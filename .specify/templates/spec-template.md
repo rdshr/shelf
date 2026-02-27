@@ -95,6 +95,15 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Constitution Alignment *(mandatory)*
+
+- **Story Traceability**: Map each functional requirement to one or more user
+  stories (US1, US2, ...).
+- **Verification Method**: Define how each story will be validated (automated
+  test, manual flow, or both) and what evidence is required.
+- **Operational Impact**: Document expected logging/error/configuration changes,
+  or explicitly state "No operational impact".
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]

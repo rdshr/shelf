@@ -1,0 +1,6 @@
+# Codex workspace (may contain auth tokens)
+.codex/**
+
+# Allow shared prompts (safe, review before commit)
+!.codex/prompts/
+!.codex/prompts/*.md

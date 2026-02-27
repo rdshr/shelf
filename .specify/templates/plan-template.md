@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Spec-first gate: `spec.md` includes prioritized user stories, acceptance
+      scenarios, edge cases, and measurable success criteria.
+- [ ] Traceability gate: plan maps intended work to user stories and identifies
+      exact implementation paths.
+- [ ] Verification gate: each story has an independent validation method and
+      evidence expectations (automated, manual, or both).
+- [ ] Operational clarity gate: runtime config, error handling, and observability
+      updates are listed (including quickstart/runbook impacts when relevant).
+- [ ] Simplicity gate: added dependencies/abstractions are justified with a
+      minimal alternative considered.
 
 ## Project Structure
 
