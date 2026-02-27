@@ -1,23 +1,30 @@
-# 1. 前置环境准备
-1. linux 环境
-2. 确保 uv 已安装
-3. 确保 http 与 https 代理已配置(能访问外网)
-4. codex cli 已安装到系统中
+# Shelf
 
-# 2. 安装 Specify CLI
-```
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-```
+本仓库提供“通用框架标准 + 置物架领域标准”的双层规范，以及对应 Python 参考实现。
 
-安装完后, 就可以使用命令初始化 spec kit 项目了, 但是由于本仓库已经初始化过了, 所以就不需要再初始化了
+## 文件结构
 
-# 3. 将 codex 的配置目录指向项目的 .codex
+- `framework_design_standard.md`：通用抽象标准（仓库最高规范）
+- `shelf_framework_standard.md`：置物架领域标准（基于通用标准派生）
+- `shelf_framework.py`：核心模型（Goal/Boundary/Rule/Hypothesis/Verification/LogicRecord）
+- `main.py`：示例运行入口
+- `docs/logic_record.json`：示例运行导出的逻辑记录
+- `pyproject.toml`：`uv` 管理入口（Python 版本与依赖管理）
+
+## 仓库规范
+
+- `framework_design_standard.md` 是本仓库的最高设计规范与评审基线。
+- `shelf_framework_standard.md` 是置物架领域的具体标准，必须遵循通用标准。
+- Python 环境与依赖管理统一使用 `uv`。
+- 运行命令统一使用 `uv run`。
+
+## 快速运行
+
 ```bash
-export CODEX_HOME="$PWD/.codex"
+uv sync
+uv run python main.py
 ```
 
-# 4. 启动 codex
-```bash
-codex
-```
-
+运行后会：
+1. 在控制台输出框架快照与验证结果
+2. 生成或更新 `docs/logic_record.json`
