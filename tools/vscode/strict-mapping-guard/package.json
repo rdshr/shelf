@@ -21,6 +21,10 @@
       {
         "command": "strictMapping.validateNow",
         "title": "Strict Mapping: Validate Now"
+      },
+      {
+        "command": "strictMapping.showIssues",
+        "title": "Strict Mapping: Show Issues"
       }
     ],
     "configuration": {
@@ -30,6 +34,11 @@
           "type": "boolean",
           "default": true,
           "description": "Run strict mapping validation when a relevant file is saved."
+        },
+        "strictMappingGuard.notifyOnAutoFail": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification when auto validation detects mapping issues."
         },
         "strictMappingGuard.changeValidationCommand": {
           "type": "string",
