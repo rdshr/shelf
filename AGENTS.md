@@ -15,6 +15,8 @@
 ### 3. 变更执行要求
 - 修改标准或代码后，必须执行对应验证命令。
 - 禁止在仓库规范文档中引入 `pip install` 作为标准流程。
+- 必须启用仓库 `pre-push` hook：`bash scripts/install_git_hooks.sh`。
+- 若严格映射验证不通过，禁止推送。
 
 ### 4. 规范优先级
 - 规范总纲：`standards/standards_tree.md`

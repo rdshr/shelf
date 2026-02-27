@@ -16,6 +16,14 @@ uv run python scripts/validate_strict_mapping.py
 uv run python scripts/validate_strict_mapping.py --check-changes
 ```
 
+## 推送守卫（Git Hook）
+- 安装命令：
+```bash
+bash scripts/install_git_hooks.sh
+```
+- Hook：`.githooks/pre-push`
+- 作用：推送前强制执行严格映射验证；若失败则阻止 `git push`
+
 ## VSCode 插件雏形
 - 位置：`tools/vscode/strict-mapping-guard`
 - 作用：保存文件后自动运行严格映射校验，并在 Problems 面板报警

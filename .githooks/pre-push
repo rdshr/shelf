@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "[pre-push] blocked: uv is required but was not found in PATH." >&2
+  exit 1
+fi
+
+echo "[pre-push] strict mapping validation..."
+uv run python scripts/validate_strict_mapping.py
+uv run python scripts/validate_strict_mapping.py --check-changes
+echo "[pre-push] strict mapping checks passed."
