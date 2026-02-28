@@ -35,10 +35,70 @@
           "default": true,
           "description": "Run strict mapping validation when a relevant file is saved."
         },
+        "strictMappingGuard.autoDetectRepository": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-detect whether current workspace should run strict mapping validation."
+        },
         "strictMappingGuard.notifyOnAutoFail": {
           "type": "boolean",
           "default": true,
           "description": "Show notification when auto validation detects mapping issues."
+        },
+        "strictMappingGuard.watchAllFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true, any workspace file change can trigger change validation (except ignored prefixes)."
+        },
+        "strictMappingGuard.watchGlobs": {
+          "type": "array",
+          "default": [
+            "**/*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace-relative glob patterns watched for external file changes."
+        },
+        "strictMappingGuard.ignorePathPrefixes": {
+          "type": "array",
+          "default": [
+            ".git/",
+            ".github/",
+            ".venv/",
+            "node_modules/",
+            ".idea/",
+            ".vscode/",
+            "dist/",
+            "build/",
+            "coverage/",
+            "__pycache__/"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Path prefixes excluded from auto-triggered validation."
+        },
+        "strictMappingGuard.requiredRegistryPaths": {
+          "type": "array",
+          "default": [
+            "standards/L3/mapping_registry.json",
+            "standards/mapping_registry.json"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Any existing path in this list counts as a mapping registry for repository detection."
+        },
+        "strictMappingGuard.requiredValidatorPaths": {
+          "type": "array",
+          "default": [
+            "scripts/validate_strict_mapping.py"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Any existing path in this list counts as a validator script for repository detection."
         },
         "strictMappingGuard.changeValidationCommand": {
           "type": "string",
