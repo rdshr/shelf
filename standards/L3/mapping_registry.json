@@ -164,6 +164,7 @@
       "l1_anchor": "## 3. 模块（最小可行基，Module）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 3. 模块（最小可行基，Module）",
+      "sync_note": "L2 module role descriptions refined; L3 symbols unchanged",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
