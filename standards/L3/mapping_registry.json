@@ -196,6 +196,26 @@
         {
           "file": "src/shelf_framework.py",
           "symbol": "def default()"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class StructuralPrinciples"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class ExactFitSpec"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def rods_orthogonal_layout("
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def boards_parallel_with_rod_constraints("
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def exact_fit("
         }
       ]
     },
