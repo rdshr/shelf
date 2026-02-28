@@ -19,6 +19,6 @@
 - 若严格映射验证不通过，禁止推送。
 
 ### 4. 规范优先级
-- 规范总纲：`standards/standards_tree.md`
-- 框架设计标准：`standards/framework_design_standard.md`
-- 领域标准：`standards/shelf_framework_standard.md`
+- 规范总纲：`standards/规范总纲与树形结构.md`
+- 框架设计标准：`standards/框架设计核心标准.md`
+- 领域标准：`standards/置物架框架标准.md`

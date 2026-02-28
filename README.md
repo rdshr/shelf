@@ -3,9 +3,9 @@
 本仓库采用“多级严格映射”规范。
 
 ## 规范入口
-- 规范总纲（树形）：`standards/standards_tree.md`
-- 框架设计核心标准：`standards/framework_design_standard.md`
-- 领域标准（置物架）：`standards/shelf_framework_standard.md`
+- 规范总纲（树形）：`standards/规范总纲与树形结构.md`
+- 框架设计核心标准：`standards/框架设计核心标准.md`
+- 领域标准（置物架）：`standards/置物架框架标准.md`
 - 工程执行规范：`AGENTS.md`
 
 ## 映射与验证

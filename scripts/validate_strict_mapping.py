@@ -108,8 +108,8 @@ def collect_changed_files() -> set[str]:
     changed: set[str] = set()
 
     commands = [
-        ["git", "diff", "--name-only"],
-        ["git", "diff", "--name-only", "--cached"],
+        ["git", "-c", "core.quotePath=false", "diff", "--name-only"],
+        ["git", "-c", "core.quotePath=false", "diff", "--name-only", "--cached"],
     ]
 
     for cmd in commands:
@@ -128,7 +128,7 @@ def collect_changed_files() -> set[str]:
                 changed.add(item)
 
     untracked = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard"],
+        ["git", "-c", "core.quotePath=false", "ls-files", "--others", "--exclude-standard"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -148,9 +148,19 @@ def discover_domain_standards() -> list[str]:
     if not standards_dir.exists():
         return []
 
+    excluded_names = {
+        "framework_design_standard.md",
+        "框架设计核心标准.md",
+    }
     results: list[str] = []
-    for path in sorted(standards_dir.glob("*_framework_standard.md")):
-        if path.name == "framework_design_standard.md":
+    for path in sorted(standards_dir.glob("*.md")):
+        file_name = path.name
+        if file_name in excluded_names:
+            continue
+        if not (
+            file_name.endswith("_framework_standard.md")
+            or file_name.endswith("框架标准.md")
+        ):
             continue
         results.append(path.relative_to(REPO_ROOT).as_posix())
     return results

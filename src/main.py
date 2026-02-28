@@ -21,6 +21,7 @@ from shelf_framework import (
 
 
 def build_logic_record(goal: Goal, boundary: BoundaryDefinition, result_ok: bool) -> LogicRecord:
+    """构建可追溯逻辑记录，用于输出 L3 证据文件。"""
     steps = [
         LogicStep("G", "goal", evidence=goal.to_dict()),
         LogicStep("B1", "layers", ["G"], {"N": boundary.layers_n}),
@@ -41,6 +42,7 @@ def build_logic_record(goal: Goal, boundary: BoundaryDefinition, result_ok: bool
 
 
 def main() -> None:
+    """运行置物架框架示例并输出验证快照。"""
     goal = Goal("Increase storage access efficiency per footprint area")
 
     boundary = BoundaryDefinition(

@@ -1,15 +1,15 @@
 {
   "levels": {
-    "L0": ["standards/standards_tree.md"],
+    "L0": ["standards/规范总纲与树形结构.md"],
     "L1": [
-      "standards/framework_design_standard.md",
-      "standards/traceability_standard.md",
-      "standards/reducibility_standard.md",
+      "standards/框架设计核心标准.md",
+      "standards/可追溯性标准.md",
+      "standards/可删减性标准.md",
       "AGENTS.md"
     ],
     "L2": [
-      "standards/shelf_framework_standard.md",
-      "standards/curtain_framework_standard.md"
+      "standards/置物架框架标准.md",
+      "standards/窗帘框架标准.md"
     ],
     "L3": [
       "src/shelf_framework.py",
