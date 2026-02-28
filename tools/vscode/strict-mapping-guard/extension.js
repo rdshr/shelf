@@ -9,23 +9,7 @@ const WATCH_FILES = new Set([
   "README.md",
   "scripts/validate_strict_mapping.py"
 ]);
-const DEFAULT_REGISTRY_PATHS = [
-  "standards/L3/mapping_registry.json",
-  "standards/mapping_registry.json"
-];
-const DEFAULT_VALIDATOR_PATHS = ["scripts/validate_strict_mapping.py"];
-const DEFAULT_IGNORE_PATH_PREFIXES = [
-  ".git/",
-  ".github/",
-  ".venv/",
-  "node_modules/",
-  ".idea/",
-  ".vscode/",
-  "dist/",
-  "build/",
-  "coverage/",
-  "__pycache__/"
-];
+const STANDARDS_TREE_FILE = path.join("standards", "standards_tree.md");
 
 function activate(context) {
   const output = vscode.window.createOutputChannel("Strict Mapping Guard");
@@ -46,41 +30,32 @@ function activate(context) {
   let lastFailureSignature = "";
   let lastRunIssues = [];
   let lastRepoRoot = "";
-  let lastFallbackTarget = null;
-
-  const applyUnsupportedState = (reason, repoRoot) => {
-    lastRunIssues = [];
-    diagnostics.clear();
-    status.text = "$(info) Mapping N/A";
-    status.tooltip = `Strict Mapping Guard: ${reason}`;
-    status.backgroundColor = undefined;
-    status.color = undefined;
-    lastFallbackTarget = getDefaultFallbackTarget(repoRoot);
-  };
+  let strictMappingActive = true;
 
   const runValidation = async (options = { mode: "change", triggerUri: null, notifyOnFail: false }) => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return;
     }
-
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
     const repoRoot = folder.uri.fsPath;
-    lastRepoRoot = repoRoot;
 
-    const support = detectRepositorySupport(repoRoot, config);
-    lastFallbackTarget = support.fallbackTarget;
-    if (!support.enabled) {
-      applyUnsupportedState(support.reason, repoRoot);
+    if (!hasStandardsTree(repoRoot)) {
+      strictMappingActive = false;
+      lastRepoRoot = repoRoot;
+      lastRunIssues = [];
+      lastFailureSignature = "";
+      diagnostics.clear();
+      setStatusDisabled(status, repoRoot);
       return;
     }
+    strictMappingActive = true;
 
+    const config = vscode.workspace.getConfiguration("strictMappingGuard");
     const command = options.mode === "full"
       ? config.get("fullValidationCommand")
       : config.get("changeValidationCommand");
 
     if (!command || typeof command !== "string") {
-      applyUnsupportedState("validation command is not configured", repoRoot);
       return;
     }
 
@@ -90,13 +65,14 @@ function activate(context) {
     output.clear();
     output.appendLine(`[run] ${command}`);
 
-    const execResult = await execCommand(command, repoRoot);
+    const execResult = await execCommand(command, folder.uri.fsPath);
     output.appendLine(execResult.stdout || "");
     output.appendLine(execResult.stderr || "");
 
     const parsed = parseResult(execResult.stdout, execResult.stderr, execResult.code);
     lastRunIssues = parsed.errors;
-    applyDiagnostics(parsed, diagnostics, repoRoot, options.triggerUri, lastFallbackTarget);
+    lastRepoRoot = folder.uri.fsPath;
+    applyDiagnostics(parsed, diagnostics, folder.uri.fsPath, options.triggerUri);
     output.appendLine(`[result] passed=${parsed.passed} errors=${parsed.errors.length}`);
 
     if (parsed.passed) {
@@ -166,13 +142,19 @@ function activate(context) {
     scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true });
   });
   const showIssuesDisposable = vscode.commands.registerCommand("strictMapping.showIssues", async () => {
+    if (!strictMappingActive && lastRepoRoot) {
+      vscode.window.showInformationMessage(
+        `Strict Mapping Guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+      );
+      return;
+    }
     if (!lastRunIssues.length) {
       await vscode.commands.executeCommand("workbench.actions.view.problems");
       return;
     }
 
     if (lastRunIssues.length === 1 && lastRepoRoot) {
-      await revealIssue(lastRunIssues[0], lastRepoRoot, lastFallbackTarget);
+      await revealIssue(lastRunIssues[0], lastRepoRoot);
       return;
     }
 
@@ -193,7 +175,7 @@ function activate(context) {
     });
 
     if (selected && lastRepoRoot) {
-      await revealIssue(selected.issue, lastRepoRoot, lastFallbackTarget);
+      await revealIssue(selected.issue, lastRepoRoot);
     }
   });
 
@@ -209,7 +191,7 @@ function activate(context) {
     }
 
     const rel = path.relative(folder.uri.fsPath, doc.uri.fsPath).replace(/\\/g, "/");
-    if (!isWatchedPath(rel, config)) {
+    if (!isWatchedPath(rel)) {
       return;
     }
 
@@ -221,8 +203,7 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
-    if (anyWatchedUris(event.files, folder.uri.fsPath, config)) {
+    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
       scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false });
     }
   });
@@ -232,8 +213,7 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
-    if (anyWatchedUris(event.files, folder.uri.fsPath, config)) {
+    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
       scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false });
     }
   });
@@ -247,8 +227,7 @@ function activate(context) {
     for (const item of event.files) {
       uris.push(item.oldUri, item.newUri);
     }
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
-    if (anyWatchedUris(uris, folder.uri.fsPath, config)) {
+    if (anyWatchedUris(uris, folder.uri.fsPath)) {
       scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false });
     }
   });
@@ -263,8 +242,14 @@ function activate(context) {
   const fileWatcherDisposables = [];
   const watcherFolder = vscode.workspace.workspaceFolders?.[0];
   if (watcherFolder) {
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
-    const watcherPatterns = normalizeWatchGlobs(config.get("watchGlobs"));
+    const watcherPatterns = [
+      "standards/**",
+      "src/**",
+      "docs/**",
+      "AGENTS.md",
+      "README.md",
+      "scripts/validate_strict_mapping.py"
+    ];
 
     for (const pattern of watcherPatterns) {
       const watcher = vscode.workspace.createFileSystemWatcher(
@@ -272,8 +257,7 @@ function activate(context) {
       );
 
       const triggerIfWatched = (uri) => {
-        const latestConfig = vscode.workspace.getConfiguration("strictMappingGuard");
-        if (isWatchedUri(uri, watcherFolder.uri.fsPath, latestConfig)) {
+        if (isWatchedUri(uri, watcherFolder.uri.fsPath)) {
           scheduleValidation({ mode: "change", triggerUri: uri, notifyOnFail: false });
         }
       };
@@ -285,13 +269,6 @@ function activate(context) {
     }
   }
 
-  const configChangeDisposable = vscode.workspace.onDidChangeConfiguration((event) => {
-    if (!event.affectsConfiguration("strictMappingGuard")) {
-      return;
-    }
-    scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false });
-  });
-
   context.subscriptions.push(
     commandDisposable,
     showIssuesDisposable,
@@ -300,7 +277,6 @@ function activate(context) {
     deleteDisposable,
     renameDisposable,
     focusDisposable,
-    configChangeDisposable,
     ...fileWatcherDisposables
   );
 
@@ -310,133 +286,30 @@ function activate(context) {
 
 function deactivate() {}
 
-function isWatchedPath(relPath, config) {
+function isWatchedPath(relPath) {
   if (!relPath || relPath.startsWith("..")) {
     return false;
   }
 
-  const normalized = relPath.replace(/\\/g, "/");
-  const ignorePrefixes = normalizePathPrefixes(config?.get("ignorePathPrefixes"));
-  if (isIgnoredPath(normalized, ignorePrefixes)) {
-    return false;
-  }
-
-  if (config?.get("watchAllFiles")) {
+  if (WATCH_FILES.has(relPath)) {
     return true;
   }
 
-  if (WATCH_FILES.has(normalized)) {
-    return true;
-  }
-
-  return WATCH_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+  return WATCH_PREFIXES.some((prefix) => relPath.startsWith(prefix));
 }
 
-function anyWatchedUris(uris, workspaceRoot, config) {
+function anyWatchedUris(uris, workspaceRoot) {
   for (const uri of uris) {
-    if (isWatchedUri(uri, workspaceRoot, config)) {
+    if (isWatchedUri(uri, workspaceRoot)) {
       return true;
     }
   }
   return false;
 }
 
-function isWatchedUri(uri, workspaceRoot, config) {
+function isWatchedUri(uri, workspaceRoot) {
   const rel = path.relative(workspaceRoot, uri.fsPath).replace(/\\/g, "/");
-  return isWatchedPath(rel, config);
-}
-
-function normalizeWatchGlobs(value) {
-  const items = getStringArray(value);
-  return items.length ? items : ["**/*"];
-}
-
-function normalizePathPrefixes(value) {
-  const items = getStringArray(value);
-  const source = items.length ? items : DEFAULT_IGNORE_PATH_PREFIXES;
-  return source.map((item) => item.replace(/\\/g, "/")).map((item) => (
-    item.endsWith("/") ? item : `${item}/`
-  ));
-}
-
-function isIgnoredPath(relPath, ignorePrefixes) {
-  return ignorePrefixes.some((prefix) => {
-    const bare = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
-    return relPath === bare || relPath.startsWith(prefix);
-  });
-}
-
-function getStringArray(value) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .filter((item) => typeof item === "string")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function detectRepositorySupport(repoRoot, config) {
-  const fallbackTarget = getDefaultFallbackTarget(repoRoot);
-  if (!config?.get("autoDetectRepository")) {
-    return {
-      enabled: true,
-      reason: "repository auto-detection disabled",
-      fallbackTarget
-    };
-  }
-
-  const registryCandidates = getStringArray(config?.get("requiredRegistryPaths"));
-  const validatorCandidates = getStringArray(config?.get("requiredValidatorPaths"));
-  const registryPaths = registryCandidates.length ? registryCandidates : DEFAULT_REGISTRY_PATHS;
-  const validatorPaths = validatorCandidates.length ? validatorCandidates : DEFAULT_VALIDATOR_PATHS;
-
-  const existingRegistry = firstExistingPath(repoRoot, registryPaths);
-  const existingValidator = firstExistingPath(repoRoot, validatorPaths);
-
-  if (existingRegistry && existingValidator) {
-    return {
-      enabled: true,
-      reason: "strict mapping repository detected",
-      fallbackTarget: existingRegistry
-    };
-  }
-
-  const missing = [];
-  if (!existingRegistry) {
-    missing.push("mapping registry file");
-  }
-  if (!existingValidator) {
-    missing.push("validator script");
-  }
-
-  return {
-    enabled: false,
-    reason: `skipped (${missing.join(" + ")} not found)`,
-    fallbackTarget
-  };
-}
-
-function firstExistingPath(repoRoot, relPaths) {
-  for (const relPath of relPaths) {
-    const fullPath = path.join(repoRoot, relPath);
-    if (fs.existsSync(fullPath)) {
-      return fullPath;
-    }
-  }
-  return null;
-}
-
-function getDefaultFallbackTarget(repoRoot) {
-  if (!repoRoot) {
-    return null;
-  }
-  const fallbackCandidates = [...DEFAULT_REGISTRY_PATHS, ...DEFAULT_VALIDATOR_PATHS];
-  const existing = firstExistingPath(repoRoot, fallbackCandidates);
-  if (existing) {
-    return existing;
-  }
-  return path.join(repoRoot, "README.md");
+  return isWatchedPath(rel);
 }
 
 function execCommand(command, cwd) {
@@ -484,7 +357,7 @@ function parseResult(stdout, stderr, code) {
   };
 }
 
-function applyDiagnostics(parsed, collection, repoRoot, triggerUri, fallbackTarget) {
+function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
   collection.clear();
   if (parsed.passed) {
     return;
@@ -496,9 +369,7 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri, fallbackTarg
     const candidateTarget = resolveIssueFile(issue.file, repoRoot);
     const target = (candidateTarget && fs.existsSync(candidateTarget))
       ? candidateTarget
-      : (triggerUri
-        ? triggerUri.fsPath
-        : fallbackTarget || getDefaultFallbackTarget(repoRoot));
+      : (triggerUri ? triggerUri.fsPath : path.join(repoRoot, "standards", "mapping_registry.json"));
     if (!grouped.has(target)) {
       grouped.set(target, []);
     }
@@ -560,11 +431,11 @@ function toWorkspaceRelative(filePath, repoRoot) {
   return rel.startsWith("..") ? filePath : rel;
 }
 
-async function revealIssue(issue, repoRoot, fallbackTarget) {
+async function revealIssue(issue, repoRoot) {
   const candidate = resolveIssueFile(issue.file, repoRoot);
   const target = (candidate && fs.existsSync(candidate))
     ? candidate
-    : fallbackTarget || getDefaultFallbackTarget(repoRoot);
+    : path.join(repoRoot, "standards", "mapping_registry.json");
   const uri = vscode.Uri.file(target);
   const doc = await vscode.workspace.openTextDocument(uri);
   const line = Math.max(0, Number(issue.line || 1) - 1);
@@ -629,6 +500,20 @@ function buildTooltip(errors) {
   const preview = errors.slice(0, 3).map((e) => `• ${e.message}`).join("\n");
   const more = errors.length > 3 ? `\n... +${errors.length - 3} more` : "";
   return `Strict Mapping Guard\n${preview}${more}\n(click to open Problems)`;
+}
+
+function hasStandardsTree(repoRoot) {
+  return fs.existsSync(path.join(repoRoot, STANDARDS_TREE_FILE));
+}
+
+function setStatusDisabled(status, repoRoot) {
+  status.text = "$(circle-slash) Mapping n/a";
+  status.tooltip = `Strict Mapping Guard disabled: ${toWorkspaceRelative(
+    path.join(repoRoot, STANDARDS_TREE_FILE),
+    repoRoot
+  )} not found`;
+  status.backgroundColor = undefined;
+  status.color = undefined;
 }
 
 module.exports = {

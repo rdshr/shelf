@@ -1,7 +1,15 @@
 # Python cache
 __pycache__/
+**/__pycache__/
 *.pyc
 .venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# JavaScript local dependencies/test artifacts
+node_modules/
+.vscode-test/
 
 # Local temporary files
 *~
@@ -9,4 +17,7 @@ __pycache__/
 *.swo
 .DS_Store
 
-.codex
+# Codex workspace
+.codex/**
+!.codex/prompts/
+!.codex/prompts/*.md
