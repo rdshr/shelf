@@ -1,8 +1,9 @@
 # Strict Mapping Guard (VSCode Extension)
 
 ## What It Does
-- Runs strict mapping validation automatically on startup.
-- Runs strict mapping validation on save/create/rename/delete for relevant files.
+- Detects whether current workspace has strict mapping support before validating.
+- Runs strict mapping validation automatically on startup (only when repository detection passes).
+- Runs strict mapping validation on save/create/rename/delete for changed files.
 - Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
 - Shows validation issues in VSCode Problems panel.
 - Status bar (`Mapping issues`) is clickable and opens an issue picker for direct file/line jump.
@@ -20,6 +21,12 @@
 
 ## Configuration
 - `strictMappingGuard.enableOnSave`
+- `strictMappingGuard.autoDetectRepository`
+- `strictMappingGuard.watchAllFiles`
+- `strictMappingGuard.watchGlobs`
+- `strictMappingGuard.ignorePathPrefixes`
+- `strictMappingGuard.requiredRegistryPaths`
+- `strictMappingGuard.requiredValidatorPaths`
 - `strictMappingGuard.changeValidationCommand`
 - `strictMappingGuard.fullValidationCommand`
 
