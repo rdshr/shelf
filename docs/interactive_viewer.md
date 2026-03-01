@@ -4,13 +4,19 @@
 不通过 html，直接打开本地窗口进行 3D 动态查看与参数调整。
 
 ## 启动命令
+WSL 下优先（推荐）：
+```bash
+PYTHONPATH=src python3 src/interactive_viewer.py
+```
+
+`uv` 方式：
 ```bash
 uv run python src/interactive_viewer.py
 ```
 
-若 `uv` 环境报 `tkagg/qt` 后端错误，可使用系统 Python（已实测可进入 GUI 事件循环）：
+若报 `FigureCanvasAgg is non-interactive`，表示当前解释器没有可用 GUI 后端，请改用系统 Python，或先执行：
 ```bash
-PYTHONPATH=src python3 src/interactive_viewer.py
+uv python install --reinstall 3.12
 ```
 
 ## 交互说明

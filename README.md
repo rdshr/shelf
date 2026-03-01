@@ -77,8 +77,18 @@ xdg-open /home/xue/code/shelf/docs/examples/type_subpages_valid_2x2x2_dualfamily
 
 ## 我要自己调界面，怎么做
 ### A. 弹窗交互查看器（非 HTML）
+WSL 下建议优先用系统 Python（通常可直接弹窗）：
+```bash
+PYTHONPATH=src python3 src/interactive_viewer.py
+```
+
+`uv` 方式（如果你的 `uv` Python 已支持 Tk/Qt）：
 ```bash
 uv run python src/interactive_viewer.py
+```
+若看到 `FigureCanvasAgg is non-interactive`，说明当前解释器无 GUI 后端，请切回上面的 `python3` 命令，或执行：
+```bash
+uv python install --reinstall 3.12
 ```
 界面控件：
 - `x_cells / y_cells / layers`：离散空间大小
