@@ -1,150 +1,173 @@
 {
-  "steps": [
+  "goal": "提升单位占地面积下的存取效率",
+  "formalization_chain": [
+    "自然语言规范",
+    "形式化对象",
+    "规则约束",
+    "数学模型",
+    "分型穷举",
+    "判定验证",
+    "3D 可视化",
+    "证据输出"
+  ],
+  "assumptions": [
     {
-      "step_id": "G",
-      "label": "goal",
-      "depends_on": [],
-      "evidence": {
-        "statement": "Increase storage access efficiency per footprint area"
-      }
+      "id": "A1",
+      "statement": "连续尺寸先离散化到有限网格，先解可计算穷举，再讨论连续优化。",
+      "config_key": "DiscreteGrid(x_cells, y_cells, layers_n)"
     },
     {
-      "step_id": "B1",
-      "label": "layers",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "N": 4
-      }
+      "id": "A2",
+      "statement": "默认支持同层多块矩形板分割（占用模式与分割方式分离计数）。",
+      "config_key": "partition_into_rectangles"
     },
     {
-      "step_id": "B2",
-      "label": "payload",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "P": 30.0
-      }
+      "id": "A3",
+      "statement": "冗余杆件/连接件不枚举，采用板诱导的最小必需支撑构造。",
+      "config_key": "build_geometry(topology, grid)"
     },
     {
-      "step_id": "B3",
-      "label": "space",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "S": {
-          "width": 80.0,
-          "depth": 35.0,
-          "height": 30.0
-        }
-      }
+      "id": "A4",
+      "statement": "默认重力沿 -Z，层板法向沿 +Z（水平层板语义）。",
+      "config_key": "check_r4_board_parallel"
     },
     {
-      "step_id": "B4",
-      "label": "opening",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "O": {
-          "width": 65.0,
-          "height": 28.0
-        }
-      }
+      "id": "A5",
+      "statement": "opening_o 映射为 access_factor（宽高比均值，裁剪到 [0,1]）。",
+      "config_key": "metrics.efficiency::_access_factor"
     },
     {
-      "step_id": "B5",
-      "label": "footprint",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "A": {
-          "width": 90.0,
-          "depth": 40.0
-        }
-      }
+      "id": "A6",
+      "statement": "baseline_efficiency 默认由实验输入给定，可替换为任意基准结构。",
+      "config_key": "baseline_efficiency"
     },
     {
-      "step_id": "M1",
-      "label": "rod",
-      "depends_on": [
-        "B1",
-        "B2"
-      ],
-      "evidence": {}
+      "id": "A7",
+      "statement": "未提供材料/截面/连接强度时，不声称完成真实工程安全验证，仅给简化载荷检查接口。",
+      "config_key": "simplified_load_check"
     },
     {
-      "step_id": "M2",
-      "label": "connector",
-      "depends_on": [
-        "B1",
-        "B4"
-      ],
-      "evidence": {}
+      "id": "A8",
+      "statement": "FRAME 结构采用 V1“腔体诱导骨架”：枚举 6-邻接连通单元子集 U，并诱导最小外边界骨架。",
+      "config_key": "enumerate_connected_non_empty_cell_subsets + derive_boundary_skeleton_edges"
     },
     {
-      "step_id": "M3",
-      "label": "panel",
-      "depends_on": [
-        "B2",
-        "B3"
-      ],
-      "evidence": {}
-    },
-    {
-      "step_id": "R1",
-      "label": "no isolated module",
-      "depends_on": [
-        "M1",
-        "M2",
-        "M3"
-      ],
-      "evidence": {}
-    },
-    {
-      "step_id": "R2",
-      "label": "connector is mandatory",
-      "depends_on": [
-        "M2"
-      ],
-      "evidence": {}
-    },
-    {
-      "step_id": "H1",
-      "label": "efficiency improves under valid constraints",
-      "depends_on": [
-        "R1",
-        "R2"
-      ],
-      "evidence": {}
-    },
-    {
-      "step_id": "V1",
-      "label": "verify hypothesis",
-      "depends_on": [
-        "H1"
-      ],
-      "evidence": {
-        "passed": true
-      }
-    },
-    {
-      "step_id": "C",
-      "label": "conclusion",
-      "depends_on": [
-        "V1"
-      ],
-      "evidence": {
-        "adopt_now": true
-      }
+      "id": "A9",
+      "statement": "FRAME 的 R4/R5 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
+      "config_key": "evaluate_structural_rules(frame path)"
     }
   ],
-  "self_consistency": {
-    "ok": true,
-    "errors": []
-  }
+  "module_combinations": {
+    "M_type": [
+      [
+        "connector",
+        "rod"
+      ],
+      [
+        "connector",
+        "panel"
+      ],
+      [
+        "connector",
+        "panel",
+        "rod"
+      ]
+    ],
+    "M_geo": [
+      [
+        "connector",
+        "rod"
+      ],
+      [
+        "connector",
+        "panel",
+        "rod"
+      ]
+    ]
+  },
+  "enumeration_summary": {
+    "counting_mode": "dual_family",
+    "omega_formula": "Omega = Omega_frame ⊔ Omega_shelf",
+    "layers_n": 2,
+    "grid_cells_2d": 4,
+    "grid_cells_3d": 8,
+    "shelf": {
+      "counting_formula": "C_raw^shelf = (T_layer)^N",
+      "occupancy_patterns_non_empty": 15,
+      "partition_terms_per_layer": 34,
+      "empty_layer_terms": 1,
+      "terms_per_layer_total": 35,
+      "formula_instantiated": 1225,
+      "raw_candidate_count": 1225
+    },
+    "frame": {
+      "counting_formula": "C_raw^frame = |{U subseteq C | U != empty and connected_6(U)}| (V1 cavity-induced boundary skeleton)",
+      "formula_instantiated": 167,
+      "raw_candidate_count": 167
+    },
+    "all": {
+      "counting_formula": "C_raw^all = C_raw^frame + C_raw^shelf",
+      "formula_instantiated": 1392,
+      "raw_candidate_count": 1392
+    },
+    "formula_instantiated": 1392,
+    "family_counts": {
+      "frame": {
+        "raw_candidates": 167,
+        "raw_valid_candidates": 154,
+        "unique_types": 31,
+        "valid_types": 31,
+        "invalid_types": 0
+      },
+      "shelf": {
+        "raw_candidates": 1225,
+        "raw_valid_candidates": 1224,
+        "unique_types": 202,
+        "valid_types": 201,
+        "invalid_types": 1
+      }
+    },
+    "total_candidates": 1392,
+    "structural_valid_candidates": 1378,
+    "unique_types": 233,
+    "truncated": false,
+    "layer_pattern_count": 35
+  },
+  "examples": {
+    "valid_count": 6,
+    "invalid_count": 3
+  },
+  "limitations": [
+    "离散边界内完备，不代表连续空间完备",
+    "真实工程安全验证依赖材料/截面/连接强度参数"
+  ],
+  "strict_mapping": {
+    "level": "L3",
+    "registry": "standards/L3/mapping_registry.json",
+    "validation_command": "uv run python scripts/validate_strict_mapping.py --check-changes"
+  },
+  "load_check": {
+    "performed": false,
+    "passed": false,
+    "layer_capacity": null,
+    "reason": "missing material/section/connector parameters; engineering safety not concluded"
+  },
+  "visualization_artifacts": [
+    {
+      "interactive_html": "docs/examples/valid_1.html",
+      "obj_fallback": "docs/examples/valid_1.obj"
+    },
+    {
+      "interactive_html": "docs/examples/valid_2.html",
+      "obj_fallback": "docs/examples/valid_2.obj"
+    },
+    {
+      "interactive_html": "docs/examples/valid_3.html",
+      "obj_fallback": "docs/examples/valid_3.obj"
+    },
+    {
+      "interactive_html": "docs/examples/invalid_1.html",
+      "obj_fallback": "docs/examples/invalid_1.obj"
+    }
+  ]
 }
