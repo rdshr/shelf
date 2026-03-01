@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Logic-consistent shelf framework with executable Python reference implementation."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "matplotlib>=3.10.8",
+    "plotly>=6.5.2",
+    "pyqt6>=6.10.2",
+]
 
 [tool.uv]
 package = false
