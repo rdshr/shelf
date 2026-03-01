@@ -44,3 +44,71 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 uv sync
 uv run python src/main.py
 ```
+
+## 看图（总入口）
+- 双族分型子页面入口：
+  - `docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html`
+- 旧版单族分型子页面入口：
+  - `docs/examples/type_subpages_valid_2x2x2/index.html`
+- 3D 分型总览墙：
+  - `docs/examples/type_gallery_3d_valid_2x2x2.html`
+
+## 打开方式（Linux / WSL）
+### 方式 1：本地 HTTP 服务（推荐）
+```bash
+cd /home/xue/code/shelf
+uv run python -m http.server 8765
+```
+浏览器访问：
+- `http://localhost:8765/docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html`
+- `http://localhost:8765/docs/examples/type_gallery_3d_valid_2x2x2.html`
+
+### 方式 2：WSL 直接调用 Windows 浏览器
+```bash
+explorer.exe "$(wslpath -w /home/xue/code/shelf/docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html)"
+explorer.exe "$(wslpath -w /home/xue/code/shelf/docs/examples/type_gallery_3d_valid_2x2x2.html)"
+```
+
+### 方式 3：Linux 桌面环境
+```bash
+xdg-open /home/xue/code/shelf/docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html
+```
+如果报 `Couldn't find a suitable web browser`，请用“方式 1”或“方式 2”。
+
+## 我要自己调界面，怎么做
+### A. 弹窗交互查看器（非 HTML）
+```bash
+uv run python src/interactive_viewer.py
+```
+界面控件：
+- `x_cells / y_cells / layers`：离散空间大小
+- `cell_w / cell_d / layer_h`：几何尺寸
+- `allow_empty`：是否允许空层
+- `valid / invalid / all`：筛选分型
+- `Prev / Next`：切换分型
+- `Recompute`：按当前参数重新枚举
+
+### B. 重新生成网页分型墙（批量）
+生成“每个类型组一个子页面（含组内 3D）”：
+```bash
+uv run python src/generate_type_subpages.py \
+  --x-cells 2 --y-cells 2 --layers 2 \
+  --filter valid \
+  --output-dir docs/examples/type_subpages_valid_2x2x2_dualfamily \
+  --group-3d-columns 8
+```
+
+生成单页 3D 总览墙：
+```bash
+uv run python src/generate_type_gallery_3d.py \
+  --x-cells 2 --y-cells 2 --layers 2 \
+  --filter valid \
+  --output-html docs/examples/type_gallery_3d_valid_2x2x2.html \
+  --columns 16
+```
+
+常用可调参数：
+- `--x-cells --y-cells --layers`：离散边界
+- `--filter valid|invalid|all`：筛选范围
+- `--columns`：3D 墙局部排布密度
+- `--group-3d-columns`：子页面内组级 3D 排布密度
