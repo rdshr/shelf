@@ -1,0 +1,16 @@
+{
+  "before_csv": "docs/validation/compare/shelf_projection_validation_table_before_r6.csv",
+  "after_csv": "docs/validation/shelf_projection_validation_table.csv",
+  "type_total_before": 202,
+  "type_total_after": 202,
+  "pass_flip_count": 0,
+  "pass_to_fail": 0,
+  "fail_to_pass": 0,
+  "structural_flip_count": 57,
+  "structural_pass_to_fail": 57,
+  "structural_fail_to_pass": 0,
+  "artifacts": {
+    "diff_csv": "docs/validation/compare/shelf_projection_validation_diff_types.csv",
+    "dashboard_html": "docs/validation/compare/shelf_projection_validation_compare_dashboard.html"
+  }
+}

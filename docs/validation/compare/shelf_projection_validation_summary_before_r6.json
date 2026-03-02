@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-03-02T07:03:58+00:00",
+  "strict_mapping_passed": true,
+  "strict_mapping_change_passed": true,
+  "ratio_threshold": 1.0,
+  "total_types": 202,
+  "boundary_valid": true,
+  "structural_valid_types": 201,
+  "structural_invalid_types": 1,
+  "projection_improved_types": 144,
+  "projection_not_improved_types": 58,
+  "passed_types": 144,
+  "failed_types": 58,
+  "avg_ratio": 1.3477722772277227,
+  "min_ratio": 0.0,
+  "max_ratio": 2.0
+}
