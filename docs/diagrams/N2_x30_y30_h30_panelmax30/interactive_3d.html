@@ -13,7 +13,7 @@
     }
     #app {
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 380px 1fr;
       height: 100%;
     }
     #panel {
@@ -51,10 +51,12 @@
     <div class="row">
       <button id="prevBtn">Prev</button>
       <button id="nextBtn">Next</button>
+      <button id="fitBtn">Fit</button>
     </div>
     <div class="row">
       <select id="comboSelect"></select>
     </div>
+    <div class="row mono" id="status" style="color:#b91c1c;">Initializing viewer...</div>
     <div class="row mono" id="info"></div>
     <div class="row" style="font-size:12px;color:#555;">
       Left-drag: rotate | Wheel: zoom | Right-drag: pan
@@ -63,9 +65,27 @@
   <div id="viewer"><canvas id="cv"></canvas></div>
 </div>
 
+<script id="combo-data" type="application/json">[{"combo_id": "CASE-01", "label": "L1(R:none|P:back-front) L2(R:none|P:back-front)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:none|P:back-front)", "L1(R:none|P:left-right) L2(R:none|P:left-right)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}], "obj": "CASE-01.obj", "preview_png": "CASE-01.png"}, {"combo_id": "CASE-02", "label": "L1(R:none|P:back-front) L2(R:none|P:left-right)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:none|P:left-right)", "L1(R:none|P:left-right) L2(R:none|P:back-front)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}], "obj": "CASE-02.obj", "preview_png": "CASE-02.png"}, {"combo_id": "CASE-03", "label": "L1(R:none|P:back-front) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL|P:front-right)", "L1(R:none|P:back-front) L2(R:FR|P:back-left)", "L1(R:none|P:left-right) L2(R:BR|P:front-left)", "L1(R:none|P:left-right) L2(R:FL|P:back-right)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}], "obj": "CASE-03.obj", "preview_png": "CASE-03.png"}, {"combo_id": "CASE-04", "label": "L1(R:none|P:back-front) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-BR|P:front)", "L1(R:none|P:back-front) L2(R:FL-FR|P:back)", "L1(R:none|P:left-right) L2(R:BL-FL|P:right)", "L1(R:none|P:left-right) L2(R:BR-FR|P:left)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}], "obj": "CASE-04.obj", "preview_png": "CASE-04.png"}, {"combo_id": "CASE-05", "label": "L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)", "L1(R:none|P:left-right) L2(R:BL-BR-FL-FR|P:none)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}], "obj": "CASE-05.obj", "preview_png": "CASE-05.png"}, {"combo_id": "CASE-06", "label": "L1(R:none|P:back-front) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-FL|P:right)", "L1(R:none|P:back-front) L2(R:BR-FR|P:left)", "L1(R:none|P:left-right) L2(R:BL-BR|P:front)", "L1(R:none|P:left-right) L2(R:FL-FR|P:back)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}], "obj": "CASE-06.obj", "preview_png": "CASE-06.png"}, {"combo_id": "CASE-07", "label": "L1(R:none|P:back-front) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BR|P:front-left)", "L1(R:none|P:back-front) L2(R:FL|P:back-right)", "L1(R:none|P:left-right) L2(R:BL|P:front-right)", "L1(R:none|P:left-right) L2(R:FR|P:back-left)"], "layers": [{"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}], "obj": "CASE-07.obj", "preview_png": "CASE-07.png"}, {"combo_id": "CASE-08", "label": "L1(R:BL|P:front-right) L2(R:none|P:back-front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:none|P:back-front)", "L1(R:BR|P:front-left) L2(R:none|P:left-right)", "L1(R:FL|P:back-right) L2(R:none|P:left-right)", "L1(R:FR|P:back-left) L2(R:none|P:back-front)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}], "obj": "CASE-08.obj", "preview_png": "CASE-08.png"}, {"combo_id": "CASE-09", "label": "L1(R:BL|P:front-right) L2(R:none|P:left-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:none|P:left-right)", "L1(R:BR|P:front-left) L2(R:none|P:back-front)", "L1(R:FL|P:back-right) L2(R:none|P:back-front)", "L1(R:FR|P:back-left) L2(R:none|P:left-right)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}], "obj": "CASE-09.obj", "preview_png": "CASE-09.png"}, {"combo_id": "CASE-10", "label": "L1(R:BL|P:front-right) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL|P:front-right)", "L1(R:BR|P:front-left) L2(R:BR|P:front-left)", "L1(R:FL|P:back-right) L2(R:FL|P:back-right)", "L1(R:FR|P:back-left) L2(R:FR|P:back-left)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}], "obj": "CASE-10.obj", "preview_png": "CASE-10.png"}, {"combo_id": "CASE-11", "label": "L1(R:BL|P:front-right) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-BR|P:front)", "L1(R:BR|P:front-left) L2(R:BR-FR|P:left)", "L1(R:FL|P:back-right) L2(R:BL-FL|P:right)", "L1(R:FR|P:back-left) L2(R:FL-FR|P:back)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}], "obj": "CASE-11.obj", "preview_png": "CASE-11.png"}, {"combo_id": "CASE-12", "label": "L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BR|P:front-left) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FL|P:back-right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FR|P:back-left) L2(R:BL-BR-FL-FR|P:none)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}], "obj": "CASE-12.obj", "preview_png": "CASE-12.png"}, {"combo_id": "CASE-13", "label": "L1(R:BL|P:front-right) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-FL|P:right)", "L1(R:BR|P:front-left) L2(R:BL-BR|P:front)", "L1(R:FL|P:back-right) L2(R:FL-FR|P:back)", "L1(R:FR|P:back-left) L2(R:BR-FR|P:left)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}], "obj": "CASE-13.obj", "preview_png": "CASE-13.png"}, {"combo_id": "CASE-14", "label": "L1(R:BL|P:front-right) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BR|P:front-left)", "L1(R:BR|P:front-left) L2(R:FR|P:back-left)", "L1(R:FL|P:back-right) L2(R:BL|P:front-right)", "L1(R:FR|P:back-left) L2(R:FL|P:back-right)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}], "obj": "CASE-14.obj", "preview_png": "CASE-14.png"}, {"combo_id": "CASE-15", "label": "L1(R:BL|P:front-right) L2(R:BR-FR|P:left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BR-FR|P:left)", "L1(R:BR|P:front-left) L2(R:FL-FR|P:back)", "L1(R:FL|P:back-right) L2(R:BL-BR|P:front)", "L1(R:FR|P:back-left) L2(R:BL-FL|P:right)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["BR", "FR"], "support_panels": ["left"], "open_sides": ["front", "right", "back"]}], "obj": "CASE-15.obj", "preview_png": "CASE-15.png"}, {"combo_id": "CASE-16", "label": "L1(R:BL|P:front-right) L2(R:FL|P:back-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FL|P:back-right)", "L1(R:BR|P:front-left) L2(R:BL|P:front-right)", "L1(R:FL|P:back-right) L2(R:FR|P:back-left)", "L1(R:FR|P:back-left) L2(R:BR|P:front-left)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["FL"], "support_panels": ["back", "right"], "open_sides": ["front", "left"]}], "obj": "CASE-16.obj", "preview_png": "CASE-16.png"}, {"combo_id": "CASE-17", "label": "L1(R:BL|P:front-right) L2(R:FL-FR|P:back)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FL-FR|P:back)", "L1(R:BR|P:front-left) L2(R:BL-FL|P:right)", "L1(R:FL|P:back-right) L2(R:BR-FR|P:left)", "L1(R:FR|P:back-left) L2(R:BL-BR|P:front)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["FL", "FR"], "support_panels": ["back"], "open_sides": ["front", "right", "left"]}], "obj": "CASE-17.obj", "preview_png": "CASE-17.png"}, {"combo_id": "CASE-18", "label": "L1(R:BL|P:front-right) L2(R:FR|P:back-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FR|P:back-left)", "L1(R:BR|P:front-left) L2(R:FL|P:back-right)", "L1(R:FL|P:back-right) L2(R:BR|P:front-left)", "L1(R:FR|P:back-left) L2(R:BL|P:front-right)"], "layers": [{"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, {"rods": ["FR"], "support_panels": ["back", "left"], "open_sides": ["front", "right"]}], "obj": "CASE-18.obj", "preview_png": "CASE-18.png"}, {"combo_id": "CASE-19", "label": "L1(R:BL-BR|P:front) L2(R:none|P:back-front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:none|P:back-front)", "L1(R:BL-FL|P:right) L2(R:none|P:left-right)", "L1(R:BR-FR|P:left) L2(R:none|P:left-right)", "L1(R:FL-FR|P:back) L2(R:none|P:back-front)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}], "obj": "CASE-19.obj", "preview_png": "CASE-19.png"}, {"combo_id": "CASE-20", "label": "L1(R:BL-BR|P:front) L2(R:none|P:left-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:none|P:left-right)", "L1(R:BL-FL|P:right) L2(R:none|P:back-front)", "L1(R:BR-FR|P:left) L2(R:none|P:back-front)", "L1(R:FL-FR|P:back) L2(R:none|P:left-right)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}], "obj": "CASE-20.obj", "preview_png": "CASE-20.png"}, {"combo_id": "CASE-21", "label": "L1(R:BL-BR|P:front) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL|P:front-right)", "L1(R:BL-FL|P:right) L2(R:FL|P:back-right)", "L1(R:BR-FR|P:left) L2(R:BR|P:front-left)", "L1(R:FL-FR|P:back) L2(R:FR|P:back-left)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}], "obj": "CASE-21.obj", "preview_png": "CASE-21.png"}, {"combo_id": "CASE-22", "label": "L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)", "L1(R:BL-FL|P:right) L2(R:BL-FL|P:right)", "L1(R:BR-FR|P:left) L2(R:BR-FR|P:left)", "L1(R:FL-FR|P:back) L2(R:FL-FR|P:back)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}], "obj": "CASE-22.obj", "preview_png": "CASE-22.png"}, {"combo_id": "CASE-23", "label": "L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BL-FL|P:right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BR-FR|P:left) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FL-FR|P:back) L2(R:BL-BR-FL-FR|P:none)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}], "obj": "CASE-23.obj", "preview_png": "CASE-23.png"}, {"combo_id": "CASE-24", "label": "L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)", "L1(R:BL-FL|P:right) L2(R:FL-FR|P:back)", "L1(R:BR-FR|P:left) L2(R:BL-BR|P:front)", "L1(R:FL-FR|P:back) L2(R:BR-FR|P:left)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}], "obj": "CASE-24.obj", "preview_png": "CASE-24.png"}, {"combo_id": "CASE-25", "label": "L1(R:BL-BR|P:front) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BR|P:front-left)", "L1(R:BL-FL|P:right) L2(R:BL|P:front-right)", "L1(R:BR-FR|P:left) L2(R:FR|P:back-left)", "L1(R:FL-FR|P:back) L2(R:FL|P:back-right)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}], "obj": "CASE-25.obj", "preview_png": "CASE-25.png"}, {"combo_id": "CASE-26", "label": "L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)", "L1(R:BL-FL|P:right) L2(R:BL-BR|P:front)", "L1(R:BR-FR|P:left) L2(R:FL-FR|P:back)", "L1(R:FL-FR|P:back) L2(R:BL-FL|P:right)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["BR", "FR"], "support_panels": ["left"], "open_sides": ["front", "right", "back"]}], "obj": "CASE-26.obj", "preview_png": "CASE-26.png"}, {"combo_id": "CASE-27", "label": "L1(R:BL-BR|P:front) L2(R:FL|P:back-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FL|P:back-right)", "L1(R:BL-FL|P:right) L2(R:FR|P:back-left)", "L1(R:BR-FR|P:left) L2(R:BL|P:front-right)", "L1(R:FL-FR|P:back) L2(R:BR|P:front-left)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["FL"], "support_panels": ["back", "right"], "open_sides": ["front", "left"]}], "obj": "CASE-27.obj", "preview_png": "CASE-27.png"}, {"combo_id": "CASE-28", "label": "L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)", "L1(R:BL-FL|P:right) L2(R:BR-FR|P:left)", "L1(R:BR-FR|P:left) L2(R:BL-FL|P:right)", "L1(R:FL-FR|P:back) L2(R:BL-BR|P:front)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["FL", "FR"], "support_panels": ["back"], "open_sides": ["front", "right", "left"]}], "obj": "CASE-28.obj", "preview_png": "CASE-28.png"}, {"combo_id": "CASE-29", "label": "L1(R:BL-BR|P:front) L2(R:FR|P:back-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FR|P:back-left)", "L1(R:BL-FL|P:right) L2(R:BR|P:front-left)", "L1(R:BR-FR|P:left) L2(R:FL|P:back-right)", "L1(R:FL-FR|P:back) L2(R:BL|P:front-right)"], "layers": [{"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, {"rods": ["FR"], "support_panels": ["back", "left"], "open_sides": ["front", "right"]}], "obj": "CASE-29.obj", "preview_png": "CASE-29.png"}, {"combo_id": "CASE-30", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)", "equivalent_count": 2, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)", "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:left-right)"], "layers": [{"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}], "obj": "CASE-30.obj", "preview_png": "CASE-30.png"}, {"combo_id": "CASE-31", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BR|P:front-left)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FL|P:back-right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FR|P:back-left)"], "layers": [{"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}], "obj": "CASE-31.obj", "preview_png": "CASE-31.png"}, {"combo_id": "CASE-32", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-FL|P:right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BR-FR|P:left)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FL-FR|P:back)"], "layers": [{"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}], "obj": "CASE-32.obj", "preview_png": "CASE-32.png"}, {"combo_id": "CASE-33", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 1, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)"], "layers": [{"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}], "obj": "CASE-33.obj", "preview_png": "CASE-33.png"}]</script>
 <script>
-const combos = [{"combo_id": "CASE-01", "label": "L1(R:none|P:back-front) L2(R:none|P:back-front)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:none|P:back-front)", "L1(R:none|P:left-right) L2(R:none|P:left-right)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "obj": "CASE-01.obj", "preview_png": "CASE-01.png"}, {"combo_id": "CASE-02", "label": "L1(R:none|P:back-front) L2(R:none|P:left-right)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:none|P:left-right)", "L1(R:none|P:left-right) L2(R:none|P:back-front)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}, "obj": "CASE-02.obj", "preview_png": "CASE-02.png"}, {"combo_id": "CASE-03", "label": "L1(R:none|P:back-front) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL|P:front-right)", "L1(R:none|P:back-front) L2(R:FR|P:back-left)", "L1(R:none|P:left-right) L2(R:BR|P:front-left)", "L1(R:none|P:left-right) L2(R:FL|P:back-right)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "obj": "CASE-03.obj", "preview_png": "CASE-03.png"}, {"combo_id": "CASE-04", "label": "L1(R:none|P:back-front) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-BR|P:front)", "L1(R:none|P:back-front) L2(R:FL-FR|P:back)", "L1(R:none|P:left-right) L2(R:BL-FL|P:right)", "L1(R:none|P:left-right) L2(R:BR-FR|P:left)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "obj": "CASE-04.obj", "preview_png": "CASE-04.png"}, {"combo_id": "CASE-05", "label": "L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 2, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)", "L1(R:none|P:left-right) L2(R:BL-BR-FL-FR|P:none)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "obj": "CASE-05.obj", "preview_png": "CASE-05.png"}, {"combo_id": "CASE-06", "label": "L1(R:none|P:back-front) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BL-FL|P:right)", "L1(R:none|P:back-front) L2(R:BR-FR|P:left)", "L1(R:none|P:left-right) L2(R:BL-BR|P:front)", "L1(R:none|P:left-right) L2(R:FL-FR|P:back)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}, "obj": "CASE-06.obj", "preview_png": "CASE-06.png"}, {"combo_id": "CASE-07", "label": "L1(R:none|P:back-front) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:none|P:back-front) L2(R:BR|P:front-left)", "L1(R:none|P:back-front) L2(R:FL|P:back-right)", "L1(R:none|P:left-right) L2(R:BL|P:front-right)", "L1(R:none|P:left-right) L2(R:FR|P:back-left)"], "layer1": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "layer2": {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}, "obj": "CASE-07.obj", "preview_png": "CASE-07.png"}, {"combo_id": "CASE-08", "label": "L1(R:BL|P:front-right) L2(R:none|P:back-front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:none|P:back-front)", "L1(R:BR|P:front-left) L2(R:none|P:left-right)", "L1(R:FL|P:back-right) L2(R:none|P:left-right)", "L1(R:FR|P:back-left) L2(R:none|P:back-front)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "obj": "CASE-08.obj", "preview_png": "CASE-08.png"}, {"combo_id": "CASE-09", "label": "L1(R:BL|P:front-right) L2(R:none|P:left-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:none|P:left-right)", "L1(R:BR|P:front-left) L2(R:none|P:back-front)", "L1(R:FL|P:back-right) L2(R:none|P:back-front)", "L1(R:FR|P:back-left) L2(R:none|P:left-right)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}, "obj": "CASE-09.obj", "preview_png": "CASE-09.png"}, {"combo_id": "CASE-10", "label": "L1(R:BL|P:front-right) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL|P:front-right)", "L1(R:BR|P:front-left) L2(R:BR|P:front-left)", "L1(R:FL|P:back-right) L2(R:FL|P:back-right)", "L1(R:FR|P:back-left) L2(R:FR|P:back-left)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "obj": "CASE-10.obj", "preview_png": "CASE-10.png"}, {"combo_id": "CASE-11", "label": "L1(R:BL|P:front-right) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-BR|P:front)", "L1(R:BR|P:front-left) L2(R:BR-FR|P:left)", "L1(R:FL|P:back-right) L2(R:BL-FL|P:right)", "L1(R:FR|P:back-left) L2(R:FL-FR|P:back)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "obj": "CASE-11.obj", "preview_png": "CASE-11.png"}, {"combo_id": "CASE-12", "label": "L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BR|P:front-left) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FL|P:back-right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FR|P:back-left) L2(R:BL-BR-FL-FR|P:none)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "obj": "CASE-12.obj", "preview_png": "CASE-12.png"}, {"combo_id": "CASE-13", "label": "L1(R:BL|P:front-right) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BL-FL|P:right)", "L1(R:BR|P:front-left) L2(R:BL-BR|P:front)", "L1(R:FL|P:back-right) L2(R:FL-FR|P:back)", "L1(R:FR|P:back-left) L2(R:BR-FR|P:left)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}, "obj": "CASE-13.obj", "preview_png": "CASE-13.png"}, {"combo_id": "CASE-14", "label": "L1(R:BL|P:front-right) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BR|P:front-left)", "L1(R:BR|P:front-left) L2(R:FR|P:back-left)", "L1(R:FL|P:back-right) L2(R:BL|P:front-right)", "L1(R:FR|P:back-left) L2(R:FL|P:back-right)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}, "obj": "CASE-14.obj", "preview_png": "CASE-14.png"}, {"combo_id": "CASE-15", "label": "L1(R:BL|P:front-right) L2(R:BR-FR|P:left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:BR-FR|P:left)", "L1(R:BR|P:front-left) L2(R:FL-FR|P:back)", "L1(R:FL|P:back-right) L2(R:BL-BR|P:front)", "L1(R:FR|P:back-left) L2(R:BL-FL|P:right)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["BR", "FR"], "support_panels": ["left"], "open_sides": ["front", "right", "back"]}, "obj": "CASE-15.obj", "preview_png": "CASE-15.png"}, {"combo_id": "CASE-16", "label": "L1(R:BL|P:front-right) L2(R:FL|P:back-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FL|P:back-right)", "L1(R:BR|P:front-left) L2(R:BL|P:front-right)", "L1(R:FL|P:back-right) L2(R:FR|P:back-left)", "L1(R:FR|P:back-left) L2(R:BR|P:front-left)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["FL"], "support_panels": ["back", "right"], "open_sides": ["front", "left"]}, "obj": "CASE-16.obj", "preview_png": "CASE-16.png"}, {"combo_id": "CASE-17", "label": "L1(R:BL|P:front-right) L2(R:FL-FR|P:back)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FL-FR|P:back)", "L1(R:BR|P:front-left) L2(R:BL-FL|P:right)", "L1(R:FL|P:back-right) L2(R:BR-FR|P:left)", "L1(R:FR|P:back-left) L2(R:BL-BR|P:front)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["FL", "FR"], "support_panels": ["back"], "open_sides": ["front", "right", "left"]}, "obj": "CASE-17.obj", "preview_png": "CASE-17.png"}, {"combo_id": "CASE-18", "label": "L1(R:BL|P:front-right) L2(R:FR|P:back-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL|P:front-right) L2(R:FR|P:back-left)", "L1(R:BR|P:front-left) L2(R:FL|P:back-right)", "L1(R:FL|P:back-right) L2(R:BR|P:front-left)", "L1(R:FR|P:back-left) L2(R:BL|P:front-right)"], "layer1": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "layer2": {"rods": ["FR"], "support_panels": ["back", "left"], "open_sides": ["front", "right"]}, "obj": "CASE-18.obj", "preview_png": "CASE-18.png"}, {"combo_id": "CASE-19", "label": "L1(R:BL-BR|P:front) L2(R:none|P:back-front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:none|P:back-front)", "L1(R:BL-FL|P:right) L2(R:none|P:left-right)", "L1(R:BR-FR|P:left) L2(R:none|P:left-right)", "L1(R:FL-FR|P:back) L2(R:none|P:back-front)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "obj": "CASE-19.obj", "preview_png": "CASE-19.png"}, {"combo_id": "CASE-20", "label": "L1(R:BL-BR|P:front) L2(R:none|P:left-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:none|P:left-right)", "L1(R:BL-FL|P:right) L2(R:none|P:back-front)", "L1(R:BR-FR|P:left) L2(R:none|P:back-front)", "L1(R:FL-FR|P:back) L2(R:none|P:left-right)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": [], "support_panels": ["left", "right"], "open_sides": ["front", "back"]}, "obj": "CASE-20.obj", "preview_png": "CASE-20.png"}, {"combo_id": "CASE-21", "label": "L1(R:BL-BR|P:front) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL|P:front-right)", "L1(R:BL-FL|P:right) L2(R:FL|P:back-right)", "L1(R:BR-FR|P:left) L2(R:BR|P:front-left)", "L1(R:FL-FR|P:back) L2(R:FR|P:back-left)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "obj": "CASE-21.obj", "preview_png": "CASE-21.png"}, {"combo_id": "CASE-22", "label": "L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)", "L1(R:BL-FL|P:right) L2(R:BL-FL|P:right)", "L1(R:BR-FR|P:left) L2(R:BR-FR|P:left)", "L1(R:FL-FR|P:back) L2(R:FL-FR|P:back)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "obj": "CASE-22.obj", "preview_png": "CASE-22.png"}, {"combo_id": "CASE-23", "label": "L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BL-FL|P:right) L2(R:BL-BR-FL-FR|P:none)", "L1(R:BR-FR|P:left) L2(R:BL-BR-FL-FR|P:none)", "L1(R:FL-FR|P:back) L2(R:BL-BR-FL-FR|P:none)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "obj": "CASE-23.obj", "preview_png": "CASE-23.png"}, {"combo_id": "CASE-24", "label": "L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)", "L1(R:BL-FL|P:right) L2(R:FL-FR|P:back)", "L1(R:BR-FR|P:left) L2(R:BL-BR|P:front)", "L1(R:FL-FR|P:back) L2(R:BR-FR|P:left)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BL", "FL"], "support_panels": ["right"], "open_sides": ["front", "back", "left"]}, "obj": "CASE-24.obj", "preview_png": "CASE-24.png"}, {"combo_id": "CASE-25", "label": "L1(R:BL-BR|P:front) L2(R:BR|P:front-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BR|P:front-left)", "L1(R:BL-FL|P:right) L2(R:BL|P:front-right)", "L1(R:BR-FR|P:left) L2(R:FR|P:back-left)", "L1(R:FL-FR|P:back) L2(R:FL|P:back-right)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BR"], "support_panels": ["front", "left"], "open_sides": ["right", "back"]}, "obj": "CASE-25.obj", "preview_png": "CASE-25.png"}, {"combo_id": "CASE-26", "label": "L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)", "L1(R:BL-FL|P:right) L2(R:BL-BR|P:front)", "L1(R:BR-FR|P:left) L2(R:FL-FR|P:back)", "L1(R:FL-FR|P:back) L2(R:BL-FL|P:right)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["BR", "FR"], "support_panels": ["left"], "open_sides": ["front", "right", "back"]}, "obj": "CASE-26.obj", "preview_png": "CASE-26.png"}, {"combo_id": "CASE-27", "label": "L1(R:BL-BR|P:front) L2(R:FL|P:back-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FL|P:back-right)", "L1(R:BL-FL|P:right) L2(R:FR|P:back-left)", "L1(R:BR-FR|P:left) L2(R:BL|P:front-right)", "L1(R:FL-FR|P:back) L2(R:BR|P:front-left)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["FL"], "support_panels": ["back", "right"], "open_sides": ["front", "left"]}, "obj": "CASE-27.obj", "preview_png": "CASE-27.png"}, {"combo_id": "CASE-28", "label": "L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)", "L1(R:BL-FL|P:right) L2(R:BR-FR|P:left)", "L1(R:BR-FR|P:left) L2(R:BL-FL|P:right)", "L1(R:FL-FR|P:back) L2(R:BL-BR|P:front)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["FL", "FR"], "support_panels": ["back"], "open_sides": ["front", "right", "left"]}, "obj": "CASE-28.obj", "preview_png": "CASE-28.png"}, {"combo_id": "CASE-29", "label": "L1(R:BL-BR|P:front) L2(R:FR|P:back-left)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR|P:front) L2(R:FR|P:back-left)", "L1(R:BL-FL|P:right) L2(R:BR|P:front-left)", "L1(R:BR-FR|P:left) L2(R:FL|P:back-right)", "L1(R:FL-FR|P:back) L2(R:BL|P:front-right)"], "layer1": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "layer2": {"rods": ["FR"], "support_panels": ["back", "left"], "open_sides": ["front", "right"]}, "obj": "CASE-29.obj", "preview_png": "CASE-29.png"}, {"combo_id": "CASE-30", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)", "equivalent_count": 2, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)", "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:left-right)"], "layer1": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "layer2": {"rods": [], "support_panels": ["back", "front"], "open_sides": ["right", "left"]}, "obj": "CASE-30.obj", "preview_png": "CASE-30.png"}, {"combo_id": "CASE-31", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BR|P:front-left)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FL|P:back-right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FR|P:back-left)"], "layer1": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "layer2": {"rods": ["BL"], "support_panels": ["front", "right"], "open_sides": ["back", "left"]}, "obj": "CASE-31.obj", "preview_png": "CASE-31.png"}, {"combo_id": "CASE-32", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)", "equivalent_count": 4, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-FL|P:right)", "L1(R:BL-BR-FL-FR|P:none) L2(R:BR-FR|P:left)", "L1(R:BL-BR-FL-FR|P:none) L2(R:FL-FR|P:back)"], "layer1": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "layer2": {"rods": ["BL", "BR"], "support_panels": ["front"], "open_sides": ["right", "back", "left"]}, "obj": "CASE-32.obj", "preview_png": "CASE-32.png"}, {"combo_id": "CASE-33", "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)", "equivalent_count": 1, "equivalent_members": ["L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)"], "layer1": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "layer2": {"rods": ["BL", "BR", "FL", "FR"], "support_panels": [], "open_sides": ["front", "right", "back", "left"]}, "obj": "CASE-33.obj", "preview_png": "CASE-33.png"}];
-const X = 30, Y = 30, H = 30;
+let combos = [];
+const statusEl = document.getElementById('status');
+function showStatus(msg, isError) {
+  if (!statusEl) return;
+  statusEl.style.color = isError ? '#b91c1c' : '#065f46';
+  statusEl.textContent = msg || '';
+}
+try {
+  const raw = document.getElementById('combo-data').textContent || '[]';
+  combos = JSON.parse(raw);
+} catch (err) {
+  showStatus('Failed to parse combo JSON: ' + String(err), true);
+}
+window.addEventListener('error', function (e) {
+  showStatus('JS error: ' + String(e.message) + ' @' + String(e.lineno) + ':' + String(e.colno), true);
+});
+
+const N = 2, X = 30, Y = 30, H = 30;
+const TOTAL_H = N * H;
 const sideCorners = {
   front: ['FL', 'FR'],
   back: ['BL', 'BR'],
@@ -90,6 +110,15 @@ let panX = 0;
 let panY = 0;
 let current = 0;
 
+function fitView() {
+  const w = Math.max(1, viewer.clientWidth);
+  const h = Math.max(1, viewer.clientHeight);
+  const modelSize = Math.max(X, Y, TOTAL_H, 1);
+  zoom = Math.max(2.0, Math.min(40.0, Math.min(w, h) * 0.55 / modelSize));
+  panX = 0;
+  panY = 0;
+}
+
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const w = viewer.clientWidth;
@@ -99,22 +128,20 @@ function resizeCanvas() {
   cv.style.width = w + 'px';
   cv.style.height = h + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fitView();
   draw();
 }
 
 function rotatePoint(p) {
-  // shift origin to shelf center on xy
   const x0 = p[0] - X / 2;
   const y0 = p[1] - Y / 2;
-  const z0 = p[2] - H;
+  const z0 = p[2] - TOTAL_H / 2;
 
-  // yaw around z
   const cy = Math.cos(yaw), sy = Math.sin(yaw);
   const x1 = x0 * cy - y0 * sy;
   const y1 = x0 * sy + y0 * cy;
   const z1 = z0;
 
-  // pitch around x
   const cp = Math.cos(pitch), sp = Math.sin(pitch);
   const x2 = x1;
   const y2 = y1 * cp - z1 * sp;
@@ -135,8 +162,9 @@ function buildRods(combo) {
   const rods = { FL: [], FR: [], BL: [], BR: [] };
   for (const c of ['FL', 'FR', 'BL', 'BR']) {
     const segs = [];
-    if (combo.layer1.rods.includes(c)) segs.push([0, H]);
-    if (combo.layer2.rods.includes(c)) segs.push([H, 2 * H]);
+    for (let i = 0; i < combo.layers.length; i++) {
+      if (combo.layers[i].rods.includes(c)) segs.push([i * H, (i + 1) * H]);
+    }
     segs.sort((a, b) => a[0] - b[0]);
     if (!segs.length) continue;
     let a0 = segs[0][0], a1 = segs[0][1];
@@ -178,25 +206,27 @@ function draw() {
 
   const faces = [];
 
-  // load boards
-  faces.push(drawFace(
-    [[0,0,H], [X,0,H], [X,Y,H], [0,Y,H]],
-    'rgba(59,130,246,0.30)', 'rgba(30,64,175,0.90)'
-  ));
-  faces.push(drawFace(
-    [[0,0,2*H], [X,0,2*H], [X,Y,2*H], [0,Y,2*H]],
-    'rgba(59,130,246,0.30)', 'rgba(30,64,175,0.90)'
-  ));
-
-  // side support panels
-  for (const s of combo.layer1.support_panels) {
-    faces.push(drawFace(panelQuad(s, 0, H), 'rgba(245,158,11,0.45)', 'rgba(154,52,18,0.95)'));
-  }
-  for (const s of combo.layer2.support_panels) {
-    faces.push(drawFace(panelQuad(s, H, 2*H), 'rgba(249,115,22,0.45)', 'rgba(154,52,18,0.95)'));
+  for (let level = 1; level <= N; level++) {
+    const z = level * H;
+    faces.push(drawFace(
+      [[0,0,z], [X,0,z], [X,Y,z], [0,Y,z]],
+      'rgba(59,130,246,0.30)', 'rgba(30,64,175,0.90)'
+    ));
   }
 
-  // painter's order: far to near
+  for (let i = 0; i < combo.layers.length; i++) {
+    const layer = combo.layers[i];
+    const z0 = i * H;
+    const z1 = (i + 1) * H;
+    const alpha = 0.45;
+    const red = 245 - (i % 4) * 8;
+    const green = 158 - (i % 4) * 14;
+    const blue = 11 + (i % 4) * 12;
+    for (const s of layer.support_panels) {
+      faces.push(drawFace(panelQuad(s, z0, z1), `rgba(${red},${green},${blue},${alpha})`, 'rgba(154,52,18,0.95)'));
+    }
+  }
+
   faces.sort((a, b) => a.zAvg - b.zAvg);
   for (const f of faces) {
     ctx.beginPath();
@@ -210,7 +240,6 @@ function draw() {
     ctx.stroke();
   }
 
-  // rods
   const rods = buildRods(combo);
   ctx.strokeStyle = 'rgba(17,24,39,1)';
   ctx.lineWidth = 3;
@@ -229,82 +258,103 @@ function draw() {
 
 function refreshInfo() {
   const combo = combos[current];
-  document.getElementById('info').textContent =
-    combo.combo_id + '\n' +
-    combo.label + '\n' +
-    'equivalent_count=' + combo.equivalent_count + '\n' +
-    'L1 rods=' + JSON.stringify(combo.layer1.rods) + '\n' +
-    'L1 panels=' + JSON.stringify(combo.layer1.support_panels) + '\n' +
-    'L2 rods=' + JSON.stringify(combo.layer2.rods) + '\n' +
-    'L2 panels=' + JSON.stringify(combo.layer2.support_panels);
+  if (!combo) {
+    document.getElementById('info').textContent = '';
+    return;
+  }
+  const lines = [
+    combo.combo_id,
+    combo.label,
+    'equivalent_count=' + combo.equivalent_count
+  ];
+  for (let i = 0; i < combo.layers.length; i++) {
+    const layer = combo.layers[i];
+    lines.push(`L${i + 1} rods=` + JSON.stringify(layer.rods));
+    lines.push(`L${i + 1} panels=` + JSON.stringify(layer.support_panels));
+  }
+  document.getElementById('info').textContent = lines.join('\n');
 }
 
 function renderCurrent() {
+  if (!combos.length) {
+    showStatus('No combos available to render.', true);
+    draw();
+    return;
+  }
   const sel = document.getElementById('comboSelect');
   sel.value = String(current);
   refreshInfo();
   draw();
 }
 
-const sel = document.getElementById('comboSelect');
-combos.forEach((c, idx) => {
-  const op = document.createElement('option');
-  op.value = String(idx);
-  op.textContent = c.combo_id + '  (' + c.equivalent_count + ')  ' + c.label;
-  sel.appendChild(op);
-});
-sel.addEventListener('change', () => {
-  current = Number(sel.value);
-  renderCurrent();
-});
+try {
+  const sel = document.getElementById('comboSelect');
+  combos.forEach((c, idx) => {
+    const op = document.createElement('option');
+    op.value = String(idx);
+    op.textContent = c.combo_id + '  (' + c.equivalent_count + ')  ' + c.label;
+    sel.appendChild(op);
+  });
+  sel.addEventListener('change', () => {
+    current = Number(sel.value);
+    renderCurrent();
+  });
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-  current = (current - 1 + combos.length) % combos.length;
-  renderCurrent();
-});
-document.getElementById('nextBtn').addEventListener('click', () => {
-  current = (current + 1) % combos.length;
-  renderCurrent();
-});
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    current = (current - 1 + combos.length) % combos.length;
+    renderCurrent();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    current = (current + 1) % combos.length;
+    renderCurrent();
+  });
+  document.getElementById('fitBtn').addEventListener('click', () => {
+    fitView();
+    draw();
+  });
 
-let dragging = false;
-let mode = 'rotate';
-let lastX = 0;
-let lastY = 0;
-cv.addEventListener('contextmenu', (e) => e.preventDefault());
-cv.addEventListener('mousedown', (e) => {
-  dragging = true;
-  mode = (e.button === 2) ? 'pan' : 'rotate';
-  lastX = e.clientX;
-  lastY = e.clientY;
-});
-window.addEventListener('mouseup', () => dragging = false);
-window.addEventListener('mousemove', (e) => {
-  if (!dragging) return;
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
-  lastX = e.clientX;
-  lastY = e.clientY;
-  if (mode === 'rotate') {
-    yaw += dx * 0.008;
-    pitch += dy * 0.008;
-    pitch = Math.max(-1.4, Math.min(1.4, pitch));
-  } else {
-    panX += dx;
-    panY += dy;
-  }
-  draw();
-});
-cv.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const k = Math.exp(-e.deltaY * 0.0015);
-  zoom = Math.max(2.0, Math.min(40.0, zoom * k));
-  draw();
-}, { passive: false });
+  let dragging = false;
+  let mode = 'rotate';
+  let lastX = 0;
+  let lastY = 0;
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('mousedown', (e) => {
+    dragging = true;
+    mode = (e.button === 2) ? 'pan' : 'rotate';
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => dragging = false);
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    if (mode === 'rotate') {
+      yaw += dx * 0.008;
+      pitch += dy * 0.008;
+      pitch = Math.max(-1.4, Math.min(1.4, pitch));
+    } else {
+      panX += dx;
+      panY += dy;
+    }
+    draw();
+  });
+  cv.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const k = Math.exp(-e.deltaY * 0.0015);
+    zoom = Math.max(2.0, Math.min(40.0, zoom * k));
+    draw();
+  }, { passive: false });
 
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-renderCurrent();
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  renderCurrent();
+  showStatus('Viewer ready. combos=' + combos.length, false);
+} catch (err) {
+  showStatus('Viewer init failed: ' + String(err), true);
+}
 </script>
 </body>
 </html>
