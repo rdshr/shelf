@@ -23,8 +23,8 @@
 
 ## 5. 规则适用域
 - `R3` 对所有结构适用。
-- `R4/R5` 仅对存在 panel 的结构（SHELF）适用。
-- 对 FRAME 结构，`R4/R5` 视为 `not applicable / pass`，并启用 frame-specific 规则。
+- `R4/R5/R6` 仅对存在 panel 的结构（SHELF）适用。
+- 对 FRAME 结构，`R4/R5/R6` 视为 `not applicable / pass`，并启用 frame-specific 规则。
 
 ## 6. 计数框架
 设第 `k` 层占用区域为 `Q_k`，其矩形板分割方式数为 `tau(Q_k)`。

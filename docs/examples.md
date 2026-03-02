@@ -4,31 +4,31 @@
 
 ### V1
 
-- canonical_key: `SHELF|L0:(0,1,0,1)`
+- canonical_key: `SHELF|L0:(0,1,0,1)|L1:(0,2,0,2)`
 
-- panel_count: 1
+- panel_count: 2
 
-- target_efficiency: 6.546875
+- target_efficiency: 32.734375
 
 - 结论: True
 
 ### V2
 
-- canonical_key: `SHELF|L0:(0,1,0,2)`
+- canonical_key: `SHELF|L0:(0,1,0,1)|L1:(0,1,0,2)|L1:(1,2,0,2)`
 
-- panel_count: 1
+- panel_count: 3
 
-- target_efficiency: 13.093750
+- target_efficiency: 32.734375
 
 - 结论: True
 
 ### V3
 
-- canonical_key: `SHELF|L0:(0,1,0,1)|L0:(0,1,1,2)`
+- canonical_key: `SHELF|L0:(0,1,0,1)|L1:(0,1,0,2)|L1:(1,2,0,1)|L1:(1,2,1,2)`
 
-- panel_count: 2
+- panel_count: 4
 
-- target_efficiency: 13.093750
+- target_efficiency: 32.734375
 
 - 结论: True
 
@@ -40,7 +40,7 @@
 
 - 结论: False
 
-- 原因: ['layers_n must be > 0', 'payload_p_per_layer must be > 0', 'family-specific verification path: SHELF (R3/R4/R5)']
+- 原因: ['layers_n must be > 0', 'payload_p_per_layer must be > 0', 'family-specific verification path: SHELF (R3/R4/R5/R6)']
 
 ### I2
 
@@ -48,7 +48,7 @@
 
 - 结论: False
 
-- 原因: ['target_efficiency must be > baseline_efficiency', 'family-specific verification path: SHELF (R3/R4/R5)']
+- 原因: ['target_efficiency must be > baseline_efficiency', 'family-specific verification path: SHELF (R3/R4/R5/R6)']
 
 ### I3
 

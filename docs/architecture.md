@@ -16,7 +16,7 @@
 ## 规则流
 - R1/R2：模块种类组合过滤（FRAME/SHELF 通用）
 - R3：对所有结构适用
-- R4/R5：仅对 SHELF 适用；FRAME 视为 not applicable/pass
+- R4/R5/R6：仅对 SHELF 适用；FRAME 视为 not applicable/pass
 - FRAME 特有规则：connected、ground_contact、minimal_under_deletability、可选 forbid_dangling_rods
 - Verification：边界有效 + 组合有效 + 效率提升
 

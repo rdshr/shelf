@@ -53,7 +53,7 @@
     },
     {
       "id": "A9",
-      "statement": "FRAME 的 R4/R5 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
+      "statement": "FRAME 的 R4/R5/R6 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
       "config_key": "evaluate_structural_rules(frame path)"
     }
   ],
@@ -121,14 +121,14 @@
       },
       "shelf": {
         "raw_candidates": 1225,
-        "raw_valid_candidates": 1224,
+        "raw_valid_candidates": 864,
         "unique_types": 202,
-        "valid_types": 201,
-        "invalid_types": 1
+        "valid_types": 144,
+        "invalid_types": 58
       }
     },
     "total_candidates": 1392,
-    "structural_valid_candidates": 1378,
+    "structural_valid_candidates": 1018,
     "unique_types": 233,
     "truncated": false,
     "layer_pattern_count": 35
@@ -168,6 +168,14 @@
     {
       "interactive_html": "docs/examples/invalid_1.html",
       "obj_fallback": "docs/examples/invalid_1.obj"
+    },
+    {
+      "interactive_html": "docs/examples/invalid_2.html",
+      "obj_fallback": "docs/examples/invalid_2.obj"
+    },
+    {
+      "interactive_html": "docs/examples/invalid_3.html",
+      "obj_fallback": "docs/examples/invalid_3.obj"
     }
   ]
 }

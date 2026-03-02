@@ -52,7 +52,7 @@
 
 ## A9
 
-- 假设：FRAME 的 R4/R5 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。
+- 假设：FRAME 的 R4/R5/R6 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。
 
 - 配置位置：`evaluate_structural_rules(frame path)`
 
