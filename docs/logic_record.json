@@ -103,11 +103,9 @@
     },
     {
       "step_id": "R1",
-      "label": "len(combo) >= 2",
+      "label": "support structure uses rod-only supports",
       "depends_on": [
-        "M1",
-        "M2",
-        "M3"
+        "M1"
       ],
       "evidence": {
         "passed": true
@@ -115,38 +113,7 @@
     },
     {
       "step_id": "R2",
-      "label": "connector in combo",
-      "depends_on": [
-        "M2"
-      ],
-      "evidence": {
-        "passed": true
-      }
-    },
-    {
-      "step_id": "E1",
-      "label": ">=2 parallel panels",
-      "depends_on": [
-        "M3"
-      ],
-      "evidence": {
-        "passed": true
-      }
-    },
-    {
-      "step_id": "E2",
-      "label": ">=2 supports per panel",
-      "depends_on": [
-        "M1",
-        "M3"
-      ],
-      "evidence": {
-        "passed": true
-      }
-    },
-    {
-      "step_id": "E3",
-      "label": "rod-panel through connector",
+      "label": "each panel is supported by 4 rods at 4 corners",
       "depends_on": [
         "M1",
         "M2",
@@ -157,101 +124,72 @@
       }
     },
     {
-      "step_id": "E4",
-      "label": "single connected graph",
+      "step_id": "R3",
+      "label": "structure is 3D and layered by monotonic height",
       "depends_on": [
-        "E3"
+        "R2"
       ],
       "evidence": {
         "passed": true
       }
     },
     {
-      "step_id": "E5",
-      "label": "layer bounds within boundary",
+      "step_id": "R4",
+      "label": "all links pass legal connector interfaces",
+      "depends_on": [
+        "R3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "R5",
+      "label": "each layer forms a closed four-corner support frame",
+      "depends_on": [
+        "R2",
+        "R4"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "R6",
+      "label": "whole structure graph is single connected",
+      "depends_on": [
+        "R4",
+        "R5"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "R7",
+      "label": "continuous load path satisfies N/x/y/h/O/A boundary",
       "depends_on": [
         "B1",
         "B3",
-        "B5"
+        "B4",
+        "B5",
+        "R5"
       ],
       "evidence": {
         "passed": true
-      }
-    },
-    {
-      "step_id": "E6",
-      "label": "forbid undefined penetration/intersection/floating",
-      "depends_on": [
-        "E3"
-      ],
-      "evidence": {
-        "passed": true
-      }
-    },
-    {
-      "step_id": "S1",
-      "label": "prefer vertical rod-panel",
-      "depends_on": [
-        "E2"
-      ],
-      "evidence": {
-        "passed": true,
-        "deletable": true
-      }
-    },
-    {
-      "step_id": "S2",
-      "label": "prefer 4 supports per layer",
-      "depends_on": [
-        "E2"
-      ],
-      "evidence": {
-        "passed": true,
-        "deletable": true
-      }
-    },
-    {
-      "step_id": "S3",
-      "label": "prefer corner/predefined connector",
-      "depends_on": [
-        "E3"
-      ],
-      "evidence": {
-        "passed": true,
-        "deletable": true
-      }
-    },
-    {
-      "step_id": "S4",
-      "label": "prefer aligned layer contours",
-      "depends_on": [
-        "E1"
-      ],
-      "evidence": {
-        "passed": true,
-        "deletable": true
-      }
-    },
-    {
-      "step_id": "S5",
-      "label": "opening preference configuration",
-      "depends_on": [
-        "B4"
-      ],
-      "evidence": {
-        "passed": true,
-        "deletable": true
       }
     },
     {
       "step_id": "D1",
       "label": "rule deletion assessment",
       "depends_on": [
-        "S1",
-        "S2",
-        "S3",
-        "S4",
-        "S5"
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7"
       ],
       "evidence": {
         "items": [
@@ -274,7 +212,7 @@
             "mandatory_conflict": false
           },
           {
-            "rule_id": "E1",
+            "rule_id": "R3",
             "mandatory": true,
             "baseline_passed": true,
             "passed_after_removal": true,
@@ -283,7 +221,7 @@
             "mandatory_conflict": false
           },
           {
-            "rule_id": "E2",
+            "rule_id": "R4",
             "mandatory": true,
             "baseline_passed": true,
             "passed_after_removal": true,
@@ -292,7 +230,7 @@
             "mandatory_conflict": false
           },
           {
-            "rule_id": "E3",
+            "rule_id": "R5",
             "mandatory": true,
             "baseline_passed": true,
             "passed_after_removal": true,
@@ -301,7 +239,7 @@
             "mandatory_conflict": false
           },
           {
-            "rule_id": "E4",
+            "rule_id": "R6",
             "mandatory": true,
             "baseline_passed": true,
             "passed_after_removal": true,
@@ -310,66 +248,12 @@
             "mandatory_conflict": false
           },
           {
-            "rule_id": "E5",
+            "rule_id": "R7",
             "mandatory": true,
             "baseline_passed": true,
             "passed_after_removal": true,
             "target_not_degraded": true,
             "removable": false,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "E6",
-            "mandatory": true,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": false,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "S1",
-            "mandatory": false,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": true,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "S2",
-            "mandatory": false,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": true,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "S3",
-            "mandatory": false,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": true,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "S4",
-            "mandatory": false,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": true,
-            "mandatory_conflict": false
-          },
-          {
-            "rule_id": "S5",
-            "mandatory": false,
-            "baseline_passed": true,
-            "passed_after_removal": true,
-            "target_not_degraded": true,
-            "removable": true,
             "mandatory_conflict": false
           }
         ],
@@ -382,12 +266,11 @@
       "depends_on": [
         "R1",
         "R2",
-        "E1",
-        "E2",
-        "E3",
-        "E4",
-        "E5",
-        "E6"
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7"
       ],
       "evidence": {
         "statement_valid": true

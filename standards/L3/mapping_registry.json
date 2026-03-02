@@ -184,7 +184,7 @@
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
-      "sync_note": "L2 R1/R2/E1-E6/S1-S5 are fully implemented as executable combination and structure rules in L3",
+      "sync_note": "L2 unified R1-R7 rules map to single-shelf rod support, four-corner panel support, connectivity, and boundary-constrained load path in L3",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -204,6 +204,10 @@
         },
         {
           "file": "src/shelf_framework.py",
+          "symbol": "class PanelCorner"
+        },
+        {
+          "file": "src/shelf_framework.py",
           "symbol": "class PanelLayer"
         },
         {
@@ -217,10 +221,6 @@
         {
           "file": "src/shelf_framework.py",
           "symbol": "class RodPanelConnection"
-        },
-        {
-          "file": "src/shelf_framework.py",
-          "symbol": "class OpeningPreference"
         },
         {
           "file": "src/shelf_framework.py",
@@ -248,7 +248,7 @@
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
-      "sync_note": "L2 verification conditions map to boundary/combo/engineering-rule checks with explicit failure reasons",
+      "sync_note": "L2 verification conditions map to boundary + unified R1-R7 checks with explicit failure reasons",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",

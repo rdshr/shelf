@@ -1,0 +1,188 @@
+{
+  "assumptions": {
+    "N": 2,
+    "x": 30.0,
+    "y": 30.0,
+    "h": 30.0,
+    "payload_ignored": true,
+    "opening_ignored": true
+  },
+  "rule_interpretation": {
+    "R2": "E_total=4, E(rod)=1, E(support_panel)=2, four corners covered",
+    "R7": "at least one side open (front/back/left/right)"
+  },
+  "valid_combo_count": 7,
+  "valid_combos": [
+    {
+      "combo_id": "CASE-01",
+      "label": "R[BL-BR-FL-FR]_P[none]",
+      "rods": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "support_panels": [],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "front",
+        "back",
+        "left",
+        "right"
+      ],
+      "obj": "CASE-01.obj",
+      "preview_png": "CASE-01.png"
+    },
+    {
+      "combo_id": "CASE-02",
+      "label": "R[FL-FR]_P[back]",
+      "rods": [
+        "FL",
+        "FR"
+      ],
+      "support_panels": [
+        "back"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "front",
+        "left",
+        "right"
+      ],
+      "obj": "CASE-02.obj",
+      "preview_png": "CASE-02.png"
+    },
+    {
+      "combo_id": "CASE-03",
+      "label": "R[BL-BR]_P[front]",
+      "rods": [
+        "BL",
+        "BR"
+      ],
+      "support_panels": [
+        "front"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "back",
+        "left",
+        "right"
+      ],
+      "obj": "CASE-03.obj",
+      "preview_png": "CASE-03.png"
+    },
+    {
+      "combo_id": "CASE-04",
+      "label": "R[BR-FR]_P[left]",
+      "rods": [
+        "BR",
+        "FR"
+      ],
+      "support_panels": [
+        "left"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "front",
+        "back",
+        "right"
+      ],
+      "obj": "CASE-04.obj",
+      "preview_png": "CASE-04.png"
+    },
+    {
+      "combo_id": "CASE-05",
+      "label": "R[BL-FL]_P[right]",
+      "rods": [
+        "BL",
+        "FL"
+      ],
+      "support_panels": [
+        "right"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "front",
+        "back",
+        "left"
+      ],
+      "obj": "CASE-05.obj",
+      "preview_png": "CASE-05.png"
+    },
+    {
+      "combo_id": "CASE-06",
+      "label": "R[none]_P[back-front]",
+      "rods": [],
+      "support_panels": [
+        "back",
+        "front"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "left",
+        "right"
+      ],
+      "obj": "CASE-06.obj",
+      "preview_png": "CASE-06.png"
+    },
+    {
+      "combo_id": "CASE-07",
+      "label": "R[none]_P[left-right]",
+      "rods": [],
+      "support_panels": [
+        "left",
+        "right"
+      ],
+      "equivalent_support_total": 4,
+      "covered_corners": [
+        "BL",
+        "BR",
+        "FL",
+        "FR"
+      ],
+      "open_sides": [
+        "front",
+        "back"
+      ],
+      "obj": "CASE-07.obj",
+      "preview_png": "CASE-07.png"
+    }
+  ],
+  "overview_png": "ALL_COMBOS_3D.png"
+}

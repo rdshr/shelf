@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Logic-consistent shelf framework with executable Python reference implementation."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pillow>=12.1.1",
+]
 
 [tool.uv]
 package = false

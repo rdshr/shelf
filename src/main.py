@@ -14,7 +14,7 @@ from shelf_framework import (
     LogicStep,
     Module,
     Opening2D,
-    OpeningPreference,
+    PanelCorner,
     PanelLayer,
     RodPanelConnection,
     ShelfStructure,
@@ -44,6 +44,12 @@ def build_demo_structure(boundary: BoundaryDefinition) -> ShelfStructure:
     layers: list[PanelLayer] = []
     connectors: list[ConnectorUnit] = []
     connections: list[RodPanelConnection] = []
+    corner_by_support: dict[str, PanelCorner] = {
+        support_ids[0]: PanelCorner.FRONT_LEFT,
+        support_ids[1]: PanelCorner.FRONT_RIGHT,
+        support_ids[2]: PanelCorner.BACK_LEFT,
+        support_ids[3]: PanelCorner.BACK_RIGHT,
+    }
 
     for level in range(1, boundary.layers_n + 1):
         panel_id = f"panel-{level}"
@@ -78,6 +84,7 @@ def build_demo_structure(boundary: BoundaryDefinition) -> ShelfStructure:
                     panel_id=panel_id,
                     connector_id=connector_id,
                     uses_defined_interface=True,
+                    panel_corner=corner_by_support[support_id],
                     illegal_intersection=False,
                     floating=False,
                 )
@@ -112,33 +119,17 @@ def build_logic_record(
         LogicStep("M1", "rod", ["B1", "B2"], {"module": Module.ROD.value}),
         LogicStep("M2", "connector", ["B1", "B4"], {"module": Module.CONNECTOR.value}),
         LogicStep("M3", "panel", ["B2", "B3"], {"module": Module.PANEL.value}),
-        LogicStep("R1", "len(combo) >= 2", ["M1", "M2", "M3"], {"passed": rule.get("R1")}),
-        LogicStep("R2", "connector in combo", ["M2"], {"passed": rule.get("R2")}),
-        LogicStep("E1", ">=2 parallel panels", ["M3"], {"passed": rule.get("E1")}),
-        LogicStep("E2", ">=2 supports per panel", ["M1", "M3"], {"passed": rule.get("E2")}),
-        LogicStep(
-            "E3",
-            "rod-panel through connector",
-            ["M1", "M2", "M3"],
-            {"passed": rule.get("E3")},
-        ),
-        LogicStep("E4", "single connected graph", ["E3"], {"passed": rule.get("E4")}),
-        LogicStep("E5", "layer bounds within boundary", ["B1", "B3", "B5"], {"passed": rule.get("E5")}),
-        LogicStep(
-            "E6",
-            "forbid undefined penetration/intersection/floating",
-            ["E3"],
-            {"passed": rule.get("E6")},
-        ),
-        LogicStep("S1", "prefer vertical rod-panel", ["E2"], {"passed": rule.get("S1"), "deletable": True}),
-        LogicStep("S2", "prefer 4 supports per layer", ["E2"], {"passed": rule.get("S2"), "deletable": True}),
-        LogicStep("S3", "prefer corner/predefined connector", ["E3"], {"passed": rule.get("S3"), "deletable": True}),
-        LogicStep("S4", "prefer aligned layer contours", ["E1"], {"passed": rule.get("S4"), "deletable": True}),
-        LogicStep("S5", "opening preference configuration", ["B4"], {"passed": rule.get("S5"), "deletable": True}),
+        LogicStep("R1", "support structure uses rod-only supports", ["M1"], {"passed": rule.get("R1")}),
+        LogicStep("R2", "each panel is supported by 4 rods at 4 corners", ["M1", "M2", "M3"], {"passed": rule.get("R2")}),
+        LogicStep("R3", "structure is 3D and layered by monotonic height", ["R2"], {"passed": rule.get("R3")}),
+        LogicStep("R4", "all links pass legal connector interfaces", ["R3"], {"passed": rule.get("R4")}),
+        LogicStep("R5", "each layer forms a closed four-corner support frame", ["R2", "R4"], {"passed": rule.get("R5")}),
+        LogicStep("R6", "whole structure graph is single connected", ["R4", "R5"], {"passed": rule.get("R6")}),
+        LogicStep("R7", "continuous load path satisfies N/x/y/h/O/A boundary", ["B1", "B3", "B4", "B5", "R5"], {"passed": rule.get("R7")}),
         LogicStep(
             "D1",
             "rule deletion assessment",
-            ["S1", "S2", "S3", "S4", "S5"],
+            ["R1", "R2", "R3", "R4", "R5", "R6", "R7"],
             {
                 "items": assessments,
                 "mandatory_conflict_count": len(mandatory_conflicts),
@@ -147,7 +138,7 @@ def build_logic_record(
         LogicStep(
             "H1",
             "efficiency improves under valid constraints",
-            ["R1", "R2", "E1", "E2", "E3", "E4", "E5", "E6"],
+            ["R1", "R2", "R3", "R4", "R5", "R6", "R7"],
             {"statement_valid": result.mandatory_rules_passed},
         ),
         LogicStep(
@@ -183,11 +174,6 @@ def main() -> None:
     valid_combos = rules.valid_subsets()
     candidate_combo = {Module.ROD, Module.CONNECTOR, Module.PANEL}
     structure = build_demo_structure(boundary)
-    opening_preference = OpeningPreference(
-        preferred_direction="front",
-        min_ratio=0.6,
-        max_ratio=0.95,
-    )
 
     hypothesis = Hypothesis(
         hypothesis_id="H1",
@@ -202,9 +188,8 @@ def main() -> None:
         target_efficiency=1.22,
         structure=structure,
         rules=rules,
-        opening_preference=opening_preference,
         disabled_rules=(),
-        include_recommended_rules=True,
+        include_recommended_rules=False,
     )
     verification_result = verify(verification_input)
 
@@ -215,7 +200,6 @@ def main() -> None:
         "goal": goal.to_dict(),
         "boundary": boundary.to_dict(),
         "structure": structure.to_dict(),
-        "opening_preference": opening_preference.to_dict(),
         "hypothesis": hypothesis.to_dict(),
         "strict_mapping": strict_mapping_meta(),
         "candidate_combo": modules_to_list(candidate_combo),

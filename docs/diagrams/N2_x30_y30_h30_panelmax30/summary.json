@@ -1,0 +1,1312 @@
+{
+  "assumptions": {
+    "N": 2,
+    "x": 30.0,
+    "y": 30.0,
+    "h": 30.0,
+    "side_panel_height_max": 30.0,
+    "rod_length_unlimited": true,
+    "payload_ignored": true,
+    "opening_ignored": true
+  },
+  "rule_interpretation": {
+    "single_layer_patterns": 11,
+    "raw_total_for_N2": "11 x 11 = 121",
+    "dedup": "rotation equivalence around vertical axis (0/90/180/270 deg)",
+    "R2": "per layer E_total=4 with E(rod)=1 and E(panel)=2, shared panel corner counted once; full-corner coverage",
+    "R4_note": "90-degree panel-panel connection is allowed but does not relax corner support completeness",
+    "R7": "per layer at least one side open"
+  },
+  "raw_combo_count": 121,
+  "unique_combo_count_after_rotation_dedup": 33,
+  "valid_combos": [
+    {
+      "combo_id": "CASE-01",
+      "label": "L1(R:none|P:back-front) L2(R:none|P:back-front)",
+      "equivalent_count": 2,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:none|P:back-front)",
+        "L1(R:none|P:left-right) L2(R:none|P:left-right)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-01.obj",
+      "preview_png": "CASE-01.png"
+    },
+    {
+      "combo_id": "CASE-02",
+      "label": "L1(R:none|P:back-front) L2(R:none|P:left-right)",
+      "equivalent_count": 2,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:none|P:left-right)",
+        "L1(R:none|P:left-right) L2(R:none|P:back-front)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "left",
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back"
+        ]
+      },
+      "obj": "CASE-02.obj",
+      "preview_png": "CASE-02.png"
+    },
+    {
+      "combo_id": "CASE-03",
+      "label": "L1(R:none|P:back-front) L2(R:BL|P:front-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:BL|P:front-right)",
+        "L1(R:none|P:back-front) L2(R:FR|P:back-left)",
+        "L1(R:none|P:left-right) L2(R:BR|P:front-left)",
+        "L1(R:none|P:left-right) L2(R:FL|P:back-right)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-03.obj",
+      "preview_png": "CASE-03.png"
+    },
+    {
+      "combo_id": "CASE-04",
+      "label": "L1(R:none|P:back-front) L2(R:BL-BR|P:front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:BL-BR|P:front)",
+        "L1(R:none|P:back-front) L2(R:FL-FR|P:back)",
+        "L1(R:none|P:left-right) L2(R:BL-FL|P:right)",
+        "L1(R:none|P:left-right) L2(R:BR-FR|P:left)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-04.obj",
+      "preview_png": "CASE-04.png"
+    },
+    {
+      "combo_id": "CASE-05",
+      "label": "L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)",
+      "equivalent_count": 2,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:none|P:left-right) L2(R:BL-BR-FL-FR|P:none)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-05.obj",
+      "preview_png": "CASE-05.png"
+    },
+    {
+      "combo_id": "CASE-06",
+      "label": "L1(R:none|P:back-front) L2(R:BL-FL|P:right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:BL-FL|P:right)",
+        "L1(R:none|P:back-front) L2(R:BR-FR|P:left)",
+        "L1(R:none|P:left-right) L2(R:BL-BR|P:front)",
+        "L1(R:none|P:left-right) L2(R:FL-FR|P:back)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "FL"
+        ],
+        "support_panels": [
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-06.obj",
+      "preview_png": "CASE-06.png"
+    },
+    {
+      "combo_id": "CASE-07",
+      "label": "L1(R:none|P:back-front) L2(R:BR|P:front-left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:none|P:back-front) L2(R:BR|P:front-left)",
+        "L1(R:none|P:back-front) L2(R:FL|P:back-right)",
+        "L1(R:none|P:left-right) L2(R:BL|P:front-right)",
+        "L1(R:none|P:left-right) L2(R:FR|P:back-left)"
+      ],
+      "layer1": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BR"
+        ],
+        "support_panels": [
+          "front",
+          "left"
+        ],
+        "open_sides": [
+          "right",
+          "back"
+        ]
+      },
+      "obj": "CASE-07.obj",
+      "preview_png": "CASE-07.png"
+    },
+    {
+      "combo_id": "CASE-08",
+      "label": "L1(R:BL|P:front-right) L2(R:none|P:back-front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:none|P:back-front)",
+        "L1(R:BR|P:front-left) L2(R:none|P:left-right)",
+        "L1(R:FL|P:back-right) L2(R:none|P:left-right)",
+        "L1(R:FR|P:back-left) L2(R:none|P:back-front)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-08.obj",
+      "preview_png": "CASE-08.png"
+    },
+    {
+      "combo_id": "CASE-09",
+      "label": "L1(R:BL|P:front-right) L2(R:none|P:left-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:none|P:left-right)",
+        "L1(R:BR|P:front-left) L2(R:none|P:back-front)",
+        "L1(R:FL|P:back-right) L2(R:none|P:back-front)",
+        "L1(R:FR|P:back-left) L2(R:none|P:left-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "left",
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back"
+        ]
+      },
+      "obj": "CASE-09.obj",
+      "preview_png": "CASE-09.png"
+    },
+    {
+      "combo_id": "CASE-10",
+      "label": "L1(R:BL|P:front-right) L2(R:BL|P:front-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BL|P:front-right)",
+        "L1(R:BR|P:front-left) L2(R:BR|P:front-left)",
+        "L1(R:FL|P:back-right) L2(R:FL|P:back-right)",
+        "L1(R:FR|P:back-left) L2(R:FR|P:back-left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-10.obj",
+      "preview_png": "CASE-10.png"
+    },
+    {
+      "combo_id": "CASE-11",
+      "label": "L1(R:BL|P:front-right) L2(R:BL-BR|P:front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BL-BR|P:front)",
+        "L1(R:BR|P:front-left) L2(R:BR-FR|P:left)",
+        "L1(R:FL|P:back-right) L2(R:BL-FL|P:right)",
+        "L1(R:FR|P:back-left) L2(R:FL-FR|P:back)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-11.obj",
+      "preview_png": "CASE-11.png"
+    },
+    {
+      "combo_id": "CASE-12",
+      "label": "L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:BR|P:front-left) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:FL|P:back-right) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:FR|P:back-left) L2(R:BL-BR-FL-FR|P:none)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-12.obj",
+      "preview_png": "CASE-12.png"
+    },
+    {
+      "combo_id": "CASE-13",
+      "label": "L1(R:BL|P:front-right) L2(R:BL-FL|P:right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BL-FL|P:right)",
+        "L1(R:BR|P:front-left) L2(R:BL-BR|P:front)",
+        "L1(R:FL|P:back-right) L2(R:FL-FR|P:back)",
+        "L1(R:FR|P:back-left) L2(R:BR-FR|P:left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "FL"
+        ],
+        "support_panels": [
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-13.obj",
+      "preview_png": "CASE-13.png"
+    },
+    {
+      "combo_id": "CASE-14",
+      "label": "L1(R:BL|P:front-right) L2(R:BR|P:front-left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BR|P:front-left)",
+        "L1(R:BR|P:front-left) L2(R:FR|P:back-left)",
+        "L1(R:FL|P:back-right) L2(R:BL|P:front-right)",
+        "L1(R:FR|P:back-left) L2(R:FL|P:back-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BR"
+        ],
+        "support_panels": [
+          "front",
+          "left"
+        ],
+        "open_sides": [
+          "right",
+          "back"
+        ]
+      },
+      "obj": "CASE-14.obj",
+      "preview_png": "CASE-14.png"
+    },
+    {
+      "combo_id": "CASE-15",
+      "label": "L1(R:BL|P:front-right) L2(R:BR-FR|P:left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:BR-FR|P:left)",
+        "L1(R:BR|P:front-left) L2(R:FL-FR|P:back)",
+        "L1(R:FL|P:back-right) L2(R:BL-BR|P:front)",
+        "L1(R:FR|P:back-left) L2(R:BL-FL|P:right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BR",
+          "FR"
+        ],
+        "support_panels": [
+          "left"
+        ],
+        "open_sides": [
+          "front",
+          "right",
+          "back"
+        ]
+      },
+      "obj": "CASE-15.obj",
+      "preview_png": "CASE-15.png"
+    },
+    {
+      "combo_id": "CASE-16",
+      "label": "L1(R:BL|P:front-right) L2(R:FL|P:back-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:FL|P:back-right)",
+        "L1(R:BR|P:front-left) L2(R:BL|P:front-right)",
+        "L1(R:FL|P:back-right) L2(R:FR|P:back-left)",
+        "L1(R:FR|P:back-left) L2(R:BR|P:front-left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FL"
+        ],
+        "support_panels": [
+          "back",
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "left"
+        ]
+      },
+      "obj": "CASE-16.obj",
+      "preview_png": "CASE-16.png"
+    },
+    {
+      "combo_id": "CASE-17",
+      "label": "L1(R:BL|P:front-right) L2(R:FL-FR|P:back)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:FL-FR|P:back)",
+        "L1(R:BR|P:front-left) L2(R:BL-FL|P:right)",
+        "L1(R:FL|P:back-right) L2(R:BR-FR|P:left)",
+        "L1(R:FR|P:back-left) L2(R:BL-BR|P:front)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FL",
+          "FR"
+        ],
+        "support_panels": [
+          "back"
+        ],
+        "open_sides": [
+          "front",
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-17.obj",
+      "preview_png": "CASE-17.png"
+    },
+    {
+      "combo_id": "CASE-18",
+      "label": "L1(R:BL|P:front-right) L2(R:FR|P:back-left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL|P:front-right) L2(R:FR|P:back-left)",
+        "L1(R:BR|P:front-left) L2(R:FL|P:back-right)",
+        "L1(R:FL|P:back-right) L2(R:BR|P:front-left)",
+        "L1(R:FR|P:back-left) L2(R:BL|P:front-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FR"
+        ],
+        "support_panels": [
+          "back",
+          "left"
+        ],
+        "open_sides": [
+          "front",
+          "right"
+        ]
+      },
+      "obj": "CASE-18.obj",
+      "preview_png": "CASE-18.png"
+    },
+    {
+      "combo_id": "CASE-19",
+      "label": "L1(R:BL-BR|P:front) L2(R:none|P:back-front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:none|P:back-front)",
+        "L1(R:BL-FL|P:right) L2(R:none|P:left-right)",
+        "L1(R:BR-FR|P:left) L2(R:none|P:left-right)",
+        "L1(R:FL-FR|P:back) L2(R:none|P:back-front)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-19.obj",
+      "preview_png": "CASE-19.png"
+    },
+    {
+      "combo_id": "CASE-20",
+      "label": "L1(R:BL-BR|P:front) L2(R:none|P:left-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:none|P:left-right)",
+        "L1(R:BL-FL|P:right) L2(R:none|P:back-front)",
+        "L1(R:BR-FR|P:left) L2(R:none|P:back-front)",
+        "L1(R:FL-FR|P:back) L2(R:none|P:left-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "left",
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back"
+        ]
+      },
+      "obj": "CASE-20.obj",
+      "preview_png": "CASE-20.png"
+    },
+    {
+      "combo_id": "CASE-21",
+      "label": "L1(R:BL-BR|P:front) L2(R:BL|P:front-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BL|P:front-right)",
+        "L1(R:BL-FL|P:right) L2(R:FL|P:back-right)",
+        "L1(R:BR-FR|P:left) L2(R:BR|P:front-left)",
+        "L1(R:FL-FR|P:back) L2(R:FR|P:back-left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-21.obj",
+      "preview_png": "CASE-21.png"
+    },
+    {
+      "combo_id": "CASE-22",
+      "label": "L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BL-BR|P:front)",
+        "L1(R:BL-FL|P:right) L2(R:BL-FL|P:right)",
+        "L1(R:BR-FR|P:left) L2(R:BR-FR|P:left)",
+        "L1(R:FL-FR|P:back) L2(R:FL-FR|P:back)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-22.obj",
+      "preview_png": "CASE-22.png"
+    },
+    {
+      "combo_id": "CASE-23",
+      "label": "L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:BL-FL|P:right) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:BR-FR|P:left) L2(R:BL-BR-FL-FR|P:none)",
+        "L1(R:FL-FR|P:back) L2(R:BL-BR-FL-FR|P:none)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-23.obj",
+      "preview_png": "CASE-23.png"
+    },
+    {
+      "combo_id": "CASE-24",
+      "label": "L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BL-FL|P:right)",
+        "L1(R:BL-FL|P:right) L2(R:FL-FR|P:back)",
+        "L1(R:BR-FR|P:left) L2(R:BL-BR|P:front)",
+        "L1(R:FL-FR|P:back) L2(R:BR-FR|P:left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "FL"
+        ],
+        "support_panels": [
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-24.obj",
+      "preview_png": "CASE-24.png"
+    },
+    {
+      "combo_id": "CASE-25",
+      "label": "L1(R:BL-BR|P:front) L2(R:BR|P:front-left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BR|P:front-left)",
+        "L1(R:BL-FL|P:right) L2(R:BL|P:front-right)",
+        "L1(R:BR-FR|P:left) L2(R:FR|P:back-left)",
+        "L1(R:FL-FR|P:back) L2(R:FL|P:back-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BR"
+        ],
+        "support_panels": [
+          "front",
+          "left"
+        ],
+        "open_sides": [
+          "right",
+          "back"
+        ]
+      },
+      "obj": "CASE-25.obj",
+      "preview_png": "CASE-25.png"
+    },
+    {
+      "combo_id": "CASE-26",
+      "label": "L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:BR-FR|P:left)",
+        "L1(R:BL-FL|P:right) L2(R:BL-BR|P:front)",
+        "L1(R:BR-FR|P:left) L2(R:FL-FR|P:back)",
+        "L1(R:FL-FR|P:back) L2(R:BL-FL|P:right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BR",
+          "FR"
+        ],
+        "support_panels": [
+          "left"
+        ],
+        "open_sides": [
+          "front",
+          "right",
+          "back"
+        ]
+      },
+      "obj": "CASE-26.obj",
+      "preview_png": "CASE-26.png"
+    },
+    {
+      "combo_id": "CASE-27",
+      "label": "L1(R:BL-BR|P:front) L2(R:FL|P:back-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:FL|P:back-right)",
+        "L1(R:BL-FL|P:right) L2(R:FR|P:back-left)",
+        "L1(R:BR-FR|P:left) L2(R:BL|P:front-right)",
+        "L1(R:FL-FR|P:back) L2(R:BR|P:front-left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FL"
+        ],
+        "support_panels": [
+          "back",
+          "right"
+        ],
+        "open_sides": [
+          "front",
+          "left"
+        ]
+      },
+      "obj": "CASE-27.obj",
+      "preview_png": "CASE-27.png"
+    },
+    {
+      "combo_id": "CASE-28",
+      "label": "L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:FL-FR|P:back)",
+        "L1(R:BL-FL|P:right) L2(R:BR-FR|P:left)",
+        "L1(R:BR-FR|P:left) L2(R:BL-FL|P:right)",
+        "L1(R:FL-FR|P:back) L2(R:BL-BR|P:front)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FL",
+          "FR"
+        ],
+        "support_panels": [
+          "back"
+        ],
+        "open_sides": [
+          "front",
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-28.obj",
+      "preview_png": "CASE-28.png"
+    },
+    {
+      "combo_id": "CASE-29",
+      "label": "L1(R:BL-BR|P:front) L2(R:FR|P:back-left)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR|P:front) L2(R:FR|P:back-left)",
+        "L1(R:BL-FL|P:right) L2(R:BR|P:front-left)",
+        "L1(R:BR-FR|P:left) L2(R:FL|P:back-right)",
+        "L1(R:FL-FR|P:back) L2(R:BL|P:front-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "FR"
+        ],
+        "support_panels": [
+          "back",
+          "left"
+        ],
+        "open_sides": [
+          "front",
+          "right"
+        ]
+      },
+      "obj": "CASE-29.obj",
+      "preview_png": "CASE-29.png"
+    },
+    {
+      "combo_id": "CASE-30",
+      "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)",
+      "equivalent_count": 2,
+      "equivalent_members": [
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:back-front)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:none|P:left-right)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [],
+        "support_panels": [
+          "back",
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "left"
+        ]
+      },
+      "obj": "CASE-30.obj",
+      "preview_png": "CASE-30.png"
+    },
+    {
+      "combo_id": "CASE-31",
+      "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BL|P:front-right)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BR|P:front-left)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:FL|P:back-right)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:FR|P:back-left)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL"
+        ],
+        "support_panels": [
+          "front",
+          "right"
+        ],
+        "open_sides": [
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-31.obj",
+      "preview_png": "CASE-31.png"
+    },
+    {
+      "combo_id": "CASE-32",
+      "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)",
+      "equivalent_count": 4,
+      "equivalent_members": [
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR|P:front)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-FL|P:right)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BR-FR|P:left)",
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:FL-FR|P:back)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR"
+        ],
+        "support_panels": [
+          "front"
+        ],
+        "open_sides": [
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-32.obj",
+      "preview_png": "CASE-32.png"
+    },
+    {
+      "combo_id": "CASE-33",
+      "label": "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)",
+      "equivalent_count": 1,
+      "equivalent_members": [
+        "L1(R:BL-BR-FL-FR|P:none) L2(R:BL-BR-FL-FR|P:none)"
+      ],
+      "layer1": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "layer2": {
+        "rods": [
+          "BL",
+          "BR",
+          "FL",
+          "FR"
+        ],
+        "support_panels": [],
+        "open_sides": [
+          "front",
+          "right",
+          "back",
+          "left"
+        ]
+      },
+      "obj": "CASE-33.obj",
+      "preview_png": "CASE-33.png"
+    }
+  ],
+  "overview_png": "ALL_COMBOS_3D.png",
+  "interactive_html": "interactive_3d.html"
+}

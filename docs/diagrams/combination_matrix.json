@@ -1,0 +1,4802 @@
+[
+  {
+    "combo_id": "COMBO-001",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-002",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-003",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-004",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-005",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-006",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-007",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-008",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-009",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-010",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-011",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-012",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-013",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-014",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-015",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-016",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-017",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-018",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-019",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-020",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-021",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-022",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-023",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-024",
+    "option": {
+      "support_count": 1,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-025",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-026",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-027",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-028",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-029",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-030",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-031",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-032",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-033",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-034",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-035",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-036",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-037",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-038",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-039",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-040",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-041",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-042",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-043",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-044",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-045",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-046",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-047",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-048",
+    "option": {
+      "support_count": 1,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": false,
+    "rule_results": {
+      "R1": true,
+      "R2": false,
+      "R3": false,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {}
+  },
+  {
+    "combo_id": "COMBO-049",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-049.mmd",
+      "svg": "COMBO-049.svg",
+      "png": "COMBO-049.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-050",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-050.mmd",
+      "svg": "COMBO-050.svg",
+      "png": "COMBO-050.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-051",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-051.mmd",
+      "svg": "COMBO-051.svg",
+      "png": "COMBO-051.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-052",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-052.mmd",
+      "svg": "COMBO-052.svg",
+      "png": "COMBO-052.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-053",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-053.mmd",
+      "svg": "COMBO-053.svg",
+      "png": "COMBO-053.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-054",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-054.mmd",
+      "svg": "COMBO-054.svg",
+      "png": "COMBO-054.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-055",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-055.mmd",
+      "svg": "COMBO-055.svg",
+      "png": "COMBO-055.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-056",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-056.mmd",
+      "svg": "COMBO-056.svg",
+      "png": "COMBO-056.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-057",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-057.mmd",
+      "svg": "COMBO-057.svg",
+      "png": "COMBO-057.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-058",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-058.mmd",
+      "svg": "COMBO-058.svg",
+      "png": "COMBO-058.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-059",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-059.mmd",
+      "svg": "COMBO-059.svg",
+      "png": "COMBO-059.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-060",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-060.mmd",
+      "svg": "COMBO-060.svg",
+      "png": "COMBO-060.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-061",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-061.mmd",
+      "svg": "COMBO-061.svg",
+      "png": "COMBO-061.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-062",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-062.mmd",
+      "svg": "COMBO-062.svg",
+      "png": "COMBO-062.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-063",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-063.mmd",
+      "svg": "COMBO-063.svg",
+      "png": "COMBO-063.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-064",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-064.mmd",
+      "svg": "COMBO-064.svg",
+      "png": "COMBO-064.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-065",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-065.mmd",
+      "svg": "COMBO-065.svg",
+      "png": "COMBO-065.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-066",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-066.mmd",
+      "svg": "COMBO-066.svg",
+      "png": "COMBO-066.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-067",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-067.mmd",
+      "svg": "COMBO-067.svg",
+      "png": "COMBO-067.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-068",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-068.mmd",
+      "svg": "COMBO-068.svg",
+      "png": "COMBO-068.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-069",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-069.mmd",
+      "svg": "COMBO-069.svg",
+      "png": "COMBO-069.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-070",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-070.mmd",
+      "svg": "COMBO-070.svg",
+      "png": "COMBO-070.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-071",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-071.mmd",
+      "svg": "COMBO-071.svg",
+      "png": "COMBO-071.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-072",
+    "option": {
+      "support_count": 2,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-072.mmd",
+      "svg": "COMBO-072.svg",
+      "png": "COMBO-072.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-073",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-073.mmd",
+      "svg": "COMBO-073.svg",
+      "png": "COMBO-073.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-074",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-074.mmd",
+      "svg": "COMBO-074.svg",
+      "png": "COMBO-074.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-075",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-075.mmd",
+      "svg": "COMBO-075.svg",
+      "png": "COMBO-075.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-076",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-076.mmd",
+      "svg": "COMBO-076.svg",
+      "png": "COMBO-076.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-077",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-077.mmd",
+      "svg": "COMBO-077.svg",
+      "png": "COMBO-077.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-078",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-078.mmd",
+      "svg": "COMBO-078.svg",
+      "png": "COMBO-078.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-079",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-079.mmd",
+      "svg": "COMBO-079.svg",
+      "png": "COMBO-079.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-080",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-080.mmd",
+      "svg": "COMBO-080.svg",
+      "png": "COMBO-080.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-081",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-081.mmd",
+      "svg": "COMBO-081.svg",
+      "png": "COMBO-081.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-082",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-082.mmd",
+      "svg": "COMBO-082.svg",
+      "png": "COMBO-082.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-083",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-083.mmd",
+      "svg": "COMBO-083.svg",
+      "png": "COMBO-083.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-084",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-084.mmd",
+      "svg": "COMBO-084.svg",
+      "png": "COMBO-084.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-085",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-085.mmd",
+      "svg": "COMBO-085.svg",
+      "png": "COMBO-085.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-086",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-086.mmd",
+      "svg": "COMBO-086.svg",
+      "png": "COMBO-086.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-087",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-087.mmd",
+      "svg": "COMBO-087.svg",
+      "png": "COMBO-087.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-088",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-088.mmd",
+      "svg": "COMBO-088.svg",
+      "png": "COMBO-088.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-089",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-089.mmd",
+      "svg": "COMBO-089.svg",
+      "png": "COMBO-089.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-090",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-090.mmd",
+      "svg": "COMBO-090.svg",
+      "png": "COMBO-090.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-091",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-091.mmd",
+      "svg": "COMBO-091.svg",
+      "png": "COMBO-091.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-092",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-092.mmd",
+      "svg": "COMBO-092.svg",
+      "png": "COMBO-092.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-093",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-093.mmd",
+      "svg": "COMBO-093.svg",
+      "png": "COMBO-093.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-094",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-094.mmd",
+      "svg": "COMBO-094.svg",
+      "png": "COMBO-094.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-095",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-095.mmd",
+      "svg": "COMBO-095.svg",
+      "png": "COMBO-095.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-096",
+    "option": {
+      "support_count": 2,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-096.mmd",
+      "svg": "COMBO-096.svg",
+      "png": "COMBO-096.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-097",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-097.mmd",
+      "svg": "COMBO-097.svg",
+      "png": "COMBO-097.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-098",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-098.mmd",
+      "svg": "COMBO-098.svg",
+      "png": "COMBO-098.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-099",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-099.mmd",
+      "svg": "COMBO-099.svg",
+      "png": "COMBO-099.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-100",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-100.mmd",
+      "svg": "COMBO-100.svg",
+      "png": "COMBO-100.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-101",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-101.mmd",
+      "svg": "COMBO-101.svg",
+      "png": "COMBO-101.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-102",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-102.mmd",
+      "svg": "COMBO-102.svg",
+      "png": "COMBO-102.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-103",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-103.mmd",
+      "svg": "COMBO-103.svg",
+      "png": "COMBO-103.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-104",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-104.mmd",
+      "svg": "COMBO-104.svg",
+      "png": "COMBO-104.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-105",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-105.mmd",
+      "svg": "COMBO-105.svg",
+      "png": "COMBO-105.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-106",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-106.mmd",
+      "svg": "COMBO-106.svg",
+      "png": "COMBO-106.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-107",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-107.mmd",
+      "svg": "COMBO-107.svg",
+      "png": "COMBO-107.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-108",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-108.mmd",
+      "svg": "COMBO-108.svg",
+      "png": "COMBO-108.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-109",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-109.mmd",
+      "svg": "COMBO-109.svg",
+      "png": "COMBO-109.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-110",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-110.mmd",
+      "svg": "COMBO-110.svg",
+      "png": "COMBO-110.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-111",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-111.mmd",
+      "svg": "COMBO-111.svg",
+      "png": "COMBO-111.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-112",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-112.mmd",
+      "svg": "COMBO-112.svg",
+      "png": "COMBO-112.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-113",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-113.mmd",
+      "svg": "COMBO-113.svg",
+      "png": "COMBO-113.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-114",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-114.mmd",
+      "svg": "COMBO-114.svg",
+      "png": "COMBO-114.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-115",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-115.mmd",
+      "svg": "COMBO-115.svg",
+      "png": "COMBO-115.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-116",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-116.mmd",
+      "svg": "COMBO-116.svg",
+      "png": "COMBO-116.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-117",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-117.mmd",
+      "svg": "COMBO-117.svg",
+      "png": "COMBO-117.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-118",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-118.mmd",
+      "svg": "COMBO-118.svg",
+      "png": "COMBO-118.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-119",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-119.mmd",
+      "svg": "COMBO-119.svg",
+      "png": "COMBO-119.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-120",
+    "option": {
+      "support_count": 3,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-120.mmd",
+      "svg": "COMBO-120.svg",
+      "png": "COMBO-120.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-121",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-121.mmd",
+      "svg": "COMBO-121.svg",
+      "png": "COMBO-121.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-122",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-122.mmd",
+      "svg": "COMBO-122.svg",
+      "png": "COMBO-122.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-123",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-123.mmd",
+      "svg": "COMBO-123.svg",
+      "png": "COMBO-123.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-124",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-124.mmd",
+      "svg": "COMBO-124.svg",
+      "png": "COMBO-124.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-125",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-125.mmd",
+      "svg": "COMBO-125.svg",
+      "png": "COMBO-125.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-126",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-126.mmd",
+      "svg": "COMBO-126.svg",
+      "png": "COMBO-126.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-127",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-127.mmd",
+      "svg": "COMBO-127.svg",
+      "png": "COMBO-127.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-128",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-128.mmd",
+      "svg": "COMBO-128.svg",
+      "png": "COMBO-128.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-129",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-129.mmd",
+      "svg": "COMBO-129.svg",
+      "png": "COMBO-129.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-130",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-130.mmd",
+      "svg": "COMBO-130.svg",
+      "png": "COMBO-130.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-131",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-131.mmd",
+      "svg": "COMBO-131.svg",
+      "png": "COMBO-131.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-132",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-132.mmd",
+      "svg": "COMBO-132.svg",
+      "png": "COMBO-132.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-133",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-133.mmd",
+      "svg": "COMBO-133.svg",
+      "png": "COMBO-133.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-134",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-134.mmd",
+      "svg": "COMBO-134.svg",
+      "png": "COMBO-134.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-135",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-135.mmd",
+      "svg": "COMBO-135.svg",
+      "png": "COMBO-135.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-136",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-136.mmd",
+      "svg": "COMBO-136.svg",
+      "png": "COMBO-136.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-137",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-137.mmd",
+      "svg": "COMBO-137.svg",
+      "png": "COMBO-137.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-138",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-138.mmd",
+      "svg": "COMBO-138.svg",
+      "png": "COMBO-138.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-139",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-139.mmd",
+      "svg": "COMBO-139.svg",
+      "png": "COMBO-139.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-140",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-140.mmd",
+      "svg": "COMBO-140.svg",
+      "png": "COMBO-140.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-141",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-141.mmd",
+      "svg": "COMBO-141.svg",
+      "png": "COMBO-141.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-142",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-142.mmd",
+      "svg": "COMBO-142.svg",
+      "png": "COMBO-142.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-143",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-143.mmd",
+      "svg": "COMBO-143.svg",
+      "png": "COMBO-143.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-144",
+    "option": {
+      "support_count": 3,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-144.mmd",
+      "svg": "COMBO-144.svg",
+      "png": "COMBO-144.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-145",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-145.mmd",
+      "svg": "COMBO-145.svg",
+      "png": "COMBO-145.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-146",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-146.mmd",
+      "svg": "COMBO-146.svg",
+      "png": "COMBO-146.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-147",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-147.mmd",
+      "svg": "COMBO-147.svg",
+      "png": "COMBO-147.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-148",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-148.mmd",
+      "svg": "COMBO-148.svg",
+      "png": "COMBO-148.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-149",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-149.mmd",
+      "svg": "COMBO-149.svg",
+      "png": "COMBO-149.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-150",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-150.mmd",
+      "svg": "COMBO-150.svg",
+      "png": "COMBO-150.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-151",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-151.mmd",
+      "svg": "COMBO-151.svg",
+      "png": "COMBO-151.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-152",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-152.mmd",
+      "svg": "COMBO-152.svg",
+      "png": "COMBO-152.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-153",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-153.mmd",
+      "svg": "COMBO-153.svg",
+      "png": "COMBO-153.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-154",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-154.mmd",
+      "svg": "COMBO-154.svg",
+      "png": "COMBO-154.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-155",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-155.mmd",
+      "svg": "COMBO-155.svg",
+      "png": "COMBO-155.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-156",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-156.mmd",
+      "svg": "COMBO-156.svg",
+      "png": "COMBO-156.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-157",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-157.mmd",
+      "svg": "COMBO-157.svg",
+      "png": "COMBO-157.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-158",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-158.mmd",
+      "svg": "COMBO-158.svg",
+      "png": "COMBO-158.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-159",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-159.mmd",
+      "svg": "COMBO-159.svg",
+      "png": "COMBO-159.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-160",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-160.mmd",
+      "svg": "COMBO-160.svg",
+      "png": "COMBO-160.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-161",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-161.mmd",
+      "svg": "COMBO-161.svg",
+      "png": "COMBO-161.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-162",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-162.mmd",
+      "svg": "COMBO-162.svg",
+      "png": "COMBO-162.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-163",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-163.mmd",
+      "svg": "COMBO-163.svg",
+      "png": "COMBO-163.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-164",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-164.mmd",
+      "svg": "COMBO-164.svg",
+      "png": "COMBO-164.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-165",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-165.mmd",
+      "svg": "COMBO-165.svg",
+      "png": "COMBO-165.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-166",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-166.mmd",
+      "svg": "COMBO-166.svg",
+      "png": "COMBO-166.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-167",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-167.mmd",
+      "svg": "COMBO-167.svg",
+      "png": "COMBO-167.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-168",
+    "option": {
+      "support_count": 4,
+      "support_kind": "rod",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-168.mmd",
+      "svg": "COMBO-168.svg",
+      "png": "COMBO-168.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-169",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-169.mmd",
+      "svg": "COMBO-169.svg",
+      "png": "COMBO-169.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-170",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-170.mmd",
+      "svg": "COMBO-170.svg",
+      "png": "COMBO-170.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-171",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-171.mmd",
+      "svg": "COMBO-171.svg",
+      "png": "COMBO-171.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-172",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-172.mmd",
+      "svg": "COMBO-172.svg",
+      "png": "COMBO-172.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-173",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-173.mmd",
+      "svg": "COMBO-173.svg",
+      "png": "COMBO-173.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-174",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-174.mmd",
+      "svg": "COMBO-174.svg",
+      "png": "COMBO-174.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-175",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-175.mmd",
+      "svg": "COMBO-175.svg",
+      "png": "COMBO-175.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-176",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-176.mmd",
+      "svg": "COMBO-176.svg",
+      "png": "COMBO-176.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-177",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-177.mmd",
+      "svg": "COMBO-177.svg",
+      "png": "COMBO-177.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-178",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-178.mmd",
+      "svg": "COMBO-178.svg",
+      "png": "COMBO-178.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-179",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-179.mmd",
+      "svg": "COMBO-179.svg",
+      "png": "COMBO-179.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-180",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "vertical",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-180.mmd",
+      "svg": "COMBO-180.svg",
+      "png": "COMBO-180.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-181",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-181.mmd",
+      "svg": "COMBO-181.svg",
+      "png": "COMBO-181.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-182",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-182.mmd",
+      "svg": "COMBO-182.svg",
+      "png": "COMBO-182.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-183",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-183.mmd",
+      "svg": "COMBO-183.svg",
+      "png": "COMBO-183.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-184",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "corner",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-184.mmd",
+      "svg": "COMBO-184.svg",
+      "png": "COMBO-184.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-185",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-185.mmd",
+      "svg": "COMBO-185.svg",
+      "png": "COMBO-185.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-186",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-186.mmd",
+      "svg": "COMBO-186.svg",
+      "png": "COMBO-186.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-187",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-187.mmd",
+      "svg": "COMBO-187.svg",
+      "png": "COMBO-187.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-188",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "predefined_slot",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-188.mmd",
+      "svg": "COMBO-188.svg",
+      "png": "COMBO-188.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-189",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-189.mmd",
+      "svg": "COMBO-189.svg",
+      "png": "COMBO-189.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-190",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "aligned",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-190.mmd",
+      "svg": "COMBO-190.svg",
+      "png": "COMBO-190.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-191",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "front"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-191.mmd",
+      "svg": "COMBO-191.svg",
+      "png": "COMBO-191.png"
+    }
+  },
+  {
+    "combo_id": "COMBO-192",
+    "option": {
+      "support_count": 4,
+      "support_kind": "panel",
+      "support_orientation": "angled",
+      "connector_placement": "custom",
+      "contour_mode": "staggered",
+      "opening_direction": "left"
+    },
+    "combination_principles_passed": true,
+    "rule_results": {
+      "R1": true,
+      "R2": true,
+      "R3": true,
+      "R4": true,
+      "R5": true,
+      "R6": true,
+      "R7": true
+    },
+    "diagram_files": {
+      "mmd": "COMBO-192.mmd",
+      "svg": "COMBO-192.svg",
+      "png": "COMBO-192.png"
+    }
+  }
+]
