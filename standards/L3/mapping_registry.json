@@ -184,6 +184,7 @@
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
+      "sync_note": "L2 adds engineering mandatory/recommended rules; L3 keeps R1/R2 baseline symbols",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -207,6 +208,7 @@
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
+      "sync_note": "L2 expands engineering verification scenarios; L3 verify() interface remains stable",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
