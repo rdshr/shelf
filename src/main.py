@@ -75,7 +75,7 @@ def build_assumptions() -> list[dict[str, str]]:
         },
         {
             "id": "A9",
-            "statement": "FRAME 的 R4/R5 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
+            "statement": "FRAME 的 R4/R5/R6 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
             "config_key": "evaluate_structural_rules(frame path)",
         },
     ]
@@ -102,7 +102,7 @@ def write_architecture_doc() -> None:
 ## 规则流
 - R1/R2：模块种类组合过滤（FRAME/SHELF 通用）
 - R3：对所有结构适用
-- R4/R5：仅对 SHELF 适用；FRAME 视为 not applicable/pass
+- R4/R5/R6：仅对 SHELF 适用；FRAME 视为 not applicable/pass
 - FRAME 特有规则：connected、ground_contact、minimal_under_deletability、可选 forbid_dangling_rods
 - Verification：边界有效 + 组合有效 + 效率提升
 
@@ -140,8 +140,8 @@ def write_math_model_doc() -> None:
 
 ## 5. 规则适用域
 - `R3` 对所有结构适用。
-- `R4/R5` 仅对存在 panel 的结构（SHELF）适用。
-- 对 FRAME 结构，`R4/R5` 视为 `not applicable / pass`，并启用 frame-specific 规则。
+- `R4/R5/R6` 仅对存在 panel 的结构（SHELF）适用。
+- 对 FRAME 结构，`R4/R5/R6` 视为 `not applicable / pass`，并启用 frame-specific 规则。
 
 ## 6. 计数框架
 设第 `k` 层占用区域为 `Q_k`，其矩形板分割方式数为 `tau(Q_k)`。
@@ -217,7 +217,7 @@ def write_slides_outline_doc() -> None:
 3. 歧义与假设闭环
 4. 三层对象分离：组合/分型/实例
 5. 离散网格建模
-6. R1-R5 规则形式化
+6. R1-R6 规则形式化
 7. 穷举器与剪枝策略
 8. canonical 去重
 9. 效率函数与 baseline
@@ -489,7 +489,7 @@ def main() -> None:
                     "R1",
                     "R2",
                     "R3(all)",
-                    "R4/R5(shelf-only)",
+                    "R4/R5/R6(shelf-only)",
                     "FRAME.connected",
                     "FRAME.ground_contact",
                     "FRAME.minimal_under_deletability",

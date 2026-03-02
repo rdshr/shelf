@@ -70,6 +70,13 @@
                     "children": []
                   },
                   {
+                    "id": "NODE-L3-STRUCTURAL-RULES",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "src/rules/structural_rules.py",
+                    "children": []
+                  },
+                  {
                     "id": "NODE-L3-MAIN",
                     "kind": "file",
                     "level": "L3",
@@ -216,6 +223,10 @@
         {
           "file": "src/shelf_framework.py",
           "symbol": "def exact_fit("
+        },
+        {
+          "file": "src/rules/structural_rules.py",
+          "symbol": "def check_r6_projected_panel_gain("
         }
       ]
     },

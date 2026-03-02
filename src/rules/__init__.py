@@ -14,6 +14,7 @@ from rules.structural_rules import (
     check_r3_rods_orthogonal,
     check_r4_board_parallel,
     check_r5_exact_fit,
+    check_r6_projected_panel_gain,
     evaluate_structural_rules,
 )
 
@@ -28,6 +29,7 @@ __all__ = [
     "check_r3_rods_orthogonal",
     "check_r4_board_parallel",
     "check_r5_exact_fit",
+    "check_r6_projected_panel_gain",
     "classify_combo_sets",
     "evaluate_structural_rules",
     "geometric_type_combinations",

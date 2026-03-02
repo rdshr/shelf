@@ -75,7 +75,7 @@ def verify_structure(
     if topology.family == StructureFamily.FRAME:
         reasons.append("family-specific verification path: FRAME (R4/R5 not applicable, frame rules enabled)")
     else:
-        reasons.append("family-specific verification path: SHELF (R3/R4/R5)")
+        reasons.append("family-specific verification path: SHELF (R3/R4/R5/R6)")
 
     passed = base.passed and structural_valid
 

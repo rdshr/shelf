@@ -24,14 +24,19 @@ from verification import verify_structure
 class VerificationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.boundary = BoundaryDefinition(
-            layers_n=1,
+            layers_n=2,
             payload_p_per_layer=10.0,
             space_s_per_layer=Space3D(width=10.0, depth=10.0, height=10.0),
             opening_o=Opening2D(width=10.0, height=10.0),
             footprint_a=Footprint2D(width=10.0, depth=10.0),
         )
-        self.grid = DiscreteGrid(x_cells=1, y_cells=1, layers_n=1, cell_width=10.0, cell_depth=10.0)
-        self.topology = StructureTopology(panels=(PanelPlacement(rect=Rect2D(0, 1, 0, 1), layer_index=0),))
+        self.grid = DiscreteGrid(x_cells=1, y_cells=1, layers_n=2, cell_width=10.0, cell_depth=10.0)
+        self.topology = StructureTopology(
+            panels=(
+                PanelPlacement(rect=Rect2D(0, 1, 0, 1), layer_index=0),
+                PanelPlacement(rect=Rect2D(0, 1, 0, 1), layer_index=1),
+            )
+        )
         self.frame_topology = StructureTopology(
             family=StructureFamily.FRAME,
             frame_cells=frozenset({(0, 0, 0)}),
@@ -71,15 +76,28 @@ class VerificationTest(unittest.TestCase):
         )
         self.assertFalse(result.passed)
 
+    def test_projection_gain_rule_r6_fails_when_weighted_cells_not_greater_than_footprint(self) -> None:
+        single_layer = StructureTopology(
+            panels=(PanelPlacement(rect=Rect2D(0, 1, 0, 1), layer_index=0),)
+        )
+        report = verify_structure(single_layer, self.boundary, self.grid, baseline_efficiency=0.0)
+        self.assertFalse(report.passed)
+        r6 = next(item for item in report.structural_checks if item.name == "R6")
+        self.assertFalse(r6.passed)
+        self.assertTrue(any("weighted projected panel cells must be > footprint cells" in msg for msg in r6.reasons))
+
     def test_frame_without_panel_not_failed_by_r4_r5(self) -> None:
         report = verify_structure(self.frame_topology, self.boundary, self.grid, baseline_efficiency=0.0)
         self.assertTrue(report.passed)
         r4 = next(item for item in report.structural_checks if item.name == "R4")
         r5 = next(item for item in report.structural_checks if item.name == "R5")
+        r6 = next(item for item in report.structural_checks if item.name == "R6")
         self.assertTrue(r4.passed)
         self.assertTrue(r5.passed)
+        self.assertTrue(r6.passed)
         self.assertTrue(any("not applicable" in msg for msg in r4.reasons))
         self.assertTrue(any("not applicable" in msg for msg in r5.reasons))
+        self.assertTrue(any("not applicable" in msg for msg in r6.reasons))
 
 
 if __name__ == "__main__":

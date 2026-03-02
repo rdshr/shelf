@@ -83,6 +83,27 @@ def check_r5_exact_fit(topology: StructureTopology, grid: DiscreteGrid) -> Struc
     return StructuralCheck(name="R5", passed=all_passed, reasons=reasons)
 
 
+def check_r6_projected_panel_gain(topology: StructureTopology, grid: DiscreteGrid) -> StructuralCheck:
+    """R6: weighted projected panel coverage must be strictly greater than footprint cell count."""
+    if topology.family == StructureFamily.FRAME:
+        return StructuralCheck("R6", True, ["R6 not applicable for FRAME; treated as pass"])
+
+    occupied_by_layer = topology.occupied_cells_by_layer()
+    weighted_cells = sum(len(cells) for cells in occupied_by_layer.values())
+    footprint_cells = grid.x_cells * grid.y_cells
+    passed = weighted_cells > footprint_cells
+    if passed:
+        reasons: list[str] = []
+    else:
+        reasons = [
+            (
+                "R6 failed: weighted projected panel cells must be > footprint cells "
+                f"(weighted={weighted_cells}, footprint={footprint_cells})"
+            )
+        ]
+    return StructuralCheck(name="R6", passed=passed, reasons=reasons)
+
+
 def check_frame_connected(topology: StructureTopology, _grid: DiscreteGrid) -> StructuralCheck:
     if topology.family != StructureFamily.FRAME:
         return StructuralCheck("FRAME.connected", True, ["not a FRAME topology"])
@@ -174,6 +195,7 @@ def evaluate_structural_rules(
         check_r3_rods_orthogonal(topology, grid),
         check_r4_board_parallel(topology, grid),
         check_r5_exact_fit(topology, grid),
+        check_r6_projected_panel_gain(topology, grid),
     ]
     if topology.family == StructureFamily.FRAME:
         checks.extend(
