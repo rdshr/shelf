@@ -184,7 +184,7 @@
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
-      "sync_note": "L2 adds engineering mandatory/recommended rules; L3 keeps R1/R2 baseline symbols",
+      "sync_note": "L2 R1/R2/E1-E6/S1-S5 are fully implemented as executable combination and structure rules in L3",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -192,7 +192,47 @@
         },
         {
           "file": "src/shelf_framework.py",
+          "symbol": "class RuleContext"
+        },
+        {
+          "file": "src/shelf_framework.py",
           "symbol": "class CombinationRules"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class ShelfStructure"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class PanelLayer"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class SupportUnit"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class ConnectorUnit"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class RodPanelConnection"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class OpeningPreference"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def valid_subsets("
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def evaluate_rules("
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def assess_rule_deletions("
         },
         {
           "file": "src/shelf_framework.py",
@@ -208,7 +248,7 @@
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
-      "sync_note": "L2 expands engineering verification scenarios; L3 verify() interface remains stable",
+      "sync_note": "L2 verification conditions map to boundary/combo/engineering-rule checks with explicit failure reasons",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -220,7 +260,15 @@
         },
         {
           "file": "src/shelf_framework.py",
+          "symbol": "class RuleDeletionAssessment"
+        },
+        {
+          "file": "src/shelf_framework.py",
           "symbol": "def verify("
+        },
+        {
+          "file": "src/main.py",
+          "symbol": "verification_input = VerificationInput("
         },
         {
           "file": "src/main.py",

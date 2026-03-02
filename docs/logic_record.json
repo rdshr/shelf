@@ -75,7 +75,9 @@
         "B1",
         "B2"
       ],
-      "evidence": {}
+      "evidence": {
+        "module": "rod"
+      }
     },
     {
       "step_id": "M2",
@@ -84,7 +86,9 @@
         "B1",
         "B4"
       ],
-      "evidence": {}
+      "evidence": {
+        "module": "connector"
+      }
     },
     {
       "step_id": "M3",
@@ -93,43 +97,315 @@
         "B2",
         "B3"
       ],
-      "evidence": {}
+      "evidence": {
+        "module": "panel"
+      }
     },
     {
       "step_id": "R1",
-      "label": "no isolated module",
+      "label": "len(combo) >= 2",
       "depends_on": [
         "M1",
         "M2",
         "M3"
       ],
-      "evidence": {}
+      "evidence": {
+        "passed": true
+      }
     },
     {
       "step_id": "R2",
-      "label": "connector is mandatory",
+      "label": "connector in combo",
       "depends_on": [
         "M2"
       ],
-      "evidence": {}
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E1",
+      "label": ">=2 parallel panels",
+      "depends_on": [
+        "M3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E2",
+      "label": ">=2 supports per panel",
+      "depends_on": [
+        "M1",
+        "M3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E3",
+      "label": "rod-panel through connector",
+      "depends_on": [
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E4",
+      "label": "single connected graph",
+      "depends_on": [
+        "E3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E5",
+      "label": "layer bounds within boundary",
+      "depends_on": [
+        "B1",
+        "B3",
+        "B5"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "E6",
+      "label": "forbid undefined penetration/intersection/floating",
+      "depends_on": [
+        "E3"
+      ],
+      "evidence": {
+        "passed": true
+      }
+    },
+    {
+      "step_id": "S1",
+      "label": "prefer vertical rod-panel",
+      "depends_on": [
+        "E2"
+      ],
+      "evidence": {
+        "passed": true,
+        "deletable": true
+      }
+    },
+    {
+      "step_id": "S2",
+      "label": "prefer 4 supports per layer",
+      "depends_on": [
+        "E2"
+      ],
+      "evidence": {
+        "passed": true,
+        "deletable": true
+      }
+    },
+    {
+      "step_id": "S3",
+      "label": "prefer corner/predefined connector",
+      "depends_on": [
+        "E3"
+      ],
+      "evidence": {
+        "passed": true,
+        "deletable": true
+      }
+    },
+    {
+      "step_id": "S4",
+      "label": "prefer aligned layer contours",
+      "depends_on": [
+        "E1"
+      ],
+      "evidence": {
+        "passed": true,
+        "deletable": true
+      }
+    },
+    {
+      "step_id": "S5",
+      "label": "opening preference configuration",
+      "depends_on": [
+        "B4"
+      ],
+      "evidence": {
+        "passed": true,
+        "deletable": true
+      }
+    },
+    {
+      "step_id": "D1",
+      "label": "rule deletion assessment",
+      "depends_on": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "evidence": {
+        "items": [
+          {
+            "rule_id": "R1",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "R2",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E1",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E2",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E3",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E4",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E5",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "E6",
+            "mandatory": true,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": false,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "S1",
+            "mandatory": false,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": true,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "S2",
+            "mandatory": false,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": true,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "S3",
+            "mandatory": false,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": true,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "S4",
+            "mandatory": false,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": true,
+            "mandatory_conflict": false
+          },
+          {
+            "rule_id": "S5",
+            "mandatory": false,
+            "baseline_passed": true,
+            "passed_after_removal": true,
+            "target_not_degraded": true,
+            "removable": true,
+            "mandatory_conflict": false
+          }
+        ],
+        "mandatory_conflict_count": 0
+      }
     },
     {
       "step_id": "H1",
       "label": "efficiency improves under valid constraints",
       "depends_on": [
         "R1",
-        "R2"
+        "R2",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
       ],
-      "evidence": {}
+      "evidence": {
+        "statement_valid": true
+      }
     },
     {
       "step_id": "V1",
       "label": "verify hypothesis",
       "depends_on": [
-        "H1"
+        "H1",
+        "D1"
       ],
       "evidence": {
-        "passed": true
+        "passed": true,
+        "boundary_valid": true,
+        "combination_valid": true,
+        "efficiency_improved": true,
+        "reasons": []
       }
     },
     {
