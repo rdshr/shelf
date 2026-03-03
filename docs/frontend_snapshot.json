@@ -1,0 +1,2083 @@
+{
+  "goal": {
+    "statement": "Increase storage access efficiency per footprint area"
+  },
+  "boundary": {
+    "layers_n": 3,
+    "payload_p_per_layer": 30.0,
+    "space_s_per_layer": {
+      "width": 1.0,
+      "depth": 1.0,
+      "height": 1.0
+    },
+    "opening_o": {
+      "width": 0.8,
+      "height": 0.9
+    },
+    "footprint_a": {
+      "width": 1.0,
+      "depth": 1.0
+    }
+  },
+  "hypothesis": {
+    "hypothesis_id": "H1",
+    "statement": "With valid boundary and combination, access efficiency should improve"
+  },
+  "modules": [
+    {
+      "name": "vertical_rod",
+      "role": "vertical load-bearing support"
+    },
+    {
+      "name": "horizontal_rod",
+      "role": "panel support beam"
+    },
+    {
+      "name": "connector",
+      "role": "joint between structural members"
+    },
+    {
+      "name": "panel",
+      "role": "placement surface"
+    }
+  ],
+  "strict_mapping": {
+    "level": "L3",
+    "registry": "standards/L3/mapping_registry.json",
+    "validation_command": "uv run python scripts/validate_strict_mapping.py --check-changes"
+  },
+  "combination_catalog": {
+    "total_count": 16,
+    "valid_count": 1,
+    "invalid_count": 15,
+    "all_combinations": [
+      {
+        "combo_id": "empty",
+        "modules": [],
+        "module_count": 0,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": false
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector",
+        "modules": [
+          "connector"
+        ],
+        "module_count": 1,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": false
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "horizontal_rod",
+        "modules": [
+          "horizontal_rod"
+        ],
+        "module_count": 1,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": false
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "panel",
+        "modules": [
+          "panel"
+        ],
+        "module_count": 1,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": false
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "vertical_rod",
+        "modules": [
+          "vertical_rod"
+        ],
+        "module_count": 1,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": false
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+horizontal_rod",
+        "modules": [
+          "connector",
+          "horizontal_rod"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+panel",
+        "modules": [
+          "connector",
+          "panel"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+vertical_rod",
+        "modules": [
+          "connector",
+          "vertical_rod"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "horizontal_rod+panel",
+        "modules": [
+          "horizontal_rod",
+          "panel"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "horizontal_rod+vertical_rod",
+        "modules": [
+          "horizontal_rod",
+          "vertical_rod"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "panel+vertical_rod",
+        "modules": [
+          "panel",
+          "vertical_rod"
+        ],
+        "module_count": 2,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+horizontal_rod+panel",
+        "modules": [
+          "connector",
+          "horizontal_rod",
+          "panel"
+        ],
+        "module_count": 3,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+horizontal_rod+vertical_rod",
+        "modules": [
+          "connector",
+          "horizontal_rod",
+          "vertical_rod"
+        ],
+        "module_count": 3,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+panel+vertical_rod",
+        "modules": [
+          "connector",
+          "panel",
+          "vertical_rod"
+        ],
+        "module_count": 3,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "horizontal_rod+panel+vertical_rod",
+        "modules": [
+          "horizontal_rod",
+          "panel",
+          "vertical_rod"
+        ],
+        "module_count": 3,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": false
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": false
+          }
+        ],
+        "valid": false
+      },
+      {
+        "combo_id": "connector+horizontal_rod+panel+vertical_rod",
+        "modules": [
+          "connector",
+          "horizontal_rod",
+          "panel",
+          "vertical_rod"
+        ],
+        "module_count": 4,
+        "rule_checks": [
+          {
+            "rule_id": "R1",
+            "description": "module set must not be isolated",
+            "passed": true
+          },
+          {
+            "rule_id": "R2",
+            "description": "connector must exist in every usable combination",
+            "passed": true
+          },
+          {
+            "rule_id": "R3",
+            "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+            "passed": true
+          }
+        ],
+        "valid": true
+      }
+    ],
+    "valid_combo_ids": [
+      "connector+horizontal_rod+panel+vertical_rod"
+    ],
+    "valid_combinations": [
+      [
+        "connector",
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ]
+    ],
+    "by_size": [
+      {
+        "module_count": 0,
+        "total_count": 1,
+        "valid_count": 0,
+        "invalid_count": 1
+      },
+      {
+        "module_count": 1,
+        "total_count": 4,
+        "valid_count": 0,
+        "invalid_count": 4
+      },
+      {
+        "module_count": 2,
+        "total_count": 6,
+        "valid_count": 0,
+        "invalid_count": 6
+      },
+      {
+        "module_count": 3,
+        "total_count": 4,
+        "valid_count": 0,
+        "invalid_count": 4
+      },
+      {
+        "module_count": 4,
+        "total_count": 1,
+        "valid_count": 1,
+        "invalid_count": 0
+      }
+    ],
+    "module_coverage": [
+      {
+        "module": "vertical_rod",
+        "role": "vertical load-bearing support",
+        "valid_combo_count": 1
+      },
+      {
+        "module": "horizontal_rod",
+        "role": "panel support beam",
+        "valid_combo_count": 1
+      },
+      {
+        "module": "connector",
+        "role": "joint between structural members",
+        "valid_combo_count": 1
+      },
+      {
+        "module": "panel",
+        "role": "placement surface",
+        "valid_combo_count": 1
+      }
+    ],
+    "rule_pass_rate": [
+      {
+        "rule_id": "R1",
+        "description": "module set must not be isolated",
+        "passed_count": 11,
+        "failed_count": 5
+      },
+      {
+        "rule_id": "R2",
+        "description": "connector must exist in every usable combination",
+        "passed_count": 8,
+        "failed_count": 8
+      },
+      {
+        "rule_id": "R3",
+        "description": "minimum structure requires vertical_rod + horizontal_rod + connector + panel",
+        "passed_count": 1,
+        "failed_count": 15
+      }
+    ]
+  },
+  "validation_scenario": {
+    "dimension": {
+      "unit_footprint_area": 1,
+      "total_area_units": 1,
+      "max_shelves_in_unit_area": 4,
+      "shelf_slots_per_unit_area": 4,
+      "layout_grid": {
+        "rows": 2,
+        "cols": 2
+      }
+    },
+    "layer_constraint": {
+      "min_inclusive": 1,
+      "max_exclusive": 4,
+      "allowed_values": [
+        1,
+        2,
+        3
+      ],
+      "rule": "1 <= layers_n < 4"
+    },
+    "efficiency_rule": {
+      "at_least_one_shelf_min_layers": 2,
+      "rule": "at least one shelf in the unit footprint must have layers_n >= 2",
+      "statement": "to improve access efficiency per unit footprint, at least one shelf must be configured with 2 or more layers"
+    },
+    "minimum_structure_rule": {
+      "single_layer": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "formula": {
+        "vertical_rod": ">= 4",
+        "connector": ">= 4 * layers_n",
+        "horizontal_rod": ">= 4 * layers_n",
+        "panel": ">= layers_n"
+      },
+      "statement": "minimum structure requires 4 vertical rods; every layer needs 4 connectors and 4 horizontal rods to support panel"
+    }
+  },
+  "required_component_counts_for_boundary_layers": {
+    "vertical_rod": 4,
+    "horizontal_rod": 12,
+    "connector": 12,
+    "panel": 3
+  },
+  "unit_variants": [
+    {
+      "variant_id": "empty|L1",
+      "combo_id": "empty",
+      "modules": [],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "empty|L2",
+      "combo_id": "empty",
+      "modules": [],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 8; got 0",
+        "connector must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "empty|L3",
+      "combo_id": "empty",
+      "modules": [],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 12; got 0",
+        "connector must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector|L1",
+      "combo_id": "connector",
+      "modules": [
+        "connector"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 4,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector|L2",
+      "combo_id": "connector",
+      "modules": [
+        "connector"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 8,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector|L3",
+      "combo_id": "connector",
+      "modules": [
+        "connector"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 12,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod|L1",
+      "combo_id": "horizontal_rod",
+      "modules": [
+        "horizontal_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 4,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod|L2",
+      "combo_id": "horizontal_rod",
+      "modules": [
+        "horizontal_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 8,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod|L3",
+      "combo_id": "horizontal_rod",
+      "modules": [
+        "horizontal_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 12,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel|L1",
+      "combo_id": "panel",
+      "modules": [
+        "panel"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel|L2",
+      "combo_id": "panel",
+      "modules": [
+        "panel"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 8; got 0",
+        "connector must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel|L3",
+      "combo_id": "panel",
+      "modules": [
+        "panel"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 12; got 0",
+        "connector must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "vertical_rod|L1",
+      "combo_id": "vertical_rod",
+      "modules": [
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "vertical_rod|L2",
+      "combo_id": "vertical_rod",
+      "modules": [
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 8; got 0",
+        "connector must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "vertical_rod|L3",
+      "combo_id": "vertical_rod",
+      "modules": [
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 12; got 0",
+        "connector must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod|L1",
+      "combo_id": "connector+horizontal_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod|L2",
+      "combo_id": "connector+horizontal_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod|L3",
+      "combo_id": "connector+horizontal_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel|L1",
+      "combo_id": "connector+panel",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 4,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel|L2",
+      "combo_id": "connector+panel",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 8,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel|L3",
+      "combo_id": "connector+panel",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 0,
+        "connector": 12,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "horizontal_rod must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+vertical_rod|L1",
+      "combo_id": "connector+vertical_rod",
+      "modules": [
+        "connector",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 4,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+vertical_rod|L2",
+      "combo_id": "connector+vertical_rod",
+      "modules": [
+        "connector",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 8,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+vertical_rod|L3",
+      "combo_id": "connector+vertical_rod",
+      "modules": [
+        "connector",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 12,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel|L1",
+      "combo_id": "horizontal_rod+panel",
+      "modules": [
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 4,
+        "connector": 0,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel|L2",
+      "combo_id": "horizontal_rod+panel",
+      "modules": [
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 8,
+        "connector": 0,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel|L3",
+      "combo_id": "horizontal_rod+panel",
+      "modules": [
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 12,
+        "connector": 0,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0",
+        "connector must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+vertical_rod|L1",
+      "combo_id": "horizontal_rod+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "connector must be >= 4; got 0",
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+vertical_rod|L2",
+      "combo_id": "horizontal_rod+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "connector must be >= 8; got 0",
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+vertical_rod|L3",
+      "combo_id": "horizontal_rod+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 0,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "connector must be >= 12; got 0",
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel+vertical_rod|L1",
+      "combo_id": "panel+vertical_rod",
+      "modules": [
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 4; got 0",
+        "connector must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel+vertical_rod|L2",
+      "combo_id": "panel+vertical_rod",
+      "modules": [
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 8; got 0",
+        "connector must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "panel+vertical_rod|L3",
+      "combo_id": "panel+vertical_rod",
+      "modules": [
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 0,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 12; got 0",
+        "connector must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel|L1",
+      "combo_id": "connector+horizontal_rod+panel",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel|L2",
+      "combo_id": "connector+horizontal_rod+panel",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel|L3",
+      "combo_id": "connector+horizontal_rod+panel",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 0,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "vertical_rod must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+vertical_rod|L1",
+      "combo_id": "connector+horizontal_rod+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "panel must be >= 1; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+vertical_rod|L2",
+      "combo_id": "connector+horizontal_rod+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "panel must be >= 2; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+vertical_rod|L3",
+      "combo_id": "connector+horizontal_rod+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 0
+      },
+      "structure_reasons": [
+        "panel must be >= 3; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel+vertical_rod|L1",
+      "combo_id": "connector+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 4,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel+vertical_rod|L2",
+      "combo_id": "connector+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 8,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+panel+vertical_rod|L3",
+      "combo_id": "connector+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 0,
+        "connector": 12,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "horizontal_rod must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel+vertical_rod|L1",
+      "combo_id": "horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 0,
+        "panel": 1
+      },
+      "structure_reasons": [
+        "connector must be >= 4; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel+vertical_rod|L2",
+      "combo_id": "horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 0,
+        "panel": 2
+      },
+      "structure_reasons": [
+        "connector must be >= 8; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "horizontal_rod+panel+vertical_rod|L3",
+      "combo_id": "horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": false,
+      "layer_valid": true,
+      "structure_valid": false,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 0,
+        "panel": 3
+      },
+      "structure_reasons": [
+        "connector must be >= 12; got 0"
+      ],
+      "valid": false
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel+vertical_rod|L1",
+      "combo_id": "connector+horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 1,
+      "combo_valid": true,
+      "layer_valid": true,
+      "structure_valid": true,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 4,
+        "connector": 4,
+        "panel": 1
+      },
+      "structure_reasons": [],
+      "valid": true
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel+vertical_rod|L2",
+      "combo_id": "connector+horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 2,
+      "combo_valid": true,
+      "layer_valid": true,
+      "structure_valid": true,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 8,
+        "connector": 8,
+        "panel": 2
+      },
+      "structure_reasons": [],
+      "valid": true
+    },
+    {
+      "variant_id": "connector+horizontal_rod+panel+vertical_rod|L3",
+      "combo_id": "connector+horizontal_rod+panel+vertical_rod",
+      "modules": [
+        "connector",
+        "horizontal_rod",
+        "panel",
+        "vertical_rod"
+      ],
+      "layers_n": 3,
+      "combo_valid": true,
+      "layer_valid": true,
+      "structure_valid": true,
+      "required_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "actual_component_counts": {
+        "vertical_rod": 4,
+        "horizontal_rod": 12,
+        "connector": 12,
+        "panel": 3
+      },
+      "structure_reasons": [],
+      "valid": true
+    }
+  ],
+  "layout_statistics": {
+    "slot_count": 4,
+    "efficiency_min_layers": 2,
+    "unit_variant_total": 48,
+    "unit_variant_valid": 3,
+    "unit_variant_invalid": 45,
+    "efficiency_qualified_variant_count": 2,
+    "efficiency_unqualified_variant_count": 1,
+    "total_layout_count": 5308416,
+    "valid_layout_count": 80,
+    "invalid_layout_count": 5308336,
+    "efficiency_rule_fail_layout_count": 1,
+    "invalid_unit_distribution": [
+      {
+        "invalid_units": 0,
+        "layout_count": 81
+      },
+      {
+        "invalid_units": 1,
+        "layout_count": 4860
+      },
+      {
+        "invalid_units": 2,
+        "layout_count": 109350
+      },
+      {
+        "invalid_units": 3,
+        "layout_count": 1093500
+      },
+      {
+        "invalid_units": 4,
+        "layout_count": 4100625
+      }
+    ]
+  },
+  "default_layout": [
+    "connector+horizontal_rod+panel+vertical_rod|L2",
+    "connector+horizontal_rod+panel+vertical_rod|L1",
+    "connector+horizontal_rod+panel+vertical_rod|L1",
+    "connector+horizontal_rod+panel+vertical_rod|L1"
+  ],
+  "default_layout_verification": {
+    "selected_variant_ids": [
+      "connector+horizontal_rod+panel+vertical_rod|L2",
+      "connector+horizontal_rod+panel+vertical_rod|L1",
+      "connector+horizontal_rod+panel+vertical_rod|L1",
+      "connector+horizontal_rod+panel+vertical_rod|L1"
+    ],
+    "efficiency_rule_satisfied": true,
+    "passed": true,
+    "reasons": []
+  },
+  "candidate_combo": [
+    "connector",
+    "horizontal_rod",
+    "panel",
+    "vertical_rod"
+  ],
+  "valid_combinations": [
+    [
+      "connector",
+      "horizontal_rod",
+      "panel",
+      "vertical_rod"
+    ]
+  ],
+  "verification_input": {
+    "baseline_efficiency": 1.0,
+    "target_efficiency": 1.22
+  },
+  "verification": {
+    "boundary_valid": true,
+    "combination_valid": true,
+    "composition_valid": true,
+    "efficiency_improved": true,
+    "passed": true,
+    "required_component_counts": {
+      "vertical_rod": 4,
+      "horizontal_rod": 12,
+      "connector": 12,
+      "panel": 3
+    },
+    "actual_component_counts": {
+      "vertical_rod": 4,
+      "horizontal_rod": 12,
+      "connector": 12,
+      "panel": 3
+    },
+    "reasons": []
+  },
+  "logic_record_path": "docs/logic_record.json"
+}

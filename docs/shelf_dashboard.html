@@ -1,0 +1,1505 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>置物架 1 单位面积内 4 置物架验证与 3D 组合看板</title>
+    <style>
+      :root {
+        --bg: #0b0c11;
+        --bg-soft: #12141d;
+        --panel: #151821;
+        --panel-2: #11141c;
+        --line: #2a2f3d;
+        --line-soft: #212634;
+        --text: #e8edf8;
+        --muted: #8d96ad;
+        --accent: #ff2b73;
+        --accent-soft: rgba(255, 43, 115, 0.14);
+        --ok: #1cd485;
+        --ok-soft: rgba(28, 212, 133, 0.16);
+        --bad: #ff5b68;
+        --bad-soft: rgba(255, 91, 104, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: "Rajdhani", "Noto Sans SC", "PingFang SC", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(255, 43, 115, 0.11) 0%, transparent 32%),
+          radial-gradient(circle at 100% 0%, rgba(255, 43, 115, 0.08) 0%, transparent 28%),
+          linear-gradient(transparent 39px, rgba(255, 255, 255, 0.02) 40px),
+          linear-gradient(90deg, transparent 39px, rgba(255, 255, 255, 0.02) 40px),
+          var(--bg);
+        background-size: auto, auto, 40px 40px, 40px 40px, auto;
+      }
+
+      .shell {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 18px 16px 42px;
+      }
+
+      .hero {
+        position: relative;
+        padding: 20px;
+        border-radius: 16px;
+        background: linear-gradient(155deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 43, 115, 0.03) 100%);
+        border: 1px solid var(--line);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 43, 115, 0.14),
+          0 16px 28px rgba(0, 0, 0, 0.34);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(255, 43, 115, 0), var(--accent), rgba(255, 43, 115, 0));
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        font-family: "Orbitron", "Rajdhani", sans-serif;
+      }
+
+      .hero p {
+        margin: 10px 0 0;
+        color: #b8c2d8;
+      }
+
+      .tip {
+        margin-top: 12px;
+        font-size: 0.88rem;
+        color: #9ca7be;
+      }
+
+      .tip code {
+        background: #1b1f2b;
+        border: 1px solid #30374a;
+        border-radius: 4px;
+        padding: 1px 6px;
+        color: #f0f4ff;
+      }
+
+      .kpi-band {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metric-tile {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        min-height: 94px;
+        padding: 11px;
+        position: relative;
+      }
+
+      .metric-tile::before {
+        content: "";
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        top: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(255, 43, 115, 0), var(--accent), rgba(255, 43, 115, 0));
+      }
+
+      .metric-label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        letter-spacing: 0.03em;
+      }
+
+      .metric-value {
+        margin-top: 8px;
+        font-size: 1.64rem;
+        font-weight: 700;
+        color: #f4f7ff;
+      }
+
+      .workspace {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 0.98fr 1.32fr;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 13px;
+      }
+
+      .panel h2 {
+        margin: 0;
+        font-size: 1.02rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        font-family: "Orbitron", "Rajdhani", sans-serif;
+      }
+
+      .subhead {
+        margin: 12px 0 8px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #d7deee;
+      }
+
+      .scenario-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .scenario-box {
+        background: var(--panel-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 9px;
+        padding: 8px;
+      }
+
+      .scenario-k {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.03em;
+      }
+
+      .scenario-v {
+        margin-top: 4px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #f2f6ff;
+      }
+
+      .bar-row {
+        margin-bottom: 10px;
+      }
+
+      .bar-head {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #a7b2cb;
+      }
+
+      .bar-track {
+        margin-top: 4px;
+        height: 10px;
+        border-radius: 999px;
+        border: 1px solid #2d3242;
+        background: #171b24;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff2b73 0%, #ff4d8a 100%);
+        box-shadow: 0 0 10px rgba(255, 43, 115, 0.5);
+      }
+
+      .meta {
+        margin-top: 7px;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .layout-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .unit-card {
+        background: var(--panel-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 8px;
+      }
+
+      .unit-head {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .unit-head strong {
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        color: #f0f3ff;
+      }
+
+      select,
+      input[type="number"] {
+        width: 100%;
+        background: #10131b;
+        color: #f5f8ff;
+        border: 1px solid #2c3241;
+        border-radius: 8px;
+        padding: 6px 7px;
+        font-size: 0.8rem;
+      }
+
+      select:focus,
+      input[type="number"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(255, 43, 115, 0.16);
+      }
+
+      .canvas-wrap {
+        margin-top: 10px;
+        border: 1px solid #2d3446;
+        border-radius: 11px;
+        background:
+          radial-gradient(circle at 10% 12%, rgba(255, 43, 115, 0.08) 0%, transparent 34%),
+          linear-gradient(180deg, #11151f 0%, #0f1219 100%);
+        position: relative;
+        overflow: hidden;
+        height: 230px;
+      }
+
+      .canvas-wrap.mega {
+        height: 420px;
+      }
+
+      .canvas-wrap canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+        cursor: grab;
+      }
+
+      .canvas-wrap canvas.dragging {
+        cursor: grabbing;
+      }
+
+      .canvas-wrap canvas.panning {
+        cursor: move;
+      }
+
+      .overlay {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        font-size: 0.7rem;
+        color: #f0f4ff;
+        background: rgba(255, 43, 115, 0.16);
+        border: 1px solid rgba(255, 43, 115, 0.4);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+
+      .layout-status {
+        margin-top: 10px;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 10px;
+        background: #0f131b;
+      }
+
+      .layout-status.pass {
+        border-color: rgba(28, 212, 133, 0.45);
+        background: linear-gradient(160deg, rgba(28, 212, 133, 0.13) 0%, rgba(15, 19, 27, 1) 100%);
+      }
+
+      .layout-status.fail {
+        border-color: rgba(255, 91, 104, 0.5);
+        background: linear-gradient(160deg, rgba(255, 91, 104, 0.14) 0%, rgba(15, 19, 27, 1) 100%);
+      }
+
+      .list {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+
+      .combos-panel {
+        margin-top: 14px;
+      }
+
+      .combo-gallery {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+        gap: 10px;
+      }
+
+      .combo-card {
+        background: var(--panel-2);
+        border: 1px solid var(--line-soft);
+        border-left: 2px solid #2f3544;
+        border-radius: 11px;
+        padding: 10px;
+      }
+
+      .combo-card.valid {
+        border-left-color: var(--ok);
+      }
+
+      .combo-card.invalid {
+        border-left-color: var(--accent);
+      }
+
+      .combo-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .combo-id {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #edf2ff;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 1px 8px;
+        font-size: 0.7rem;
+      }
+
+      .badge.ok {
+        color: #7df0be;
+        background: rgba(28, 212, 133, 0.12);
+        border: 1px solid rgba(28, 212, 133, 0.35);
+      }
+
+      .badge.bad {
+        color: #ff8f98;
+        background: rgba(255, 91, 104, 0.14);
+        border: 1px solid rgba(255, 91, 104, 0.38);
+      }
+
+      .combo-row {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .combo-row label {
+        width: 100%;
+        font-size: 0.78rem;
+        color: #a4afc5;
+      }
+
+      .chips {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .chip {
+        font-size: 0.7rem;
+        border-radius: 999px;
+        padding: 1px 8px;
+      }
+
+      .chip.ok {
+        color: #78efbb;
+        background: rgba(28, 212, 133, 0.12);
+      }
+
+      .chip.bad {
+        color: #ff92a0;
+        background: rgba(255, 91, 104, 0.14);
+      }
+
+      .placeholder {
+        margin-top: 16px;
+        border: 1px dashed #3a4052;
+        border-radius: 12px;
+        padding: 15px;
+        background: #121722;
+        color: #9da7bf;
+      }
+
+      @media (max-width: 1200px) {
+        .kpi-band {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .shell {
+          padding: 14px 12px 34px;
+        }
+
+        .kpi-band {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .layout-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .scenario-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <h1>SHELF CONTROL SURFACE · 1 UNIT / 4 SHELVES</h1>
+        <p id="goal"></p>
+        <p class="tip">先执行 <code>uv run python src/main.py</code> 生成最新快照，再打开本页面。每个 3D 视图支持拖拽旋转，按住 Shift + 滚轮缩放，Shift + 左键拖拽可平移画布。</p>
+      </header>
+
+      <div id="app" class="placeholder">未检测到 <code>docs/frontend_snapshot.js</code>。请先运行主程序生成前端数据。</div>
+    </div>
+
+    <script src="./frontend_snapshot.js"></script>
+    <script>
+      (function () {
+        const root = document.getElementById("app");
+        const goalNode = document.getElementById("goal");
+        const data = window.SHELF_FRONTEND_DATA;
+
+        if (!data) {
+          return;
+        }
+
+        goalNode.textContent = "Objective: " + data.goal.statement;
+
+        const scenario = data.validation_scenario;
+        const catalog = data.combination_catalog;
+        const unitVariants = data.unit_variants;
+        const layoutStats = data.layout_statistics;
+
+        root.className = "";
+        root.innerHTML = `
+          <section class="kpi-band">
+            <article class="metric-tile"><div class="metric-label">模块组合总数</div><div class="metric-value">${catalog.total_count}</div></article>
+            <article class="metric-tile"><div class="metric-label">有效模块组合</div><div class="metric-value">${catalog.valid_count}</div></article>
+            <article class="metric-tile"><div class="metric-label">置物架变体总数</div><div class="metric-value">${layoutStats.unit_variant_total}</div></article>
+            <article class="metric-tile"><div class="metric-label">单单位4置物架总布局</div><div class="metric-value">${layoutStats.total_layout_count}</div></article>
+            <article class="metric-tile"><div class="metric-label">单单位4置物架有效布局</div><div class="metric-value">${layoutStats.valid_layout_count}</div></article>
+          </section>
+
+          <section class="workspace">
+            <article class="panel scenario-panel">
+              <h2>规则与边界</h2>
+              <div class="scenario-grid">
+                <div class="scenario-box"><div class="scenario-k">单位占地面积</div><div class="scenario-v">${scenario.dimension.unit_footprint_area}</div></div>
+                <div class="scenario-box"><div class="scenario-k">总面积单位数</div><div class="scenario-v">${scenario.dimension.total_area_units}</div></div>
+                <div class="scenario-box"><div class="scenario-k">单位内置物架数量</div><div class="scenario-v">${scenario.dimension.max_shelves_in_unit_area}</div></div>
+                <div class="scenario-box"><div class="scenario-k">布局网格</div><div class="scenario-v">${scenario.dimension.layout_grid.rows} x ${scenario.dimension.layout_grid.cols}</div></div>
+                <div class="scenario-box"><div class="scenario-k">层数约束</div><div class="scenario-v">${scenario.layer_constraint.rule}</div></div>
+                <div class="scenario-box"><div class="scenario-k">允许层数</div><div class="scenario-v">${scenario.layer_constraint.allowed_values.join(", ")}</div></div>
+                <div class="scenario-box"><div class="scenario-k">单层最小竖杆</div><div class="scenario-v">${scenario.minimum_structure_rule.single_layer.vertical_rod}</div></div>
+                <div class="scenario-box"><div class="scenario-k">单层最小横杆</div><div class="scenario-v">${scenario.minimum_structure_rule.single_layer.horizontal_rod}</div></div>
+                <div class="scenario-box"><div class="scenario-k">单层最小接口</div><div class="scenario-v">${scenario.minimum_structure_rule.single_layer.connector}</div></div>
+                <div class="scenario-box"><div class="scenario-k">单层最小隔板</div><div class="scenario-v">${scenario.minimum_structure_rule.single_layer.panel}</div></div>
+              </div>
+              <div class="meta">${scenario.minimum_structure_rule.statement}</div>
+              <div class="meta">${scenario.efficiency_rule.statement}</div>
+              <div class="meta">该维度下在同一个单位面积内放置 4 个“组合+层数”置物架变体，并拼成同一整体。</div>
+              <div class="subhead">无效置物架分布</div>
+              <div id="distribution-bars"></div>
+            </article>
+
+            <article class="panel stage-panel">
+              <h2>1 单位面积 · 4 置物架整体 3D 验证器</h2>
+              <div id="layout-grid" class="layout-grid"></div>
+              <div class="canvas-wrap mega">
+                <canvas id="layout-canvas"></canvas>
+                <div class="overlay">拖拽旋转（统一视角） | Shift+滚轮缩放 | Shift+左键平移</div>
+              </div>
+              <div id="layout-status" class="layout-status"></div>
+            </article>
+          </section>
+
+          <section class="panel combos-panel">
+            <h2>全组合 3D 模型库（拖拽旋转 + Shift+滚轮缩放 + Shift+左键平移）</h2>
+            <div id="combo-gallery" class="combo-gallery"></div>
+          </section>
+        `;
+
+        function ratioPercent(part, total) {
+          return total === 0 ? 0 : (part / total) * 100;
+        }
+
+        function requiredCountsForLayer(layers) {
+          return {
+            vertical_rod: 4,
+            horizontal_rod: 4 * layers,
+            connector: 4 * layers,
+            panel: layers,
+          };
+        }
+
+        function actualCountsForModules(modules, layers) {
+          const moduleSet = new Set(modules);
+          const required = requiredCountsForLayer(layers);
+          return {
+            vertical_rod: moduleSet.has("vertical_rod") ? required.vertical_rod : 0,
+            horizontal_rod: moduleSet.has("horizontal_rod") ? required.horizontal_rod : 0,
+            connector: moduleSet.has("connector") ? required.connector : 0,
+            panel: moduleSet.has("panel") ? required.panel : 0,
+          };
+        }
+
+        function evaluateStructure(modules, layers) {
+          const required = requiredCountsForLayer(layers);
+          const actual = actualCountsForModules(modules, layers);
+          const reasons = [];
+          Object.keys(required).forEach((key) => {
+            if (actual[key] < required[key]) {
+              reasons.push(`${key} must be >= ${required[key]}; got ${actual[key]}`);
+            }
+          });
+          return { required, actual, passed: reasons.length === 0, reasons };
+        }
+
+        const distNode = document.getElementById("distribution-bars");
+        layoutStats.invalid_unit_distribution.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "bar-row";
+          const pct = ratioPercent(item.layout_count, layoutStats.total_layout_count);
+          row.innerHTML = `
+            <div class="bar-head"><span>${item.invalid_units} 个无效置物架</span><span>${item.layout_count}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+            <div class="meta">占比 ${pct.toFixed(2)}%</div>
+          `;
+          distNode.appendChild(row);
+        });
+
+        class ShelfModelViewer {
+          constructor(canvas, modules, layers) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext("2d");
+            this.modules = modules.slice();
+            this.layers = layers;
+            this.rotX = -0.55;
+            this.rotY = 0.75;
+            this.zoom = 1;
+            this.minZoom = 0.45;
+            this.maxZoom = 2.4;
+            this.dragging = false;
+            this.dragMode = "rotate";
+            this.lastX = 0;
+            this.lastY = 0;
+            this.panX = 0;
+            this.panY = 0;
+            this.attachEvents();
+            this.render();
+          }
+
+          attachEvents() {
+            this.canvas.addEventListener("pointerdown", (event) => {
+              if (event.button !== 0) {
+                return;
+              }
+              this.dragging = true;
+              this.dragMode = event.shiftKey ? "pan" : "rotate";
+              this.lastX = event.clientX;
+              this.lastY = event.clientY;
+              this.canvas.classList.toggle("dragging", this.dragMode === "rotate");
+              this.canvas.classList.toggle("panning", this.dragMode === "pan");
+              this.canvas.setPointerCapture(event.pointerId);
+            });
+
+            this.canvas.addEventListener("pointermove", (event) => {
+              if (!this.dragging) {
+                return;
+              }
+              const dx = event.clientX - this.lastX;
+              const dy = event.clientY - this.lastY;
+              this.lastX = event.clientX;
+              this.lastY = event.clientY;
+              if (this.dragMode === "pan") {
+                this.panX += dx;
+                this.panY += dy;
+              } else {
+                this.rotY += dx * 0.012;
+                this.rotX += dy * 0.012;
+                this.rotX = Math.max(-1.3, Math.min(1.2, this.rotX));
+              }
+              this.render();
+            });
+
+            const endDrag = () => {
+              this.dragging = false;
+              this.canvas.classList.remove("dragging");
+              this.canvas.classList.remove("panning");
+            };
+            this.canvas.addEventListener("pointerup", endDrag);
+            this.canvas.addEventListener("pointerleave", endDrag);
+            this.canvas.addEventListener("pointercancel", endDrag);
+            this.canvas.addEventListener(
+              "wheel",
+              (event) => {
+                if (!event.shiftKey) {
+                  return;
+                }
+                event.preventDefault();
+                const factor = event.deltaY < 0 ? 1.08 : 0.92;
+                this.zoom = Math.max(
+                  this.minZoom,
+                  Math.min(this.maxZoom, this.zoom * factor)
+                );
+                this.render();
+              },
+              { passive: false }
+            );
+
+            window.addEventListener("resize", () => this.render());
+          }
+
+          setModel(modules, layers) {
+            this.modules = modules.slice();
+            this.layers = layers;
+            this.render();
+          }
+
+          buildPieces() {
+            const modules = new Set(this.modules);
+            const layers = Math.max(1, Math.min(3, Number(this.layers) || 1));
+
+            const width = 120;
+            const depth = 72;
+            const layerGap = 28;
+            const panelThickness = 4;
+            const rodSize = 5;
+            const connectorSize = 8;
+            const firstLayerBottomY = 24;
+            const totalHeight = firstLayerBottomY + (layers - 1) * layerGap + panelThickness;
+
+            const pieces = [];
+
+            if (modules.has("panel")) {
+              for (let i = 0; i < layers; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY + panelThickness / 2;
+                pieces.push(this.makeCuboid(0, y, 0, width, panelThickness, depth, "panel"));
+              }
+            }
+
+            if (modules.has("vertical_rod")) {
+              const rodHeight = totalHeight;
+              const rodY = rodHeight / 2;
+              const xs = [-(width / 2 - rodSize), width / 2 - rodSize];
+              const zs = [-(depth / 2 - rodSize), depth / 2 - rodSize];
+              xs.forEach((x) => {
+                zs.forEach((z) => {
+                  pieces.push(this.makeCuboid(x, rodY, z, rodSize, rodHeight, rodSize, "vertical_rod"));
+                });
+              });
+            }
+
+            if (modules.has("horizontal_rod")) {
+              const spanX = width - rodSize * 2;
+              const spanZ = depth - rodSize * 2;
+              for (let i = 0; i < layers; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY - rodSize / 2;
+                const frontZ = depth / 2 - rodSize;
+                const backZ = -(depth / 2 - rodSize);
+                const rightX = width / 2 - rodSize;
+                const leftX = -(width / 2 - rodSize);
+
+                pieces.push(this.makeCuboid(0, y, frontZ, spanX, rodSize, rodSize, "horizontal_rod"));
+                pieces.push(this.makeCuboid(0, y, backZ, spanX, rodSize, rodSize, "horizontal_rod"));
+                pieces.push(this.makeCuboid(rightX, y, 0, rodSize, rodSize, spanZ, "horizontal_rod"));
+                pieces.push(this.makeCuboid(leftX, y, 0, rodSize, rodSize, spanZ, "horizontal_rod"));
+              }
+            }
+
+            if (modules.has("connector")) {
+              const xs = [-(width / 2 - connectorSize), width / 2 - connectorSize];
+              const zs = [-(depth / 2 - connectorSize), depth / 2 - connectorSize];
+              for (let i = 0; i < layers; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY - connectorSize / 2;
+                xs.forEach((x) => {
+                  zs.forEach((z) => {
+                    pieces.push(this.makeCuboid(x, y, z, connectorSize, connectorSize, connectorSize, "connector"));
+                  });
+                });
+              }
+            }
+
+            return pieces;
+          }
+
+          makeCuboid(cx, cy, cz, w, h, d, type) {
+            const x0 = cx - w / 2;
+            const x1 = cx + w / 2;
+            const y0 = cy - h / 2;
+            const y1 = cy + h / 2;
+            const z0 = cz - d / 2;
+            const z1 = cz + d / 2;
+
+            const palette = {
+              panel: { front: "#cf1f64", side: "#9e184d", top: "#f94b8d", back: "#7d123d", bottom: "#620d30" },
+              vertical_rod: { front: "#2f3f5a", side: "#253247", top: "#43567a", back: "#1d2738", bottom: "#161e2c" },
+              horizontal_rod: { front: "#384d72", side: "#2d3f5d", top: "#4c6998", back: "#22314a", bottom: "#1a2538" },
+              connector: { front: "#ff2b73", side: "#d51d5b", top: "#ff5b97", back: "#b6174b", bottom: "#8d113a" },
+            }[type];
+
+            return {
+              vertices: [
+                { x: x0, y: y0, z: z0 },
+                { x: x1, y: y0, z: z0 },
+                { x: x1, y: y1, z: z0 },
+                { x: x0, y: y1, z: z0 },
+                { x: x0, y: y0, z: z1 },
+                { x: x1, y: y0, z: z1 },
+                { x: x1, y: y1, z: z1 },
+                { x: x0, y: y1, z: z1 },
+              ],
+              faces: [
+                { idx: [4, 5, 6, 7], color: palette.front },
+                { idx: [1, 5, 6, 2], color: palette.side },
+                { idx: [3, 2, 6, 7], color: palette.top },
+                { idx: [0, 1, 2, 3], color: palette.back },
+                { idx: [0, 4, 7, 3], color: palette.side },
+                { idx: [0, 1, 5, 4], color: palette.bottom },
+              ],
+            };
+          }
+
+          rotatePoint(point) {
+            const cosY = Math.cos(this.rotY);
+            const sinY = Math.sin(this.rotY);
+            const x1 = point.x * cosY + point.z * sinY;
+            const z1 = -point.x * sinY + point.z * cosY;
+
+            const cosX = Math.cos(this.rotX);
+            const sinX = Math.sin(this.rotX);
+            const y2 = point.y * cosX - z1 * sinX;
+            const z2 = point.y * sinX + z1 * cosX;
+
+            return { x: x1, y: y2, z: z2 };
+          }
+
+          computeView(points, width, height, padding) {
+            if (!points.length) {
+              return {
+                scale: Math.min(width, height) * 0.01 * this.zoom,
+                centerX: width / 2 + this.panX,
+                centerY: height / 2 + this.panY,
+              };
+            }
+
+            let minX = Infinity;
+            let maxX = -Infinity;
+            let minY = Infinity;
+            let maxY = -Infinity;
+
+            points.forEach((p) => {
+              if (p.x < minX) minX = p.x;
+              if (p.x > maxX) maxX = p.x;
+              if (p.y < minY) minY = p.y;
+              if (p.y > maxY) maxY = p.y;
+            });
+
+            const spanX = Math.max(1, maxX - minX);
+            const spanY = Math.max(1, maxY - minY);
+            const safeW = Math.max(1, width - padding * 2);
+            const safeH = Math.max(1, height - padding * 2);
+            const fitScale = Math.min(safeW / spanX, safeH / spanY);
+            const scale = fitScale * this.zoom;
+            const midX = (minX + maxX) / 2;
+            const midY = (minY + maxY) / 2;
+
+            return {
+              scale,
+              centerX: width / 2 - midX * scale + this.panX,
+              centerY: height / 2 + midY * scale + this.panY,
+            };
+          }
+
+          project(point, view) {
+            return {
+              x: point.x * view.scale + view.centerX,
+              y: -point.y * view.scale + view.centerY,
+              z: point.z,
+            };
+          }
+
+          render() {
+            const rect = this.canvas.getBoundingClientRect();
+            const width = Math.max(1, rect.width);
+            const height = Math.max(1, rect.height);
+            const dpr = window.devicePixelRatio || 1;
+
+            this.canvas.width = Math.floor(width * dpr);
+            this.canvas.height = Math.floor(height * dpr);
+
+            const ctx = this.ctx;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.fillStyle = "#0b0c11";
+            ctx.fillRect(0, 0, width, height);
+
+            const pieces = this.buildPieces();
+            if (pieces.length === 0) {
+              ctx.fillStyle = "#ff6d9f";
+              ctx.font = "600 13px IBM Plex Sans, sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText("空组合（无模块）", width / 2, height / 2);
+              return;
+            }
+
+            const faces = [];
+            const allPoints = [];
+            pieces.forEach((piece) => {
+              const transformed = piece.vertices.map((point) => this.rotatePoint(point));
+              allPoints.push(...transformed);
+              piece.faces.forEach((face) => {
+                const poly3d = face.idx.map((i) => transformed[i]);
+                const avgZ = poly3d.reduce((sum, p) => sum + p.z, 0) / poly3d.length;
+                faces.push({ points3d: poly3d, z: avgZ, color: face.color });
+              });
+            });
+
+            const view = this.computeView(allPoints, width, height, 20);
+            faces.sort((a, b) => a.z - b.z);
+
+            faces.forEach((face) => {
+              const points = face.points3d.map((p) => this.project(p, view));
+              ctx.beginPath();
+              ctx.moveTo(points[0].x, points[0].y);
+              for (let i = 1; i < points.length; i += 1) {
+                ctx.lineTo(points[i].x, points[i].y);
+              }
+              ctx.closePath();
+              ctx.fillStyle = face.color;
+              ctx.fill();
+              ctx.strokeStyle = "rgba(255, 96, 153, 0.35)";
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            });
+          }
+        }
+
+        class LayoutCanvasViewer {
+          constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext("2d");
+            this.items = [];
+            this.rotX = -0.55;
+            this.rotY = 0.72;
+            this.zoom = 1;
+            this.minZoom = 0.45;
+            this.maxZoom = 2.4;
+            this.dragging = false;
+            this.dragMode = "rotate";
+            this.lastX = 0;
+            this.lastY = 0;
+            this.panX = 0;
+            this.panY = 0;
+            this.view = { scale: 1, centerX: 0, centerY: 0 };
+            this.attachEvents();
+            this.render();
+          }
+
+          attachEvents() {
+            this.canvas.addEventListener("pointerdown", (event) => {
+              if (event.button !== 0) {
+                return;
+              }
+              this.dragging = true;
+              this.dragMode = event.shiftKey ? "pan" : "rotate";
+              this.lastX = event.clientX;
+              this.lastY = event.clientY;
+              this.canvas.classList.toggle("dragging", this.dragMode === "rotate");
+              this.canvas.classList.toggle("panning", this.dragMode === "pan");
+              this.canvas.setPointerCapture(event.pointerId);
+            });
+
+            this.canvas.addEventListener("pointermove", (event) => {
+              if (!this.dragging) {
+                return;
+              }
+              const dx = event.clientX - this.lastX;
+              const dy = event.clientY - this.lastY;
+              this.lastX = event.clientX;
+              this.lastY = event.clientY;
+              if (this.dragMode === "pan") {
+                this.panX += dx;
+                this.panY += dy;
+              } else {
+                this.rotY += dx * 0.012;
+                this.rotX += dy * 0.012;
+                this.rotX = Math.max(-1.3, Math.min(1.2, this.rotX));
+              }
+              this.render();
+            });
+
+            const endDrag = () => {
+              this.dragging = false;
+              this.canvas.classList.remove("dragging");
+              this.canvas.classList.remove("panning");
+            };
+            this.canvas.addEventListener("pointerup", endDrag);
+            this.canvas.addEventListener("pointerleave", endDrag);
+            this.canvas.addEventListener("pointercancel", endDrag);
+            this.canvas.addEventListener(
+              "wheel",
+              (event) => {
+                if (!event.shiftKey) {
+                  return;
+                }
+                event.preventDefault();
+                const factor = event.deltaY < 0 ? 1.08 : 0.92;
+                this.zoom = Math.max(
+                  this.minZoom,
+                  Math.min(this.maxZoom, this.zoom * factor)
+                );
+                this.render();
+              },
+              { passive: false }
+            );
+            window.addEventListener("resize", () => this.render());
+          }
+
+          setItems(items) {
+            this.items = items.slice(0, 4);
+            this.render();
+          }
+
+          buildPieces(modules, layers) {
+            const moduleSet = new Set(modules || []);
+            const layersClamped = Math.max(1, Math.min(3, Number(layers) || 1));
+
+            const width = 92;
+            const depth = 56;
+            const layerGap = 22;
+            const panelThickness = 4;
+            const rodSize = 4;
+            const connectorSize = 7;
+            const firstLayerBottomY = 18;
+            const totalHeight = firstLayerBottomY + (layersClamped - 1) * layerGap + panelThickness;
+
+            const pieces = [];
+
+            if (moduleSet.has("panel")) {
+              for (let i = 0; i < layersClamped; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY + panelThickness / 2;
+                pieces.push(this.makeCuboid(0, y, 0, width, panelThickness, depth, "panel"));
+              }
+            }
+
+            if (moduleSet.has("vertical_rod")) {
+              const rodHeight = totalHeight;
+              const rodY = rodHeight / 2;
+              const xs = [-(width / 2 - rodSize), width / 2 - rodSize];
+              const zs = [-(depth / 2 - rodSize), depth / 2 - rodSize];
+              xs.forEach((x) => {
+                zs.forEach((z) => {
+                  pieces.push(this.makeCuboid(x, rodY, z, rodSize, rodHeight, rodSize, "vertical_rod"));
+                });
+              });
+            }
+
+            if (moduleSet.has("horizontal_rod")) {
+              const spanX = width - rodSize * 2;
+              const spanZ = depth - rodSize * 2;
+              for (let i = 0; i < layersClamped; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY - rodSize / 2;
+                const frontZ = depth / 2 - rodSize;
+                const backZ = -(depth / 2 - rodSize);
+                const rightX = width / 2 - rodSize;
+                const leftX = -(width / 2 - rodSize);
+
+                pieces.push(this.makeCuboid(0, y, frontZ, spanX, rodSize, rodSize, "horizontal_rod"));
+                pieces.push(this.makeCuboid(0, y, backZ, spanX, rodSize, rodSize, "horizontal_rod"));
+                pieces.push(this.makeCuboid(rightX, y, 0, rodSize, rodSize, spanZ, "horizontal_rod"));
+                pieces.push(this.makeCuboid(leftX, y, 0, rodSize, rodSize, spanZ, "horizontal_rod"));
+              }
+            }
+
+            if (moduleSet.has("connector")) {
+              const xs = [-(width / 2 - connectorSize), width / 2 - connectorSize];
+              const zs = [-(depth / 2 - connectorSize), depth / 2 - connectorSize];
+              for (let i = 0; i < layersClamped; i += 1) {
+                const panelBottomY = firstLayerBottomY + i * layerGap;
+                const y = panelBottomY - connectorSize / 2;
+                xs.forEach((x) => {
+                  zs.forEach((z) => {
+                    pieces.push(this.makeCuboid(x, y, z, connectorSize, connectorSize, connectorSize, "connector"));
+                  });
+                });
+              }
+            }
+
+            return pieces;
+          }
+
+          makeCuboid(cx, cy, cz, w, h, d, type) {
+            const x0 = cx - w / 2;
+            const x1 = cx + w / 2;
+            const y0 = cy - h / 2;
+            const y1 = cy + h / 2;
+            const z0 = cz - d / 2;
+            const z1 = cz + d / 2;
+
+            const palette = {
+              panel: { front: "#cf1f64", side: "#9e184d", top: "#f94b8d", back: "#7d123d", bottom: "#620d30" },
+              vertical_rod: { front: "#2f3f5a", side: "#253247", top: "#43567a", back: "#1d2738", bottom: "#161e2c" },
+              horizontal_rod: { front: "#384d72", side: "#2d3f5d", top: "#4c6998", back: "#22314a", bottom: "#1a2538" },
+              connector: { front: "#ff2b73", side: "#d51d5b", top: "#ff5b97", back: "#b6174b", bottom: "#8d113a" },
+            }[type];
+
+            return {
+              vertices: [
+                { x: x0, y: y0, z: z0 },
+                { x: x1, y: y0, z: z0 },
+                { x: x1, y: y1, z: z0 },
+                { x: x0, y: y1, z: z0 },
+                { x: x0, y: y0, z: z1 },
+                { x: x1, y: y0, z: z1 },
+                { x: x1, y: y1, z: z1 },
+                { x: x0, y: y1, z: z1 },
+              ],
+              faces: [
+                { idx: [4, 5, 6, 7], color: palette.front },
+                { idx: [1, 5, 6, 2], color: palette.side },
+                { idx: [3, 2, 6, 7], color: palette.top },
+                { idx: [0, 1, 2, 3], color: palette.back },
+                { idx: [0, 4, 7, 3], color: palette.side },
+                { idx: [0, 1, 5, 4], color: palette.bottom },
+              ],
+            };
+          }
+
+          rotatePoint(point) {
+            const cosY = Math.cos(this.rotY);
+            const sinY = Math.sin(this.rotY);
+            const x1 = point.x * cosY + point.z * sinY;
+            const z1 = -point.x * sinY + point.z * cosY;
+
+            const cosX = Math.cos(this.rotX);
+            const sinX = Math.sin(this.rotX);
+            const y2 = point.y * cosX - z1 * sinX;
+            const z2 = point.y * sinX + z1 * cosX;
+
+            return { x: x1, y: y2, z: z2 };
+          }
+
+          computeView(points, width, height, padding) {
+            if (!points.length) {
+              return {
+                scale: Math.min(width, height) * 0.01 * this.zoom,
+                centerX: width / 2 + this.panX,
+                centerY: height / 2 + this.panY,
+              };
+            }
+
+            let minX = Infinity;
+            let maxX = -Infinity;
+            let minY = Infinity;
+            let maxY = -Infinity;
+
+            points.forEach((p) => {
+              if (p.x < minX) minX = p.x;
+              if (p.x > maxX) maxX = p.x;
+              if (p.y < minY) minY = p.y;
+              if (p.y > maxY) maxY = p.y;
+            });
+
+            const spanX = Math.max(1, maxX - minX);
+            const spanY = Math.max(1, maxY - minY);
+            const safeW = Math.max(1, width - padding * 2);
+            const safeH = Math.max(1, height - padding * 2);
+            const fitScale = Math.min(safeW / spanX, safeH / spanY);
+            const scale = fitScale * this.zoom;
+            const midX = (minX + maxX) / 2;
+            const midY = (minY + maxY) / 2;
+
+            return {
+              scale,
+              centerX: width / 2 - midX * scale + this.panX,
+              centerY: height / 2 + midY * scale + this.panY,
+            };
+          }
+
+          project(point) {
+            return {
+              x: point.x * this.view.scale + this.view.centerX,
+              y: -point.y * this.view.scale + this.view.centerY,
+              z: point.z,
+            };
+          }
+
+          shortCounts(counts) {
+            const c = counts || {};
+            return `v${c.vertical_rod || 0}/h${c.horizontal_rod || 0}/c${c.connector || 0}/p${c.panel || 0}`;
+          }
+
+          drawGround() {
+            const ctx = this.ctx;
+            const corners = [
+              { x: -140, y: 0, z: -100 },
+              { x: 140, y: 0, z: -100 },
+              { x: 140, y: 0, z: 100 },
+              { x: -140, y: 0, z: 100 },
+            ].map((point) => this.project(this.rotatePoint(point)));
+
+            ctx.beginPath();
+            ctx.moveTo(corners[0].x, corners[0].y);
+            for (let i = 1; i < corners.length; i += 1) {
+              ctx.lineTo(corners[i].x, corners[i].y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = "#101620";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255, 96, 153, 0.32)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            const gridLines = [
+              [
+                { x: 0, y: 0, z: -100 },
+                { x: 0, y: 0, z: 100 },
+              ],
+              [
+                { x: -140, y: 0, z: 0 },
+                { x: 140, y: 0, z: 0 },
+              ],
+            ];
+            gridLines.forEach((line) => {
+              const points = line.map((point) =>
+                this.project(this.rotatePoint(point))
+              );
+              ctx.beginPath();
+              ctx.moveTo(points[0].x, points[0].y);
+              ctx.lineTo(points[1].x, points[1].y);
+              ctx.strokeStyle = "rgba(255, 96, 153, 0.22)";
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            });
+
+            ctx.fillStyle = "#f3f7ff";
+            ctx.font = "600 12px IBM Plex Sans, sans-serif";
+            ctx.fillText("2x2 shelf slots in one unit footprint", 12, 22);
+          }
+
+          render() {
+            const rect = this.canvas.getBoundingClientRect();
+            const width = Math.max(1, rect.width);
+            const height = Math.max(1, rect.height);
+            const dpr = window.devicePixelRatio || 1;
+
+            this.canvas.width = Math.floor(width * dpr);
+            this.canvas.height = Math.floor(height * dpr);
+
+            const ctx = this.ctx;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.fillStyle = "#0b0c11";
+            ctx.fillRect(0, 0, width, height);
+
+            const offsets = [
+              { x: -60, z: -42 },
+              { x: 60, z: -42 },
+              { x: -60, z: 42 },
+              { x: 60, z: 42 },
+            ];
+
+            const fallback = {
+              combo_id: "unknown",
+              layers_n: 1,
+              modules: [],
+              valid: false,
+              required_component_counts: {
+                vertical_rod: 4,
+                horizontal_rod: 4,
+                connector: 4,
+                panel: 1,
+              },
+              actual_component_counts: {
+                vertical_rod: 0,
+                horizontal_rod: 0,
+                connector: 0,
+                panel: 0,
+              },
+            };
+
+            const faces = [];
+            const labels = [];
+            const allPoints = [];
+
+            for (let index = 0; index < 4; index += 1) {
+              const item = this.items[index] || fallback;
+              const offset = offsets[index];
+              const pieces = this.buildPieces(item.modules, item.layers_n);
+
+              pieces.forEach((piece) => {
+                const transformed = piece.vertices.map((point) =>
+                  this.rotatePoint({
+                    x: point.x + offset.x,
+                    y: point.y,
+                    z: point.z + offset.z,
+                  })
+                );
+                allPoints.push(...transformed);
+                piece.faces.forEach((face) => {
+                  const poly3d = face.idx.map((i) => transformed[i]);
+                  const avgZ = poly3d.reduce((sum, p) => sum + p.z, 0) / poly3d.length;
+                  faces.push({ points3d: poly3d, z: avgZ, color: face.color });
+                });
+              });
+
+              const labelAnchor3d = this.rotatePoint({ x: offset.x, y: -8, z: offset.z });
+              allPoints.push(labelAnchor3d);
+              labels.push({ item, anchor3d: labelAnchor3d, index });
+            }
+
+            this.view = this.computeView(allPoints, width, height, 22);
+            this.drawGround();
+
+            faces.sort((a, b) => a.z - b.z);
+            faces.forEach((face) => {
+              const points = face.points3d.map((p) => this.project(p));
+              ctx.beginPath();
+              ctx.moveTo(points[0].x, points[0].y);
+              for (let i = 1; i < points.length; i += 1) {
+                ctx.lineTo(points[i].x, points[i].y);
+              }
+              ctx.closePath();
+              ctx.fillStyle = face.color;
+              ctx.fill();
+              ctx.strokeStyle = "rgba(255, 96, 153, 0.35)";
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            });
+
+            labels.forEach((label) => {
+              const anchor = this.project(label.anchor3d);
+              const passed = Boolean(label.item.valid);
+              const text = `S${label.index + 1} ${passed ? "VALID" : "INVALID"} L${label.item.layers_n || 1}`;
+              ctx.fillStyle = passed ? "rgba(47, 201, 134, 0.92)" : "rgba(255, 86, 113, 0.92)";
+              ctx.fillRect(anchor.x - 54, anchor.y - 18, 108, 16);
+              ctx.fillStyle = "#fff";
+              ctx.font = "700 10px IBM Plex Sans, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(text, anchor.x, anchor.y - 10);
+
+              ctx.fillStyle = "#d8e1ef";
+              ctx.font = "10px IBM Plex Sans, sans-serif";
+              ctx.fillText(
+                `Req ${this.shortCounts(label.item.required_component_counts)}`,
+                anchor.x,
+                anchor.y + 2
+              );
+              ctx.fillText(
+                `Act ${this.shortCounts(label.item.actual_component_counts)}`,
+                anchor.x,
+                anchor.y + 13
+              );
+            });
+
+            ctx.textAlign = "start";
+            ctx.textBaseline = "alphabetic";
+          }
+        }
+
+        const galleryNode = document.getElementById("combo-gallery");
+        const layerOptions = scenario.layer_constraint.allowed_values;
+
+        catalog.all_combinations.forEach((combo) => {
+          const card = document.createElement("article");
+          card.className = `combo-card ${combo.valid ? "valid" : "invalid"}`;
+
+          const modulesText = combo.modules.length ? combo.modules.join(" + ") : "空集";
+          card.innerHTML = `
+            <div class="combo-head">
+              <span class="combo-id">${combo.combo_id}</span>
+              <span class="badge ${combo.valid ? "ok" : "bad"}">${combo.valid ? "有效" : "无效"}</span>
+            </div>
+            <div class="meta">模块: ${modulesText}</div>
+            <div class="meta" data-structure></div>
+            <div class="canvas-wrap">
+              <canvas></canvas>
+              <div class="overlay">拖拽旋转 | Shift+滚轮缩放 | Shift+左键平移</div>
+            </div>
+            <div class="combo-row">
+              <label>层数
+                <select class="layer-select">
+                  ${layerOptions.map((n) => `<option value="${n}" ${n === data.boundary.layers_n ? "selected" : ""}>${n}</option>`).join("")}
+                </select>
+              </label>
+            </div>
+            <div class="chips">
+              ${combo.rule_checks
+                .map((rule) => `<span class="chip ${rule.passed ? "ok" : "bad"}">${rule.rule_id}:${rule.passed ? "PASS" : "FAIL"}</span>`)
+                .join("")}
+            </div>
+          `;
+
+          galleryNode.appendChild(card);
+
+          const canvas = card.querySelector("canvas");
+          const select = card.querySelector(".layer-select");
+          const structureNode = card.querySelector("[data-structure]");
+          const viewer = new ShelfModelViewer(canvas, combo.modules, Number(select.value));
+          const renderStructure = () => {
+            const layers = Number(select.value);
+            const struct = evaluateStructure(combo.modules, layers);
+            structureNode.textContent = `结构计数 layers=${layers} | required=${JSON.stringify(
+              struct.required
+            )} | actual=${JSON.stringify(struct.actual)} | ${
+              struct.passed ? "PASS" : "FAIL"
+            }`;
+          };
+          renderStructure();
+          select.addEventListener("change", () => {
+            viewer.setModel(combo.modules, Number(select.value));
+            renderStructure();
+          });
+        });
+
+        const layoutNode = document.getElementById("layout-grid");
+        const layoutCanvas = document.getElementById("layout-canvas");
+        const layoutCanvasViewer = new LayoutCanvasViewer(layoutCanvas);
+        const layoutStatusNode = document.getElementById("layout-status");
+        const shelfSlotCount = Number(scenario.dimension.shelf_slots_per_unit_area || 4);
+        const efficiencyMinLayers = Number(
+          (scenario.efficiency_rule && scenario.efficiency_rule.at_least_one_shelf_min_layers) || 2
+        );
+        const variantMap = new Map(unitVariants.map((variant) => [variant.variant_id, variant]));
+        const variantOptions = unitVariants.slice().sort((a, b) => {
+          if (a.valid === b.valid) {
+            return a.variant_id.localeCompare(b.variant_id);
+          }
+          return a.valid ? -1 : 1;
+        });
+
+        const unitControllers = [];
+
+        for (let i = 0; i < shelfSlotCount; i += 1) {
+          const card = document.createElement("article");
+          card.className = "unit-card";
+          const selected = data.default_layout[i] || variantOptions[0].variant_id;
+          card.innerHTML = `
+            <div class="unit-head">
+              <strong>Shelf ${i + 1}</strong>
+              <select class="unit-select">
+                ${variantOptions
+                  .map(
+                    (variant) =>
+                      `<option value="${variant.variant_id}" ${variant.variant_id === selected ? "selected" : ""}>${variant.variant_id}${
+                        variant.valid ? "" : " (invalid)"
+                      }</option>`
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div class="meta" data-info></div>
+          `;
+
+          layoutNode.appendChild(card);
+
+          const select = card.querySelector(".unit-select");
+          const info = card.querySelector("[data-info]");
+          unitControllers.push({ select, info });
+        }
+
+        function verifyLayout() {
+          const reasons = [];
+          const selectedIds = [];
+          const selectedVariants = [];
+          let hasTargetLayers = false;
+
+          unitControllers.forEach((controller, index) => {
+            const variantId = controller.select.value;
+            selectedIds.push(variantId);
+            const variant = variantMap.get(variantId);
+
+            if (!variant) {
+              controller.info.textContent = "未知变体";
+              reasons.push(`shelf-${index + 1}: unknown variant`);
+              selectedVariants.push({
+                combo_id: "unknown",
+                layers_n: 1,
+                modules: [],
+                valid: false,
+                required_component_counts: { vertical_rod: 4, horizontal_rod: 4, connector: 4, panel: 1 },
+                actual_component_counts: { vertical_rod: 0, horizontal_rod: 0, connector: 0, panel: 0 },
+              });
+              return;
+            }
+
+            controller.info.textContent = `${variant.combo_id} | layers=${variant.layers_n} | ${variant.valid ? "valid" : "invalid"} | required=${JSON.stringify(
+              variant.required_component_counts
+            )} | actual=${JSON.stringify(variant.actual_component_counts)}`;
+            selectedVariants.push(variant);
+
+            if (!variant.valid) {
+              const detail = (variant.structure_reasons || []).join("; ") || "rule mismatch";
+              reasons.push(`shelf-${index + 1}: variant is invalid (${variant.variant_id}) -> ${detail}`);
+            } else if (Number(variant.layers_n) >= efficiencyMinLayers) {
+              hasTargetLayers = true;
+            }
+          });
+
+          layoutCanvasViewer.setItems(selectedVariants);
+
+          if (selectedIds.length !== shelfSlotCount) {
+            reasons.push(`layout must contain exactly ${shelfSlotCount} shelves`);
+          }
+          if (!hasTargetLayers) {
+            reasons.push(`at least one shelf must have layers_n >= ${efficiencyMinLayers}`);
+          }
+
+          const passed = reasons.length === 0;
+          layoutStatusNode.className = `layout-status ${passed ? "pass" : "fail"}`;
+          layoutStatusNode.innerHTML = `
+            <strong>${passed ? "布局验证通过" : "布局验证失败"}</strong>
+            <div class="meta">规则: 1 个单位面积内固定放置 ${shelfSlotCount} 个置物架，层数满足 ${scenario.layer_constraint.rule}</div>
+            <div class="meta">${scenario.minimum_structure_rule.statement}</div>
+            <div class="meta">${scenario.efficiency_rule.statement}</div>
+            ${
+              reasons.length
+                ? `<ul class="list">${reasons.map((reason) => `<li>${reason}</li>`).join("")}</ul>`
+                : `<div class='meta'>当前 ${shelfSlotCount} 个置物架选择均有效，且满足至少一个置物架层数 >= ${efficiencyMinLayers}。</div>`
+            }
+          `;
+        }
+
+        unitControllers.forEach((controller) => {
+          controller.select.addEventListener("change", verifyLayout);
+        });
+
+        verifyLayout();
+      })();
+    </script>
+  </body>
+</html>

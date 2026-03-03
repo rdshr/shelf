@@ -85,16 +85,73 @@ class BoundaryDefinition:
 
 
 class Module(str, Enum):
-    ROD = "rod"
+    VERTICAL_ROD = "vertical_rod"
+    HORIZONTAL_ROD = "horizontal_rod"
     CONNECTOR = "connector"
     PANEL = "panel"
 
 
 MODULE_ROLE: dict[Module, str] = {
-    Module.ROD: "load-bearing support",
+    Module.VERTICAL_ROD: "vertical load-bearing support",
+    Module.HORIZONTAL_ROD: "panel support beam",
     Module.CONNECTOR: "joint between structural members",
     Module.PANEL: "placement surface",
 }
+
+MINIMUM_SINGLE_LAYER_COMPONENTS: dict[Module, int] = {
+    Module.VERTICAL_ROD: 4,
+    Module.HORIZONTAL_ROD: 4,
+    Module.CONNECTOR: 4,
+    Module.PANEL: 1,
+}
+
+
+def required_component_counts(layers_n: int) -> dict[Module, int]:
+    scaled_layers = max(1, int(layers_n))
+    return {
+        Module.VERTICAL_ROD: MINIMUM_SINGLE_LAYER_COMPONENTS[Module.VERTICAL_ROD],
+        Module.HORIZONTAL_ROD: (
+            MINIMUM_SINGLE_LAYER_COMPONENTS[Module.HORIZONTAL_ROD] * scaled_layers
+        ),
+        Module.CONNECTOR: MINIMUM_SINGLE_LAYER_COMPONENTS[Module.CONNECTOR]
+        * scaled_layers,
+        Module.PANEL: MINIMUM_SINGLE_LAYER_COMPONENTS[Module.PANEL] * scaled_layers,
+    }
+
+
+def component_counts_from_combo(combo: set[Module], layers_n: int) -> dict[Module, int]:
+    required = required_component_counts(layers_n)
+    return {module: (required[module] if module in combo else 0) for module in Module}
+
+
+def module_counts_to_dict(counts: dict[Module, int]) -> dict[str, int]:
+    return {module.value: int(counts.get(module, 0)) for module in Module}
+
+
+def validate_component_counts(
+    actual: dict[Module, int], required: dict[Module, int]
+) -> tuple[bool, list[str]]:
+    errors: list[str] = []
+    for module in Module:
+        actual_count = int(actual.get(module, 0))
+        required_count = int(required.get(module, 0))
+        if actual_count < required_count:
+            errors.append(
+                f"{module.value} must be >= {required_count}; got {actual_count}"
+            )
+    return (len(errors) == 0, errors)
+
+
+def evaluate_minimum_structure(combo: set[Module], layers_n: int) -> dict[str, Any]:
+    required = required_component_counts(layers_n)
+    actual = component_counts_from_combo(combo, layers_n)
+    passed, reasons = validate_component_counts(actual, required)
+    return {
+        "required_component_counts": module_counts_to_dict(required),
+        "actual_component_counts": module_counts_to_dict(actual),
+        "passed": passed,
+        "reasons": reasons,
+    }
 
 
 ComboValidator = Callable[[set[Module]], bool]
@@ -147,6 +204,19 @@ class CombinationRules:
                     description="connector must exist in every usable combination",
                     validator=lambda combo: Module.CONNECTOR in combo,
                 ),
+                Rule(
+                    rule_id="R3",
+                    description=(
+                        "minimum structure requires vertical_rod + horizontal_rod + "
+                        "connector + panel"
+                    ),
+                    validator=lambda combo: {
+                        Module.VERTICAL_ROD,
+                        Module.HORIZONTAL_ROD,
+                        Module.CONNECTOR,
+                        Module.PANEL,
+                    }.issubset(combo),
+                ),
             ]
         )
 
@@ -167,14 +237,18 @@ class VerificationInput:
     valid_combinations: list[set[Module]]
     baseline_efficiency: float
     target_efficiency: float
+    component_counts: dict[Module, int] | None = None
 
 
 @dataclass(frozen=True)
 class VerificationResult:
     boundary_valid: bool
     combination_valid: bool
+    composition_valid: bool
     efficiency_improved: bool
     passed: bool
+    required_component_counts: dict[str, int] = field(default_factory=dict)
+    actual_component_counts: dict[str, int] = field(default_factory=dict)
     reasons: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -186,10 +260,19 @@ def verify(payload: VerificationInput) -> VerificationResult:
     combo_key = frozenset(payload.combo)
     valid_set = {frozenset(item) for item in payload.valid_combinations}
     combination_valid = combo_key in valid_set
+    required_counts = required_component_counts(payload.boundary.layers_n)
+    if payload.component_counts is None:
+        actual_counts = component_counts_from_combo(payload.combo, payload.boundary.layers_n)
+    else:
+        actual_counts = {module: int(payload.component_counts.get(module, 0)) for module in Module}
+    composition_valid, composition_errors = validate_component_counts(
+        actual_counts, required_counts
+    )
     efficiency_improved = payload.target_efficiency > payload.baseline_efficiency
 
     reasons: list[str] = []
     reasons.extend(boundary_errors)
+    reasons.extend(composition_errors)
     if not combination_valid:
         reasons.append("combo is not in valid combinations")
     if not efficiency_improved:
@@ -198,8 +281,11 @@ def verify(payload: VerificationInput) -> VerificationResult:
     return VerificationResult(
         boundary_valid=boundary_valid,
         combination_valid=combination_valid,
+        composition_valid=composition_valid,
         efficiency_improved=efficiency_improved,
-        passed=boundary_valid and combination_valid and efficiency_improved,
+        passed=boundary_valid and combination_valid and composition_valid and efficiency_improved,
+        required_component_counts=module_counts_to_dict(required_counts),
+        actual_component_counts=module_counts_to_dict(actual_counts),
         reasons=reasons,
     )
 
