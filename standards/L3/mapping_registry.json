@@ -185,7 +185,7 @@
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
-      "sync_note": "L2 R3/R4/R5 updated; combination generation consumes parsed rule expressions and enforces connector non-isolation with panel+rod pairing.",
+      "sync_note": "L2 combination principles now act as generation constraints; candidate enumeration is rule-driven and keeps only structures that satisfy R1-R6.",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -209,7 +209,7 @@
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
-      "sync_note": "L2 verification updated to a required 3-stage flow: (1) combination rules, (2) boundary area only, (3) target checks for openness and efficiency; efficiency anchor remains target_efficiency > baseline_efficiency.",
+      "sync_note": "L2 verification requires rule-driven enumeration with a combination-consistency review, then boundary area validation, then target checks for openness and efficiency.",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",

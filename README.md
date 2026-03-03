@@ -66,6 +66,7 @@ uv sync
 ```bash
 uv run python scripts/generate_shelf_combinations.py
 ```
+说明：穷举过程为“组合原则驱动穷举”，不是先无约束穷举再筛选。
 
 4. 启动控制台静态服务：
 ```bash

@@ -8,7 +8,6 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from itertools import combinations
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +29,9 @@ class StandardProfile:
     goal_statement: str
     module_symbols: list[str]
     combination_rules: list[str]
+    active_rule_ids: list[str]
+    panel_max_count: int | None
+    rod_max_count: int | None
     verification_requirements: list[str]
     baseline_efficiency: float
     boundary_limit_a: float | None
@@ -40,6 +42,9 @@ class StandardProfile:
             "goal_statement": self.goal_statement,
             "module_symbols": self.module_symbols,
             "combination_rules": self.combination_rules,
+            "active_rule_ids": self.active_rule_ids,
+            "panel_max_count": self.panel_max_count,
+            "rod_max_count": self.rod_max_count,
             "verification_requirements": self.verification_requirements,
             "baseline_efficiency": self.baseline_efficiency,
             "boundary_limit_a": self.boundary_limit_a,
@@ -117,6 +122,32 @@ def parse_boundary_limit_a(markdown: str) -> float | None:
     return None
 
 
+def parse_active_rule_ids(combination_rules: list[str]) -> list[str]:
+    ids: list[str] = []
+    for rule in combination_rules:
+        match = re.match(r"^(R\d+):", rule)
+        if match:
+            ids.append(match.group(1))
+    return sorted(set(ids), key=lambda value: int(value[1:]) if value[1:].isdigit() else 999)
+
+
+def parse_module_count_limit(combination_rules: list[str], module_label: str) -> int | None:
+    text = "\n".join(combination_rules)
+    patterns = [
+        rf"最多包含([0-9]+)个{module_label}",
+        rf"最多([0-9]+)个{module_label}",
+        rf"最多包含一个{module_label}",
+        rf"最多一个{module_label}",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            if match.groups():
+                return int(match.group(1))
+            return 1
+    return None
+
+
 def load_standard_profile() -> StandardProfile:
     if not STANDARD_L2_PATH.exists():
         raise FileNotFoundError(f"missing standard file: {STANDARD_L2_PATH}")
@@ -145,10 +176,17 @@ def load_standard_profile() -> StandardProfile:
         if re.match(r"^\d+\.\s", stripped):
             verification_requirements.append(stripped)
 
+    active_rule_ids = parse_active_rule_ids(combination_rules)
+    panel_max_count = parse_module_count_limit(combination_rules, "隔板")
+    rod_max_count = parse_module_count_limit(combination_rules, "杆")
+
     return StandardProfile(
         goal_statement=goal_statement,
         module_symbols=module_symbols,
         combination_rules=combination_rules,
+        active_rule_ids=active_rule_ids,
+        panel_max_count=panel_max_count,
+        rod_max_count=rod_max_count,
         verification_requirements=verification_requirements,
         baseline_efficiency=parse_baseline_efficiency(text),
         boundary_limit_a=parse_boundary_limit_a(text),
@@ -211,13 +249,20 @@ def build_enumeration_domain() -> EnumerationDomain:
     )
 
 
-def iter_candidates(domain: EnumerationDomain):
+def iter_candidates(
+    domain: EnumerationDomain,
+    active_rule_ids: set[str],
+    panel_max_count: int | None = None,
+    rod_max_count: int | None = None,
+):
     connector_ids = sorted(domain.connectors)
     rod_count = len(domain.rod_candidates)
     panel_count = len(domain.panel_candidates)
 
     for rod_mask in range(1 << rod_count):
         selected_rods = [domain.rod_candidates[idx] for idx in range(rod_count) if (rod_mask >> idx) & 1]
+        if rod_max_count is not None and len(selected_rods) > rod_max_count:
+            continue
 
         for panel_mask in range(1 << panel_count):
             selected_panels = [
@@ -225,6 +270,8 @@ def iter_candidates(domain: EnumerationDomain):
                 for idx in range(panel_count)
                 if (panel_mask >> idx) & 1
             ]
+            if panel_max_count is not None and len(selected_panels) > panel_max_count:
+                continue
 
             required_connectors: set[str] = set()
             for rod in selected_rods:
@@ -236,17 +283,36 @@ def iter_candidates(domain: EnumerationDomain):
             optional_connectors = [
                 node_id for node_id in connector_ids if node_id not in required_connectors
             ]
-            for optional_mask in range(1 << len(optional_connectors)):
+            optional_masks: list[int]
+            if "R4" in active_rule_ids:
+                # R4 requires every connector to have incident modules; optional connectors
+                # in this domain are isolated by construction, so they are pruned here.
+                optional_masks = [0]
+            else:
+                optional_masks = list(range(1 << len(optional_connectors)))
+
+            for optional_mask in optional_masks:
                 selected_connectors = set(required_connectors)
                 for idx, node_id in enumerate(optional_connectors):
                     if (optional_mask >> idx) & 1:
                         selected_connectors.add(node_id)
 
-                yield {
+                if "R2" in active_rule_ids and not selected_connectors:
+                    continue
+
+                candidate = {
                     "node_ids": sorted(selected_connectors),
                     "rods": selected_rods,
                     "panels": selected_panels,
                 }
+                graph = materialize_graph(candidate, domain)
+                combination_valid, _ = validate_combination_principles(
+                    graph, active_rule_ids=active_rule_ids
+                )
+                if not combination_valid:
+                    continue
+
+                yield graph
 
 
 def materialize_graph(candidate: dict[str, Any], domain: EnumerationDomain) -> dict[str, Any]:
@@ -495,76 +561,83 @@ def validate_r1_connectivity(graph: dict[str, Any]) -> bool:
     return len(visited) == len(module_nodes)
 
 
-def validate_combination_principles(graph: dict[str, Any]) -> tuple[bool, list[str]]:
+def validate_combination_principles(
+    graph: dict[str, Any], active_rule_ids: set[str] | None = None
+) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     node_map = {node["id"]: node["position"] for node in graph["nodes"]}
+    enabled = active_rule_ids or {"R1", "R2", "R3", "R4", "R5", "R6"}
 
     # R2: must include connector module.
-    if not graph["nodes"]:
+    if "R2" in enabled and not graph["nodes"]:
         reasons.append("module combination violates R2: connector module is required")
 
     # R3: all rods/panels must connect via connector nodes.
-    for rod in graph["rods"]:
-        if rod["from"] not in node_map or rod["to"] not in node_map:
-            reasons.append(
-                "module combination violates R3: rod must connect through connector nodes"
-            )
-            break
+    if "R3" in enabled:
+        for rod in graph["rods"]:
+            if rod["from"] not in node_map or rod["to"] not in node_map:
+                reasons.append(
+                    "module combination violates R3: rod must connect through connector nodes"
+                )
+                break
 
-    for panel in graph["panels"]:
-        supports = panel.get("supports", [])
-        if not supports or any(node_id not in node_map for node_id in supports):
-            reasons.append(
-                "module combination violates R3: panel must connect through connector nodes"
-            )
-            break
+        for panel in graph["panels"]:
+            supports = panel.get("supports", [])
+            if not supports or any(node_id not in node_map for node_id in supports):
+                reasons.append(
+                    "module combination violates R3: panel must connect through connector nodes"
+                )
+                break
 
     # R4: each connector must connect at least two modules.
-    incident_count: dict[str, int] = {node_id: 0 for node_id in node_map}
-    for rod in graph["rods"]:
-        if rod["from"] in incident_count:
-            incident_count[rod["from"]] += 1
-        if rod["to"] in incident_count:
-            incident_count[rod["to"]] += 1
-    for panel in graph["panels"]:
-        for support in panel.get("supports", []):
-            if support in incident_count:
-                incident_count[support] += 1
+    if "R4" in enabled:
+        incident_count: dict[str, int] = {node_id: 0 for node_id in node_map}
+        for rod in graph["rods"]:
+            if rod["from"] in incident_count:
+                incident_count[rod["from"]] += 1
+            if rod["to"] in incident_count:
+                incident_count[rod["to"]] += 1
+        for panel in graph["panels"]:
+            for support in panel.get("supports", []):
+                if support in incident_count:
+                    incident_count[support] += 1
 
-    isolated_connectors = [
-        node_id for node_id, count in incident_count.items() if count < 2
-    ]
-    if isolated_connectors:
-        reasons.append(
-            "module combination violates R4: connector must connect at least two modules"
-        )
+        isolated_connectors = [
+            node_id for node_id, count in incident_count.items() if count < 2
+        ]
+        if isolated_connectors:
+            reasons.append(
+                "module combination violates R4: connector must connect at least two modules"
+            )
 
     # R5: panel must be horizontal (all support connectors share same y).
-    for panel in graph["panels"]:
-        supports = panel.get("supports", [])
-        if not supports:
-            reasons.append("module combination violates R5: panel must be horizontal")
-            break
-        y_values = {round3(float(node_map[support][1])) for support in supports if support in node_map}
-        if len(y_values) != 1:
-            reasons.append("module combination violates R5: panel must be horizontal")
-            break
+    if "R5" in enabled:
+        for panel in graph["panels"]:
+            supports = panel.get("supports", [])
+            if not supports:
+                reasons.append("module combination violates R5: panel must be horizontal")
+                break
+            y_values = {round3(float(node_map[support][1])) for support in supports if support in node_map}
+            if len(y_values) != 1:
+                reasons.append("module combination violates R5: panel must be horizontal")
+                break
 
     # R6: rod must be vertical (x,z equal on both endpoints and y differs).
-    for rod in graph["rods"]:
-        a = node_map.get(rod["from"])
-        b = node_map.get(rod["to"])
-        if a is None or b is None:
-            continue
-        same_x = abs(float(a[0]) - float(b[0])) <= EPS
-        same_z = abs(float(a[2]) - float(b[2])) <= EPS
-        diff_y = abs(float(a[1]) - float(b[1])) > EPS
-        if not (same_x and same_z and diff_y):
-            reasons.append("module combination violates R6: rod must be vertical")
-            break
+    if "R6" in enabled:
+        for rod in graph["rods"]:
+            a = node_map.get(rod["from"])
+            b = node_map.get(rod["to"])
+            if a is None or b is None:
+                continue
+            same_x = abs(float(a[0]) - float(b[0])) <= EPS
+            same_z = abs(float(a[2]) - float(b[2])) <= EPS
+            diff_y = abs(float(a[1]) - float(b[1])) > EPS
+            if not (same_x and same_z and diff_y):
+                reasons.append("module combination violates R6: rod must be vertical")
+                break
 
     # R1: all modules must be mutually reachable.
-    if not validate_r1_connectivity(graph):
+    if "R1" in enabled and not validate_r1_connectivity(graph):
         reasons.append("module combination violates R1: module graph is disconnected")
 
     return (len(reasons) == 0, reasons)
@@ -615,7 +688,7 @@ def evaluate_design(
 ) -> tuple[dict[str, Any], dict[str, float]]:
     metrics = compute_metrics(graph, baseline_efficiency=profile.baseline_efficiency)
     validation: dict[str, Any] = {
-        "combination_valid": None,
+        "combination_valid": True,
         "boundary_valid": None,
         "goal_passed": None,
         "open_style_valid": None,
@@ -625,13 +698,6 @@ def evaluate_design(
         "reasons": [],
         "warnings": [],
     }
-
-    combination_valid, combo_reasons = validate_combination_principles(graph)
-    validation["combination_valid"] = combination_valid
-    if not combination_valid:
-        validation["failed_stage"] = "combination"
-        validation["reasons"] = combo_reasons
-        return validation, metrics
 
     boundary_valid, boundary_reasons, boundary_warnings = validate_boundary(
         metrics=metrics,
@@ -755,13 +821,18 @@ def build_dataset(limit: int | None = None) -> tuple[list[dict[str, Any]], dict[
     profile = load_standard_profile()
     _ = module_universe(profile.module_symbols)
     domain = build_enumeration_domain()
+    active_rule_ids = set(profile.active_rule_ids)
 
     representatives: dict[str, dict[str, Any]] = {}
-    raw_candidate_count = 0
+    rule_driven_candidate_count = 0
 
-    for candidate in iter_candidates(domain):
-        raw_candidate_count += 1
-        graph = materialize_graph(candidate, domain)
+    for graph in iter_candidates(
+        domain,
+        active_rule_ids=active_rule_ids,
+        panel_max_count=profile.panel_max_count,
+        rod_max_count=profile.rod_max_count,
+    ):
+        rule_driven_candidate_count += 1
         signature = compute_isomorphism_signature(graph)
         if signature in representatives:
             continue
@@ -864,7 +935,8 @@ def build_dataset(limit: int | None = None) -> tuple[list[dict[str, Any]], dict[
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "standard_profile": profile.to_dict(),
         "enumeration_domain": domain.to_dict(),
-        "raw_candidates": raw_candidate_count,
+        "raw_candidates": rule_driven_candidate_count,
+        "generation_strategy": "rule_driven_enumeration",
         "total_combinations": total,
         "passed": passed,
         "failed": failed,
