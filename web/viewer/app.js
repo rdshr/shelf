@@ -6,6 +6,7 @@ const SUMMARY_URL = "../../artifacts/summary.json";
 
 const state = {
   baseCombinations: [],
+  baseSummary: null,
   combinations: [],
   summary: null,
   filtered: [],
@@ -160,6 +161,287 @@ function readRuleConfigFromUI() {
     useR6: document.getElementById("ruleR6")?.checked ?? true,
     maxPanels: parsePositiveIntOrNull(document.getElementById("maxPanelInput")?.value),
     maxRods: parsePositiveIntOrNull(document.getElementById("maxRodInput")?.value),
+  };
+}
+
+function round3(value) {
+  return Number(Number(value).toFixed(3));
+}
+
+function buildEnumerationDomain() {
+  const xValues = [0.0, 1.2];
+  const zValues = [0.0, 0.62];
+  const yValues = [0.36, 0.78];
+
+  const connectors = [];
+  const slot = new Map();
+
+  let nodeIndex = 0;
+  yValues.forEach((y, iy) => {
+    zValues.forEach((z, iz) => {
+      xValues.forEach((x, ix) => {
+        const id = `N${String(nodeIndex).padStart(3, "0")}`;
+        nodeIndex += 1;
+        connectors.push({ id, position: [round3(x), round3(y), round3(z)] });
+        slot.set(`${ix}-${iz}-${iy}`, id);
+      });
+    });
+  });
+
+  const rods = [];
+  let rodIndex = 0;
+  zValues.forEach((_, iz) => {
+    xValues.forEach((__, ix) => {
+      rods.push({
+        id: `R${String(rodIndex).padStart(3, "0")}`,
+        from: slot.get(`${ix}-${iz}-0`),
+        to: slot.get(`${ix}-${iz}-1`),
+        role: "vertical",
+      });
+      rodIndex += 1;
+    });
+  });
+
+  const panelSize = [round3(xValues[1] - xValues[0]), 0.05, round3(zValues[1] - zValues[0])];
+  const panelCenterX = round3((xValues[1] + xValues[0]) * 0.5);
+  const panelCenterZ = round3((zValues[1] + zValues[0]) * 0.5);
+  const panels = [];
+  yValues.forEach((y, iy) => {
+    panels.push({
+      id: `P${String(iy).padStart(3, "0")}`,
+      center: [panelCenterX, round3(y - 0.03), panelCenterZ],
+      size: [...panelSize],
+      supports: [
+        slot.get(`0-0-${iy}`),
+        slot.get(`1-0-${iy}`),
+        slot.get(`0-1-${iy}`),
+        slot.get(`1-1-${iy}`),
+      ],
+      role: "storage_surface",
+    });
+  });
+
+  return { connectors, rods, panels };
+}
+
+function materializeGraphFromSelection(domain, selectedConnectorIds, selectedRods, selectedPanels) {
+  const nodeSet = new Set(selectedConnectorIds);
+  const nodes = domain.connectors
+    .filter((node) => nodeSet.has(node.id))
+    .map((node) => ({ id: node.id, position: [...node.position] }));
+
+  const rods = selectedRods
+    .filter((rod) => nodeSet.has(rod.from) && nodeSet.has(rod.to))
+    .map((rod) => ({ from: rod.from, to: rod.to, role: rod.role || "support" }));
+
+  const panels = selectedPanels
+    .map((panel) => {
+      const supports = (panel.supports || []).filter((id) => nodeSet.has(id));
+      if (supports.length < 2) return null;
+      return {
+        id: panel.id,
+        center: [...panel.center],
+        size: [...panel.size],
+        supports: [...new Set(supports)].sort(),
+        role: panel.role || "storage_surface",
+      };
+    })
+    .filter(Boolean);
+
+  return { nodes, rods, panels };
+}
+
+function hashText(text) {
+  let hash = 5381;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) + hash) + text.charCodeAt(i);
+    hash >>>= 0;
+  }
+  return hash.toString(16).padStart(8, "0");
+}
+
+function computeTopologySignature(graph) {
+  const connectorIds = (graph.nodes || []).map((node) => node.id);
+  const label = new Map();
+  const adj = new Map();
+
+  connectorIds.forEach((connectorId) => {
+    const id = `C:${connectorId}`;
+    label.set(id, "C");
+    adj.set(id, []);
+  });
+
+  (graph.rods || []).forEach((rod, idx) => {
+    const rid = `R:${idx}`;
+    label.set(rid, "R");
+    adj.set(rid, []);
+    const a = `C:${rod.from}`;
+    const b = `C:${rod.to}`;
+    if (adj.has(a)) {
+      adj.get(rid).push(a);
+      adj.get(a).push(rid);
+    }
+    if (adj.has(b)) {
+      adj.get(rid).push(b);
+      adj.get(b).push(rid);
+    }
+  });
+
+  (graph.panels || []).forEach((panel, idx) => {
+    const pid = `P:${idx}`;
+    const supports = [...new Set(panel.supports || [])].sort();
+    label.set(pid, `P${supports.length}`);
+    adj.set(pid, []);
+    supports.forEach((support) => {
+      const cid = `C:${support}`;
+      if (!adj.has(cid)) return;
+      adj.get(pid).push(cid);
+      adj.get(cid).push(pid);
+    });
+  });
+
+  let colors = new Map(label);
+  for (let round = 0; round < 4; round += 1) {
+    const nextColors = new Map();
+    [...colors.keys()].sort().forEach((nodeId) => {
+      const neighbours = (adj.get(nodeId) || []).map((n) => colors.get(n) || "").sort();
+      const payload = `${colors.get(nodeId)}|${neighbours.join("/")}`;
+      nextColors.set(nodeId, hashText(payload));
+    });
+    colors = nextColors;
+  }
+
+  const connectorProfile = connectorIds.map((connectorId) => {
+    const rodIncident = (graph.rods || []).filter((rod) => rod.from === connectorId || rod.to === connectorId).length;
+    const panelIncident = (graph.panels || []).filter((panel) => (panel.supports || []).includes(connectorId)).length;
+    return `${rodIncident}-${panelIncident}`;
+  }).sort();
+
+  const colorCounts = new Map();
+  [...colors.values()].forEach((color) => {
+    colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+  });
+  const colorPart = [...colorCounts.keys()].sort().map((k) => `${k}:${colorCounts.get(k)}`).join(",");
+  const profilePart = connectorProfile.join(",");
+  return `C${graph.nodes.length}-R${graph.rods.length}-P${graph.panels.length}-CP[${profilePart}]-WL[${colorPart}]`;
+}
+
+function convexHull(points) {
+  const unique = [...new Set(points.map((p) => `${p[0]}:${p[1]}`))]
+    .map((token) => token.split(":").map((v) => Number(v)))
+    .sort((a, b) => (a[0] - b[0]) || (a[1] - b[1]));
+  if (unique.length <= 1) return unique;
+
+  const cross = (o, a, b) => ((a[0] - o[0]) * (b[1] - o[1])) - ((a[1] - o[1]) * (b[0] - o[0]));
+  const lower = [];
+  unique.forEach((p) => {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+      lower.pop();
+    }
+    lower.push(p);
+  });
+
+  const upper = [];
+  [...unique].reverse().forEach((p) => {
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+      upper.pop();
+    }
+    upper.push(p);
+  });
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+function polygonArea(points) {
+  if (points.length < 3) return 0;
+  let sum = 0;
+  points.forEach((point, idx) => {
+    const next = points[(idx + 1) % points.length];
+    sum += (point[0] * next[1]) - (next[0] * point[1]);
+  });
+  return Math.abs(sum) * 0.5;
+}
+
+function rectangleUnionArea(rectangles) {
+  if (!rectangles.length) return 0;
+  const xs = [...new Set(rectangles.flatMap((r) => [r[0], r[1]]))].sort((a, b) => a - b);
+  if (xs.length < 2) return 0;
+  let area = 0;
+  for (let i = 0; i < xs.length - 1; i += 1) {
+    const left = xs[i];
+    const right = xs[i + 1];
+    const dx = right - left;
+    if (dx <= 0) continue;
+
+    const intervals = rectangles
+      .filter((r) => r[0] < right && r[1] > left)
+      .map((r) => [Math.min(r[2], r[3]), Math.max(r[2], r[3])])
+      .sort((a, b) => a[0] - b[0]);
+    if (!intervals.length) continue;
+
+    const merged = [];
+    intervals.forEach((interval) => {
+      if (!merged.length || interval[0] > merged[merged.length - 1][1]) {
+        merged.push(interval);
+      } else {
+        merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], interval[1]);
+      }
+    });
+    const covered = merged.reduce((acc, [start, end]) => acc + Math.max(0, end - start), 0);
+    area += covered * dx;
+  }
+  return area;
+}
+
+function projectionBoundaryArea(graph) {
+  const points = [];
+  (graph.nodes || []).forEach((node) => {
+    points.push([Number(node.position[0]), Number(node.position[2])]);
+  });
+
+  const rectangles = [];
+  (graph.panels || []).forEach((panel) => {
+    const [cx, , cz] = panel.center;
+    const [sx, , sz] = panel.size;
+    const hx = Number(sx) * 0.5;
+    const hz = Number(sz) * 0.5;
+    points.push([Number(cx) - hx, Number(cz) - hz]);
+    points.push([Number(cx) - hx, Number(cz) + hz]);
+    points.push([Number(cx) + hx, Number(cz) - hz]);
+    points.push([Number(cx) + hx, Number(cz) + hz]);
+    rectangles.push([Number(cx) - hx, Number(cx) + hx, Number(cz) - hz, Number(cz) + hz]);
+  });
+
+  const hullArea = points.length ? polygonArea(convexHull(points)) : 0;
+  const panelUnion = rectangleUnionArea(rectangles);
+  return Math.max(hullArea, panelUnion, 1e-6);
+}
+
+function computeMetricsFromGraph(graph, baseline) {
+  const nodes = graph.nodes || [];
+  const panels = graph.panels || [];
+  const xs = nodes.map((n) => Number(n.position[0]));
+  const ys = nodes.map((n) => Number(n.position[1]));
+  const zs = nodes.map((n) => Number(n.position[2]));
+  const spanX = xs.length ? Math.max(...xs) - Math.min(...xs) : 0;
+  const spanY = ys.length ? Math.max(...ys) - Math.min(...ys) : 0;
+  const spanZ = zs.length ? Math.max(...zs) - Math.min(...zs) : 0;
+  const footprint = projectionBoundaryArea(graph);
+  const panelSum = panels.reduce((acc, panel) => acc + (Number(panel.size[0]) * Number(panel.size[2])), 0);
+  const targetEfficiency = panelSum / footprint;
+  return {
+    span_x: round3(spanX),
+    span_y: round3(spanY),
+    span_z: round3(spanZ),
+    footprint_area: round3(footprint),
+    footprint_projection_boundary_area: round3(footprint),
+    storage_surface: round3(panelSum),
+    panel_projection_area_sum: round3(panelSum),
+    storage_efficiency: round3(targetEfficiency),
+    target_efficiency: round3(targetEfficiency),
+    goal_score: round3(targetEfficiency),
+    baseline_score: round3(baseline),
+    baseline_efficiency: round3(baseline),
+    improvement_ratio: baseline > 0 ? round3(targetEfficiency / baseline) : 0,
   };
 }
 
@@ -393,7 +675,7 @@ function evaluateByThreeStages(item, config, summary) {
   };
 }
 
-function buildRuntimeSummary(items, referenceSummary, ruleConfig) {
+function buildRuntimeSummary(items, referenceSummary, ruleConfig, meta = {}) {
   const total = items.length;
   const passed = items.filter((item) => item.validation?.passed).length;
   const failed = total - passed;
@@ -450,6 +732,8 @@ function buildRuntimeSummary(items, referenceSummary, ruleConfig) {
 
   return {
     ...referenceSummary,
+    raw_candidates: meta.rawCandidates ?? referenceSummary.raw_candidates ?? total,
+    generation_strategy: meta.generationStrategy ?? referenceSummary.generation_strategy ?? "rule_driven_enumeration",
     total_combinations: total,
     passed,
     failed,
@@ -465,18 +749,93 @@ function buildRuntimeSummary(items, referenceSummary, ruleConfig) {
 
 function runConfiguredCombination() {
   state.ruleConfig = readRuleConfigFromUI();
-  const evaluated = [];
-  for (const item of state.baseCombinations) {
-    const validation = evaluateByThreeStages(item, state.ruleConfig, state.summary);
-    if (!validation.combination_valid) continue;
-    evaluated.push({
-      ...item,
-      validation,
-    });
+  const baseline = Number(state.baseSummary?.standard_profile?.baseline_efficiency ?? state.baseSummary?.baseline_score ?? 1);
+  const domain = buildEnumerationDomain();
+  const connectorIds = domain.connectors.map((node) => node.id);
+  const representatives = new Map();
+  let rawCandidates = 0;
+
+  const rodCount = domain.rods.length;
+  const panelCount = domain.panels.length;
+
+  for (let rodMask = 0; rodMask < (1 << rodCount); rodMask += 1) {
+    const selectedRods = domain.rods.filter((_, idx) => ((rodMask >> idx) & 1) === 1);
+    if (state.ruleConfig.maxRods !== null && selectedRods.length > state.ruleConfig.maxRods) continue;
+
+    for (let panelMask = 0; panelMask < (1 << panelCount); panelMask += 1) {
+      const selectedPanels = domain.panels.filter((_, idx) => ((panelMask >> idx) & 1) === 1);
+      if (state.ruleConfig.maxPanels !== null && selectedPanels.length > state.ruleConfig.maxPanels) continue;
+
+      const requiredConnectorIds = new Set();
+      selectedRods.forEach((rod) => {
+        requiredConnectorIds.add(rod.from);
+        requiredConnectorIds.add(rod.to);
+      });
+      selectedPanels.forEach((panel) => {
+        (panel.supports || []).forEach((id) => requiredConnectorIds.add(id));
+      });
+
+      const optionalConnectorIds = connectorIds.filter((id) => !requiredConnectorIds.has(id));
+      const optionalMasks = state.ruleConfig.useR4 ? [0] : [...Array(1 << optionalConnectorIds.length).keys()];
+
+      optionalMasks.forEach((optionalMask) => {
+        const selectedConnectorIds = new Set(requiredConnectorIds);
+        optionalConnectorIds.forEach((id, idx) => {
+          if (((optionalMask >> idx) & 1) === 1) selectedConnectorIds.add(id);
+        });
+        if (state.ruleConfig.useR2 && selectedConnectorIds.size === 0) return;
+
+        const graph = materializeGraphFromSelection(
+          domain,
+          [...selectedConnectorIds].sort(),
+          selectedRods,
+          selectedPanels,
+        );
+        const comboCheck = validateCombinationByConfig({ graph }, state.ruleConfig);
+        if (!comboCheck.pass) return;
+        rawCandidates += 1;
+
+        const signature = computeTopologySignature(graph);
+        if (representatives.has(signature)) return;
+        representatives.set(signature, graph);
+      });
+    }
   }
 
+  const evaluated = [...representatives.keys()].sort().map((signature, idx) => {
+    const graph = representatives.get(signature);
+    const panelCountLocal = (graph.panels || []).length;
+    const rodCountLocal = (graph.rods || []).length;
+    const connectorCountLocal = (graph.nodes || []).length;
+    const family = `p${panelCountLocal}_r${rodCountLocal}_c${connectorCountLocal}`;
+    const familyLabel = `隔板${panelCountLocal}-杆${rodCountLocal}-连接接口${connectorCountLocal}`;
+    const modules = [];
+    if (connectorCountLocal > 0) modules.push("connector");
+    if (panelCountLocal > 0) modules.push("panel");
+    if (rodCountLocal > 0) modules.push("rod");
+    const metrics = computeMetricsFromGraph(graph, baseline);
+    const item = {
+      id: `SHELF-${String(idx + 1).padStart(4, "0")}`,
+      family,
+      family_label: familyLabel,
+      description: `拓扑代表结构：${familyLabel}`,
+      variant: idx + 1,
+      topology_signature: signature,
+      modules: modules.sort(),
+      graph,
+      metrics,
+    };
+    return {
+      ...item,
+      validation: evaluateByThreeStages(item, state.ruleConfig, state.baseSummary || state.summary),
+    };
+  });
+
   state.combinations = evaluated;
-  state.summary = buildRuntimeSummary(evaluated, state.summary, state.ruleConfig);
+  state.summary = buildRuntimeSummary(evaluated, state.baseSummary || state.summary, state.ruleConfig, {
+    rawCandidates,
+    generationStrategy: "rule_driven_enumeration",
+  });
   state.searchKeyword = "";
   const searchInput = document.getElementById("searchInput");
   if (searchInput) searchInput.value = "";
@@ -1079,6 +1438,7 @@ async function main() {
   try {
     const data = await loadData();
     state.baseCombinations = data.combinations;
+    state.baseSummary = data.summary;
     state.combinations = [];
     state.summary = data.summary;
     state.filtered = [];
