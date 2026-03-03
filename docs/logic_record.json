@@ -5,75 +5,14 @@
       "label": "goal",
       "depends_on": [],
       "evidence": {
-        "statement": "Increase storage access efficiency per footprint area"
-      }
-    },
-    {
-      "step_id": "B1",
-      "label": "layers",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "N": 4
-      }
-    },
-    {
-      "step_id": "B2",
-      "label": "payload",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "P": 30.0
-      }
-    },
-    {
-      "step_id": "B3",
-      "label": "space",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "S": {
-          "width": 80.0,
-          "depth": 35.0,
-          "height": 30.0
-        }
-      }
-    },
-    {
-      "step_id": "B4",
-      "label": "opening",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "O": {
-          "width": 65.0,
-          "height": 28.0
-        }
-      }
-    },
-    {
-      "step_id": "B5",
-      "label": "footprint",
-      "depends_on": [
-        "G"
-      ],
-      "evidence": {
-        "A": {
-          "width": 90.0,
-          "depth": 40.0
-        }
+        "statement": "提升单位占地面积下的存取效率"
       }
     },
     {
       "step_id": "M1",
       "label": "rod",
       "depends_on": [
-        "B1",
-        "B2"
+        "G"
       ],
       "evidence": {}
     },
@@ -81,8 +20,7 @@
       "step_id": "M2",
       "label": "connector",
       "depends_on": [
-        "B1",
-        "B4"
+        "G"
       ],
       "evidence": {}
     },
@@ -90,8 +28,7 @@
       "step_id": "M3",
       "label": "panel",
       "depends_on": [
-        "B2",
-        "B3"
+        "G"
       ],
       "evidence": {}
     },
@@ -114,11 +51,57 @@
       "evidence": {}
     },
     {
+      "step_id": "R3",
+      "label": "layers_n >= 2 for valid structure",
+      "depends_on": [
+        "M3"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R4",
+      "label": "rods follow Z-axis and are perpendicular to panels",
+      "depends_on": [
+        "M1",
+        "M3"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R5",
+      "label": "panels are parallel and corners connect to rods via connectors",
+      "depends_on": [
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R6",
+      "label": "valid set includes only results satisfying R1~R5",
+      "depends_on": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R7",
+      "label": "candidate set may include invalid samples for comparison",
+      "depends_on": [
+        "R6"
+      ],
+      "evidence": {}
+    },
+    {
       "step_id": "H1",
       "label": "efficiency improves under valid constraints",
       "depends_on": [
-        "R1",
-        "R2"
+        "R6"
       ],
       "evidence": {}
     },
