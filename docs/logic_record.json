@@ -15,7 +15,7 @@
         "G"
       ],
       "evidence": {
-        "N": 4
+        "N": 3
       }
     },
     {
@@ -36,9 +36,9 @@
       ],
       "evidence": {
         "S": {
-          "width": 80.0,
-          "depth": 35.0,
-          "height": 30.0
+          "width": 1.0,
+          "depth": 1.0,
+          "height": 1.0
         }
       }
     },
@@ -50,8 +50,8 @@
       ],
       "evidence": {
         "O": {
-          "width": 65.0,
-          "height": 28.0
+          "width": 0.8,
+          "height": 0.9
         }
       }
     },
@@ -63,14 +63,14 @@
       ],
       "evidence": {
         "A": {
-          "width": 90.0,
-          "depth": 40.0
+          "width": 1.0,
+          "depth": 1.0
         }
       }
     },
     {
       "step_id": "M1",
-      "label": "rod",
+      "label": "vertical_rod",
       "depends_on": [
         "B1",
         "B2"
@@ -79,6 +79,15 @@
     },
     {
       "step_id": "M2",
+      "label": "horizontal_rod",
+      "depends_on": [
+        "B2",
+        "B3"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "M3",
       "label": "connector",
       "depends_on": [
         "B1",
@@ -87,7 +96,7 @@
       "evidence": {}
     },
     {
-      "step_id": "M3",
+      "step_id": "M4",
       "label": "panel",
       "depends_on": [
         "B2",
@@ -101,7 +110,8 @@
       "depends_on": [
         "M1",
         "M2",
-        "M3"
+        "M3",
+        "M4"
       ],
       "evidence": {}
     },
@@ -109,7 +119,27 @@
       "step_id": "R2",
       "label": "connector is mandatory",
       "depends_on": [
-        "M2"
+        "M3"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R3",
+      "label": "minimum structure: 4 vertical rods + 4 connectors + 4 horizontal rods + panel",
+      "depends_on": [
+        "M1",
+        "M2",
+        "M3",
+        "M4"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "R4",
+      "label": "single-unit layout requires at least one shelf with layers_n >= 2",
+      "depends_on": [
+        "B1",
+        "R3"
       ],
       "evidence": {}
     },
@@ -118,7 +148,9 @@
       "label": "efficiency improves under valid constraints",
       "depends_on": [
         "R1",
-        "R2"
+        "R2",
+        "R3",
+        "R4"
       ],
       "evidence": {}
     },
