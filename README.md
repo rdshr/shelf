@@ -44,3 +44,27 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 uv sync
 uv run python src/main.py
 ```
+
+## 3D 组合可视化
+先生成固定 `3x3x3` 的组合缓存（仅需一次）：
+
+```bash
+python scripts/generate_catalog_cache.py
+```
+
+缓存文件位置：
+- `data/catalog_3x3x3_v2.pkl.gz`
+- 缓存已在生成阶段预剔除 `R8`（非单一连通）组合，便于聚焦其余失败类型。
+
+启动本地服务后，可在浏览器中进行分型筛选、量化统计与 3D 拖拽旋转查看：
+
+```bash
+python scripts/serve_shelf_catalog.py
+```
+
+默认地址：
+- `http://127.0.0.1:8765`
+
+可选参数：
+- `--host`：监听地址
+- `--port`：端口（默认 `8765`）

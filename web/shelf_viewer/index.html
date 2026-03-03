@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>置物架组合引擎 - 3D 可视化</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <header class="hero">
+      <div class="hero-left">
+        <p class="kicker">Shelf Combination Lab</p>
+        <h1>置物架组合结果 3D 验证看板</h1>
+        <p class="subtitle">
+          固定 `3x3x3` 系统，板层位点为 `0/1/2`，按缓存配置快速观测分型与验证结果。
+        </p>
+      </div>
+      <div class="hero-right">
+        <button id="reloadBtn" class="btn-primary">刷新组合结果</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel controls">
+        <h2>系统设置（固定）</h2>
+        <div class="grid fixed-grid">
+          <label>
+            结构网格
+            <input value="3 x 3 x 3" readonly />
+          </label>
+          <label>
+            板可放层
+            <input value="0,1,2" readonly />
+          </label>
+          <label>
+            板长/板宽/杆长
+            <input value="1 / 1 / 1" readonly />
+          </label>
+          <label>
+            杆段计数规则
+            <input value="按端接最高层自动截断（非3倍数约束）" readonly />
+          </label>
+          <label>
+            去重策略
+            <input value="对称 + 平移" readonly />
+          </label>
+        </div>
+        <p class="param-note">全部组合由本地缓存文件提供，不再每次重新穷举生成；R8 不连通组合已在缓存阶段剔除。</p>
+
+        <h2>边界与目标</h2>
+        <div class="grid">
+          <label>
+            层数上限 N
+            <input id="boundaryNInput" type="number" value="3" />
+          </label>
+          <label>
+            基线取用增益 G_baseline
+            <input id="boundaryGInput" type="number" step="0.01" value="1.0" />
+          </label>
+        </div>
+
+        <h2>筛选与分页</h2>
+        <div class="grid">
+          <label>
+            分型类别
+            <select id="familySelect">
+              <option value="all">全部分型</option>
+            </select>
+          </label>
+          <label>
+            通过状态
+            <select id="statusSelect">
+              <option value="all">全部状态</option>
+              <option value="goal_pass">目标通过</option>
+              <option value="goal_fail">目标失败</option>
+              <option value="boundary_fail">边界失败</option>
+              <option value="rule_fail">规则失败</option>
+            </select>
+          </label>
+          <label>
+            每页数量
+            <input id="limitInput" type="number" value="40" min="1" />
+          </label>
+          <label>
+            偏移量
+            <input id="offsetInput" type="number" value="0" min="0" />
+          </label>
+        </div>
+        <p class="param-note">要查看组合失败形态，请将“通过状态”切换为“规则失败”。</p>
+        <p id="cacheInfo" class="param-note">缓存文件：-</p>
+      </aside>
+
+      <section class="main-stage">
+        <section class="panel stats">
+          <div class="stat-card">
+            <p>全部情况（去重）</p>
+            <h3 id="enumerationTotal">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>有效组合</p>
+            <h3 id="generatedTotal">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>目标通过</p>
+            <h3 id="goalPassed">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>目标失败</p>
+            <h3 id="goalFailed">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>当前筛选</p>
+            <h3 id="filteredTotal">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>计算耗时（s）</p>
+            <h3 id="computeSeconds">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>规则失败</p>
+            <h3 id="ruleFailed">-</h3>
+          </div>
+          <div class="stat-card">
+            <p>边界失败</p>
+            <h3 id="boundaryFailed">-</h3>
+          </div>
+        </section>
+
+        <section class="panel bars">
+          <h2>验证结果分布</h2>
+          <div class="bar-line">
+            <span>目标通过率</span>
+            <div class="bar-wrap"><div id="goalPassBar" class="bar pass"></div></div>
+            <strong id="goalPassRate">-</strong>
+          </div>
+          <div class="bar-line">
+            <span>组合失败占比</span>
+            <div class="bar-wrap"><div id="ruleFailBar" class="bar fail"></div></div>
+            <strong id="ruleFailRate">-</strong>
+          </div>
+          <div class="bar-line">
+            <span>目标失败占比</span>
+            <div class="bar-wrap"><div id="goalFailBar" class="bar warn"></div></div>
+            <strong id="goalFailRate">-</strong>
+          </div>
+          <div class="bar-line">
+            <span>边界失败占比</span>
+            <div class="bar-wrap"><div id="boundaryFailBar" class="bar neutral"></div></div>
+            <strong id="boundaryFailRate">-</strong>
+          </div>
+        </section>
+
+        <section class="panel preview-list">
+          <div class="preview-column viewer-column">
+            <div class="viewer-head">
+              <h2>3D 结构预览</h2>
+              <p id="selectedTitle">未选择分型</p>
+            </div>
+            <div id="viewerCanvas" class="viewer-canvas"></div>
+            <div class="viewer-note">
+              鼠标左键旋转，右键平移，滚轮缩放。
+            </div>
+
+            <details id="detailToggle" class="detail-toggle">
+              <summary>显示当前分型详情</summary>
+              <pre id="detailBox">请选择一个组合查看详细量化结果。</pre>
+            </details>
+          </div>
+
+          <div class="preview-column list-column">
+            <h2>组合列表（可观测结果）</h2>
+            <div class="table-wrap side-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>分型</th>
+                    <th>占地</th>
+                    <th>取用</th>
+                    <th>增益比</th>
+                    <th>组合</th>
+                    <th>边界</th>
+                    <th>目标</th>
+                    <th>失败原因</th>
+                  </tr>
+                </thead>
+                <tbody id="resultTbody"></tbody>
+              </table>
+            </div>
+            <div class="pager">
+              <button id="prevPageBtn" class="pager-btn">上一页</button>
+              <span id="pageInfo">第 - / - 页</span>
+              <button id="nextPageBtn" class="pager-btn">下一页</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

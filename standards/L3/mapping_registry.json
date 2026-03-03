@@ -136,7 +136,7 @@
       "l1_file": "standards/L1/框架设计核心标准.md",
       "l1_anchor": "## 2. 边界定义（Boundary）",
       "l2_file": "standards/L2/置物架框架标准.md",
-      "l2_anchor": "## 2. 边界定义（Boundary）",
+      "l2_anchor": "## 2. 边界定义（Boundary Definition）",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
