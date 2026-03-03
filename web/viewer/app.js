@@ -22,7 +22,7 @@ const state = {
     useR4: true,
     useR5: true,
     useR6: true,
-    maxModules: null,
+    maxModules: 8,
   },
   enumerationRuns: 0,
 };
@@ -1131,7 +1131,7 @@ function renderList() {
 
   if (!state.filtered.length) {
     list.appendChild(createElement("p", "", "没有匹配的组合。"));
-    document.getElementById("listHint").textContent = `显示 0 / 共 ${state.combinations.length}`;
+    document.getElementById("listHint").textContent = `显示 0 / 共 ${state.combinations.length}（规则候选：${state.summary?.raw_candidates ?? 0}）`;
     return;
   }
 
@@ -1180,7 +1180,7 @@ function renderList() {
     list.appendChild(card);
   });
 
-  document.getElementById("listHint").textContent = `显示 ${state.filtered.length} / 共 ${state.combinations.length}`;
+  document.getElementById("listHint").textContent = `显示 ${state.filtered.length} / 共 ${state.combinations.length}（规则候选：${state.summary?.raw_candidates ?? 0}）`;
 }
 
 function renderActiveMetrics(item) {
