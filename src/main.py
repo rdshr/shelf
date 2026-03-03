@@ -3751,10 +3751,12 @@ def main() -> None:
         ),
     }
 
-    area_min = env_int("SHELF_AREA_MIN", 1, minimum=1)
-    area_max = env_int("SHELF_AREA_MAX", 9, minimum=1)
-    layer_min = env_int("SHELF_LAYER_MIN", 1, minimum=1)
-    layer_max = env_int("SHELF_LAYER_MAX", 3, minimum=1)
+    # Keep the prebuilt payload intentionally small. Arbitrary A/N requests are served
+    # at runtime by /api/variant, so docs bootstrap should only include a light baseline.
+    area_min = env_int("SHELF_AREA_MIN", 4, minimum=1)
+    area_max = env_int("SHELF_AREA_MAX", 4, minimum=1)
+    layer_min = env_int("SHELF_LAYER_MIN", 2, minimum=1)
+    layer_max = env_int("SHELF_LAYER_MAX", 2, minimum=1)
 
     if area_min > area_max:
         area_min, area_max = area_max, area_min

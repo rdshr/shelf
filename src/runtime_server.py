@@ -229,6 +229,10 @@ class ShelfHandler(SimpleHTTPRequestHandler):
     def log_message(self, format: str, *args: Any) -> None:
         super().log_message(format, *args)
 
+    def end_headers(self) -> None:
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def _write_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
