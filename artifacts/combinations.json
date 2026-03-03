@@ -1,0 +1,5120 @@
+{
+  "combinations": [
+    {
+      "id": "SHELF-0001",
+      "family": "p0_r0_c0",
+      "family_label": "隔板0-杆0-连接接口0",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口0",
+      "variant": 1,
+      "topology_signature": "C0-R0-P0-CP[]-WL[]",
+      "modules": [],
+      "graph": {
+        "nodes": [],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 0.0,
+        "span_y": 0.0,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R2: connector module is required",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0002",
+      "family": "p0_r0_c1",
+      "family_label": "隔板0-杆0-连接接口1",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口1",
+      "variant": 1,
+      "topology_signature": "C1-R0-P0-CP[0-0]-WL[29fe1ef95ec5:1]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 0.0,
+        "span_y": 0.0,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0003",
+      "family": "p0_r0_c2",
+      "family_label": "隔板0-杆0-连接接口2",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口2",
+      "variant": 1,
+      "topology_signature": "C2-R0-P0-CP[0-0,0-0]-WL[29fe1ef95ec5:2]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.0,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0004",
+      "family": "p0_r1_c2",
+      "family_label": "隔板0-杆1-连接接口2",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口2",
+      "variant": 1,
+      "topology_signature": "C2-R1-P0-CP[1-0,1-0]-WL[eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 0.0,
+        "span_y": 0.42,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0005",
+      "family": "p0_r0_c3",
+      "family_label": "隔板0-杆0-连接接口3",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口3",
+      "variant": 1,
+      "topology_signature": "C3-R0-P0-CP[0-0,0-0,0-0]-WL[29fe1ef95ec5:3]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.0,
+        "span_z": 0.62,
+        "footprint_area": 0.372,
+        "footprint_projection_boundary_area": 0.372,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0006",
+      "family": "p0_r1_c3",
+      "family_label": "隔板0-杆1-连接接口3",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口3",
+      "variant": 1,
+      "topology_signature": "C3-R1-P0-CP[0-0,1-0,1-0]-WL[29fe1ef95ec5:1,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0007",
+      "family": "p0_r0_c4",
+      "family_label": "隔板0-杆0-连接接口4",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口4",
+      "variant": 1,
+      "topology_signature": "C4-R0-P0-CP[0-0,0-0,0-0,0-0]-WL[29fe1ef95ec5:4]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.0,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0008",
+      "family": "p1_r0_c4",
+      "family_label": "隔板1-杆0-连接接口4",
+      "description": "拓扑代表结构：隔板1-杆0-连接接口4",
+      "variant": 1,
+      "topology_signature": "C4-R0-P1-CP[0-1,0-1,0-1,0-1]-WL[a78883609285:1,ee686ee88ee7:4]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.0,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0009",
+      "family": "p0_r1_c4",
+      "family_label": "隔板0-杆1-连接接口4",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口4",
+      "variant": 1,
+      "topology_signature": "C4-R1-P0-CP[0-0,0-0,1-0,1-0]-WL[29fe1ef95ec5:2,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.372,
+        "footprint_projection_boundary_area": 0.372,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0010",
+      "family": "p0_r2_c4",
+      "family_label": "隔板0-杆2-连接接口4",
+      "description": "拓扑代表结构：隔板0-杆2-连接接口4",
+      "variant": 1,
+      "topology_signature": "C4-R2-P0-CP[1-0,1-0,1-0,1-0]-WL[eae441f240b8:4,f65f9d78a465:2]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.0,
+        "footprint_area": 0.0,
+        "footprint_projection_boundary_area": 0.0,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0011",
+      "family": "p0_r0_c5",
+      "family_label": "隔板0-杆0-连接接口5",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口5",
+      "variant": 1,
+      "topology_signature": "C5-R0-P0-CP[0-0,0-0,0-0,0-0,0-0]-WL[29fe1ef95ec5:5]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0012",
+      "family": "p1_r0_c5",
+      "family_label": "隔板1-杆0-连接接口5",
+      "description": "拓扑代表结构：隔板1-杆0-连接接口5",
+      "variant": 1,
+      "topology_signature": "C5-R0-P1-CP[0-0,0-1,0-1,0-1,0-1]-WL[29fe1ef95ec5:1,a78883609285:1,ee686ee88ee7:4]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0013",
+      "family": "p0_r1_c5",
+      "family_label": "隔板0-杆1-连接接口5",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口5",
+      "variant": 1,
+      "topology_signature": "C5-R1-P0-CP[0-0,0-0,0-0,1-0,1-0]-WL[29fe1ef95ec5:3,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0014",
+      "family": "p1_r1_c5",
+      "family_label": "隔板1-杆1-连接接口5",
+      "description": "拓扑代表结构：隔板1-杆1-连接接口5",
+      "variant": 1,
+      "topology_signature": "C5-R1-P1-CP[0-1,0-1,0-1,1-0,1-1]-WL[0ba414f6de51:1,27876e0413eb:1,cf29a1add280:1,ded671d460ff:3,ff17af8644eb:1]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0015",
+      "family": "p0_r2_c5",
+      "family_label": "隔板0-杆2-连接接口5",
+      "description": "拓扑代表结构：隔板0-杆2-连接接口5",
+      "variant": 1,
+      "topology_signature": "C5-R2-P0-CP[0-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:1,eae441f240b8:4,f65f9d78a465:2]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.372,
+        "footprint_projection_boundary_area": 0.372,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0016",
+      "family": "p0_r0_c6",
+      "family_label": "隔板0-杆0-连接接口6",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R0-P0-CP[0-0,0-0,0-0,0-0,0-0,0-0]-WL[29fe1ef95ec5:6]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0017",
+      "family": "p1_r0_c6",
+      "family_label": "隔板1-杆0-连接接口6",
+      "description": "拓扑代表结构：隔板1-杆0-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R0-P1-CP[0-0,0-0,0-1,0-1,0-1,0-1]-WL[29fe1ef95ec5:2,a78883609285:1,ee686ee88ee7:4]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0018",
+      "family": "p0_r1_c6",
+      "family_label": "隔板0-杆1-连接接口6",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R1-P0-CP[0-0,0-0,0-0,0-0,1-0,1-0]-WL[29fe1ef95ec5:4,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0019",
+      "family": "p1_r1_c6",
+      "family_label": "隔板1-杆1-连接接口6",
+      "description": "拓扑代表结构：隔板1-杆1-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R1-P1-CP[0-0,0-1,0-1,0-1,1-0,1-1]-WL[0ba414f6de51:1,27876e0413eb:1,29fe1ef95ec5:1,cf29a1add280:1,ded671d460ff:3,ff17af8644eb:1]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0020",
+      "family": "p0_r2_c6",
+      "family_label": "隔板0-杆2-连接接口6",
+      "description": "拓扑代表结构：隔板0-杆2-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R2-P0-CP[0-0,0-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:2,eae441f240b8:4,f65f9d78a465:2]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0021",
+      "family": "p1_r2_c6",
+      "family_label": "隔板1-杆2-连接接口6",
+      "description": "拓扑代表结构：隔板1-杆2-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R2-P1-CP[0-1,0-1,1-0,1-0,1-1,1-1]-WL[27876e0413eb:2,4db19aebaf89:1,682af02a5041:2,d0902720ea91:2,f194e984e547:2]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0022",
+      "family": "p0_r3_c6",
+      "family_label": "隔板0-杆3-连接接口6",
+      "description": "拓扑代表结构：隔板0-杆3-连接接口6",
+      "variant": 1,
+      "topology_signature": "C6-R3-P0-CP[1-0,1-0,1-0,1-0,1-0,1-0]-WL[eae441f240b8:6,f65f9d78a465:3]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.372,
+        "footprint_projection_boundary_area": 0.372,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0023",
+      "family": "p0_r0_c7",
+      "family_label": "隔板0-杆0-连接接口7",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R0-P0-CP[0-0,0-0,0-0,0-0,0-0,0-0,0-0]-WL[29fe1ef95ec5:7]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0024",
+      "family": "p1_r0_c7",
+      "family_label": "隔板1-杆0-连接接口7",
+      "description": "拓扑代表结构：隔板1-杆0-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R0-P1-CP[0-0,0-0,0-0,0-1,0-1,0-1,0-1]-WL[29fe1ef95ec5:3,a78883609285:1,ee686ee88ee7:4]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0025",
+      "family": "p0_r1_c7",
+      "family_label": "隔板0-杆1-连接接口7",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R1-P0-CP[0-0,0-0,0-0,0-0,0-0,1-0,1-0]-WL[29fe1ef95ec5:5,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0026",
+      "family": "p1_r1_c7",
+      "family_label": "隔板1-杆1-连接接口7",
+      "description": "拓扑代表结构：隔板1-杆1-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R1-P1-CP[0-0,0-0,0-1,0-1,0-1,1-0,1-1]-WL[0ba414f6de51:1,27876e0413eb:1,29fe1ef95ec5:2,cf29a1add280:1,ded671d460ff:3,ff17af8644eb:1]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0027",
+      "family": "p0_r2_c7",
+      "family_label": "隔板0-杆2-连接接口7",
+      "description": "拓扑代表结构：隔板0-杆2-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R2-P0-CP[0-0,0-0,0-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:3,eae441f240b8:4,f65f9d78a465:2]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0028",
+      "family": "p1_r2_c7",
+      "family_label": "隔板1-杆2-连接接口7",
+      "description": "拓扑代表结构：隔板1-杆2-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R2-P1-CP[0-0,0-1,0-1,1-0,1-0,1-1,1-1]-WL[27876e0413eb:2,29fe1ef95ec5:1,4db19aebaf89:1,682af02a5041:2,d0902720ea91:2,f194e984e547:2]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0029",
+      "family": "p0_r3_c7",
+      "family_label": "隔板0-杆3-连接接口7",
+      "description": "拓扑代表结构：隔板0-杆3-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R3-P0-CP[0-0,1-0,1-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:1,eae441f240b8:6,f65f9d78a465:3]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0030",
+      "family": "p1_r3_c7",
+      "family_label": "隔板1-杆3-连接接口7",
+      "description": "拓扑代表结构：隔板1-杆3-连接接口7",
+      "variant": 1,
+      "topology_signature": "C7-R3-P1-CP[0-1,1-0,1-0,1-0,1-1,1-1,1-1]-WL[04d475dddfbf:1,1ed6516926b9:1,252d68ab7259:3,27876e0413eb:3,32a6f39f8ba6:3]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0031",
+      "family": "p0_r0_c8",
+      "family_label": "隔板0-杆0-连接接口8",
+      "description": "拓扑代表结构：隔板0-杆0-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R0-P0-CP[0-0,0-0,0-0,0-0,0-0,0-0,0-0,0-0]-WL[29fe1ef95ec5:8]",
+      "modules": [
+        "connector"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0032",
+      "family": "p1_r0_c8",
+      "family_label": "隔板1-杆0-连接接口8",
+      "description": "拓扑代表结构：隔板1-杆0-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R0-P1-CP[0-0,0-0,0-0,0-0,0-1,0-1,0-1,0-1]-WL[29fe1ef95ec5:4,a78883609285:1,ee686ee88ee7:4]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0033",
+      "family": "p2_r0_c8",
+      "family_label": "隔板2-杆0-连接接口8",
+      "description": "拓扑代表结构：隔板2-杆0-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R0-P2-CP[0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1]-WL[a78883609285:2,ee686ee88ee7:8]",
+      "modules": [
+        "connector",
+        "panel"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          },
+          {
+            "id": "P001",
+            "center": [
+              0.6,
+              0.75,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N004",
+              "N005",
+              "N006",
+              "N007"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 1.488,
+        "panel_projection_area_sum": 1.488,
+        "storage_efficiency": 2.0,
+        "target_efficiency": 2.0,
+        "goal_score": 2.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 2.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0034",
+      "family": "p0_r1_c8",
+      "family_label": "隔板0-杆1-连接接口8",
+      "description": "拓扑代表结构：隔板0-杆1-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R1-P0-CP[0-0,0-0,0-0,0-0,0-0,0-0,1-0,1-0]-WL[29fe1ef95ec5:6,eae441f240b8:2,f65f9d78a465:1]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0035",
+      "family": "p1_r1_c8",
+      "family_label": "隔板1-杆1-连接接口8",
+      "description": "拓扑代表结构：隔板1-杆1-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R1-P1-CP[0-0,0-0,0-0,0-1,0-1,0-1,1-0,1-1]-WL[0ba414f6de51:1,27876e0413eb:1,29fe1ef95ec5:3,cf29a1add280:1,ded671d460ff:3,ff17af8644eb:1]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0036",
+      "family": "p2_r1_c8",
+      "family_label": "隔板2-杆1-连接接口8",
+      "description": "拓扑代表结构：隔板2-杆1-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R1-P2-CP[0-1,0-1,0-1,0-1,0-1,0-1,1-1,1-1]-WL[3f8e3597e018:2,9362ac0ce0f3:2,978b89619216:1,ded671d460ff:6]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          },
+          {
+            "id": "P001",
+            "center": [
+              0.6,
+              0.75,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N004",
+              "N005",
+              "N006",
+              "N007"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 1.488,
+        "panel_projection_area_sum": 1.488,
+        "storage_efficiency": 2.0,
+        "target_efficiency": 2.0,
+        "goal_score": 2.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 2.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0037",
+      "family": "p0_r2_c8",
+      "family_label": "隔板0-杆2-连接接口8",
+      "description": "拓扑代表结构：隔板0-杆2-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R2-P0-CP[0-0,0-0,0-0,0-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:4,eae441f240b8:4,f65f9d78a465:2]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0038",
+      "family": "p1_r2_c8",
+      "family_label": "隔板1-杆2-连接接口8",
+      "description": "拓扑代表结构：隔板1-杆2-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R2-P1-CP[0-0,0-0,0-1,0-1,1-0,1-0,1-1,1-1]-WL[27876e0413eb:2,29fe1ef95ec5:2,4db19aebaf89:1,682af02a5041:2,d0902720ea91:2,f194e984e547:2]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0039",
+      "family": "p2_r2_c8",
+      "family_label": "隔板2-杆2-连接接口8",
+      "description": "拓扑代表结构：隔板2-杆2-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R2-P2-CP[0-1,0-1,0-1,0-1,1-1,1-1,1-1,1-1]-WL[0e0c3a73f4af:4,49affc2593bc:2,b19729ce6b8a:2,f194e984e547:4]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          },
+          {
+            "id": "P001",
+            "center": [
+              0.6,
+              0.75,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N004",
+              "N005",
+              "N006",
+              "N007"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 1.488,
+        "panel_projection_area_sum": 1.488,
+        "storage_efficiency": 2.0,
+        "target_efficiency": 2.0,
+        "goal_score": 2.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 2.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0040",
+      "family": "p0_r3_c8",
+      "family_label": "隔板0-杆3-连接接口8",
+      "description": "拓扑代表结构：隔板0-杆3-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R3-P0-CP[0-0,0-0,1-0,1-0,1-0,1-0,1-0,1-0]-WL[29fe1ef95ec5:2,eae441f240b8:6,f65f9d78a465:3]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0041",
+      "family": "p1_r3_c8",
+      "family_label": "隔板1-杆3-连接接口8",
+      "description": "拓扑代表结构：隔板1-杆3-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R3-P1-CP[0-0,0-1,1-0,1-0,1-0,1-1,1-1,1-1]-WL[04d475dddfbf:1,1ed6516926b9:1,252d68ab7259:3,27876e0413eb:3,29fe1ef95ec5:1,32a6f39f8ba6:3]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0042",
+      "family": "p2_r3_c8",
+      "family_label": "隔板2-杆3-连接接口8",
+      "description": "拓扑代表结构：隔板2-杆3-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R3-P2-CP[0-1,0-1,1-1,1-1,1-1,1-1,1-1,1-1]-WL[1ed6516926b9:2,1f1ebedec169:6,b47858322b3b:2,cfd79131beeb:3]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          },
+          {
+            "id": "P001",
+            "center": [
+              0.6,
+              0.75,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N004",
+              "N005",
+              "N006",
+              "N007"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 1.488,
+        "panel_projection_area_sum": 1.488,
+        "storage_efficiency": 2.0,
+        "target_efficiency": 2.0,
+        "goal_score": 2.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 2.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0043",
+      "family": "p0_r4_c8",
+      "family_label": "隔板0-杆4-连接接口8",
+      "description": "拓扑代表结构：隔板0-杆4-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R4-P0-CP[1-0,1-0,1-0,1-0,1-0,1-0,1-0,1-0]-WL[eae441f240b8:8,f65f9d78a465:4]",
+      "modules": [
+        "connector",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          },
+          {
+            "from": "N003",
+            "to": "N007",
+            "role": "vertical"
+          }
+        ],
+        "panels": []
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.0,
+        "panel_projection_area_sum": 0.0,
+        "storage_efficiency": 0.0,
+        "target_efficiency": 0.0,
+        "goal_score": 0.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 0.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules",
+          "module combination violates R1: module graph is disconnected"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0044",
+      "family": "p1_r4_c8",
+      "family_label": "隔板1-杆4-连接接口8",
+      "description": "拓扑代表结构：隔板1-杆4-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R4-P1-CP[1-0,1-0,1-0,1-0,1-1,1-1,1-1,1-1]-WL[27876e0413eb:4,5ed93823bf93:4,ab5efb17fe7b:4,d72f157bd479:1]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          },
+          {
+            "from": "N003",
+            "to": "N007",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 0.744,
+        "panel_projection_area_sum": 0.744,
+        "storage_efficiency": 1.0,
+        "target_efficiency": 1.0,
+        "goal_score": 1.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 1.0
+      },
+      "validation": {
+        "combination_valid": false,
+        "boundary_valid": null,
+        "goal_passed": null,
+        "open_style_valid": null,
+        "efficiency_valid": null,
+        "passed": false,
+        "failed_stage": "combination",
+        "reasons": [
+          "module combination violates R4: connector must connect at least two modules"
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "id": "SHELF-0045",
+      "family": "p2_r4_c8",
+      "family_label": "隔板2-杆4-连接接口8",
+      "description": "拓扑代表结构：隔板2-杆4-连接接口8",
+      "variant": 1,
+      "topology_signature": "C8-R4-P2-CP[1-1,1-1,1-1,1-1,1-1,1-1,1-1,1-1]-WL[468721c9be87:2,d2bf53b3dd74:8,eef982969447:4]",
+      "modules": [
+        "connector",
+        "panel",
+        "rod"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "N000",
+            "position": [
+              0.0,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N001",
+            "position": [
+              1.2,
+              0.36,
+              0.0
+            ]
+          },
+          {
+            "id": "N002",
+            "position": [
+              0.0,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N003",
+            "position": [
+              1.2,
+              0.36,
+              0.62
+            ]
+          },
+          {
+            "id": "N004",
+            "position": [
+              0.0,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N005",
+            "position": [
+              1.2,
+              0.78,
+              0.0
+            ]
+          },
+          {
+            "id": "N006",
+            "position": [
+              0.0,
+              0.78,
+              0.62
+            ]
+          },
+          {
+            "id": "N007",
+            "position": [
+              1.2,
+              0.78,
+              0.62
+            ]
+          }
+        ],
+        "rods": [
+          {
+            "from": "N000",
+            "to": "N004",
+            "role": "vertical"
+          },
+          {
+            "from": "N001",
+            "to": "N005",
+            "role": "vertical"
+          },
+          {
+            "from": "N002",
+            "to": "N006",
+            "role": "vertical"
+          },
+          {
+            "from": "N003",
+            "to": "N007",
+            "role": "vertical"
+          }
+        ],
+        "panels": [
+          {
+            "id": "P000",
+            "center": [
+              0.6,
+              0.33,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N000",
+              "N001",
+              "N002",
+              "N003"
+            ],
+            "role": "storage_surface"
+          },
+          {
+            "id": "P001",
+            "center": [
+              0.6,
+              0.75,
+              0.31
+            ],
+            "size": [
+              1.2,
+              0.05,
+              0.62
+            ],
+            "supports": [
+              "N004",
+              "N005",
+              "N006",
+              "N007"
+            ],
+            "role": "storage_surface"
+          }
+        ]
+      },
+      "metrics": {
+        "span_x": 1.2,
+        "span_y": 0.42,
+        "span_z": 0.62,
+        "footprint_area": 0.744,
+        "footprint_projection_boundary_area": 0.744,
+        "storage_surface": 1.488,
+        "panel_projection_area_sum": 1.488,
+        "storage_efficiency": 2.0,
+        "target_efficiency": 2.0,
+        "goal_score": 2.0,
+        "baseline_score": 1.0,
+        "baseline_efficiency": 1.0,
+        "improvement_ratio": 2.0
+      },
+      "validation": {
+        "combination_valid": true,
+        "boundary_valid": true,
+        "goal_passed": true,
+        "open_style_valid": true,
+        "efficiency_valid": true,
+        "passed": true,
+        "failed_stage": null,
+        "reasons": [],
+        "warnings": [
+          "boundary A is not concretely specified in standard; boundary stage is pass-through"
+        ]
+      }
+    }
+  ]
+}

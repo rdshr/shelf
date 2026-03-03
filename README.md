@@ -44,3 +44,39 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 uv sync
 uv run python src/main.py
 ```
+
+## 组合验证控制台（新环境启动）
+以下步骤可在新环境直接启动控制台：
+
+1. 安装并准备 `uv`（如未在 PATH）：
+```bash
+# 若 `uv` 命令不可用，先执行（Linux/macOS）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 让当前 shell 能找到 uv
+export PATH=\"$HOME/.local/bin:$PATH\"
+```
+
+2. 同步环境依赖：
+```bash
+uv sync
+```
+
+3. 生成组合与验证结果（默认执行穷举分型 + 同构去重 + 三阶段验证）：
+```bash
+uv run python scripts/generate_shelf_combinations.py
+```
+
+4. 启动控制台静态服务：
+```bash
+uv run python -m http.server 8080
+```
+
+5. 浏览器打开：
+`http://127.0.0.1:8080/web/viewer/`
+
+页面特性：
+- 穷举后的分型组合列表（支持通过/失败筛选）
+- Three.js 3D 交互（拖拽旋转、缩放、平移）
+- 三阶段验证结果（组合原则 / 边界 / 目标）
+- 统计图（通过率、分数分布、分型通过率）

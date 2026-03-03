@@ -1,0 +1,530 @@
+{
+  "generated_at": "2026-03-03T03:06:09.049397+00:00",
+  "standard_profile": {
+    "goal_statement": "定义可拆卸组装的开放式立体堆叠装置，以提升单位占地面积下的存取效率。",
+    "module_symbols": [
+      "Module.CONNECTOR",
+      "Module.PANEL",
+      "Module.ROD"
+    ],
+    "combination_rules": [
+      "R1: 组合中任意两个模块直接至少存在一条可达路径（即从一个模块出发，能到达另一个模块）",
+      "R2: 组合必须包含连接接口模块",
+      "R3: 隔板与隔板、隔板与杆、杆与杆之间必须通过连接接口模块连接",
+      "R4: 每个连接接口模块至少连接两个模块（即每个连接接口模块必须与至少一个隔板或杆相连）",
+      "R5: 隔板必须水平放置",
+      "R6: 杆必须垂直放置"
+    ],
+    "verification_requirements": [
+      "1. 组合原则验证",
+      "2. 边界验证（仅占地面积）",
+      "3. 目标验证（仅开放式、存取效率）"
+    ],
+    "baseline_efficiency": 1.0,
+    "boundary_limit_a": null,
+    "source_file": "standards/L2/置物架框架标准.md"
+  },
+  "enumeration_domain": {
+    "connector_slots": 8,
+    "rod_candidates": 4,
+    "panel_candidates": 2
+  },
+  "raw_candidates": 803,
+  "total_combinations": 45,
+  "passed": 1,
+  "failed": 44,
+  "pass_rate": 0.022,
+  "baseline_score": 1.0,
+  "score_min": 0.0,
+  "score_max": 2.0,
+  "score_avg": 0.556,
+  "score_distribution": [
+    {
+      "bin": 1,
+      "range": [
+        0.0,
+        0.2
+      ],
+      "count": 25
+    },
+    {
+      "bin": 2,
+      "range": [
+        0.2,
+        0.4
+      ],
+      "count": 0
+    },
+    {
+      "bin": 3,
+      "range": [
+        0.4,
+        0.6
+      ],
+      "count": 0
+    },
+    {
+      "bin": 4,
+      "range": [
+        0.6,
+        0.8
+      ],
+      "count": 0
+    },
+    {
+      "bin": 5,
+      "range": [
+        0.8,
+        1.0
+      ],
+      "count": 0
+    },
+    {
+      "bin": 6,
+      "range": [
+        1.0,
+        1.2
+      ],
+      "count": 15
+    },
+    {
+      "bin": 7,
+      "range": [
+        1.2,
+        1.4
+      ],
+      "count": 0
+    },
+    {
+      "bin": 8,
+      "range": [
+        1.4,
+        1.6
+      ],
+      "count": 0
+    },
+    {
+      "bin": 9,
+      "range": [
+        1.6,
+        1.8
+      ],
+      "count": 0
+    },
+    {
+      "bin": 10,
+      "range": [
+        1.8,
+        2.0
+      ],
+      "count": 5
+    }
+  ],
+  "families": [
+    {
+      "family": "p0_r0_c0",
+      "label": "隔板0-杆0-连接接口0",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c1",
+      "label": "隔板0-杆0-连接接口1",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c2",
+      "label": "隔板0-杆0-连接接口2",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c3",
+      "label": "隔板0-杆0-连接接口3",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c4",
+      "label": "隔板0-杆0-连接接口4",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c5",
+      "label": "隔板0-杆0-连接接口5",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c6",
+      "label": "隔板0-杆0-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c7",
+      "label": "隔板0-杆0-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r0_c8",
+      "label": "隔板0-杆0-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c2",
+      "label": "隔板0-杆1-连接接口2",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c3",
+      "label": "隔板0-杆1-连接接口3",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c4",
+      "label": "隔板0-杆1-连接接口4",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c5",
+      "label": "隔板0-杆1-连接接口5",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c6",
+      "label": "隔板0-杆1-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c7",
+      "label": "隔板0-杆1-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r1_c8",
+      "label": "隔板0-杆1-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r2_c4",
+      "label": "隔板0-杆2-连接接口4",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r2_c5",
+      "label": "隔板0-杆2-连接接口5",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r2_c6",
+      "label": "隔板0-杆2-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r2_c7",
+      "label": "隔板0-杆2-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r2_c8",
+      "label": "隔板0-杆2-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r3_c6",
+      "label": "隔板0-杆3-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r3_c7",
+      "label": "隔板0-杆3-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r3_c8",
+      "label": "隔板0-杆3-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p0_r4_c8",
+      "label": "隔板0-杆4-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 0.0
+    },
+    {
+      "family": "p1_r0_c4",
+      "label": "隔板1-杆0-连接接口4",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r0_c5",
+      "label": "隔板1-杆0-连接接口5",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r0_c6",
+      "label": "隔板1-杆0-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r0_c7",
+      "label": "隔板1-杆0-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r0_c8",
+      "label": "隔板1-杆0-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r1_c5",
+      "label": "隔板1-杆1-连接接口5",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r1_c6",
+      "label": "隔板1-杆1-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r1_c7",
+      "label": "隔板1-杆1-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r1_c8",
+      "label": "隔板1-杆1-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r2_c6",
+      "label": "隔板1-杆2-连接接口6",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r2_c7",
+      "label": "隔板1-杆2-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r2_c8",
+      "label": "隔板1-杆2-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r3_c7",
+      "label": "隔板1-杆3-连接接口7",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r3_c8",
+      "label": "隔板1-杆3-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p1_r4_c8",
+      "label": "隔板1-杆4-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 1.0
+    },
+    {
+      "family": "p2_r0_c8",
+      "label": "隔板2-杆0-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 2.0
+    },
+    {
+      "family": "p2_r1_c8",
+      "label": "隔板2-杆1-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 2.0
+    },
+    {
+      "family": "p2_r2_c8",
+      "label": "隔板2-杆2-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 2.0
+    },
+    {
+      "family": "p2_r3_c8",
+      "label": "隔板2-杆3-连接接口8",
+      "count": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0,
+      "avg_score": 2.0
+    },
+    {
+      "family": "p2_r4_c8",
+      "label": "隔板2-杆4-连接接口8",
+      "count": 1,
+      "passed": 1,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "avg_score": 2.0
+    }
+  ]
+}

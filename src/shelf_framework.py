@@ -147,6 +147,24 @@ class CombinationRules:
                     description="connector must exist in every usable combination",
                     validator=lambda combo: Module.CONNECTOR in combo,
                 ),
+                Rule(
+                    rule_id="R3",
+                    description="at most one panel module in each combination",
+                    validator=lambda combo: sum(1 for item in combo if item == Module.PANEL)
+                    <= 1,
+                ),
+                Rule(
+                    rule_id="R4",
+                    description="at most one rod module in each combination",
+                    validator=lambda combo: sum(1 for item in combo if item == Module.ROD)
+                    <= 1,
+                ),
+                Rule(
+                    rule_id="R5",
+                    description="connector must not be isolated; it must pair with both panel and rod",
+                    validator=lambda combo: (Module.CONNECTOR not in combo)
+                    or (Module.PANEL in combo and Module.ROD in combo),
+                ),
             ]
         )
 

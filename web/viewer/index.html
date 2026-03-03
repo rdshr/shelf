@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>置物架分型 3D 查看器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Bricolage+Grotesque:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-layer bg-layer-a"></div>
+    <div class="bg-layer bg-layer-b"></div>
+    <div class="bg-grid"></div>
+
+    <main class="app-shell">
+      <header class="chrome">
+        <div class="brand">
+          <p class="eyebrow">置物架分型模型</p>
+          <h1>组合验证控制台</h1>
+        </div>
+
+        <nav class="top-nav">
+          <button id="navOverview" class="nav-btn active" type="button" data-page="page-overview">
+            统计总览
+          </button>
+          <button id="navDesigns" class="nav-btn" type="button" data-page="page-designs">
+            组合与 3D
+          </button>
+        </nav>
+
+        <div id="globalStats" class="global-stats"></div>
+      </header>
+
+      <section id="page-overview" class="page page-overview is-active">
+        <article class="panel hero-panel">
+          <div class="hero-head">
+            <div>
+              <h2>目标验证总览</h2>
+              <p>唯一验证目标：单位占地面积下的存取效率提升</p>
+            </div>
+            <p id="baselineTextOverview" class="baseline-text">基线分数：-</p>
+          </div>
+          <div class="hero-main">
+            <div class="donut-wrap">
+              <div id="passDonut" class="pass-donut">
+                <div class="donut-center">
+                  <strong id="passRateText">0%</strong>
+                  <span>通过率</span>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div>
+                  <span class="dot pass"></span>
+                  <span id="passCountText">通过：0</span>
+                </div>
+                <div>
+                  <span class="dot fail"></span>
+                  <span id="failCountText">失败：0</span>
+                </div>
+              </div>
+            </div>
+            <div class="highlights">
+              <h3>关键洞察</h3>
+              <div id="overviewHighlights" class="highlight-list"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-headline">
+            <h3>分数分布</h3>
+            <p id="histogramSubtitle">分型目标分数区间分布</p>
+          </div>
+          <svg id="histogram" viewBox="0 0 520 220" preserveAspectRatio="none"></svg>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-headline">
+            <h3>分型通过率</h3>
+            <p>各分型族的通过比例</p>
+          </div>
+          <svg id="familyBars" viewBox="0 0 520 300" preserveAspectRatio="none"></svg>
+        </article>
+      </section>
+
+      <section id="page-designs" class="page page-designs">
+        <aside class="panel list-panel">
+          <div class="panel-headline">
+            <h3>组合列表</h3>
+            <p id="listHint">加载中...</p>
+          </div>
+          <label class="search-input">
+            <input id="searchInput" type="search" placeholder="按编号、分型、模块搜索..." />
+          </label>
+          <div class="list-filters" aria-label="按验证结果筛选">
+            <button type="button" class="filter-btn active" data-filter="all">全部</button>
+            <button type="button" class="filter-btn" data-filter="pass">仅通过</button>
+            <button type="button" class="filter-btn" data-filter="fail">仅失败</button>
+          </div>
+          <div id="comboList" class="combo-list"></div>
+        </aside>
+
+        <section class="panel viewer-panel">
+          <div class="viewer-head">
+            <div>
+              <h2 id="activeTitle">置物架</h2>
+              <p id="activeSubtitle">加载中</p>
+            </div>
+            <div class="viewer-actions">
+              <button id="prevBtn" type="button">上一个</button>
+              <button id="nextBtn" type="button">下一个</button>
+              <button id="autoSpinBtn" type="button">自动旋转：关</button>
+            </div>
+          </div>
+
+          <div id="viewerCanvas" class="viewer-canvas"></div>
+          <div id="activeMetrics" class="active-metrics"></div>
+
+          <div class="validation-zone">
+            <div class="panel-headline slim">
+              <h3>当前组合验证</h3>
+            </div>
+            <div id="validationDetails" class="validation-details"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

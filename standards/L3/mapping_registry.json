@@ -118,6 +118,7 @@
       "l1_anchor": "## 1. 目标（Goal）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 1. 目标（Goal）",
+      "sync_note": "L2 goal section defines target_efficiency as projection-area ratio, fixes baseline_efficiency to 1.0, and applies module morphology: rod/connector zero-area but included in boundary extraction; panel contributes area and boundary.",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -184,6 +185,7 @@
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
+      "sync_note": "L2 R3/R4/R5 updated; combination generation consumes parsed rule expressions and enforces connector non-isolation with panel+rod pairing.",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -207,6 +209,7 @@
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
+      "sync_note": "L2 verification updated to a required 3-stage flow: (1) combination rules, (2) boundary area only, (3) target checks for openness and efficiency; efficiency anchor remains target_efficiency > baseline_efficiency.",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
