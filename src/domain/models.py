@@ -169,15 +169,15 @@ class StructureTopology:
 
     def occupied_cells_by_layer(self) -> dict[int, frozenset[Cell]]:
         if self.family == StructureFamily.FRAME:
-            buckets: dict[int, set[Cell]] = {}
+            frame_buckets: dict[int, set[Cell]] = {}
             for x, y, z in self.frame_cells:
-                buckets.setdefault(z, set()).add((x, y))
-            return {layer: frozenset(cells) for layer, cells in buckets.items()}
+                frame_buckets.setdefault(z, set()).add((x, y))
+            return {layer: frozenset(cells) for layer, cells in frame_buckets.items()}
 
-        buckets: dict[int, set[Cell]] = {}
+        panel_buckets: dict[int, set[Cell]] = {}
         for panel in self.panels:
-            buckets.setdefault(panel.layer_index, set()).update(panel.rect.iter_cells())
-        return {layer: frozenset(cells) for layer, cells in buckets.items()}
+            panel_buckets.setdefault(panel.layer_index, set()).update(panel.rect.iter_cells())
+        return {layer: frozenset(cells) for layer, cells in panel_buckets.items()}
 
     def to_dict(self) -> dict[str, Any]:
         return {

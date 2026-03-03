@@ -6,9 +6,19 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "matplotlib>=3.10.8",
+    "mypy>=1.19.1",
     "plotly>=6.5.2",
     "pyqt6>=6.10.2",
 ]
 
 [tool.uv]
 package = false
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "scripts"]
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_configs = true
+show_error_codes = true

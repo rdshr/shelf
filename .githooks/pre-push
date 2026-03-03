@@ -10,6 +10,8 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 echo "[pre-push] strict mapping validation..."
+echo "[pre-push] static type check..."
+uv run mypy
 uv run python scripts/validate_strict_mapping.py
 uv run python scripts/validate_strict_mapping.py --check-changes
 echo "[pre-push] strict mapping checks passed."

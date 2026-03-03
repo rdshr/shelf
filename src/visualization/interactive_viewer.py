@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Any, cast
 
 from domain.models import CandidateEvaluation, DiscreteGrid, StructureTopology
 from geometry.builders import build_geometry
@@ -93,24 +94,35 @@ class InteractiveShelfViewer:
         self._state = _ViewerState(backend=backend)
 
         self.fig = plt.figure(figsize=(14, 9))
-        self.ax3d = self.fig.add_axes([0.05, 0.25, 0.62, 0.7], projection="3d")
-        self.ax_info = self.fig.add_axes([0.70, 0.25, 0.28, 0.7])
+        self.ax3d = cast(Any, self.fig.add_axes((0.05, 0.25, 0.62, 0.7), projection="3d"))
+        self.ax_info = self.fig.add_axes((0.70, 0.25, 0.28, 0.7))
         self.ax_info.axis("off")
 
-        self.slider_x = Slider(self.fig.add_axes([0.10, 0.18, 0.22, 0.03]), "x_cells", 1, 2, valinit=2, valstep=1)
-        self.slider_y = Slider(self.fig.add_axes([0.35, 0.18, 0.22, 0.03]), "y_cells", 1, 2, valinit=2, valstep=1)
-        self.slider_layers = Slider(self.fig.add_axes([0.60, 0.18, 0.22, 0.03]), "layers", 1, 4, valinit=2, valstep=1)
+        self.slider_x = Slider(self.fig.add_axes((0.10, 0.18, 0.22, 0.03)), "x_cells", 1, 2, valinit=2, valstep=1)
+        self.slider_y = Slider(self.fig.add_axes((0.35, 0.18, 0.22, 0.03)), "y_cells", 1, 2, valinit=2, valstep=1)
+        self.slider_layers = Slider(
+            self.fig.add_axes((0.60, 0.18, 0.22, 0.03)),
+            "layers",
+            1,
+            4,
+            valinit=2,
+            valstep=1,
+        )
 
-        self.slider_w = Slider(self.fig.add_axes([0.10, 0.13, 0.22, 0.03]), "cell_w", 10, 120, valinit=45)
-        self.slider_d = Slider(self.fig.add_axes([0.35, 0.13, 0.22, 0.03]), "cell_d", 10, 120, valinit=20)
-        self.slider_h = Slider(self.fig.add_axes([0.60, 0.13, 0.22, 0.03]), "layer_h", 10, 80, valinit=30)
+        self.slider_w = Slider(self.fig.add_axes((0.10, 0.13, 0.22, 0.03)), "cell_w", 10, 120, valinit=45)
+        self.slider_d = Slider(self.fig.add_axes((0.35, 0.13, 0.22, 0.03)), "cell_d", 10, 120, valinit=20)
+        self.slider_h = Slider(self.fig.add_axes((0.60, 0.13, 0.22, 0.03)), "layer_h", 10, 80, valinit=30)
 
-        self.btn_prev = Button(self.fig.add_axes([0.10, 0.05, 0.10, 0.05]), "Prev")
-        self.btn_next = Button(self.fig.add_axes([0.22, 0.05, 0.10, 0.05]), "Next")
-        self.btn_refresh = Button(self.fig.add_axes([0.35, 0.05, 0.12, 0.05]), "Recompute")
+        self.btn_prev = Button(self.fig.add_axes((0.10, 0.05, 0.10, 0.05)), "Prev")
+        self.btn_next = Button(self.fig.add_axes((0.22, 0.05, 0.10, 0.05)), "Next")
+        self.btn_refresh = Button(self.fig.add_axes((0.35, 0.05, 0.12, 0.05)), "Recompute")
 
-        self.check_opts = CheckButtons(self.fig.add_axes([0.50, 0.03, 0.16, 0.09]), ["allow_empty"], [True])
-        self.radio_filter = RadioButtons(self.fig.add_axes([0.70, 0.03, 0.16, 0.12]), ["valid", "invalid", "all"], active=0)
+        self.check_opts = CheckButtons(self.fig.add_axes((0.50, 0.03, 0.16, 0.09)), ["allow_empty"], [True])
+        self.radio_filter = RadioButtons(
+            self.fig.add_axes((0.70, 0.03, 0.16, 0.12)),
+            ["valid", "invalid", "all"],
+            active=0,
+        )
 
         self.slider_x.on_changed(self._on_dimension_changed)
         self.slider_y.on_changed(self._on_dimension_changed)
@@ -250,26 +262,28 @@ class InteractiveShelfViewer:
         )
         self._render()
 
-    def _on_prev(self, _event) -> None:
+    def _on_prev(self, _event: object) -> None:
         if not self._state.backend.candidates:
             return
         self._state.selected_index = (self._state.selected_index - 1) % len(self._state.backend.candidates)
         self._render()
 
-    def _on_next(self, _event) -> None:
+    def _on_next(self, _event: object) -> None:
         if not self._state.backend.candidates:
             return
         self._state.selected_index = (self._state.selected_index + 1) % len(self._state.backend.candidates)
         self._render()
 
-    def _on_recompute(self, _event) -> None:
+    def _on_recompute(self, _event: object) -> None:
         self._recompute()
         self._render()
 
-    def _on_check_toggle(self, _label: str) -> None:
+    def _on_check_toggle(self, _label: str | None) -> None:
         self._allow_empty_layer = bool(self.check_opts.get_status()[0])
 
-    def _on_filter_changed(self, label: str) -> None:
+    def _on_filter_changed(self, label: str | None) -> None:
+        if label is None:
+            return
         self._filter_mode = "all" if label == "all" else ("invalid" if label == "invalid" else "valid")
         self._recompute()
         self._render()

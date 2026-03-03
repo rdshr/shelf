@@ -98,6 +98,20 @@
                     "children": []
                   },
                   {
+                    "id": "NODE-L3-PYPROJECT",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "pyproject.toml",
+                    "children": []
+                  },
+                  {
+                    "id": "NODE-L3-PRE-PUSH-HOOK",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": ".githooks/pre-push",
+                    "children": []
+                  },
+                  {
                     "id": "NODE-L3-REGISTRY",
                     "kind": "file",
                     "level": "L3",
@@ -254,6 +268,29 @@
         {
           "file": "src/main.py",
           "symbol": "verification_result = verify("
+        }
+      ]
+    },
+    {
+      "id": "MAP-PY-TYPE",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 5. 验证机制",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 7. Python 实现质量（静态类型）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 8. 工程质量约束（静态类型）",
+      "impl_symbols": [
+        {
+          "file": "pyproject.toml",
+          "symbol": "[tool.mypy]"
+        },
+        {
+          "file": "pyproject.toml",
+          "symbol": "files = [\"src\", \"scripts\"]"
+        },
+        {
+          "file": ".githooks/pre-push",
+          "symbol": "uv run mypy"
         }
       ]
     },

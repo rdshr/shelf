@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 
 from domain.enums import StructureFamily
@@ -30,7 +31,7 @@ class EfficiencyResult:
     target_efficiency: float
     baseline_efficiency: float
     improved: bool
-    terms: list[LayerEfficiencyTerm | FrameBayEfficiencyTerm]
+    terms: Sequence[LayerEfficiencyTerm | FrameBayEfficiencyTerm]
 
     def to_dict(self) -> dict[str, object]:
         return {
