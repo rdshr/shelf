@@ -39,8 +39,17 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 - 作用：保存文件后自动运行严格映射校验，并在 Problems 面板报警
 - 手动命令：`Strict Mapping: Validate Now`
 
-## 运行
+## 运行项目
+
+### 后端引擎 (Python)
 ```bash
 uv sync
 uv run python src/main.py
+```
+
+### 前端 3D 验证仪表盘 (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev
 ```
