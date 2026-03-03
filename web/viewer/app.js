@@ -25,6 +25,7 @@ const state = {
     maxPanels: null,
     maxRods: null,
   },
+  enumerationCache: new Map(),
 };
 
 const I18N = {
@@ -202,6 +203,15 @@ function buildEnumerationDomain() {
     });
   });
 
+  // Add one non-vertical rod candidate so R6 toggle has visible impact.
+  rods.push({
+    id: `R${String(rodIndex).padStart(3, "0")}`,
+    from: slot.get("0-0-0"),
+    to: slot.get("1-0-0"),
+    role: "beam",
+  });
+  rodIndex += 1;
+
   const panelSize = [round3(xValues[1] - xValues[0]), 0.05, round3(zValues[1] - zValues[0])];
   const panelCenterX = round3((xValues[1] + xValues[0]) * 0.5);
   const panelCenterZ = round3((zValues[1] + zValues[0]) * 0.5);
@@ -219,6 +229,20 @@ function buildEnumerationDomain() {
       ],
       role: "storage_surface",
     });
+  });
+
+  // Add one non-horizontal panel candidate so R5 toggle has visible impact.
+  panels.push({
+    id: `P${String(yValues.length).padStart(3, "0")}`,
+    center: [panelCenterX, round3((yValues[0] + yValues[1]) * 0.5 - 0.03), panelCenterZ],
+    size: [...panelSize],
+    supports: [
+      slot.get("0-0-0"),
+      slot.get("1-0-0"),
+      slot.get("0-1-1"),
+      slot.get("1-1-1"),
+    ],
+    role: "storage_surface",
   });
 
   return { connectors, rods, panels };
@@ -749,11 +773,32 @@ function buildRuntimeSummary(items, referenceSummary, ruleConfig, meta = {}) {
 
 function runConfiguredCombination() {
   state.ruleConfig = readRuleConfigFromUI();
+  const cacheKey = JSON.stringify(state.ruleConfig);
+  if (state.enumerationCache.has(cacheKey)) {
+    const cached = state.enumerationCache.get(cacheKey);
+    state.combinations = cached.combinations;
+    state.summary = cached.summary;
+    state.searchKeyword = "";
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) searchInput.value = "";
+    renderGlobalStats(state.summary);
+    renderOverviewHighlights(state.summary);
+    updateDonut(state.summary);
+    drawHistogram(state.summary);
+    drawFamilyBars(state.summary);
+    const histogramSubtitle = document.getElementById("histogramSubtitle");
+    if (histogramSubtitle) {
+      histogramSubtitle.textContent = `${state.summary.total_combinations} 种分型的目标分数区间分布`;
+    }
+    applyFilters(true);
+    return;
+  }
   const baseline = Number(state.baseSummary?.standard_profile?.baseline_efficiency ?? state.baseSummary?.baseline_score ?? 1);
   const domain = buildEnumerationDomain();
   const connectorIds = domain.connectors.map((node) => node.id);
   const representatives = new Map();
   let rawCandidates = 0;
+  const t0 = performance.now();
 
   const rodCount = domain.rods.length;
   const panelCount = domain.panels.length;
@@ -776,14 +821,15 @@ function runConfiguredCombination() {
       });
 
       const optionalConnectorIds = connectorIds.filter((id) => !requiredConnectorIds.has(id));
-      const optionalMasks = state.ruleConfig.useR4 ? [0] : [...Array(1 << optionalConnectorIds.length).keys()];
-
-      optionalMasks.forEach((optionalMask) => {
+      const onlyRequiredConnectors = state.ruleConfig.useR4 || state.ruleConfig.useR1;
+      const optionalMaskCount = onlyRequiredConnectors ? 1 : (1 << optionalConnectorIds.length);
+      for (let optionalMask = 0; optionalMask < optionalMaskCount; optionalMask += 1) {
         const selectedConnectorIds = new Set(requiredConnectorIds);
-        optionalConnectorIds.forEach((id, idx) => {
+        for (let idx = 0; idx < optionalConnectorIds.length; idx += 1) {
+          const id = optionalConnectorIds[idx];
           if (((optionalMask >> idx) & 1) === 1) selectedConnectorIds.add(id);
-        });
-        if (state.ruleConfig.useR2 && selectedConnectorIds.size === 0) return;
+        }
+        if (state.ruleConfig.useR2 && selectedConnectorIds.size === 0) continue;
 
         const graph = materializeGraphFromSelection(
           domain,
@@ -792,13 +838,13 @@ function runConfiguredCombination() {
           selectedPanels,
         );
         const comboCheck = validateCombinationByConfig({ graph }, state.ruleConfig);
-        if (!comboCheck.pass) return;
+        if (!comboCheck.pass) continue;
         rawCandidates += 1;
 
         const signature = computeTopologySignature(graph);
-        if (representatives.has(signature)) return;
+        if (representatives.has(signature)) continue;
         representatives.set(signature, graph);
-      });
+      }
     }
   }
 
@@ -836,6 +882,8 @@ function runConfiguredCombination() {
     rawCandidates,
     generationStrategy: "rule_driven_enumeration",
   });
+  const elapsedMs = Math.round(performance.now() - t0);
+  state.summary.enumeration_elapsed_ms = elapsedMs;
   state.searchKeyword = "";
   const searchInput = document.getElementById("searchInput");
   if (searchInput) searchInput.value = "";
@@ -848,6 +896,10 @@ function runConfiguredCombination() {
   if (histogramSubtitle) {
     histogramSubtitle.textContent = `${state.summary.total_combinations} 种分型的目标分数区间分布`;
   }
+  state.enumerationCache.set(cacheKey, {
+    combinations: state.combinations,
+    summary: state.summary,
+  });
   applyFilters(true);
 }
 
@@ -1057,9 +1109,10 @@ function renderGlobalStats(summary) {
   stats.innerHTML = "";
   const items = [
     ["总组合数", summary.total_combinations],
+    ["规则候选", summary.raw_candidates ?? "-"],
     ["通过率", `${fmt((summary.pass_rate || 0) * 100, 1)}%`],
     ["均值效率", fmt(summary.score_avg ?? 0, 3)],
-    ["基线效率", fmt(summary.baseline_score, 3)],
+    ["穷举耗时", `${summary.enumeration_elapsed_ms ?? 0} ms`],
   ];
 
   for (const [label, value] of items) {

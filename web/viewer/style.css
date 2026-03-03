@@ -149,7 +149,7 @@ body {
 .global-stats {
   justify-self: end;
   display: grid;
-  grid-template-columns: repeat(4, minmax(88px, 1fr));
+  grid-template-columns: repeat(5, minmax(88px, 1fr));
   gap: 8px;
 }
 
