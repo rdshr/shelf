@@ -1,0 +1,76 @@
+{
+  "name": "archsync",
+  "displayName": "ArchSync",
+  "description": "ArchSync: framework tree webview + strict mapping validation guard.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:archSync.validateNow",
+    "onCommand:archSync.openFrameworkTree",
+    "onCommand:archSync.refreshFrameworkTree"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "archSync.validateNow",
+        "title": "ArchSync: Validate Mapping Now"
+      },
+      {
+        "command": "archSync.showIssues",
+        "title": "ArchSync: Show Mapping Issues"
+      },
+      {
+        "command": "archSync.openFrameworkTree",
+        "title": "ArchSync: Open Framework Tree"
+      },
+      {
+        "command": "archSync.refreshFrameworkTree",
+        "title": "ArchSync: Refresh Framework Tree"
+      }
+    ],
+    "configuration": {
+      "title": "ArchSync",
+      "properties": {
+        "archSync.enableOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run strict mapping validation when a relevant file is saved."
+        },
+        "archSync.notifyOnAutoFail": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification when auto validation detects mapping issues."
+        },
+        "archSync.changeValidationCommand": {
+          "type": "string",
+          "default": "uv run python scripts/validate_strict_mapping.py --check-changes --json",
+          "description": "Command used for save-triggered validation."
+        },
+        "archSync.fullValidationCommand": {
+          "type": "string",
+          "default": "uv run python scripts/validate_strict_mapping.py --json",
+          "description": "Command used for manual full validation."
+        },
+        "archSync.frameworkTreeHtmlPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.html",
+          "description": "Workspace-relative path of generated framework tree HTML."
+        },
+        "archSync.frameworkTreeGenerateCommand": {
+          "type": "string",
+          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --registry mapping/mapping_registry.json --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
+          "description": "Command used by 'Refresh Framework Tree'."
+        }
+      }
+    }
+  }
+}

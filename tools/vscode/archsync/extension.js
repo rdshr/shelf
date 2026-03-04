@@ -7,18 +7,23 @@ const WATCH_PREFIXES = ["framework/", "specs/", "mapping/", "src/", "docs/"];
 const WATCH_FILES = new Set([
   "AGENTS.md",
   "README.md",
-  "scripts/validate_strict_mapping.py"
+  "scripts/validate_strict_mapping.py",
+  "scripts/generate_framework_tree_hierarchy.py"
 ]);
+
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
 const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
+const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framework_tree.html");
+const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
+  "uv run python scripts/generate_framework_tree_hierarchy.py --registry mapping/mapping_registry.json --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
 
 function activate(context) {
-  const output = vscode.window.createOutputChannel("Strict Mapping Guard");
-  const diagnostics = vscode.languages.createDiagnosticCollection("strict-mapping");
+  const output = vscode.window.createOutputChannel("ArchSync");
+  const diagnostics = vscode.languages.createDiagnosticCollection("archsync-mapping");
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  status.text = "$(check) Mapping idle";
-  status.tooltip = "Strict Mapping Guard";
-  status.command = "strictMapping.showIssues";
+  status.text = "$(check) ArchSync idle";
+  status.tooltip = "ArchSync";
+  status.command = "archSync.showIssues";
   status.backgroundColor = undefined;
   status.color = undefined;
   status.show();
@@ -31,7 +36,8 @@ function activate(context) {
   let lastFailureSignature = "";
   let lastRunIssues = [];
   let lastRepoRoot = "";
-  let strictMappingActive = true;
+  let mappingValidationActive = true;
+  let frameworkTreePanel = null;
 
   const runValidation = async (options = { mode: "change", triggerUri: null, notifyOnFail: false }) => {
     const folder = vscode.workspace.workspaceFolders?.[0];
@@ -41,7 +47,7 @@ function activate(context) {
     const repoRoot = folder.uri.fsPath;
 
     if (!hasStandardsTree(repoRoot)) {
-      strictMappingActive = false;
+      mappingValidationActive = false;
       lastRepoRoot = repoRoot;
       lastRunIssues = [];
       lastFailureSignature = "";
@@ -49,9 +55,9 @@ function activate(context) {
       setStatusDisabled(status, repoRoot);
       return;
     }
-    strictMappingActive = true;
+    mappingValidationActive = true;
 
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
+    const config = vscode.workspace.getConfiguration("archSync");
     const command = options.mode === "full"
       ? config.get("fullValidationCommand")
       : config.get("changeValidationCommand");
@@ -60,40 +66,39 @@ function activate(context) {
       return;
     }
 
-    status.text = "$(sync~spin) Mapping validating";
+    status.text = "$(sync~spin) ArchSync validating";
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
     output.clear();
     output.appendLine(`[run] ${command}`);
 
-    const execResult = await execCommand(command, folder.uri.fsPath);
+    const execResult = await execCommand(command, repoRoot);
     output.appendLine(execResult.stdout || "");
     output.appendLine(execResult.stderr || "");
 
     const parsed = parseResult(execResult.stdout, execResult.stderr, execResult.code);
     lastRunIssues = parsed.errors;
-    lastRepoRoot = folder.uri.fsPath;
-    applyDiagnostics(parsed, diagnostics, folder.uri.fsPath, options.triggerUri);
+    lastRepoRoot = repoRoot;
+    applyDiagnostics(parsed, diagnostics, repoRoot, options.triggerUri);
     output.appendLine(`[result] passed=${parsed.passed} errors=${parsed.errors.length}`);
 
     if (parsed.passed) {
-      status.text = "$(check) Mapping OK";
-      status.tooltip = "Strict Mapping Guard: no issues";
+      status.text = "$(check) ArchSync OK";
+      status.tooltip = "ArchSync: no mapping issues";
       status.backgroundColor = undefined;
       status.color = undefined;
       lastFailureSignature = "";
     } else {
-      status.text = "$(error) Mapping issues";
+      status.text = "$(error) ArchSync issues";
       status.tooltip = buildTooltip(parsed.errors);
       status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
       status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
-      const config = vscode.workspace.getConfiguration("strictMappingGuard");
-      const shouldNotify = options.notifyOnFail || config.get("notifyOnAutoFail");
 
+      const shouldNotify = options.notifyOnFail || config.get("notifyOnAutoFail");
       if (shouldNotify && shouldNotifyFailure(parsed.errors, lastFailureSignature)) {
         lastFailureSignature = signature(parsed.errors);
         const action = await vscode.window.showErrorMessage(
-          `Strict mapping validation failed (${parsed.errors.length} issue(s)).`,
+          `ArchSync mapping validation failed (${parsed.errors.length} issue(s)).`,
           "Open Problems",
           "Open Log"
         );
@@ -139,16 +144,75 @@ function activate(context) {
     }, 250);
   };
 
-  const commandDisposable = vscode.commands.registerCommand("strictMapping.validateNow", async () => {
-    scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true });
-  });
-  const showIssuesDisposable = vscode.commands.registerCommand("strictMapping.showIssues", async () => {
-    if (!strictMappingActive && lastRepoRoot) {
-      vscode.window.showInformationMessage(
-        `Strict Mapping Guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+  const ensureFrameworkTreePanel = () => {
+    if (!frameworkTreePanel) {
+      frameworkTreePanel = vscode.window.createWebviewPanel(
+        "archSyncFrameworkTree",
+        "ArchSync · Framework Tree",
+        vscode.ViewColumn.Active,
+        {
+          enableScripts: true,
+          retainContextWhenHidden: true
+        }
+      );
+      frameworkTreePanel.onDidDispose(() => {
+        frameworkTreePanel = null;
+      });
+    } else {
+      frameworkTreePanel.reveal(vscode.ViewColumn.Active, true);
+    }
+    return frameworkTreePanel;
+  };
+
+  const openFrameworkTree = async (options = { regenerateIfMissing: false }) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("ArchSync: no workspace is open.");
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const config = vscode.workspace.getConfiguration("archSync");
+    const htmlPath = resolveFrameworkTreeHtmlPath(repoRoot, config.get("frameworkTreeHtmlPath"));
+
+    if (options.regenerateIfMissing && !fs.existsSync(htmlPath)) {
+      const generateCommand = config.get("frameworkTreeGenerateCommand") || DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND;
+      await generateFrameworkTree(repoRoot, String(generateCommand), output);
+    }
+
+    const panel = ensureFrameworkTreePanel();
+    panel.webview.html = buildFrameworkTreeFallbackHtml(
+      `Loading ${toWorkspaceRelative(htmlPath, repoRoot)} ...`
+    );
+
+    if (!fs.existsSync(htmlPath)) {
+      panel.webview.html = buildFrameworkTreeFallbackHtml(
+        `Framework tree HTML not found: ${toWorkspaceRelative(htmlPath, repoRoot)}`
       );
       return;
     }
+
+    try {
+      panel.webview.html = fs.readFileSync(htmlPath, "utf8");
+    } catch (error) {
+      panel.webview.html = buildFrameworkTreeFallbackHtml(
+        `Failed to read framework tree HTML: ${String(error)}`
+      );
+    }
+  };
+
+  const validateNowDisposable = vscode.commands.registerCommand("archSync.validateNow", async () => {
+    scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true });
+  });
+
+  const showIssuesDisposable = vscode.commands.registerCommand("archSync.showIssues", async () => {
+    if (!mappingValidationActive && lastRepoRoot) {
+      vscode.window.showInformationMessage(
+        `ArchSync mapping guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+      );
+      return;
+    }
+
     if (!lastRunIssues.length) {
       await vscode.commands.executeCommand("workbench.actions.view.problems");
       return;
@@ -171,7 +235,7 @@ function activate(context) {
     });
 
     const selected = await vscode.window.showQuickPick(picks, {
-      title: `Strict Mapping Issues (${lastRunIssues.length})`,
+      title: `ArchSync Mapping Issues (${lastRunIssues.length})`,
       placeHolder: "Select an issue to jump to its location"
     });
 
@@ -180,8 +244,38 @@ function activate(context) {
     }
   });
 
+  const openFrameworkTreeDisposable = vscode.commands.registerCommand("archSync.openFrameworkTree", async () => {
+    await openFrameworkTree({ regenerateIfMissing: true });
+  });
+
+  const refreshFrameworkTreeDisposable = vscode.commands.registerCommand("archSync.refreshFrameworkTree", async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("ArchSync: no workspace is open.");
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const config = vscode.workspace.getConfiguration("archSync");
+    const generateCommand = String(
+      config.get("frameworkTreeGenerateCommand") || DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND
+    );
+
+    const ok = await generateFrameworkTree(repoRoot, generateCommand, output);
+    if (!ok) {
+      await vscode.window.showErrorMessage("ArchSync: failed to refresh framework tree.", "Open Log").then((action) => {
+        if (action === "Open Log") {
+          output.show(true);
+        }
+      });
+      return;
+    }
+
+    await openFrameworkTree({ regenerateIfMissing: false });
+  });
+
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-    const config = vscode.workspace.getConfiguration("strictMappingGuard");
+    const config = vscode.workspace.getConfiguration("archSync");
     if (!config.get("enableOnSave")) {
       return;
     }
@@ -251,7 +345,8 @@ function activate(context) {
       "docs/**",
       "AGENTS.md",
       "README.md",
-      "scripts/validate_strict_mapping.py"
+      "scripts/validate_strict_mapping.py",
+      "scripts/generate_framework_tree_hierarchy.py"
     ];
 
     for (const pattern of watcherPatterns) {
@@ -273,8 +368,10 @@ function activate(context) {
   }
 
   context.subscriptions.push(
-    commandDisposable,
+    validateNowDisposable,
     showIssuesDisposable,
+    openFrameworkTreeDisposable,
+    refreshFrameworkTreeDisposable,
     saveDisposable,
     createDisposable,
     deleteDisposable,
@@ -283,7 +380,6 @@ function activate(context) {
     ...fileWatcherDisposables
   );
 
-  // Auto-run once after activation so issues surface without manual command.
   scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false });
 }
 
@@ -325,6 +421,15 @@ function execCommand(command, cwd) {
       });
     });
   });
+}
+
+async function generateFrameworkTree(repoRoot, command, output) {
+  output.appendLine(`[framework-tree] ${command}`);
+  const result = await execCommand(command, repoRoot);
+  output.appendLine(result.stdout || "");
+  output.appendLine(result.stderr || "");
+  output.appendLine(`[framework-tree] exit=${result.code}`);
+  return result.code === 0;
 }
 
 function parseResult(stdout, stderr, code) {
@@ -372,9 +477,10 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
     const candidateTarget = resolveIssueFile(issue.file, repoRoot);
     const target = (candidateTarget && fs.existsSync(candidateTarget))
       ? candidateTarget
-        : (triggerUri
-          ? triggerUri.fsPath
-          : path.join(repoRoot, REGISTRY_FILE));
+      : (triggerUri
+        ? triggerUri.fsPath
+        : path.join(repoRoot, REGISTRY_FILE));
+
     if (!grouped.has(target)) {
       grouped.set(target, []);
     }
@@ -384,9 +490,10 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
     const range = new vscode.Range(startLine, startCol, startLine, startCol + 1);
     const diag = new vscode.Diagnostic(
       range,
-      `[strict-mapping] ${issue.message}`,
+      `[archsync] ${issue.message}`,
       vscode.DiagnosticSeverity.Error
     );
+
     if (issue.code) {
       diag.code = issue.code;
     }
@@ -413,6 +520,7 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
         diag.relatedInformation = relatedInfo;
       }
     }
+
     grouped.get(target).push(diag);
   }
 
@@ -431,9 +539,49 @@ function resolveIssueFile(file, repoRoot) {
   return path.join(repoRoot, file);
 }
 
+function resolveFrameworkTreeHtmlPath(repoRoot, configuredPath) {
+  if (typeof configuredPath !== "string" || !configuredPath.trim()) {
+    return path.join(repoRoot, DEFAULT_FRAMEWORK_TREE_HTML);
+  }
+  if (path.isAbsolute(configuredPath)) {
+    return configuredPath;
+  }
+  return path.join(repoRoot, configuredPath);
+}
+
 function toWorkspaceRelative(filePath, repoRoot) {
   const rel = path.relative(repoRoot, filePath).replace(/\\/g, "/");
   return rel.startsWith("..") ? filePath : rel;
+}
+
+function buildFrameworkTreeFallbackHtml(message) {
+  const escaped = String(message)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArchSync · Framework Tree</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; color: #183249; background: #f2f7fb; }
+    .card { max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #d6e2ec; border-radius: 12px; padding: 18px; }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { margin: 0; line-height: 1.6; }
+    code { background: #edf5fb; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ArchSync · Framework Tree</h1>
+    <p>${escaped}</p>
+    <p style="margin-top:10px;">Try command <code>ArchSync: Refresh Framework Tree</code>.</p>
+  </div>
+</body>
+</html>`;
 }
 
 async function revealIssue(issue, repoRoot) {
@@ -461,7 +609,7 @@ function normalizeIssue(item) {
       file: null,
       line: 1,
       column: 1,
-      code: "STRICT_MAPPING",
+      code: "ARCHSYNC_MAPPING",
       related: []
     };
   }
@@ -472,17 +620,17 @@ function normalizeIssue(item) {
       file: null,
       line: 1,
       column: 1,
-      code: "STRICT_MAPPING",
+      code: "ARCHSYNC_MAPPING",
       related: []
     };
   }
 
   return {
-    message: String(item.message || "Strict mapping issue"),
+    message: String(item.message || "ArchSync mapping issue"),
     file: item.file || null,
     line: Number(item.line || 1),
     column: Number(item.column || 1),
-    code: item.code || "STRICT_MAPPING",
+    code: item.code || "ARCHSYNC_MAPPING",
     related: Array.isArray(item.related) ? item.related : []
   };
 }
@@ -500,11 +648,11 @@ function shouldNotifyFailure(errors, prevSignature) {
 
 function buildTooltip(errors) {
   if (!errors.length) {
-    return "Strict Mapping Guard";
+    return "ArchSync";
   }
   const preview = errors.slice(0, 3).map((e) => `• ${e.message}`).join("\n");
   const more = errors.length > 3 ? `\n... +${errors.length - 3} more` : "";
-  return `Strict Mapping Guard\n${preview}${more}\n(click to open Problems)`;
+  return `ArchSync\n${preview}${more}\n(click to open Problems)`;
 }
 
 function hasStandardsTree(repoRoot) {
@@ -512,8 +660,8 @@ function hasStandardsTree(repoRoot) {
 }
 
 function setStatusDisabled(status, repoRoot) {
-  status.text = "$(circle-slash) Mapping n/a";
-  status.tooltip = `Strict Mapping Guard disabled: ${toWorkspaceRelative(
+  status.text = "$(circle-slash) ArchSync n/a";
+  status.tooltip = `ArchSync mapping guard disabled: ${toWorkspaceRelative(
     path.join(repoRoot, STANDARDS_TREE_FILE),
     repoRoot
   )} not found`;
