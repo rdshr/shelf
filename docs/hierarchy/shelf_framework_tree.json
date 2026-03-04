@@ -1,0 +1,143 @@
+{
+  "root": {
+    "title": "框架标准树结构图",
+    "description": "从 mapping/mapping_registry.json 的 tree 自动生成，展示框架标准树父子关系。",
+    "level_labels": {
+      "0": "L0 标准层",
+      "1": "L1 标准层",
+      "2": "L2 标准层",
+      "3": "L3 标准层"
+    },
+    "nodes": [
+      {
+        "id": "NODE-L0-ROOT",
+        "label": "L0.规范总纲与树形结构",
+        "level": 0,
+        "order": 1,
+        "description": "id=NODE-L0-ROOT | kind=file | level=L0 | file=specs/规范总纲与树形结构.md"
+      },
+      {
+        "id": "NODE-L1-LAYER",
+        "label": "L1.layer",
+        "level": 1,
+        "order": 1,
+        "description": "id=NODE-L1-LAYER | kind=layer | level=L1"
+      },
+      {
+        "id": "NODE-L1-CORE",
+        "label": "L1.框架设计核心标准",
+        "level": 1,
+        "order": 2,
+        "description": "id=NODE-L1-CORE | kind=file | level=L1 | file=specs/框架设计核心标准.md"
+      },
+      {
+        "id": "NODE-L1-TRACEABILITY",
+        "label": "L1.可追溯性标准",
+        "level": 1,
+        "order": 3,
+        "description": "id=NODE-L1-TRACEABILITY | kind=file | level=L1 | file=specs/可追溯性标准.md"
+      },
+      {
+        "id": "NODE-L1-REDUCIBILITY",
+        "label": "L1.可删减性标准",
+        "level": 1,
+        "order": 4,
+        "description": "id=NODE-L1-REDUCIBILITY | kind=file | level=L1 | file=specs/可删减性标准.md"
+      },
+      {
+        "id": "NODE-L2-LAYER",
+        "label": "L2.layer",
+        "level": 2,
+        "order": 1,
+        "description": "id=NODE-L2-LAYER | kind=layer | level=L2"
+      },
+      {
+        "id": "NODE-L2-SHELF",
+        "label": "L2.置物架框架标准",
+        "level": 2,
+        "order": 2,
+        "description": "id=NODE-L2-SHELF | kind=file | level=L2 | file=framework/shelf/L2/置物架框架标准.md"
+      },
+      {
+        "id": "NODE-L2-CURTAIN",
+        "label": "L2.窗帘框架标准",
+        "level": 2,
+        "order": 3,
+        "description": "id=NODE-L2-CURTAIN | kind=file | level=L2 | file=framework/curtain/L2/窗帘框架标准.md"
+      },
+      {
+        "id": "NODE-L2-FRONTEND",
+        "label": "L2.前端框架标准",
+        "level": 2,
+        "order": 4,
+        "description": "id=NODE-L2-FRONTEND | kind=file | level=L2 | file=framework/frontend/L2/前端框架标准.md"
+      },
+      {
+        "id": "NODE-L3-LAYER",
+        "label": "L3.layer",
+        "level": 3,
+        "order": 1,
+        "description": "id=NODE-L3-LAYER | kind=layer | level=L3"
+      },
+      {
+        "id": "NODE-L3-REGISTRY",
+        "label": "L3.mapping_registry",
+        "level": 3,
+        "order": 2,
+        "description": "id=NODE-L3-REGISTRY | kind=file | level=L3 | file=mapping/mapping_registry.json"
+      }
+    ],
+    "edges": [
+      {
+        "from": "NODE-L0-ROOT",
+        "to": "NODE-L1-LAYER",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L1-LAYER",
+        "to": "NODE-L1-CORE",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L1-LAYER",
+        "to": "NODE-L1-TRACEABILITY",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L1-LAYER",
+        "to": "NODE-L1-REDUCIBILITY",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L1-LAYER",
+        "to": "NODE-L2-LAYER",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L2-LAYER",
+        "to": "NODE-L2-SHELF",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L2-LAYER",
+        "to": "NODE-L2-CURTAIN",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L2-LAYER",
+        "to": "NODE-L2-FRONTEND",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L2-LAYER",
+        "to": "NODE-L3-LAYER",
+        "relation": "tree_child"
+      },
+      {
+        "from": "NODE-L3-LAYER",
+        "to": "NODE-L3-REGISTRY",
+        "relation": "tree_child"
+      }
+    ]
+  }
+}
