@@ -143,7 +143,7 @@
   ],
   "strict_mapping": {
     "level": "L3",
-    "registry": "standards/L3/mapping_registry.json",
+    "registry": "framework/L3/mapping_registry.json",
     "validation_command": "uv run python scripts/validate_strict_mapping.py --check-changes"
   },
   "load_check": {

@@ -3,13 +3,13 @@
 本仓库采用“多级严格映射”规范。
 
 ## 规范入口
-- 规范总纲（树形）：`standards/L0/规范总纲与树形结构.md`
-- 框架设计核心标准：`standards/L1/框架设计核心标准.md`
-- 领域标准（置物架）：`standards/L2/置物架框架标准.md`
+- 规范总纲（树形）：`framework/L0/规范总纲与树形结构.md`
+- 框架设计核心标准：`framework/L1/框架设计核心标准.md`
+- 领域标准（置物架）：`framework/L2/置物架框架标准.md`
 - 工程执行规范：`AGENTS.md`
 
 ## 映射与验证
-- 映射注册：`standards/L3/mapping_registry.json`
+- 映射注册：`framework/L3/mapping_registry.json`
 - 验证命令：
 ```bash
 uv run python scripts/validate_strict_mapping.py
@@ -46,6 +46,8 @@ uv run python src/main.py
 ```
 
 ## 看图（总入口）
+- M 层级关系图（仅 M 节点，不含规范/代码约束）：
+  - `docs/hierarchy/shelf_module_hierarchy.html`
 - 双族分型子页面入口：
   - `docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html`
 - 旧版单族分型子页面入口：
@@ -122,3 +124,10 @@ uv run python src/generate_type_gallery_3d.py \
 - `--filter valid|invalid|all`：筛选范围
 - `--columns`：3D 墙局部排布密度
 - `--group-3d-columns`：子页面内组级 3D 排布密度
+
+生成 M 层级关系图（根据 JSON 配置）：
+```bash
+uv run python scripts/generate_module_hierarchy_html.py \
+  --input docs/hierarchy/shelf_module_hierarchy.json \
+  --output docs/hierarchy/shelf_module_hierarchy.html
+```

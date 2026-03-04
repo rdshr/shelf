@@ -3,7 +3,7 @@
     "id": "NODE-L0-ROOT",
     "kind": "file",
     "level": "L0",
-    "file": "standards/L0/规范总纲与树形结构.md",
+    "file": "framework/L0/规范总纲与树形结构.md",
     "children": [
       {
         "id": "NODE-L1-LAYER",
@@ -14,28 +14,21 @@
             "id": "NODE-L1-CORE",
             "kind": "file",
             "level": "L1",
-            "file": "standards/L1/框架设计核心标准.md",
+            "file": "framework/L1/框架设计核心标准.md",
             "children": []
           },
           {
             "id": "NODE-L1-TRACEABILITY",
             "kind": "file",
             "level": "L1",
-            "file": "standards/L1/可追溯性标准.md",
+            "file": "framework/L1/可追溯性标准.md",
             "children": []
           },
           {
             "id": "NODE-L1-REDUCIBILITY",
             "kind": "file",
             "level": "L1",
-            "file": "standards/L1/可删减性标准.md",
-            "children": []
-          },
-          {
-            "id": "NODE-L1-AGENT-RULES",
-            "kind": "file",
-            "level": "L1",
-            "file": "AGENTS.md",
+            "file": "framework/L1/可删减性标准.md",
             "children": []
           },
           {
@@ -47,14 +40,14 @@
                 "id": "NODE-L2-SHELF",
                 "kind": "file",
                 "level": "L2",
-                "file": "standards/L2/置物架框架标准.md",
+                "file": "framework/L2/置物架框架标准.md",
                 "children": []
               },
               {
                 "id": "NODE-L2-CURTAIN",
                 "kind": "file",
                 "level": "L2",
-                "file": "standards/L2/窗帘框架标准.md",
+                "file": "framework/L2/窗帘框架标准.md",
                 "children": []
               },
               {
@@ -63,59 +56,10 @@
                 "level": "L3",
                 "children": [
                   {
-                    "id": "NODE-L3-SHELF-FRAMEWORK",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "src/shelf_framework.py",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-STRUCTURAL-RULES",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "src/rules/structural_rules.py",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-MAIN",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "src/main.py",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-VALIDATOR",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "scripts/validate_strict_mapping.py",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-LOGIC-EVIDENCE",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "docs/logic_record.json",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-PYPROJECT",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": "pyproject.toml",
-                    "children": []
-                  },
-                  {
-                    "id": "NODE-L3-PRE-PUSH-HOOK",
-                    "kind": "file",
-                    "level": "L3",
-                    "file": ".githooks/pre-push",
-                    "children": []
-                  },
-                  {
                     "id": "NODE-L3-REGISTRY",
                     "kind": "file",
                     "level": "L3",
-                    "file": "standards/L3/mapping_registry.json",
+                    "file": "framework/L3/mapping_registry.json",
                     "children": []
                   }
                 ]
@@ -133,11 +77,11 @@
   "mappings": [
     {
       "id": "MAP-G",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 1. 目标（Goal）",
-      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_file": "framework/L2/置物架框架标准.md",
       "l2_anchor": "## 1. 目标（Goal）",
       "impl_symbols": [
         {
@@ -152,11 +96,11 @@
     },
     {
       "id": "MAP-B",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 2. 边界定义（Boundary）",
-      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_file": "framework/L2/置物架框架标准.md",
       "l2_anchor": "## 2. 边界定义（Boundary）",
       "impl_symbols": [
         {
@@ -179,11 +123,11 @@
     },
     {
       "id": "MAP-M",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 3. 最小可行基（Bases）",
-      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_file": "framework/L2/置物架框架标准.md",
       "l2_anchor": "## 3. 最小可行基（Bases）",
       "sync_note": "L2 bases section migrated to tagged annotations; Module symbols in L3 remain unchanged",
       "impl_symbols": [
@@ -199,11 +143,11 @@
     },
     {
       "id": "MAP-COMBINATION",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
-      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_file": "framework/L2/置物架框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
       "impl_symbols": [
         {
@@ -246,11 +190,11 @@
     },
     {
       "id": "MAP-V",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 5. 验证（Verification）",
-      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_file": "framework/L2/置物架框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {
@@ -272,36 +216,12 @@
       ]
     },
     {
-      "id": "MAP-PY-TYPE",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
-      "l0_anchor": "## 5. 验证机制",
-      "l1_file": "standards/L1/框架设计核心标准.md",
-      "l1_anchor": "## 7. Python 实现质量（静态类型）",
-      "l2_file": "standards/L2/置物架框架标准.md",
-      "l2_anchor": "## 8. 工程质量约束（静态类型）",
-      "sync_note": "L2 static-type quality anchor retained explicitly to satisfy strict mapping propagation",
-      "impl_symbols": [
-        {
-          "file": "pyproject.toml",
-          "symbol": "[tool.mypy]"
-        },
-        {
-          "file": "pyproject.toml",
-          "symbol": "files = [\"src\", \"scripts\"]"
-        },
-        {
-          "file": ".githooks/pre-push",
-          "symbol": "uv run mypy"
-        }
-      ]
-    },
-    {
       "id": "MAP-CURTAIN-G",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 1. 目标（Goal）",
-      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_file": "framework/L2/窗帘框架标准.md",
       "l2_anchor": "## 1. 目标（Goal）",
       "impl_symbols": [
         {
@@ -312,11 +232,11 @@
     },
     {
       "id": "MAP-CURTAIN-B",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 2. 边界定义（Boundary）",
-      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_file": "framework/L2/窗帘框架标准.md",
       "l2_anchor": "## 2. 边界定义（Boundary）",
       "impl_symbols": [
         {
@@ -327,11 +247,11 @@
     },
     {
       "id": "MAP-CURTAIN-M",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 3. 最小可行基（Bases）",
-      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_file": "framework/L2/窗帘框架标准.md",
       "l2_anchor": "## 3. 最小可行基（Bases）",
       "impl_symbols": [
         {
@@ -342,11 +262,11 @@
     },
     {
       "id": "MAP-CURTAIN-COMBINATION",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 4. 组合原则（Combination Principles）",
-      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_file": "framework/L2/窗帘框架标准.md",
       "l2_anchor": "## 4. 组合原则（Combination Principles）",
       "impl_symbols": [
         {
@@ -357,11 +277,11 @@
     },
     {
       "id": "MAP-CURTAIN-V",
-      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_file": "framework/L0/规范总纲与树形结构.md",
       "l0_anchor": "## 2. 标准树（强制）",
-      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_file": "framework/L1/框架设计核心标准.md",
       "l1_anchor": "## 5. 验证（Verification）",
-      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_file": "framework/L2/窗帘框架标准.md",
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {

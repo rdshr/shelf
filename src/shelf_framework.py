@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 STRICT_MAPPING_LEVEL = "L3"
-STRICT_MAPPING_REGISTRY = "standards/L3/mapping_registry.json"
+STRICT_MAPPING_REGISTRY = "framework/L3/mapping_registry.json"
 STRICT_MAPPING_VALIDATION_COMMAND = (
     "uv run python scripts/validate_strict_mapping.py --check-changes"
 )

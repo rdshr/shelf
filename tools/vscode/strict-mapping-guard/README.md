@@ -4,7 +4,7 @@
 - Runs strict mapping validation automatically on startup.
 - Runs strict mapping validation on save/create/rename/delete for relevant files.
 - Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
-- Auto-disables validation for repositories that do not contain `standards/standards_tree.md`.
+- Auto-disables validation for repositories that do not contain `framework/L0/规范总纲与树形结构.md`.
 - Shows validation issues in VSCode Problems panel.
 - Status bar (`Mapping issues`) is clickable and opens an issue picker for direct file/line jump.
 - Auto-fail notification provides buttons: `Open Problems` / `Open Log`.

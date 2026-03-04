@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-REGISTRY_PATH = REPO_ROOT / "standards/L3/mapping_registry.json"
+REGISTRY_PATH = REPO_ROOT / "framework/L3/mapping_registry.json"
 
 DEFAULT_LEVEL_ORDER = ("L0", "L1", "L2", "L3")
 VALID_NODE_KINDS = {"layer", "file"}
@@ -33,6 +33,7 @@ Issue = dict[str, Any]
 class ParsedRegistry:
     level_order: list[str]
     level_files: dict[str, set[str]]
+    impl_files: set[str]
 
 
 def make_issue(
@@ -161,12 +162,12 @@ def collect_changed_files() -> set[str]:
 
 
 def discover_domain_standards() -> list[str]:
-    standards_dir = REPO_ROOT / "standards" / "L2"
-    if not standards_dir.exists():
+    framework_dir = REPO_ROOT / "framework" / "L2"
+    if not framework_dir.exists():
         return []
     return [
         path.relative_to(REPO_ROOT).as_posix()
-        for path in sorted(standards_dir.glob("*.md"))
+        for path in sorted(framework_dir.glob("*.md"))
     ]
 
 
@@ -378,12 +379,12 @@ def walk_tree_and_collect(
                     seen_files.add(file_name)
                     level_files[level].add(file_name)
 
-                if file_name.startswith("standards/") and not file_name.startswith(
-                    f"standards/{level}/"
+                if file_name.startswith("framework/") and not file_name.startswith(
+                    f"framework/{level}/"
                 ):
                     issues.append(
                         make_issue(
-                            f"{node_id}: standards file must be under standards/{level}/",
+                            f"{node_id}: framework file must be under framework/{level}/",
                             REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
                             line,
                             code="TREE_STANDARDS_PATH_LEVEL_MISMATCH",
@@ -458,7 +459,7 @@ def validate_registry_structure(
         if standard_file not in declared_l2:
             issues.append(
                 make_issue(
-                    "mapping_registry.json: unregistered domain standard in standards/L2/: "
+                    "mapping_registry.json: unregistered domain standard in framework/L2/: "
                     f"{standard_file}",
                     REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
                     find_line(registry_text, '"L2"'),
@@ -483,10 +484,15 @@ def validate_registry_structure(
                 find_line(registry_text, '"mappings"'),
                 code="REGISTRY_MAPPINGS_EMPTY",
             )
+            )
+        return issues, ParsedRegistry(
+            level_order=level_order,
+            level_files=level_files,
+            impl_files=set(),
         )
-        return issues, ParsedRegistry(level_order=level_order, level_files=level_files)
 
     mapping_ids: set[str] = set()
+    impl_files: set[str] = set()
     l2_to_l1_anchors: dict[str, set[str]] = {
         file_name: set() for file_name in level_files.get("L2", set())
     }
@@ -564,20 +570,16 @@ def validate_registry_structure(
             )
             continue
 
-        l3_files = level_files.get("L3", set())
         for symbol_ref in symbols:
-            file_name = symbol_ref.get("file") if isinstance(symbol_ref, dict) else None
-            if not isinstance(file_name, str) or not file_name:
+            if not isinstance(symbol_ref, dict):
                 continue
-            if file_name not in l3_files:
-                issues.append(
-                    make_issue(
-                        f"{map_id}: impl symbol file must be registered in L3 tree: {file_name}",
-                        REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
-                        find_mapping_symbol_line(registry_text, map_id, file_name, ""),
-                        code="REGISTRY_IMPL_FILE_NOT_IN_TREE",
-                    )
-                )
+            file_name = symbol_ref.get("file")
+            if isinstance(file_name, str) and file_name:
+                impl_files.add(file_name)
+
+        # The framework tree is pure L0-L3 standards hierarchy.
+        # Implementation files are validated via `impl_symbols` existence checks,
+        # and do not need to appear as L3 tree nodes.
 
     for l2_file, anchors in l2_to_l1_anchors.items():
         if not anchors:
@@ -613,7 +615,7 @@ def validate_registry_structure(
                     related=[
                         {
                             "message": "Expected these L1 anchors to be mapped",
-                            "file": "standards/L1/框架设计核心标准.md",
+                            "file": "framework/L1/框架设计核心标准.md",
                             "line": 1,
                             "column": 1,
                         }
@@ -621,7 +623,11 @@ def validate_registry_structure(
                 )
             )
 
-    return issues, ParsedRegistry(level_order=level_order, level_files=level_files)
+    return issues, ParsedRegistry(
+        level_order=level_order,
+        level_files=level_files,
+        impl_files=impl_files,
+    )
 
 
 def validate_mapping_content(
@@ -776,10 +782,14 @@ def validate_change_propagation(
 
     level_order = parsed_registry.level_order
     level_files = parsed_registry.level_files
+    impl_files = parsed_registry.impl_files
     level_index = {level: idx for idx, level in enumerate(level_order)}
 
     def touched(level: str) -> bool:
-        return bool(changed_files.intersection(level_files.get(level, set())))
+        candidates = set(level_files.get(level, set()))
+        if level == "L3":
+            candidates.update(impl_files)
+        return bool(changed_files.intersection(candidates))
 
     for src_level in level_order:
         if src_level == "L3":
@@ -789,7 +799,9 @@ def validate_change_propagation(
 
         src_idx = level_index[src_level]
         for target_level in level_order[src_idx + 1 :]:
-            target_candidates = level_files.get(target_level, set())
+            target_candidates = set(level_files.get(target_level, set()))
+            if target_level == "L3":
+                target_candidates.update(impl_files)
             if not target_candidates:
                 continue
             if touched(target_level):
