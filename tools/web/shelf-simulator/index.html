@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shelf Morph Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-shape shape-a"></div>
+    <div class="background-shape shape-b"></div>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">L3 VISUAL SIMULATOR</p>
+        <h1>Shelf Morph Lab</h1>
+        <p class="subtitle">
+          Dynamic shelf generation based on boundary inputs and module counts.
+        </p>
+        <div class="rule-tags">
+          <span>R1: active modules >= 2</span>
+          <span>R2: connector required</span>
+          <span>V: target > baseline</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel controls-panel">
+          <h2>Inputs</h2>
+          <form id="shelf-form">
+            <fieldset>
+              <legend>Boundary</legend>
+              <label>
+                Layers (N)
+                <input type="number" name="layers_n" min="1" step="1" value="4" />
+              </label>
+              <label>
+                Payload per layer (P)
+                <input
+                  type="number"
+                  name="payload_p_per_layer"
+                  min="0.1"
+                  step="0.1"
+                  value="30"
+                />
+              </label>
+              <label>
+                Space width (S.w)
+                <input type="number" name="space_width" min="0.1" step="0.1" value="80" />
+              </label>
+              <label>
+                Space depth (S.d)
+                <input type="number" name="space_depth" min="0.1" step="0.1" value="35" />
+              </label>
+              <label>
+                Space height (S.h)
+                <input type="number" name="space_height" min="0.1" step="0.1" value="30" />
+              </label>
+              <label>
+                Opening width (O.w)
+                <input type="number" name="opening_width" min="0.1" step="0.1" value="65" />
+              </label>
+              <label>
+                Opening height (O.h)
+                <input type="number" name="opening_height" min="0.1" step="0.1" value="28" />
+              </label>
+              <label>
+                Footprint width (A.w)
+                <input
+                  type="number"
+                  name="footprint_width"
+                  min="0.1"
+                  step="0.1"
+                  value="90"
+                />
+              </label>
+              <label>
+                Footprint depth (A.d)
+                <input
+                  type="number"
+                  name="footprint_depth"
+                  min="0.1"
+                  step="0.1"
+                  value="40"
+                />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Module counts</legend>
+              <label>
+                Rod count (M1)
+                <input type="number" name="rod_count" min="0" step="1" value="4" />
+              </label>
+              <label>
+                Connector count (M2)
+                <input type="number" name="connector_count" min="0" step="1" value="12" />
+              </label>
+              <label>
+                Panel count (M3)
+                <input type="number" name="panel_count" min="0" step="1" value="4" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Verification</legend>
+              <label>
+                Baseline efficiency
+                <input
+                  type="number"
+                  name="baseline_efficiency"
+                  min="0"
+                  step="0.01"
+                  value="1.00"
+                />
+              </label>
+              <label>
+                Target efficiency
+                <input
+                  type="number"
+                  name="target_efficiency"
+                  min="0"
+                  step="0.01"
+                  value="1.22"
+                />
+              </label>
+            </fieldset>
+
+            <div class="actions">
+              <button type="submit">Generate Shelf</button>
+              <button type="button" id="reset-demo">Reset Demo</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel viewport-panel">
+          <div id="viewport"></div>
+          <div class="overlay">
+            <p id="status-pill" class="status-pill">Waiting for input...</p>
+            <ul id="reasons"></ul>
+            <div id="metrics" class="metrics"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
