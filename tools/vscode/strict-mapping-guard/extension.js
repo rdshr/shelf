@@ -3,13 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const vscode = require("vscode");
 
-const WATCH_PREFIXES = ["framework/", "src/", "docs/"];
+const WATCH_PREFIXES = ["framework/", "specs/", "mapping/", "src/", "docs/"];
 const WATCH_FILES = new Set([
   "AGENTS.md",
   "README.md",
   "scripts/validate_strict_mapping.py"
 ]);
-const STANDARDS_TREE_FILE = path.join("framework", "L0", "规范总纲与树形结构.md");
+const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
+const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
 
 function activate(context) {
   const output = vscode.window.createOutputChannel("Strict Mapping Guard");
@@ -244,6 +245,8 @@ function activate(context) {
   if (watcherFolder) {
     const watcherPatterns = [
       "framework/**",
+      "specs/**",
+      "mapping/**",
       "src/**",
       "docs/**",
       "AGENTS.md",
@@ -369,9 +372,9 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
     const candidateTarget = resolveIssueFile(issue.file, repoRoot);
     const target = (candidateTarget && fs.existsSync(candidateTarget))
       ? candidateTarget
-      : (triggerUri
-        ? triggerUri.fsPath
-        : path.join(repoRoot, "framework", "L3", "mapping_registry.json"));
+        : (triggerUri
+          ? triggerUri.fsPath
+          : path.join(repoRoot, REGISTRY_FILE));
     if (!grouped.has(target)) {
       grouped.set(target, []);
     }
@@ -437,7 +440,7 @@ async function revealIssue(issue, repoRoot) {
   const candidate = resolveIssueFile(issue.file, repoRoot);
   const target = (candidate && fs.existsSync(candidate))
     ? candidate
-    : path.join(repoRoot, "framework", "L3", "mapping_registry.json");
+    : path.join(repoRoot, REGISTRY_FILE);
   const uri = vscode.Uri.file(target);
   const doc = await vscode.workspace.openTextDocument(uri);
   const line = Math.max(0, Number(issue.line || 1) - 1);

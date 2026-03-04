@@ -82,8 +82,7 @@
         "strictMappingGuard.requiredRegistryPaths": {
           "type": "array",
           "default": [
-            "framework/L3/mapping_registry.json",
-            "framework/mapping_registry.json"
+            "mapping/mapping_registry.json"
           ],
           "items": {
             "type": "string"
