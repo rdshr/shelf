@@ -78,6 +78,55 @@ class ProjectionValidationSummary:
         }
 
 
+def _parse_int_options(raw: str, *, name: str) -> list[int]:
+    items = [item.strip() for item in raw.split(",")]
+    values: list[int] = []
+    for item in items:
+        if not item:
+            continue
+        try:
+            values.append(int(item))
+        except ValueError as exc:
+            raise ValueError(f"{name} contains non-integer value: {item!r}") from exc
+    if not values:
+        raise ValueError(f"{name} must contain at least one integer")
+    ordered_unique: list[int] = []
+    for value in values:
+        if value not in ordered_unique:
+            ordered_unique.append(value)
+    return ordered_unique
+
+
+def _parse_bool_options(raw: str, *, name: str) -> list[bool]:
+    tokens = [token.strip().lower() for token in raw.split(",") if token.strip()]
+    if not tokens:
+        raise ValueError(f"{name} must contain at least one boolean value")
+    mapping = {
+        "true": True,
+        "1": True,
+        "yes": True,
+        "y": True,
+        "false": False,
+        "0": False,
+        "no": False,
+        "n": False,
+    }
+    values: list[bool] = []
+    for token in tokens:
+        if token not in mapping:
+            raise ValueError(f"{name} contains invalid boolean value: {token!r}")
+        values.append(mapping[token])
+    ordered_unique: list[bool] = []
+    for value in values:
+        if value not in ordered_unique:
+            ordered_unique.append(value)
+    return ordered_unique
+
+
+def _scenario_id(x_cells: int, y_cells: int, layers: int, allow_empty_layer: bool) -> str:
+    return f"x{x_cells}_y{y_cells}_l{layers}_e{1 if allow_empty_layer else 0}"
+
+
 def _run_mapping_check(check_changes: bool) -> MappingCheckResult:
     cmd = [sys.executable, str(REPO_ROOT / "scripts/validate_strict_mapping.py")]
     if check_changes:
@@ -252,6 +301,59 @@ def _collect_rows(
     return rows, dict(reason_counter)
 
 
+def _collect_scenarios(
+    boundary_template: BoundaryDefinition,
+    *,
+    x_cells_options: list[int],
+    y_cells_options: list[int],
+    layers_options: list[int],
+    allow_empty_options: list[bool],
+    ratio_threshold: float,
+    max_type_count: int,
+) -> list[dict[str, Any]]:
+    scenarios: list[dict[str, Any]] = []
+    for layers in layers_options:
+        boundary = BoundaryDefinition(
+            layers_n=layers,
+            payload_p_per_layer=boundary_template.payload_p_per_layer,
+            space_s_per_layer=boundary_template.space_s_per_layer,
+            opening_o=boundary_template.opening_o,
+            footprint_a=boundary_template.footprint_a,
+        )
+        for x_cells in x_cells_options:
+            for y_cells in y_cells_options:
+                grid = _build_grid(boundary, x_cells=x_cells, y_cells=y_cells)
+                for allow_empty_layer in allow_empty_options:
+                    rows, reason_counter = _collect_rows(
+                        grid=grid,
+                        boundary=boundary,
+                        ratio_threshold=ratio_threshold,
+                        allow_empty_layer=allow_empty_layer,
+                        max_type_count=max_type_count,
+                    )
+                    scenarios.append(
+                        {
+                            "id": _scenario_id(x_cells, y_cells, layers, allow_empty_layer),
+                            "x_cells": x_cells,
+                            "y_cells": y_cells,
+                            "layers": layers,
+                            "allow_empty_layer": allow_empty_layer,
+                            "footprint_cells": x_cells * y_cells,
+                            "rows": rows,
+                            "reason_counter": reason_counter,
+                        }
+                    )
+    scenarios.sort(
+        key=lambda item: (
+            int(item["layers"]),
+            int(item["x_cells"]),
+            int(item["y_cells"]),
+            0 if bool(item["allow_empty_layer"]) else 1,
+        )
+    )
+    return scenarios
+
+
 def _build_summary(
     rows: list[dict[str, Any]],
     mapping_default: MappingCheckResult,
@@ -400,223 +502,913 @@ def _write_json_summary(summary: ProjectionValidationSummary, output_path: Path)
 
 
 def _write_dashboard(
-    rows: list[dict[str, Any]],
-    summary: ProjectionValidationSummary,
-    reason_counter: dict[str, int],
+    scenarios: list[dict[str, Any]],
+    default_state: dict[str, Any],
     output_path: Path,
 ) -> None:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "scenarios": scenarios,
+        "default": default_state,
+    }
+    payload_json = json.dumps(payload, ensure_ascii=False)
+    html = """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shelf Top-Projection Validation Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d9e2f1;
+      --pass: #1f9d55;
+      --fail: #d64545;
+      --chip-on: #e7f1ff;
+      --chip-off: #f4f4f6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1760px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .title {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(170px, 1fr));
+      gap: 10px 12px;
+      align-items: end;
+    }
+    .control label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .control select,
+    .control input[type="number"] {
+      width: 100%;
+      padding: 7px 9px;
+      border: 1px solid #c6d3e8;
+      border-radius: 7px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .check-group {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(200px, 1fr));
+      gap: 6px 12px;
+      margin-top: 10px;
+      margin-bottom: 8px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .btn {
+      padding: 8px 10px;
+      border: 1px solid #bfd0ea;
+      border-radius: 8px;
+      background: #f7fbff;
+      color: #26456d;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: #f8fbff;
+      border: 1px solid #d9e2f1;
+      border-radius: 9px;
+      padding: 10px;
+    }
+    .stat .k {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .stat .v {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .rule-card {
+      border-radius: 9px;
+      border: 1px solid #d9e2f1;
+      padding: 9px;
+      background: var(--chip-off);
+    }
+    .rule-card.on {
+      background: var(--chip-on);
+      border-color: #b6cbee;
+    }
+    .rule-card .rk {
+      font-size: 12px;
+      color: #4b5563;
+      margin-bottom: 6px;
+    }
+    .rule-card .rv {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 10px;
+    }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(300px, 1fr));
+      gap: 10px;
+    }
+    .chart-box {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px;
+      min-height: 320px;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-height: 360px;
+      border: 1px solid #d9e2f1;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #edf3ff;
+      text-align: left;
+      padding: 6px;
+      border-bottom: 1px solid #d9e2f1;
+      z-index: 1;
+    }
+    tbody td {
+      padding: 6px;
+      border-bottom: 1px solid #eef3fb;
+      vertical-align: top;
+      word-break: break-all;
+    }
+    .status-pass { color: var(--pass); font-weight: 700; }
+    .status-fail { color: var(--fail); font-weight: 700; }
+    .cell-btn {
+      border: 0;
+      background: transparent;
+      color: #1f4f9a;
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      font-size: 12px;
+      text-decoration: underline;
+    }
+    .detail {
+      font-size: 13px;
+      line-height: 1.5;
+      background: #fcfdff;
+      border: 1px solid #d9e2f1;
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 240px;
+    }
+    .detail .line {
+      margin: 4px 0;
+    }
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .chip {
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border: 1px solid #c9d7ee;
+      background: #f5f9ff;
+    }
+    .chip.fail {
+      border-color: #f2b9b9;
+      background: #fff1f1;
+      color: #a11a1a;
+    }
+    .chip.pass {
+      border-color: #b8e3c8;
+      background: #eefcf2;
+      color: #0f6a34;
+    }
+    @media (max-width: 1380px) {
+      .controls { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+      .check-group { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+      .rule-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      .stats { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      .layout-grid { grid-template-columns: 1fr; }
+      .charts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="panel">
+      <h1 class="title">Shelf Top-Projection Validation Dashboard</h1>
+      <p class="subtitle">边界与组合原则可调；支持分组筛选、点击分型看详情、显示各原则对通过/失败的影响。</p>
+    </div>
 
-    passed_rows = [row for row in rows if row["passed"]]
-    failed_rows = [row for row in rows if not row["passed"]]
+    <div class="panel">
+      <div class="controls">
+        <div class="control">
+          <label for="xCells">x_cells</label>
+          <select id="xCells"></select>
+        </div>
+        <div class="control">
+          <label for="yCells">y_cells</label>
+          <select id="yCells"></select>
+        </div>
+        <div class="control">
+          <label for="layers">layers</label>
+          <select id="layers"></select>
+        </div>
+        <div class="control">
+          <label for="allowEmptyLayer">allow_empty_layer</label>
+          <select id="allowEmptyLayer">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="ratioThreshold">ratio_threshold</label>
+          <input id="ratioThreshold" type="number" step="0.01" min="0" />
+        </div>
+        <div class="control">
+          <label for="groupFilter">group filter</label>
+          <select id="groupFilter"></select>
+        </div>
+      </div>
 
-    group_buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for row in rows:
-        group_buckets[str(row["group_id"])].append(row)
-    group_ids = sorted(group_buckets.keys())
-    group_pass = [sum(1 for row in group_buckets[gid] if row["passed"]) for gid in group_ids]
-    group_fail = [len(group_buckets[gid]) - group_pass[idx] for idx, gid in enumerate(group_ids)]
+      <div class="check-group">
+        <label class="check-item"><input id="requireBoundary" type="checkbox" /> B1: boundary_valid</label>
+        <label class="check-item"><input id="requireCombination" type="checkbox" /> C1: combination_valid</label>
+        <label class="check-item"><input id="requireStructural" type="checkbox" /> S1: structural_valid</label>
+        <label class="check-item"><input id="requireR6" type="checkbox" /> S2: weighted_cells &gt; footprint_cells</label>
+        <label class="check-item"><input id="requireRatioThreshold" type="checkbox" /> E1: projection_ratio &gt; threshold</label>
+      </div>
 
-    reason_items = sorted(reason_counter.items(), key=lambda item: item[1], reverse=True)
-    top_reasons = reason_items[:8]
-    reason_labels = [item[0] for item in top_reasons] or ["none"]
-    reason_values = [item[1] for item in top_reasons] or [0]
+      <button id="btnResetConstraints" class="btn" type="button">重置为默认约束</button>
+      <div class="hint" id="scenarioHint"></div>
+      <div class="hint" id="constraintImpact"></div>
+    </div>
 
-    failed_table = failed_rows[:20]
-    passed_table = sorted(
-        passed_rows,
-        key=lambda row: float(row["projection_ratio"]),
-        reverse=True,
-    )[:20]
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">types (filtered)</div><div class="v" id="statTotal">0</div></div>
+        <div class="stat"><div class="k">passed</div><div class="v" id="statPassed">0</div></div>
+        <div class="stat"><div class="k">failed</div><div class="v" id="statFailed">0</div></div>
+        <div class="stat"><div class="k">pass_rate</div><div class="v" id="statPassRate">0%</div></div>
+        <div class="stat"><div class="k">avg_ratio</div><div class="v" id="statAvgRatio">0.000</div></div>
+      </div>
+      <div class="rule-grid" id="ruleGrid"></div>
+    </div>
 
-    fig = make_subplots(
-        rows=3,
-        cols=2,
-        specs=[
-            [{"type": "xy"}, {"type": "xy"}],
-            [{"type": "xy"}, {"type": "xy"}],
-            [{"type": "table"}, {"type": "table"}],
+    <div class="layout-grid">
+      <div class="panel">
+        <div class="charts">
+          <div class="chart-box"><div id="chartOverall"></div></div>
+          <div class="chart-box"><div id="chartGroup"></div></div>
+          <div class="chart-box"><div id="chartPrinciple"></div></div>
+          <div class="chart-box"><div id="chartScatter"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>分型详情（点击右侧表格行或散点）</h3>
+        <div class="detail" id="detailPanel">请选择一个结构分型。</div>
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <div class="panel">
+        <h3>分组汇总</h3>
+        <div class="table-wrap" id="groupTable"></div>
+      </div>
+      <div class="panel">
+        <h3>结构分型列表</h3>
+        <div class="table-wrap" id="typeTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PAYLOAD = __PAYLOAD_JSON__;
+    const scenarios = PAYLOAD.scenarios;
+    const defaultState = PAYLOAD.default;
+
+    const PRINCIPLE_META = [
+      { id: "BOUNDARY", label: "B1 boundary_valid", checkKey: "requireBoundary" },
+      { id: "COMBO", label: "C1 combination_valid", checkKey: "requireCombination" },
+      { id: "STRUCTURAL", label: "S1 structural_valid", checkKey: "requireStructural" },
+      { id: "R6", label: "S2 weighted_cells > footprint_cells", checkKey: "requireR6" },
+      { id: "RATIO", label: "E1 projection_ratio > threshold", checkKey: "requireRatioThreshold" },
+    ];
+
+    let latestRows = [];
+    let selectedKey = null;
+
+    const dom = {
+      xCells: document.getElementById("xCells"),
+      yCells: document.getElementById("yCells"),
+      layers: document.getElementById("layers"),
+      allowEmptyLayer: document.getElementById("allowEmptyLayer"),
+      ratioThreshold: document.getElementById("ratioThreshold"),
+      groupFilter: document.getElementById("groupFilter"),
+      requireBoundary: document.getElementById("requireBoundary"),
+      requireCombination: document.getElementById("requireCombination"),
+      requireStructural: document.getElementById("requireStructural"),
+      requireR6: document.getElementById("requireR6"),
+      requireRatioThreshold: document.getElementById("requireRatioThreshold"),
+      btnResetConstraints: document.getElementById("btnResetConstraints"),
+      scenarioHint: document.getElementById("scenarioHint"),
+      constraintImpact: document.getElementById("constraintImpact"),
+      statTotal: document.getElementById("statTotal"),
+      statPassed: document.getElementById("statPassed"),
+      statFailed: document.getElementById("statFailed"),
+      statPassRate: document.getElementById("statPassRate"),
+      statAvgRatio: document.getElementById("statAvgRatio"),
+      ruleGrid: document.getElementById("ruleGrid"),
+      groupTable: document.getElementById("groupTable"),
+      typeTable: document.getElementById("typeTable"),
+      detailPanel: document.getElementById("detailPanel"),
+    };
+
+    function uniqueValues(field) {
+      return [...new Set(scenarios.map((item) => item[field]))].sort((a, b) => Number(a) - Number(b));
+    }
+
+    function fillSelect(selectEl, values) {
+      selectEl.innerHTML = "";
+      for (const value of values) {
+        const option = document.createElement("option");
+        option.value = String(value);
+        option.textContent = String(value);
+        selectEl.appendChild(option);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function rowKey(row) {
+      return String(row.canonical_key);
+    }
+
+    function scenarioBySelection() {
+      const x = Number(dom.xCells.value);
+      const y = Number(dom.yCells.value);
+      const layers = Number(dom.layers.value);
+      const allowEmptyLayer = dom.allowEmptyLayer.value === "true";
+      return scenarios.find((item) =>
+        item.x_cells === x &&
+        item.y_cells === y &&
+        item.layers === layers &&
+        Boolean(item.allow_empty_layer) === allowEmptyLayer
+      ) || null;
+    }
+
+    function currentConfig() {
+      return {
+        ratioThreshold: Number(dom.ratioThreshold.value),
+        requireBoundary: dom.requireBoundary.checked,
+        requireCombination: dom.requireCombination.checked,
+        requireStructural: dom.requireStructural.checked,
+        requireR6: dom.requireR6.checked,
+        requireRatioThreshold: dom.requireRatioThreshold.checked,
+      };
+    }
+
+    function baselineConfigFromCurrent() {
+      const cfg = currentConfig();
+      return {
+        ...cfg,
+        requireBoundary: true,
+        requireCombination: true,
+        requireStructural: true,
+        requireR6: true,
+        requireRatioThreshold: true,
+      };
+    }
+
+    function evaluateRows(scenario, config) {
+      const out = [];
+      for (const row of scenario.rows) {
+        const flags = {
+          BOUNDARY: !row.boundary_valid,
+          COMBO: !row.combination_valid,
+          STRUCTURAL: !row.structural_valid,
+          R6: !(row.weighted_projected_cells > scenario.footprint_cells),
+          RATIO: !(Number(row.projection_ratio) > config.ratioThreshold),
+        };
+
+        const failedPrinciples = [];
+        if (config.requireBoundary && flags.BOUNDARY) failedPrinciples.push("BOUNDARY");
+        if (config.requireCombination && flags.COMBO) failedPrinciples.push("COMBO");
+        if (config.requireStructural && flags.STRUCTURAL) failedPrinciples.push("STRUCTURAL");
+        if (config.requireR6 && flags.R6) failedPrinciples.push("R6");
+        if (config.requireRatioThreshold && flags.RATIO) failedPrinciples.push("RATIO");
+
+        const passed = failedPrinciples.length === 0;
+        const principleText = passed
+          ? "满足启用原则"
+          : `违反: ${failedPrinciples.map((id) => PRINCIPLE_META.find((it) => it.id === id).label).join(" | ")}`;
+
+        out.push({
+          ...row,
+          key: rowKey(row),
+          footprint_cells: scenario.footprint_cells,
+          rule_flags: flags,
+          failed_principles: failedPrinciples,
+          principle_text: principleText,
+          dynamic_reasons: passed ? "passed" : principleText,
+          passed,
+        });
+      }
+      return out;
+    }
+
+    function filteredByGroup(rows) {
+      const gid = dom.groupFilter.value || "ALL";
+      if (gid === "ALL") return rows;
+      return rows.filter((row) => row.group_id === gid);
+    }
+
+    function getGroupIds(rows) {
+      return [...new Set(rows.map((row) => row.group_id))].sort();
+    }
+
+    function refreshGroupFilterOptions(scenarioRows) {
+      const current = dom.groupFilter.value || "ALL";
+      const groups = getGroupIds(scenarioRows);
+      dom.groupFilter.innerHTML = `<option value="ALL">ALL</option>${groups
+        .map((gid) => `<option value="${escapeHtml(gid)}">${escapeHtml(gid)}</option>`)
+        .join("")}`;
+      if (groups.includes(current)) {
+        dom.groupFilter.value = current;
+      } else {
+        dom.groupFilter.value = "ALL";
+      }
+    }
+
+    function renderStats(rows) {
+      const total = rows.length;
+      const passed = rows.filter((row) => row.passed).length;
+      const failed = total - passed;
+      const avgRatio = total === 0
+        ? 0
+        : rows.reduce((acc, row) => acc + Number(row.projection_ratio), 0) / total;
+
+      dom.statTotal.textContent = String(total);
+      dom.statPassed.textContent = String(passed);
+      dom.statFailed.textContent = String(failed);
+      dom.statPassRate.textContent = total === 0 ? "0%" : `${((passed / total) * 100).toFixed(1)}%`;
+      dom.statAvgRatio.textContent = avgRatio.toFixed(3);
+    }
+
+    function renderRuleCards(rows, config) {
+      const cards = PRINCIPLE_META.map((meta) => {
+        const failCount = rows.filter((row) => row.rule_flags[meta.id]).length;
+        const on = Boolean(config[meta.checkKey]);
+        const rowClass = on ? "rule-card on" : "rule-card";
+        return `
+          <div class="${rowClass}">
+            <div class="rk">${escapeHtml(meta.label)} (${on ? "启用" : "未启用"})</div>
+            <div class="rv">${failCount}</div>
+          </div>
+        `;
+      }).join("");
+      dom.ruleGrid.innerHTML = cards;
+    }
+
+    function renderCharts(rows, config) {
+      const passedRows = rows.filter((row) => row.passed);
+      const failedRows = rows.filter((row) => !row.passed);
+
+      Plotly.react(
+        "chartOverall",
+        [{
+          type: "bar",
+          x: ["passed", "failed"],
+          y: [passedRows.length, failedRows.length],
+          marker: { color: ["#1f9d55", "#d64545"] },
+          showlegend: false,
+        }],
+        {
+          title: "通过 / 失败",
+          margin: { l: 40, r: 20, t: 36, b: 40 },
+          template: "plotly_white",
+        },
+        { responsive: true }
+      );
+
+      const groupMap = new Map();
+      for (const row of rows) {
+        if (!groupMap.has(row.group_id)) {
+          groupMap.set(row.group_id, { pass: 0, fail: 0 });
+        }
+        if (row.passed) groupMap.get(row.group_id).pass += 1;
+        else groupMap.get(row.group_id).fail += 1;
+      }
+      const groups = [...groupMap.keys()].sort();
+      Plotly.react(
+        "chartGroup",
+        [
+          {
+            type: "bar",
+            name: "passed",
+            x: groups,
+            y: groups.map((g) => groupMap.get(g).pass),
+            marker: { color: "#1f9d55" },
+          },
+          {
+            type: "bar",
+            name: "failed",
+            x: groups,
+            y: groups.map((g) => groupMap.get(g).fail),
+            marker: { color: "#d64545" },
+          },
         ],
-        subplot_titles=(
-            "Overall Pass/Fail",
-            "Projection Ratio Distribution",
-            "Pass/Fail by Group",
-            "Type-Level Ratio Scatter (hover for canonical key)",
-            "Failed Types (Top 20)",
-            "Passed Types (Top 20 by ratio)",
-        ),
-        vertical_spacing=0.1,
-        horizontal_spacing=0.08,
-    )
+        {
+          title: "分组通过/失败",
+          barmode: "stack",
+          margin: { l: 40, r: 20, t: 36, b: 40 },
+          template: "plotly_white",
+        },
+        { responsive: true }
+      );
 
-    fig.add_trace(
-        go.Bar(
-            x=["passed", "failed"],
-            y=[summary.passed_types, summary.failed_types],
-            marker_color=["#1f9d55", "#d64545"],
-            showlegend=False,
-            name="overall",
-        ),
-        row=1,
-        col=1,
-    )
+      const failByPrinciple = PRINCIPLE_META.map((meta) => {
+        const count = rows.filter((row) => row.rule_flags[meta.id]).length;
+        return { label: meta.label, count };
+      });
 
-    fig.add_trace(
-        go.Histogram(
-            x=[float(row["projection_ratio"]) for row in passed_rows],
-            nbinsx=25,
-            opacity=0.75,
-            marker_color="#1f9d55",
-            name="passed",
-        ),
-        row=1,
-        col=2,
-    )
-    fig.add_trace(
-        go.Histogram(
-            x=[float(row["projection_ratio"]) for row in failed_rows],
-            nbinsx=25,
-            opacity=0.75,
-            marker_color="#d64545",
-            name="failed",
-        ),
-        row=1,
-        col=2,
-    )
-    fig.add_vline(
-        x=summary.ratio_threshold,
-        line_width=2,
-        line_dash="dash",
-        line_color="#1a365d",
-        annotation_text=f"threshold={summary.ratio_threshold:.2f}",
-        row=1,
-        col=2,
-    )
+      Plotly.react(
+        "chartPrinciple",
+        [{
+          type: "bar",
+          x: failByPrinciple.map((item) => item.count),
+          y: failByPrinciple.map((item) => item.label),
+          orientation: "h",
+          marker: { color: "#2b6cb0" },
+          showlegend: false,
+        }],
+        {
+          title: "各原则违反计数（当前过滤后）",
+          margin: { l: 170, r: 20, t: 36, b: 40 },
+          template: "plotly_white",
+        },
+        { responsive: true }
+      );
 
-    fig.add_trace(
-        go.Bar(
-            x=group_ids,
-            y=group_pass,
-            name="passed",
-            marker_color="#1f9d55",
-        ),
-        row=2,
-        col=1,
-    )
-    fig.add_trace(
-        go.Bar(
-            x=group_ids,
-            y=group_fail,
-            name="failed",
-            marker_color="#d64545",
-        ),
-        row=2,
-        col=1,
-    )
+      Plotly.react(
+        "chartScatter",
+        [{
+          type: "scatter",
+          mode: "markers",
+          x: rows.map((row) => Number(row.index)),
+          y: rows.map((row) => Number(row.projection_ratio)),
+          customdata: rows.map((row) => [row.key, row.group_id, row.canonical_key]),
+          text: rows.map((row) => `${row.group_id}<br>${row.canonical_key}<br>${row.principle_text}`),
+          hovertemplate: "%{text}<extra></extra>",
+          marker: {
+            size: 8,
+            opacity: 0.9,
+            color: rows.map((row) => row.passed ? "#1f9d55" : "#d64545"),
+          },
+          showlegend: false,
+        }],
+        {
+          title: "分型散点（点击查看详情）",
+          margin: { l: 40, r: 20, t: 36, b: 40 },
+          template: "plotly_white",
+          shapes: config.requireRatioThreshold ? [{
+            type: "line",
+            x0: 0,
+            x1: Math.max(...rows.map((row) => Number(row.index)), 1),
+            y0: Number(config.ratioThreshold),
+            y1: Number(config.ratioThreshold),
+            line: { color: "#1f6feb", width: 2, dash: "dash" },
+          }] : [],
+        },
+        { responsive: true }
+      );
+    }
 
-    fig.add_trace(
-        go.Scatter(
-            x=[int(row["index"]) for row in rows],
-            y=[float(row["projection_ratio"]) for row in rows],
-            mode="markers",
-            marker={
-                "color": ["#1f9d55" if row["passed"] else "#d64545" for row in rows],
-                "size": 8,
-                "opacity": 0.85,
-            },
-            text=[
-                (
-                    f"group={row['group_id']}<br>"
-                    f"canonical={row['canonical_key']}<br>"
-                    f"ratio={row['projection_ratio']}<br>"
-                    f"passed={row['passed']}<br>"
-                    f"reasons={row['reasons']}"
-                )
-                for row in rows
-            ],
-            hovertemplate="%{text}<extra></extra>",
-            showlegend=False,
-            name="types",
-        ),
-        row=2,
-        col=2,
-    )
-    fig.add_hline(
-        y=summary.ratio_threshold,
-        line_width=2,
-        line_dash="dash",
-        line_color="#1a365d",
-        row=2,
-        col=2,
-    )
+    function renderGroupTable(rows) {
+      const map = new Map();
+      for (const row of rows) {
+        if (!map.has(row.group_id)) {
+          map.set(row.group_id, {
+            group_id: row.group_id,
+            counts_per_layer: row.group_counts_per_layer,
+            total: 0,
+            pass: 0,
+            fail: 0,
+          });
+        }
+        const item = map.get(row.group_id);
+        item.total += 1;
+        if (row.passed) item.pass += 1;
+        else item.fail += 1;
+      }
+      const list = [...map.values()].sort((a, b) => a.group_id.localeCompare(b.group_id));
+      const body = list.map((item) => {
+        const rate = item.total === 0 ? 0 : (item.pass / item.total) * 100;
+        return `
+          <tr>
+            <td><button class="cell-btn" data-group="${escapeHtml(item.group_id)}">${escapeHtml(item.group_id)}</button></td>
+            <td>${escapeHtml(item.counts_per_layer)}</td>
+            <td>${item.total}</td>
+            <td class="status-pass">${item.pass}</td>
+            <td class="status-fail">${item.fail}</td>
+            <td>${rate.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join("");
 
-    fig.add_trace(
-        go.Table(
-            header={
-                "values": ["group", "index", "ratio", "canonical_key", "reasons"],
-                "fill_color": "#ffe3e3",
-                "align": "left",
-            },
-            cells={
-                "values": [
-                    [row["group_id"] for row in failed_table],
-                    [row["index"] for row in failed_table],
-                    [row["projection_ratio"] for row in failed_table],
-                    [row["canonical_key"] for row in failed_table],
-                    [row["reasons"] for row in failed_table],
-                ],
-                "fill_color": "#fff5f5",
-                "align": "left",
-            },
-        ),
-        row=3,
-        col=1,
+      dom.groupTable.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>group</th><th>counts_per_layer</th><th>total</th><th>pass</th><th>fail</th><th>pass_rate</th></tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      `;
+    }
+
+    function renderTypeTable(rows) {
+      const sorted = [...rows].sort((a, b) => {
+        if (a.passed !== b.passed) return a.passed ? 1 : -1;
+        return Number(a.projection_ratio) - Number(b.projection_ratio);
+      });
+
+      const body = sorted.map((row) => {
+        const status = row.passed
+          ? `<span class="status-pass">PASS</span>`
+          : `<span class="status-fail">FAIL</span>`;
+        return `
+          <tr>
+            <td>${status}</td>
+            <td>${escapeHtml(row.group_id)}</td>
+            <td>${escapeHtml(row.group_counts_per_layer)}</td>
+            <td>${row.index}</td>
+            <td>${Number(row.projection_ratio).toFixed(3)}</td>
+            <td>${row.panel_count}</td>
+            <td>${escapeHtml(row.principle_text)}</td>
+            <td><button class="cell-btn" data-key="${escapeHtml(row.key)}">${escapeHtml(row.canonical_key)}</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      dom.typeTable.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>status</th><th>group</th><th>group_counts</th><th>index</th><th>ratio</th><th>panel</th><th>原则匹配</th><th>canonical_key</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      `;
+    }
+
+    function renderDetail(row) {
+      if (!row) {
+        dom.detailPanel.innerHTML = "请选择一个结构分型。";
+        return;
+      }
+
+      const principleChips = PRINCIPLE_META.map((meta) => {
+        const failed = Boolean(row.rule_flags[meta.id]);
+        const cls = failed ? "chip fail" : "chip pass";
+        return `<span class="${cls}">${escapeHtml(meta.label)}: ${failed ? "不满足" : "满足"}</span>`;
+      }).join("");
+
+      const failedPrinciples = row.failed_principles.length === 0
+        ? "<span class='chip pass'>全部满足</span>"
+        : row.failed_principles
+            .map((id) => {
+              const found = PRINCIPLE_META.find((item) => item.id === id);
+              return found ? found.label : id;
+            })
+            .map((label) => `<span class="chip fail">${escapeHtml(label)}</span>`)
+            .join("");
+
+      dom.detailPanel.innerHTML = `
+        <div class="line"><strong>status:</strong> ${row.passed ? "<span class='status-pass'>PASS</span>" : "<span class='status-fail'>FAIL</span>"}</div>
+        <div class="line"><strong>group:</strong> ${escapeHtml(row.group_id)} | <strong>group_counts:</strong> ${escapeHtml(row.group_counts_per_layer)}</div>
+        <div class="line"><strong>index:</strong> ${row.index} | <strong>panel_count:</strong> ${row.panel_count}</div>
+        <div class="line"><strong>projection_ratio:</strong> ${Number(row.projection_ratio).toFixed(6)} | <strong>weighted/footprint_cells:</strong> ${row.weighted_projected_cells}/${row.footprint_cells}</div>
+        <div class="line"><strong>canonical_key:</strong> ${escapeHtml(row.canonical_key)}</div>
+        <div class="line"><strong>当前失败原则:</strong><div class="chips">${failedPrinciples}</div></div>
+        <div class="line"><strong>各原则状态:</strong><div class="chips">${principleChips}</div></div>
+        <div class="line"><strong>动态判定:</strong> ${escapeHtml(row.dynamic_reasons)}</div>
+        <div class="line"><strong>原始规则说明:</strong> ${escapeHtml(row.reasons || "")}</div>
+      `;
+    }
+
+    function updateConstraintImpact(filteredRows, baselineFilteredRows) {
+      const currPass = filteredRows.filter((row) => row.passed).length;
+      const basePass = baselineFilteredRows.filter((row) => row.passed).length;
+      const delta = currPass - basePass;
+      const deltaText = delta === 0 ? "无变化" : (delta > 0 ? `+${delta}` : `${delta}`);
+      dom.constraintImpact.textContent =
+        `与“全部原则启用”相比：passed 变化 ${deltaText}（current=${currPass}, baseline=${basePass}）。`;
+    }
+
+    function bindInteractionHandlers() {
+      dom.groupTable.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const gid = target.getAttribute("data-group");
+        if (!gid) return;
+        dom.groupFilter.value = gid;
+        render();
+      });
+
+      dom.typeTable.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const key = target.getAttribute("data-key");
+        if (!key) return;
+        selectedKey = key;
+        const row = latestRows.find((item) => item.key === key) || null;
+        renderDetail(row);
+      });
+
+      const scatter = document.getElementById("chartScatter");
+      if (scatter && typeof scatter.on === "function") {
+        scatter.on("plotly_click", (eventData) => {
+          const points = eventData && eventData.points ? eventData.points : [];
+          const point = points.length > 0 ? points[0] : null;
+          const customData = point && point.customdata ? point.customdata : [];
+          const key = customData.length > 0 ? customData[0] : null;
+          if (!key) return;
+          selectedKey = key;
+          const row = latestRows.find((item) => item.key === key) || null;
+          renderDetail(row);
+        });
+      }
+    }
+
+    function render() {
+      const scenario = scenarioBySelection();
+      if (!scenario) {
+        dom.scenarioHint.textContent = "当前边界组合没有预计算数据。";
+        renderStats([]);
+        dom.ruleGrid.innerHTML = "";
+        dom.groupTable.innerHTML = "";
+        dom.typeTable.innerHTML = "";
+        renderDetail(null);
+        return;
+      }
+
+      refreshGroupFilterOptions(scenario.rows);
+      const config = currentConfig();
+      const baselineConfig = baselineConfigFromCurrent();
+      const allRows = evaluateRows(scenario, config);
+      const baselineRows = evaluateRows(scenario, baselineConfig);
+      const filteredRows = filteredByGroup(allRows);
+      const baselineFilteredRows = filteredByGroup(baselineRows);
+      latestRows = filteredRows;
+
+      dom.scenarioHint.textContent =
+        `scenario=${scenario.id} | footprint_cells=${scenario.footprint_cells} | group=${dom.groupFilter.value || "ALL"} | threshold=${Number(config.ratioThreshold).toFixed(3)}`;
+
+      renderStats(filteredRows);
+      renderRuleCards(filteredRows, config);
+      updateConstraintImpact(filteredRows, baselineFilteredRows);
+      renderCharts(filteredRows, config);
+      renderGroupTable(filteredRows);
+      renderTypeTable(filteredRows);
+
+      const selected = selectedKey
+        ? filteredRows.find((row) => row.key === selectedKey)
+        : null;
+      renderDetail(selected || filteredRows[0] || null);
+    }
+
+    function init() {
+      fillSelect(dom.xCells, uniqueValues("x_cells"));
+      fillSelect(dom.yCells, uniqueValues("y_cells"));
+      fillSelect(dom.layers, uniqueValues("layers"));
+
+      dom.xCells.value = String(defaultState.x_cells);
+      dom.yCells.value = String(defaultState.y_cells);
+      dom.layers.value = String(defaultState.layers);
+      dom.allowEmptyLayer.value = defaultState.allow_empty_layer ? "true" : "false";
+      dom.ratioThreshold.value = String(defaultState.ratio_threshold);
+
+      dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
+      dom.requireCombination.checked = Boolean(defaultState.require_combination);
+      dom.requireStructural.checked = Boolean(defaultState.require_structural);
+      dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
+      dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
+
+      dom.btnResetConstraints.addEventListener("click", () => {
+        dom.ratioThreshold.value = String(defaultState.ratio_threshold);
+        dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
+        dom.requireCombination.checked = Boolean(defaultState.require_combination);
+        dom.requireStructural.checked = Boolean(defaultState.require_structural);
+        dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
+        dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
+        render();
+      });
+
+      const listeners = [
+        dom.xCells,
+        dom.yCells,
+        dom.layers,
+        dom.allowEmptyLayer,
+        dom.groupFilter,
+        dom.ratioThreshold,
+        dom.requireBoundary,
+        dom.requireCombination,
+        dom.requireStructural,
+        dom.requireR6,
+        dom.requireRatioThreshold,
+      ];
+      for (const item of listeners) {
+        item.addEventListener("change", render);
+      }
+
+      bindInteractionHandlers();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
+"""
+    output_path.write_text(html.replace("__PAYLOAD_JSON__", payload_json), encoding="utf-8")
+
+
+def _write_scenarios_json(scenarios: list[dict[str, Any]], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps({"scenarios": scenarios}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
-
-    fig.add_trace(
-        go.Table(
-            header={
-                "values": ["group", "index", "ratio", "canonical_key"],
-                "fill_color": "#e6fffa",
-                "align": "left",
-            },
-            cells={
-                "values": [
-                    [row["group_id"] for row in passed_table],
-                    [row["index"] for row in passed_table],
-                    [row["projection_ratio"] for row in passed_table],
-                    [row["canonical_key"] for row in passed_table],
-                ],
-                "fill_color": "#f0fff4",
-                "align": "left",
-            },
-        ),
-        row=3,
-        col=2,
-    )
-
-    fig.update_layout(
-        title=(
-            "Shelf Top-Projection Validation Dashboard | "
-            f"threshold={summary.ratio_threshold:.2f}, "
-            f"types={summary.total_types}, passed={summary.passed_types}, failed={summary.failed_types}"
-        ),
-        barmode="stack",
-        template="plotly_white",
-        width=1800,
-        height=1600,
-    )
-
-    fig.update_xaxes(title_text="group id", row=2, col=1)
-    fig.update_yaxes(title_text="type count", row=2, col=1)
-    fig.update_xaxes(title_text="type index", row=2, col=2)
-    fig.update_yaxes(title_text="projection ratio", row=2, col=2)
-    fig.update_yaxes(title_text="count", row=1, col=2)
-
-    fig.write_html(str(output_path), include_plotlyjs=True, full_html=True)
 
 
 def main() -> None:
@@ -626,6 +1418,10 @@ def main() -> None:
     parser.add_argument("--x-cells", type=int, default=2)
     parser.add_argument("--y-cells", type=int, default=2)
     parser.add_argument("--layers", type=int, default=2)
+    parser.add_argument("--x-cells-options", default="1,2")
+    parser.add_argument("--y-cells-options", default="1,2")
+    parser.add_argument("--layers-options", default="1,2")
+    parser.add_argument("--allow-empty-options", default="true,false")
     parser.add_argument("--ratio-threshold", type=float, default=1.0)
     parser.add_argument("--allow-empty-layer", dest="allow_empty_layer", action="store_true")
     parser.add_argument("--no-allow-empty-layer", dest="allow_empty_layer", action="store_false")
@@ -634,25 +1430,47 @@ def main() -> None:
     parser.add_argument("--output-dir", default="docs/validation")
     args = parser.parse_args()
 
-    boundary = _default_boundary()
-    boundary = BoundaryDefinition(
-        layers_n=args.layers,
-        payload_p_per_layer=boundary.payload_p_per_layer,
-        space_s_per_layer=boundary.space_s_per_layer,
-        opening_o=boundary.opening_o,
-        footprint_a=boundary.footprint_a,
-    )
-    grid = _build_grid(boundary, x_cells=args.x_cells, y_cells=args.y_cells)
+    x_cells_options = _parse_int_options(args.x_cells_options, name="x-cells-options")
+    y_cells_options = _parse_int_options(args.y_cells_options, name="y-cells-options")
+    layers_options = _parse_int_options(args.layers_options, name="layers-options")
+    allow_empty_options = _parse_bool_options(args.allow_empty_options, name="allow-empty-options")
+
+    if args.x_cells not in x_cells_options:
+        x_cells_options.append(args.x_cells)
+    if args.y_cells not in y_cells_options:
+        y_cells_options.append(args.y_cells)
+    if args.layers not in layers_options:
+        layers_options.append(args.layers)
+    if args.allow_empty_layer not in allow_empty_options:
+        allow_empty_options.append(args.allow_empty_layer)
+
+    boundary_template = _default_boundary()
 
     mapping_default = _run_mapping_check(check_changes=False)
     mapping_changes = _run_mapping_check(check_changes=True)
-    rows, reason_counter = _collect_rows(
-        grid=grid,
-        boundary=boundary,
+
+    scenarios = _collect_scenarios(
+        boundary_template=boundary_template,
+        x_cells_options=x_cells_options,
+        y_cells_options=y_cells_options,
+        layers_options=layers_options,
+        allow_empty_options=allow_empty_options,
         ratio_threshold=args.ratio_threshold,
-        allow_empty_layer=args.allow_empty_layer,
         max_type_count=args.max_type_count,
     )
+    scenario_lookup = {str(item["id"]): item for item in scenarios}
+    selected_scenario_id = _scenario_id(
+        args.x_cells,
+        args.y_cells,
+        args.layers,
+        args.allow_empty_layer,
+    )
+    selected_scenario = scenario_lookup.get(selected_scenario_id)
+    if selected_scenario is None:
+        raise ValueError(f"default scenario missing: {selected_scenario_id}")
+
+    rows = list(selected_scenario["rows"])
+    reason_counter = dict(selected_scenario["reason_counter"])
     summary = _build_summary(
         rows=rows,
         mapping_default=mapping_default,
@@ -666,23 +1484,44 @@ def main() -> None:
     md_path = output_dir / "shelf_projection_validation_summary.md"
     html_path = output_dir / "shelf_projection_validation_dashboard.html"
     json_path = output_dir / "shelf_projection_validation_summary.json"
+    scenarios_json_path = output_dir / "shelf_projection_validation_scenarios.json"
 
     _write_rows_csv(rows, row_csv_path)
     _write_group_summary_csv(rows, group_csv_path)
     _write_markdown_summary(summary, mapping_default, mapping_changes, md_path)
-    _write_dashboard(rows, summary, reason_counter, html_path)
+    _write_dashboard(
+        scenarios=scenarios,
+        default_state={
+            "x_cells": args.x_cells,
+            "y_cells": args.y_cells,
+            "layers": args.layers,
+            "allow_empty_layer": args.allow_empty_layer,
+            "ratio_threshold": args.ratio_threshold,
+            "require_boundary": True,
+            "require_combination": True,
+            "require_structural": True,
+            "require_ratio_threshold": True,
+            "require_r6_weighted_gt_footprint": True,
+        },
+        output_path=html_path,
+    )
     _write_json_summary(summary, json_path)
+    _write_scenarios_json(scenarios, scenarios_json_path)
 
     print(
         json.dumps(
             {
                 "summary": summary.to_dict(),
+                "scenario_count": len(scenarios),
+                "default_scenario_id": selected_scenario_id,
+                "default_failure_reason_count": len(reason_counter),
                 "artifacts": {
                     "row_csv": str(row_csv_path),
                     "group_csv": str(group_csv_path),
                     "summary_markdown": str(md_path),
                     "dashboard_html": str(html_path),
                     "summary_json": str(json_path),
+                    "scenarios_json": str(scenarios_json_path),
                 },
             },
             ensure_ascii=False,
