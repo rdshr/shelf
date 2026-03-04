@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M Hierarchy Graph</title>
+  <style>
+    :root {
+      --bg-top: #e8f0f2;
+      --bg-bottom: #eff4ec;
+      --card: #ffffff;
+      --text: #1e2a34;
+      --sub: #4b5f72;
+      --edge: #90a9bf;
+      --edge-active: #d1672f;
+      --node: #2f5f86;
+      --node-active: #d1672f;
+      --node-fade: #c2d1df;
+      --band-a: rgba(50, 90, 120, 0.06);
+      --band-b: rgba(50, 90, 120, 0.02);
+      --shadow: 0 14px 36px rgba(20, 39, 59, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at 8% 0%, #ffffff 0%, transparent 36%),
+        radial-gradient(circle at 95% 8%, #ffffff 0%, transparent 30%),
+        linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+    }
+
+    .layout {
+      max-width: 1660px;
+      margin: 20px auto;
+      padding: 0 18px 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 2.35fr) minmax(320px, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(29, 57, 88, 0.1);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .graph-card {
+      padding: 0;
+    }
+
+    .head {
+      padding: 18px 22px 12px;
+      border-bottom: 1px solid #e9eef4;
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0.2px;
+      line-height: 1.2;
+    }
+
+    .desc {
+      margin: 8px 0 0;
+      color: var(--sub);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 18px;
+      border-bottom: 1px solid #e9eef4;
+      background: #fbfdff;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #35556e;
+      border: 1px solid #d6e1ec;
+      background: #f2f8ff;
+      white-space: nowrap;
+    }
+
+    #graphSvg {
+      width: 100%;
+      display: block;
+      background:
+        radial-gradient(circle at 50% -20%, #ffffff 0%, #f5fbff 45%, #edf4f8 100%);
+    }
+
+    .foot {
+      margin: 0;
+      padding: 11px 16px;
+      color: var(--sub);
+      font-size: 12px;
+      border-top: 1px solid #e9eef4;
+      background: #fbfdff;
+    }
+
+    .side {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .info-card,
+    .detail-card {
+      padding: 14px;
+    }
+
+    .info-title,
+    .detail-title {
+      margin: 0 0 10px;
+      font-size: 17px;
+      color: #223246;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--sub);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .kv {
+      margin: 8px 0;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .kv b {
+      color: #2a445d;
+    }
+
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+
+    li {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #30485f;
+    }
+
+    .level-band {
+      fill: var(--band-a);
+      stroke: rgba(76, 109, 136, 0.2);
+      stroke-width: 1;
+    }
+
+    .level-band.alt {
+      fill: var(--band-b);
+    }
+
+    .level-guide {
+      stroke: #ccdae7;
+      stroke-width: 1.2;
+      stroke-dasharray: 5 6;
+    }
+
+    .level-label {
+      font-size: 13px;
+      fill: #36526c;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--edge);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      marker-end: url(#arrowDefault);
+      opacity: 0.9;
+      transition: opacity 140ms ease, stroke 140ms ease;
+    }
+
+    .edge.faded {
+      opacity: 0.09;
+    }
+
+    .edge.active {
+      stroke: var(--edge-active);
+      marker-end: url(#arrowActive);
+      opacity: 1;
+      stroke-width: 3.3;
+    }
+
+    .node-circle {
+      fill: var(--node);
+      stroke: #ffffff;
+      stroke-width: 3;
+      cursor: pointer;
+      transition: transform 140ms ease, fill 140ms ease, opacity 140ms ease;
+      transform-origin: center;
+    }
+
+    .node-circle:hover {
+      transform: scale(1.03);
+    }
+
+    .node-circle.faded {
+      fill: var(--node-fade);
+      opacity: 0.26;
+    }
+
+    .node-circle.active {
+      fill: var(--node-active);
+      transform: scale(1.06);
+    }
+
+    .node-label {
+      fill: #ffffff;
+      font-size: 15px;
+      font-weight: 760;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      letter-spacing: 0.4px;
+      transition: opacity 120ms ease;
+    }
+
+    .node-label.faded {
+      opacity: 0.28;
+    }
+
+    @media (max-width: 1220px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .detail-card {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        font-size: 14px;
+      }
+
+      .layout {
+        margin: 10px auto;
+        padding: 0 10px 14px;
+      }
+
+      .head {
+        padding: 14px 14px 10px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .desc {
+        font-size: 13px;
+      }
+
+      .legend {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+
+      .side {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <section class="card graph-card">
+      <div class="head">
+        <h1 id="title"></h1>
+        <p id="description" class="desc"></p>
+      </div>
+      <div class="legend">
+        <span class="pill" id="summaryNodes"></span>
+        <span class="pill" id="summaryEdges"></span>
+        <span class="pill">点击节点查看直连上游/下游关系</span>
+      </div>
+      <svg id="graphSvg" role="img" aria-label="M hierarchy graph"></svg>
+      <p class="foot">图中只展示 M 结构层级与组合关系，不包含代码规范与框架规范条目。</p>
+    </section>
+
+    <aside class="side">
+      <section class="card info-card">
+        <h2 class="info-title">层级统计</h2>
+        <div id="levelStats"></div>
+      </section>
+
+      <section class="card info-card">
+        <h2 class="info-title">关系统计</h2>
+        <div id="relationStats"></div>
+      </section>
+
+      <section class="card detail-card">
+        <h2 class="detail-title">节点详情</h2>
+        <div id="detailBox" class="meta">点击左侧节点查看详情。</div>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    const graphData = {"title": "置物架 M 结构层级图", "description": "仅展示 M 节点的结构分解与组合关系，不包含代码规范或框架规范。", "width": 1520, "height": 980, "nodes": [{"id": "M10_ROOT", "label": "M10", "level": 0, "description": "顶层目标节点", "x": 760.0, "y": 132.0}, {"id": "M4_TOP", "label": "M4", "level": 1, "description": "上位组合策略（路径 A）", "x": 614.6666666666667, "y": 374.66666666666663}, {"id": "M8", "label": "M8", "level": 1, "description": "上位组合策略（路径 B）", "x": 1019.3333333333334, "y": 374.66666666666663}, {"id": "M10_MID", "label": "M10", "level": 2, "description": "中层复用能力节点", "x": 452.8, "y": 617.3333333333333}, {"id": "M7", "label": "M7", "level": 2, "description": "由路径 A 派生的中间能力", "x": 695.6, "y": 617.3333333333333}, {"id": "M6", "label": "M6", "level": 2, "description": "由路径 A 与路径 B 共同指向的共享能力", "x": 938.4000000000001, "y": 617.3333333333333}, {"id": "M5", "label": "M5", "level": 2, "description": "由路径 B 派生的中间能力", "x": 1181.2, "y": 617.3333333333333}, {"id": "M0", "label": "M0", "level": 3, "description": "执行落地端点", "x": 412.33333333333337, "y": 860.0}, {"id": "M4_BASE", "label": "M4", "level": 3, "description": "执行单元", "x": 614.6666666666667, "y": 860.0}, {"id": "M3", "label": "M3", "level": 3, "description": "执行单元", "x": 817.0, "y": 860.0}, {"id": "M2", "label": "M2", "level": 3, "description": "执行单元（复用节点）", "x": 1019.3333333333334, "y": 860.0}, {"id": "M1", "label": "M1", "level": 3, "description": "执行单元", "x": 1221.6666666666667, "y": 860.0}], "edges": [{"from": "M10_ROOT", "to": "M8", "relation": "decompose"}, {"from": "M10_ROOT", "to": "M4_TOP", "relation": "decompose"}, {"from": "M8", "to": "M5", "relation": "derive"}, {"from": "M8", "to": "M6", "relation": "derive"}, {"from": "M4_TOP", "to": "M6", "relation": "derive"}, {"from": "M4_TOP", "to": "M7", "relation": "derive"}, {"from": "M4_TOP", "to": "M10_MID", "relation": "derive"}, {"from": "M5", "to": "M1", "relation": "compose"}, {"from": "M5", "to": "M2", "relation": "compose"}, {"from": "M6", "to": "M2", "relation": "compose"}, {"from": "M6", "to": "M3", "relation": "compose"}, {"from": "M7", "to": "M4_BASE", "relation": "compose"}, {"from": "M10_MID", "to": "M0", "relation": "compose"}], "level_labels": {"0": "目标层", "1": "组合策略层", "2": "能力单元层", "3": "执行落地层"}, "level_node_counts": {"0": 1, "1": 2, "2": 4, "3": 5}, "relation_counts": {"decompose": 2, "derive": 5, "compose": 6}};
+    const SVG_NS = "http://www.w3.org/2000/svg";
+
+    const svg = document.getElementById("graphSvg");
+    const titleEl = document.getElementById("title");
+    const descriptionEl = document.getElementById("description");
+    const summaryNodesEl = document.getElementById("summaryNodes");
+    const summaryEdgesEl = document.getElementById("summaryEdges");
+    const levelStatsEl = document.getElementById("levelStats");
+    const relationStatsEl = document.getElementById("relationStats");
+    const detailBoxEl = document.getElementById("detailBox");
+
+    titleEl.textContent = graphData.title;
+    descriptionEl.textContent = graphData.description;
+    summaryNodesEl.textContent = `节点数: ${graphData.nodes.length}`;
+    summaryEdgesEl.textContent = `关系边: ${graphData.edges.length}`;
+
+    svg.setAttribute("viewBox", `0 0 ${graphData.width} ${graphData.height}`);
+
+    const byId = new Map(graphData.nodes.map((node) => [node.id, node]));
+    const incoming = new Map(graphData.nodes.map((node) => [node.id, []]));
+    const outgoing = new Map(graphData.nodes.map((node) => [node.id, []]));
+
+    for (const edge of graphData.edges) {
+      const inList = incoming.get(edge.to);
+      if (inList) inList.push(edge);
+      const outList = outgoing.get(edge.from);
+      if (outList) outList.push(edge);
+    }
+
+    const levelEntries = Object.entries(graphData.level_labels)
+      .map(([rawLevel, name]) => [Number(rawLevel), String(name)])
+      .sort((a, b) => a[0] - b[0]);
+
+    const levelCenters = new Map();
+    for (const [level] of levelEntries) {
+      const nodesInLevel = graphData.nodes.filter((node) => node.level === level);
+      const avgY =
+        nodesInLevel.reduce((sum, node) => sum + node.y, 0) / Math.max(1, nodesInLevel.length);
+      levelCenters.set(level, avgY);
+
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      meta.textContent = `${graphData.level_labels[String(level)] ?? `层级 ${level}`}：${graphData.level_node_counts[String(level)] ?? 0} 个节点`;
+      levelStatsEl.appendChild(meta);
+    }
+
+    for (const [relation, count] of Object.entries(graphData.relation_counts ?? {})) {
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      meta.textContent = `${relation}：${count}`;
+      relationStatsEl.appendChild(meta);
+    }
+
+    if (!relationStatsEl.children.length) {
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      meta.textContent = "无关系类型统计";
+      relationStatsEl.appendChild(meta);
+    }
+
+    const defs = document.createElementNS(SVG_NS, "defs");
+    defs.innerHTML = `
+      <marker id="arrowDefault" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="#90a9bf"></path>
+      </marker>
+      <marker id="arrowActive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="#d1672f"></path>
+      </marker>
+    `;
+    svg.appendChild(defs);
+
+    for (let index = 0; index < levelEntries.length; index += 1) {
+      const [level, levelName] = levelEntries[index];
+      const centerY = levelCenters.get(level) ?? 0;
+      const prevCenter = index > 0 ? levelCenters.get(levelEntries[index - 1][0]) ?? centerY : centerY;
+      const nextCenter =
+        index < levelEntries.length - 1
+          ? levelCenters.get(levelEntries[index + 1][0]) ?? centerY
+          : centerY;
+
+      const top = index === 0 ? 26 : (prevCenter + centerY) / 2;
+      const bottom =
+        index === levelEntries.length - 1 ? graphData.height - 26 : (centerY + nextCenter) / 2;
+
+      const band = document.createElementNS(SVG_NS, "rect");
+      band.setAttribute("x", "58");
+      band.setAttribute("y", String(top));
+      band.setAttribute("width", String(Math.max(1, graphData.width - 86)));
+      band.setAttribute("height", String(Math.max(1, bottom - top)));
+      band.setAttribute("rx", "12");
+      band.setAttribute("ry", "12");
+      band.setAttribute("class", `level-band${index % 2 === 1 ? " alt" : ""}`);
+      svg.appendChild(band);
+
+      const guide = document.createElementNS(SVG_NS, "line");
+      guide.setAttribute("x1", "74");
+      guide.setAttribute("x2", String(graphData.width - 26));
+      guide.setAttribute("y1", String(centerY));
+      guide.setAttribute("y2", String(centerY));
+      guide.setAttribute("class", "level-guide");
+      svg.appendChild(guide);
+
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", "76");
+      label.setAttribute("y", String(top + 24));
+      label.setAttribute("class", "level-label");
+      label.textContent = levelName;
+      svg.appendChild(label);
+    }
+
+    function edgePath(fromNode, toNode) {
+      const dy = toNode.y - fromNode.y;
+      const curve = Math.max(42, Math.min(130, Math.abs(dy) * 0.42));
+      const c1x = fromNode.x;
+      const c1y = fromNode.y + curve;
+      const c2x = toNode.x;
+      const c2y = toNode.y - curve;
+      return `M ${fromNode.x} ${fromNode.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${toNode.x} ${toNode.y}`;
+    }
+
+    const edgeElements = [];
+    for (const edge of graphData.edges) {
+      const fromNode = byId.get(edge.from);
+      const toNode = byId.get(edge.to);
+      if (!fromNode || !toNode) continue;
+
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", edgePath(fromNode, toNode));
+      path.setAttribute("class", "edge");
+      path.setAttribute("data-from", edge.from);
+      path.setAttribute("data-to", edge.to);
+      path.setAttribute("data-relation", edge.relation);
+      path.appendChild(document.createElementNS(SVG_NS, "title")).textContent = `${edge.from} -> ${edge.to} (${edge.relation})`;
+      svg.appendChild(path);
+      edgeElements.push(path);
+    }
+
+    const nodeCircleMap = new Map();
+    const nodeLabelMap = new Map();
+
+    for (const node of graphData.nodes) {
+      const group = document.createElementNS(SVG_NS, "g");
+
+      const circle = document.createElementNS(SVG_NS, "circle");
+      circle.setAttribute("cx", String(node.x));
+      circle.setAttribute("cy", String(node.y));
+      circle.setAttribute("r", "31");
+      circle.setAttribute("class", "node-circle");
+      circle.setAttribute("data-id", node.id);
+      group.appendChild(circle);
+
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", String(node.x));
+      label.setAttribute("y", String(node.y));
+      label.setAttribute("class", "node-label");
+      label.textContent = node.label;
+      group.appendChild(label);
+
+      group.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectNode(node.id);
+      });
+
+      svg.appendChild(group);
+      nodeCircleMap.set(node.id, circle);
+      nodeLabelMap.set(node.id, label);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function toList(items) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return "<li>无</li>";
+      }
+      return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    function selectNode(nodeId) {
+      const related = new Set([nodeId]);
+      const upEdges = incoming.get(nodeId) ?? [];
+      const downEdges = outgoing.get(nodeId) ?? [];
+
+      for (const edge of upEdges) related.add(edge.from);
+      for (const edge of downEdges) related.add(edge.to);
+
+      for (const [id, circle] of nodeCircleMap.entries()) {
+        circle.classList.remove("active", "faded");
+        const label = nodeLabelMap.get(id);
+        if (label) label.classList.remove("faded");
+
+        if (id === nodeId) {
+          circle.classList.add("active");
+        } else if (!related.has(id)) {
+          circle.classList.add("faded");
+          if (label) label.classList.add("faded");
+        }
+      }
+
+      for (const edgeEl of edgeElements) {
+        edgeEl.classList.remove("active", "faded");
+        const from = edgeEl.getAttribute("data-from");
+        const to = edgeEl.getAttribute("data-to");
+        if (from === nodeId || to === nodeId) {
+          edgeEl.classList.add("active");
+        } else {
+          edgeEl.classList.add("faded");
+        }
+      }
+
+      const node = byId.get(nodeId);
+      if (!node) return;
+
+      const levelName = graphData.level_labels[String(node.level)] ?? `层级 ${node.level}`;
+      const upItems = upEdges.map((edge) => `${edge.from} (${byId.get(edge.from)?.label ?? edge.from}) · ${edge.relation}`);
+      const downItems = downEdges.map((edge) => `${edge.to} (${byId.get(edge.to)?.label ?? edge.to}) · ${edge.relation}`);
+
+      detailBoxEl.innerHTML = `
+        <p class="kv"><b>ID:</b> ${escapeHtml(node.id)}</p>
+        <p class="kv"><b>标签:</b> ${escapeHtml(node.label)}</p>
+        <p class="kv"><b>层级:</b> ${escapeHtml(levelName)}</p>
+        <p class="kv"><b>描述:</b> ${escapeHtml(node.description)}</p>
+        <p class="kv"><b>上游节点:</b></p>
+        <ul>${toList(upItems)}</ul>
+        <p class="kv"><b>下游节点:</b></p>
+        <ul>${toList(downItems)}</ul>
+      `;
+    }
+
+    function resetSelection() {
+      for (const circle of nodeCircleMap.values()) {
+        circle.classList.remove("active", "faded");
+      }
+      for (const label of nodeLabelMap.values()) {
+        label.classList.remove("faded");
+      }
+      for (const edgeEl of edgeElements) {
+        edgeEl.classList.remove("active", "faded");
+      }
+      detailBoxEl.textContent = "点击左侧节点查看详情。";
+    }
+
+    svg.addEventListener("click", resetSelection);
+    resetSelection();
+  </script>
+</body>
+</html>
