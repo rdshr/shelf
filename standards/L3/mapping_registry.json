@@ -185,7 +185,7 @@
       "l1_anchor": "## 3. 模块（最小可行基，Module）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 3. 模块（最小可行基，Module）",
-      "sync_note": "L2 module role descriptions refined; L3 symbols unchanged",
+      "sync_note": "L2 module section migrated to tagged annotations; Module symbols in L3 remain unchanged",
       "impl_symbols": [
         {
           "file": "src/shelf_framework.py",
@@ -279,6 +279,7 @@
       "l1_anchor": "## 7. Python 实现质量（静态类型）",
       "l2_file": "standards/L2/置物架框架标准.md",
       "l2_anchor": "## 8. 工程质量约束（静态类型）",
+      "sync_note": "L2 static-type quality anchor retained explicitly to satisfy strict mapping propagation",
       "impl_symbols": [
         {
           "file": "pyproject.toml",
