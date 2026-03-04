@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shelf Morph Lab</title>
+    <title>置物架组合模拟站</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,133 +17,218 @@
     <div class="background-shape shape-b"></div>
     <div class="app-shell">
       <header class="hero">
-        <p class="eyebrow">L3 VISUAL SIMULATOR</p>
-        <h1>Shelf Morph Lab</h1>
+        <p class="eyebrow">SHELF RULE-DRIVEN GENERATOR</p>
+        <h1>置物架组合模拟站</h1>
         <p class="subtitle">
-          Dynamic shelf generation based on boundary inputs and module counts.
+          上半区输入边界定义和组合原则，点击确认后生成组合结果；下半区选择组合并查看对应 3D 置物架。
         </p>
-        <div class="rule-tags">
-          <span>R1: active modules >= 2</span>
-          <span>R2: connector required</span>
-          <span>V: target > baseline</span>
-        </div>
+        <p class="unit-note">全局单位统一为 1（例如长度 1、占地面积 1）。</p>
       </header>
 
       <main class="workspace">
-        <section class="panel controls-panel">
-          <h2>Inputs</h2>
+        <section class="panel input-zone">
           <form id="shelf-form">
-            <fieldset>
-              <legend>Boundary</legend>
-              <label>
-                Layers (N)
-                <input type="number" name="layers_n" min="1" step="1" value="4" />
-              </label>
-              <label>
-                Payload per layer (P)
-                <input
-                  type="number"
-                  name="payload_p_per_layer"
-                  min="0.1"
-                  step="0.1"
-                  value="30"
-                />
-              </label>
-              <label>
-                Space width (S.w)
-                <input type="number" name="space_width" min="0.1" step="0.1" value="80" />
-              </label>
-              <label>
-                Space depth (S.d)
-                <input type="number" name="space_depth" min="0.1" step="0.1" value="35" />
-              </label>
-              <label>
-                Space height (S.h)
-                <input type="number" name="space_height" min="0.1" step="0.1" value="30" />
-              </label>
-              <label>
-                Opening width (O.w)
-                <input type="number" name="opening_width" min="0.1" step="0.1" value="65" />
-              </label>
-              <label>
-                Opening height (O.h)
-                <input type="number" name="opening_height" min="0.1" step="0.1" value="28" />
-              </label>
-              <label>
-                Footprint width (A.w)
-                <input
-                  type="number"
-                  name="footprint_width"
-                  min="0.1"
-                  step="0.1"
-                  value="90"
-                />
-              </label>
-              <label>
-                Footprint depth (A.d)
-                <input
-                  type="number"
-                  name="footprint_depth"
-                  min="0.1"
-                  step="0.1"
-                  value="40"
-                />
-              </label>
-            </fieldset>
+            <div class="input-grid">
+              <section class="subpanel boundary-panel">
+                <h2>边界定义区</h2>
+                <p class="panel-hint">参数名与《置物架框架标准》保持一致，可勾选是否生效。</p>
+                <div class="boundary-list">
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_layers_n" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>层数 N（layers_n）</span>
+                      <input type="number" name="layers_n" step="1" min="1" value="4" />
+                    </label>
+                  </div>
 
-            <fieldset>
-              <legend>Module counts</legend>
-              <label>
-                Rod count (M1)
-                <input type="number" name="rod_count" min="0" step="1" value="4" />
-              </label>
-              <label>
-                Connector count (M2)
-                <input type="number" name="connector_count" min="0" step="1" value="12" />
-              </label>
-              <label>
-                Panel count (M3)
-                <input type="number" name="panel_count" min="0" step="1" value="4" />
-              </label>
-            </fieldset>
+                  <div class="input-row">
+                    <label class="switch">
+                      <input
+                        type="checkbox"
+                        class="param-enable"
+                        name="enable_payload_p_per_layer"
+                        checked
+                      />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>每层承重 P（payload_p_per_layer）</span>
+                      <input
+                        type="number"
+                        name="payload_p_per_layer"
+                        step="0.1"
+                        min="0.1"
+                        value="1"
+                      />
+                    </label>
+                  </div>
 
-            <fieldset>
-              <legend>Verification</legend>
-              <label>
-                Baseline efficiency
-                <input
-                  type="number"
-                  name="baseline_efficiency"
-                  min="0"
-                  step="0.01"
-                  value="1.00"
-                />
-              </label>
-              <label>
-                Target efficiency
-                <input
-                  type="number"
-                  name="target_efficiency"
-                  min="0"
-                  step="0.01"
-                  value="1.22"
-                />
-              </label>
-            </fieldset>
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_space_width" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>每层空间宽度 S.width</span>
+                      <input type="number" name="space_width" step="0.1" min="0.1" value="4" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_space_depth" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>每层空间深度 S.depth</span>
+                      <input type="number" name="space_depth" step="0.1" min="0.1" value="2" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_space_height" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>每层空间高度 S.height</span>
+                      <input type="number" name="space_height" step="0.1" min="0.1" value="1" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_opening_width" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>开口宽度 O.width</span>
+                      <input type="number" name="opening_width" step="0.1" min="0.1" value="3" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input type="checkbox" class="param-enable" name="enable_opening_height" checked />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>开口高度 O.height</span>
+                      <input type="number" name="opening_height" step="0.1" min="0.1" value="0.8" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input
+                        type="checkbox"
+                        class="param-enable"
+                        name="enable_footprint_width"
+                        checked
+                      />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>占地宽度 A.width</span>
+                      <input type="number" name="footprint_width" step="0.1" min="0.1" value="4.4" />
+                    </label>
+                  </div>
+
+                  <div class="input-row">
+                    <label class="switch">
+                      <input
+                        type="checkbox"
+                        class="param-enable"
+                        name="enable_footprint_depth"
+                        checked
+                      />
+                      <span>生效</span>
+                    </label>
+                    <label class="field">
+                      <span>占地深度 A.depth</span>
+                      <input type="number" name="footprint_depth" step="0.1" min="0.1" value="2.2" />
+                    </label>
+                  </div>
+                </div>
+              </section>
+
+              <section class="subpanel principles-panel">
+                <h2>组合原则区</h2>
+                <p class="panel-hint">对应 L2 组合规则，每条规则一列，可单独开关。</p>
+
+                <div class="principle-cards">
+                  <article class="principle-card">
+                    <h3>M1 杆（rod）</h3>
+                    <label class="field">
+                      <span>模块数量</span>
+                      <input type="number" name="rod_count" step="1" min="0" value="4" />
+                    </label>
+                  </article>
+
+                  <article class="principle-card">
+                    <h3>M2 连接接口（connector）</h3>
+                    <label class="field">
+                      <span>模块数量</span>
+                      <input type="number" name="connector_count" step="1" min="0" value="12" />
+                    </label>
+                  </article>
+
+                  <article class="principle-card">
+                    <h3>M3 隔板（panel）</h3>
+                    <label class="field">
+                      <span>模块数量</span>
+                      <input type="number" name="panel_count" step="1" min="0" value="4" />
+                    </label>
+                  </article>
+
+                  <article class="principle-card rule-card">
+                    <h3>R1</h3>
+                    <p>组合至少包含 2 种模块类型</p>
+                    <label class="switch">
+                      <input type="checkbox" name="enable_rule_r1" checked />
+                      <span>规则生效</span>
+                    </label>
+                  </article>
+
+                  <article class="principle-card rule-card">
+                    <h3>R2</h3>
+                    <p>可用组合必须包含 connector</p>
+                    <label class="switch">
+                      <input type="checkbox" name="enable_rule_r2" checked />
+                      <span>规则生效</span>
+                    </label>
+                  </article>
+                </div>
+              </section>
+            </div>
 
             <div class="actions">
-              <button type="submit">Generate Shelf</button>
-              <button type="button" id="reset-demo">Reset Demo</button>
+              <button type="submit" id="confirm-generate">确认并生成组合结果</button>
+              <button type="button" id="reset-demo">恢复默认</button>
             </div>
           </form>
         </section>
 
-        <section class="panel viewport-panel">
-          <div id="viewport"></div>
-          <div class="overlay">
-            <p id="status-pill" class="status-pill">Waiting for input...</p>
-            <ul id="reasons"></ul>
-            <div id="metrics" class="metrics"></div>
+        <section class="panel display-zone">
+          <div class="result-panel">
+            <div class="result-header">
+              <h2>组合结果</h2>
+              <p id="result-summary">请先点击“确认并生成组合结果”。</p>
+            </div>
+            <ul id="combo-list" class="combo-list"></ul>
+          </div>
+
+          <div class="viewer-panel">
+            <div id="viewport"></div>
+            <div class="overlay">
+              <p id="combo-title" class="combo-title">未选择组合</p>
+              <p id="status-pill" class="status-pill">等待生成</p>
+              <ul id="reasons"></ul>
+              <div id="metrics" class="metrics"></div>
+            </div>
           </div>
         </section>
       </main>
