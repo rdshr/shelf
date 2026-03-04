@@ -21,6 +21,7 @@ class HierarchyEdge:
     source: str
     target: str
     relation: str
+    metadata: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -107,7 +108,19 @@ def load_hierarchy(path: Path) -> HierarchyGraph:
         relation = _expect_str(edge_obj.get("relation"), f"edges[{idx}].relation")
         if source not in node_ids or target not in node_ids:
             raise ValueError(f"edge references unknown node: {source} -> {target}")
-        edges.append(HierarchyEdge(source=source, target=target, relation=relation))
+        metadata = {
+            str(key): value
+            for key, value in edge_obj.items()
+            if key not in {"from", "to", "relation"}
+        }
+        edges.append(
+            HierarchyEdge(
+                source=source,
+                target=target,
+                relation=relation,
+                metadata=metadata,
+            )
+        )
 
     _validate_acyclic(nodes, edges)
 
@@ -292,10 +305,11 @@ def _build_payload(
             }
         )
 
-    edges_payload = [
-        {"from": edge.source, "to": edge.target, "relation": edge.relation}
-        for edge in graph.edges
-    ]
+    edges_payload: list[dict[str, Any]] = []
+    for edge in graph.edges:
+        item: dict[str, Any] = {"from": edge.source, "to": edge.target, "relation": edge.relation}
+        item.update(edge.metadata)
+        edges_payload.append(item)
 
     return {
         "title": graph.title,
@@ -325,19 +339,22 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
   <title>M Hierarchy Graph</title>
   <style>
     :root {
-      --bg-top: #e8f0f2;
-      --bg-bottom: #eff4ec;
+      --bg-top: #f2f7fb;
+      --bg-bottom: #edf5ee;
       --card: #ffffff;
-      --text: #1e2a34;
-      --sub: #4b5f72;
-      --edge: #90a9bf;
-      --edge-active: #d1672f;
-      --node: #2f5f86;
-      --node-active: #d1672f;
-      --node-fade: #c2d1df;
-      --band-a: rgba(50, 90, 120, 0.06);
-      --band-b: rgba(50, 90, 120, 0.02);
-      --shadow: 0 14px 36px rgba(20, 39, 59, 0.12);
+      --text: #16283a;
+      --sub: #4a5e74;
+      --edge: #89a8c2;
+      --edge-active: #cb6538;
+      --edge-muted: rgba(67, 103, 136, 0.14);
+      --node: #25567f;
+      --node-active: #cb6538;
+      --node-fade: #c7d5e2;
+      --label-chip: rgba(255, 255, 255, 0.9);
+      --label-chip-border: rgba(46, 79, 110, 0.14);
+      --band-a: rgba(41, 89, 126, 0.055);
+      --band-b: rgba(41, 89, 126, 0.015);
+      --shadow: 0 16px 34px rgba(15, 33, 52, 0.11);
     }
 
     * { box-sizing: border-box; }
@@ -348,17 +365,17 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       color: var(--text);
       font-family: \"Noto Sans SC\", \"Source Han Sans SC\", \"PingFang SC\", sans-serif;
       background:
-        radial-gradient(circle at 8% 0%, #ffffff 0%, transparent 36%),
-        radial-gradient(circle at 95% 8%, #ffffff 0%, transparent 30%),
+        radial-gradient(circle at 8% 0%, #ffffff 0%, transparent 38%),
+        radial-gradient(circle at 95% 8%, #ffffff 0%, transparent 32%),
         linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
     }
 
     .layout {
-      max-width: 1660px;
-      margin: 20px auto;
-      padding: 0 18px 20px;
+      max-width: 1720px;
+      margin: 16px auto;
+      padding: 0 16px 18px;
       display: grid;
-      grid-template-columns: minmax(0, 2.35fr) minmax(320px, 1fr);
+      grid-template-columns: minmax(0, 2.55fr) minmax(320px, 1fr);
       gap: 16px;
       align-items: start;
     }
@@ -366,7 +383,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     .card {
       background: var(--card);
       border: 1px solid rgba(29, 57, 88, 0.1);
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
       overflow: hidden;
     }
@@ -376,22 +393,22 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     .head {
-      padding: 18px 22px 12px;
+      padding: 16px 20px 12px;
       border-bottom: 1px solid #e9eef4;
       background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
     }
 
     h1 {
       margin: 0;
-      font-size: 30px;
+      font-size: 29px;
       letter-spacing: 0.2px;
       line-height: 1.2;
     }
 
     .desc {
-      margin: 8px 0 0;
+      margin: 7px 0 0;
       color: var(--sub);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.55;
     }
 
@@ -399,9 +416,9 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-bottom: 1px solid #e9eef4;
-      background: #fbfdff;
+      background: #f8fcff;
     }
 
     .pill {
@@ -410,26 +427,43 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       border-radius: 999px;
       padding: 4px 10px;
       font-size: 12px;
-      color: #35556e;
+      color: #2d4e6a;
       border: 1px solid #d6e1ec;
-      background: #f2f8ff;
+      background: #edf6ff;
       white-space: nowrap;
+    }
+
+    .switch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #244a68;
+      border: 1px solid #d4e0ec;
+      background: #f4faff;
+    }
+
+    .switch-pill input {
+      margin: 0;
+      accent-color: #2d709e;
     }
 
     #graphSvg {
       width: 100%;
       display: block;
       background:
-        radial-gradient(circle at 50% -20%, #ffffff 0%, #f5fbff 45%, #edf4f8 100%);
+        radial-gradient(circle at 50% -20%, #ffffff 0%, #f4fafe 45%, #ebf3f8 100%);
     }
 
     .foot {
       margin: 0;
-      padding: 11px 16px;
+      padding: 10px 14px;
       color: var(--sub);
       font-size: 12px;
       border-top: 1px solid #e9eef4;
-      background: #fbfdff;
+      background: #f8fcff;
     }
 
     .side {
@@ -440,12 +474,12 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     .info-card,
     .detail-card {
-      padding: 14px;
+      padding: 14px 14px 12px;
     }
 
     .info-title,
     .detail-title {
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       font-size: 17px;
       color: #223246;
     }
@@ -454,11 +488,11 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       margin: 0;
       color: var(--sub);
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
     .kv {
-      margin: 8px 0;
+      margin: 7px 0;
       font-size: 14px;
       line-height: 1.4;
     }
@@ -468,14 +502,15 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     ul {
-      margin: 8px 0 0 18px;
+      margin: 6px 0 0 18px;
       padding: 0;
     }
 
     li {
-      margin: 4px 0;
-      font-size: 14px;
+      margin: 3px 0;
+      font-size: 13px;
       color: #30485f;
+      line-height: 1.45;
     }
 
     .level-band {
@@ -489,14 +524,14 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     .level-guide {
-      stroke: #ccdae7;
-      stroke-width: 1.2;
-      stroke-dasharray: 5 6;
+      stroke: #c7d6e4;
+      stroke-width: 1.1;
+      stroke-dasharray: 4 7;
     }
 
     .level-label {
       font-size: 13px;
-      fill: #36526c;
+      fill: #274862;
       font-weight: 700;
       letter-spacing: 0.2px;
     }
@@ -504,22 +539,23 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     .edge {
       fill: none;
       stroke: var(--edge);
-      stroke-width: 2.5;
+      stroke-width: 2.1;
       stroke-linecap: round;
       marker-end: url(#arrowDefault);
-      opacity: 0.9;
+      opacity: 0.86;
       transition: opacity 140ms ease, stroke 140ms ease;
     }
 
     .edge.faded {
-      opacity: 0.09;
+      opacity: 0.06;
+      stroke: var(--edge-muted);
     }
 
     .edge.active {
       stroke: var(--edge-active);
       marker-end: url(#arrowActive);
       opacity: 1;
-      stroke-width: 3.3;
+      stroke-width: 3.4;
     }
 
     .node-circle {
@@ -537,7 +573,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     .node-circle.faded {
       fill: var(--node-fade);
-      opacity: 0.26;
+      opacity: 0.22;
     }
 
     .node-circle.active {
@@ -546,18 +582,38 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     .node-label {
-      fill: #ffffff;
-      font-size: 15px;
+      fill: #1a3248;
+      font-size: 11px;
       font-weight: 760;
       text-anchor: middle;
-      dominant-baseline: middle;
+      dominant-baseline: hanging;
       pointer-events: none;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.2px;
       transition: opacity 120ms ease;
     }
 
     .node-label.faded {
-      opacity: 0.28;
+      opacity: 0.3;
+    }
+
+    .node-label.hidden {
+      opacity: 0;
+    }
+
+    .node-label-box {
+      fill: var(--label-chip);
+      stroke: var(--label-chip-border);
+      stroke-width: 1;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+    }
+
+    .node-label-box.faded {
+      opacity: 0.22;
+    }
+
+    .node-label-box.hidden {
+      opacity: 0;
     }
 
     @media (max-width: 1220px) {
@@ -617,6 +673,11 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       <div class=\"legend\">
         <span class=\"pill\" id=\"summaryNodes\"></span>
         <span class=\"pill\" id=\"summaryEdges\"></span>
+        <span class=\"pill\" id=\"summaryFan\"></span>
+        <label class=\"switch-pill\">
+          <input type=\"checkbox\" id=\"toggleLabels\" checked />
+          显示全部标签
+        </label>
         <span class=\"pill\">点击节点查看直连上游/下游关系</span>
       </div>
       <svg id=\"graphSvg\" role=\"img\" aria-label=\"M hierarchy graph\"></svg>
@@ -650,6 +711,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     const descriptionEl = document.getElementById("description");
     const summaryNodesEl = document.getElementById("summaryNodes");
     const summaryEdgesEl = document.getElementById("summaryEdges");
+    const summaryFanEl = document.getElementById("summaryFan");
+    const toggleLabelsEl = document.getElementById("toggleLabels");
     const levelStatsEl = document.getElementById("levelStats");
     const relationStatsEl = document.getElementById("relationStats");
     const detailBoxEl = document.getElementById("detailBox");
@@ -671,6 +734,14 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       const outList = outgoing.get(edge.from);
       if (outList) outList.push(edge);
     }
+
+    let maxFanOut = 0;
+    let maxFanIn = 0;
+    for (const [nodeId] of byId.entries()) {
+      maxFanOut = Math.max(maxFanOut, (outgoing.get(nodeId) ?? []).length);
+      maxFanIn = Math.max(maxFanIn, (incoming.get(nodeId) ?? []).length);
+    }
+    summaryFanEl.textContent = `最大扇出/扇入: ${maxFanOut}/${maxFanIn}`;
 
     const levelEntries = Object.entries(graphData.level_labels)
       .map(([rawLevel, name]) => [Number(rawLevel), String(name)])
@@ -754,13 +825,29 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     function edgePath(fromNode, toNode) {
+      const dx = toNode.x - fromNode.x;
       const dy = toNode.y - fromNode.y;
-      const curve = Math.max(42, Math.min(130, Math.abs(dy) * 0.42));
-      const c1x = fromNode.x;
+      const curve = Math.max(44, Math.min(136, Math.abs(dy) * 0.44));
+      const sidePull =
+        dx === 0 ? 0 : Math.sign(dx) * Math.max(26, Math.min(116, Math.abs(dx) * 0.28));
+      const c1x = fromNode.x + sidePull;
       const c1y = fromNode.y + curve;
-      const c2x = toNode.x;
+      const c2x = toNode.x - sidePull;
       const c2y = toNode.y - curve;
       return `M ${fromNode.x} ${fromNode.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${toNode.x} ${toNode.y}`;
+    }
+
+    const levelNumbers = levelEntries.map(([level]) => level);
+    const minLevel = Math.min(...levelNumbers);
+    const maxLevel = Math.max(...levelNumbers);
+    const levelSpan = Math.max(1, maxLevel - minLevel);
+
+    function nodeColorForLevel(level) {
+      const t = (level - minLevel) / levelSpan;
+      const hue = 208 - Math.round(t * 24);
+      const sat = 56 + Math.round(t * 5);
+      const light = 36 + Math.round(t * 10);
+      return `hsl(${hue} ${sat}% ${light}%)`;
     }
 
     const edgeElements = [];
@@ -775,13 +862,16 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       path.setAttribute("data-from", edge.from);
       path.setAttribute("data-to", edge.to);
       path.setAttribute("data-relation", edge.relation);
-      path.appendChild(document.createElementNS(SVG_NS, "title")).textContent = `${edge.from} -> ${edge.to} (${edge.relation})`;
+      const edgeRule = edge.rule ? `, rule=${edge.rule}` : "";
+      const edgeConstraint = edge.constraint ? `, constraint=${edge.constraint}` : "";
+      path.appendChild(document.createElementNS(SVG_NS, "title")).textContent = `${edge.from} -> ${edge.to} (${edge.relation}${edgeRule}${edgeConstraint})`;
       svg.appendChild(path);
       edgeElements.push(path);
     }
 
     const nodeCircleMap = new Map();
     const nodeLabelMap = new Map();
+    const nodeLabelBoxMap = new Map();
 
     for (const node of graphData.nodes) {
       const group = document.createElementNS(SVG_NS, "g");
@@ -789,14 +879,21 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       const circle = document.createElementNS(SVG_NS, "circle");
       circle.setAttribute("cx", String(node.x));
       circle.setAttribute("cy", String(node.y));
-      circle.setAttribute("r", "31");
+      circle.setAttribute("r", "24");
       circle.setAttribute("class", "node-circle");
       circle.setAttribute("data-id", node.id);
+      circle.style.fill = nodeColorForLevel(node.level);
       group.appendChild(circle);
+
+      const labelBox = document.createElementNS(SVG_NS, "rect");
+      labelBox.setAttribute("class", "node-label-box");
+      labelBox.setAttribute("rx", "7");
+      labelBox.setAttribute("ry", "7");
+      group.appendChild(labelBox);
 
       const label = document.createElementNS(SVG_NS, "text");
       label.setAttribute("x", String(node.x));
-      label.setAttribute("y", String(node.y));
+      label.setAttribute("y", String(node.y + 31));
       label.setAttribute("class", "node-label");
       label.textContent = node.label;
       group.appendChild(label);
@@ -807,8 +904,18 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       });
 
       svg.appendChild(group);
+      const bbox = label.getBBox();
+      const padX = 7;
+      const padY = 2;
+      labelBox.setAttribute("x", String(bbox.x - padX));
+      labelBox.setAttribute("y", String(bbox.y - padY));
+      labelBox.setAttribute("width", String(Math.max(10, bbox.width + padX * 2)));
+      labelBox.setAttribute("height", String(Math.max(10, bbox.height + padY * 2)));
+      group.insertBefore(labelBox, label);
+
       nodeCircleMap.set(node.id, circle);
       nodeLabelMap.set(node.id, label);
+      nodeLabelBoxMap.set(node.id, labelBox);
     }
 
     function escapeHtml(value) {
@@ -827,6 +934,20 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
     }
 
+    function formatEdgeItem(edge, mode) {
+      const peerId = mode === "up" ? edge.from : edge.to;
+      const peerLabel = byId.get(peerId)?.label ?? peerId;
+      const extras = [];
+      if (edge.rule) extras.push(`rule=${edge.rule}`);
+      if (edge.principle) extras.push(`principle=${edge.principle}`);
+      if (edge.constraint) extras.push(`constraint=${edge.constraint}`);
+      if (edge.source_file && edge.source_line) {
+        extras.push(`source=${edge.source_file}:${edge.source_line}`);
+      }
+      const extraText = extras.length ? ` · ${extras.join(" · ")}` : "";
+      return `${peerId} (${peerLabel}) · ${edge.relation}${extraText}`;
+    }
+
     function selectNode(nodeId) {
       const related = new Set([nodeId]);
       const upEdges = incoming.get(nodeId) ?? [];
@@ -838,13 +959,16 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       for (const [id, circle] of nodeCircleMap.entries()) {
         circle.classList.remove("active", "faded");
         const label = nodeLabelMap.get(id);
+        const labelBox = nodeLabelBoxMap.get(id);
         if (label) label.classList.remove("faded");
+        if (labelBox) labelBox.classList.remove("faded");
 
         if (id === nodeId) {
           circle.classList.add("active");
         } else if (!related.has(id)) {
           circle.classList.add("faded");
           if (label) label.classList.add("faded");
+          if (labelBox) labelBox.classList.add("faded");
         }
       }
 
@@ -863,8 +987,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       if (!node) return;
 
       const levelName = graphData.level_labels[String(node.level)] ?? `层级 ${node.level}`;
-      const upItems = upEdges.map((edge) => `${edge.from} (${byId.get(edge.from)?.label ?? edge.from}) · ${edge.relation}`);
-      const downItems = downEdges.map((edge) => `${edge.to} (${byId.get(edge.to)?.label ?? edge.to}) · ${edge.relation}`);
+      const upItems = upEdges.map((edge) => formatEdgeItem(edge, "up"));
+      const downItems = downEdges.map((edge) => formatEdgeItem(edge, "down"));
 
       detailBoxEl.innerHTML = `
         <p class=\"kv\"><b>ID:</b> ${escapeHtml(node.id)}</p>
@@ -878,6 +1002,16 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       `;
     }
 
+    function updateLabelVisibility() {
+      const visible = toggleLabelsEl?.checked ?? true;
+      for (const label of nodeLabelMap.values()) {
+        label.classList.toggle("hidden", !visible);
+      }
+      for (const box of nodeLabelBoxMap.values()) {
+        box.classList.toggle("hidden", !visible);
+      }
+    }
+
     function resetSelection() {
       for (const circle of nodeCircleMap.values()) {
         circle.classList.remove("active", "faded");
@@ -885,13 +1019,22 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       for (const label of nodeLabelMap.values()) {
         label.classList.remove("faded");
       }
+      for (const box of nodeLabelBoxMap.values()) {
+        box.classList.remove("faded");
+      }
       for (const edgeEl of edgeElements) {
         edgeEl.classList.remove("active", "faded");
       }
-      detailBoxEl.textContent = "点击左侧节点查看详情。";
+      detailBoxEl.textContent = "点击左侧节点查看详情；可通过“显示全部标签”控制整体标签密度。";
+      updateLabelVisibility();
     }
 
     svg.addEventListener("click", resetSelection);
+    if (toggleLabelsEl) {
+      toggleLabelsEl.addEventListener("change", () => {
+        updateLabelVisibility();
+      });
+    }
     resetSelection();
   </script>
 </body>
