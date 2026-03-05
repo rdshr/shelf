@@ -1,142 +1,182 @@
 {
   "root": {
     "title": "框架标准树结构图",
-    "description": "从 mapping/mapping_registry.json 的 tree 自动生成，展示框架标准树父子关系。",
+    "description": "从 framework/<module>/Lx-*.md 自动生成，仅生成相邻层级连接（Lx -> Lx+1），禁止跨级可见。 警告数量=1。",
     "level_labels": {
       "0": "L0 标准层",
       "1": "L1 标准层",
       "2": "L2 标准层",
-      "3": "L3 标准层"
+      "3": "L3 标准层",
+      "4": "L4 标准层",
+      "5": "L5 标准层",
+      "6": "L6 标准层",
+      "7": "L7 标准层"
     },
     "nodes": [
       {
-        "id": "NODE-L0-ROOT",
-        "label": "L0.规范总纲与树形结构",
+        "id": "NODE-FW-0001",
+        "label": "L0.curtain.L0-窗帘抽象结构层",
         "level": 0,
         "order": 1,
-        "description": "id=NODE-L0-ROOT | kind=file | level=L0 | file=specs/规范总纲与树形结构.md"
+        "description": "module=curtain | level=L0 | file=framework/curtain/L0-窗帘抽象结构层.md"
       },
       {
-        "id": "NODE-L1-LAYER",
-        "label": "L1.layer",
+        "id": "NODE-FW-0002",
+        "label": "L1.curtain.L1-安装与控制编排层",
         "level": 1,
         "order": 1,
-        "description": "id=NODE-L1-LAYER | kind=layer | level=L1"
+        "description": "module=curtain | level=L1 | file=framework/curtain/L1-安装与控制编排层.md"
       },
       {
-        "id": "NODE-L1-CORE",
-        "label": "L1.框架设计核心标准",
-        "level": 1,
-        "order": 2,
-        "description": "id=NODE-L1-CORE | kind=file | level=L1 | file=specs/框架设计核心标准.md"
-      },
-      {
-        "id": "NODE-L1-TRACEABILITY",
-        "label": "L1.可追溯性标准",
-        "level": 1,
-        "order": 3,
-        "description": "id=NODE-L1-TRACEABILITY | kind=file | level=L1 | file=specs/可追溯性标准.md"
-      },
-      {
-        "id": "NODE-L1-REDUCIBILITY",
-        "label": "L1.可删减性标准",
-        "level": 1,
-        "order": 4,
-        "description": "id=NODE-L1-REDUCIBILITY | kind=file | level=L1 | file=specs/可删减性标准.md"
-      },
-      {
-        "id": "NODE-L2-LAYER",
-        "label": "L2.layer",
+        "id": "NODE-FW-0003",
+        "label": "L2.curtain.L2-窗帘框架标准",
         "level": 2,
         "order": 1,
-        "description": "id=NODE-L2-LAYER | kind=layer | level=L2"
+        "description": "module=curtain | level=L2 | file=framework/curtain/L2-窗帘框架标准.md"
       },
       {
-        "id": "NODE-L2-SHELF",
-        "label": "L2.L2-置物架框架标准",
+        "id": "NODE-FW-0004",
+        "label": "L0.frontend.L0-工程与运行底座层",
+        "level": 0,
+        "order": 2,
+        "description": "module=frontend | level=L0 | file=framework/frontend/L0-工程与运行底座层.md"
+      },
+      {
+        "id": "NODE-FW-0005",
+        "label": "L1.frontend.L1-设计令牌与主题层",
+        "level": 1,
+        "order": 2,
+        "description": "module=frontend | level=L1 | file=framework/frontend/L1-设计令牌与主题层.md"
+      },
+      {
+        "id": "NODE-FW-0006",
+        "label": "L2.frontend.L2-前端框架标准",
         "level": 2,
         "order": 2,
-        "description": "id=NODE-L2-SHELF | kind=file | level=L2 | file=framework/shelf/L2-置物架框架标准.md"
+        "description": "module=frontend | level=L2 | file=framework/frontend/L2-前端框架标准.md"
       },
       {
-        "id": "NODE-L2-CURTAIN",
-        "label": "L2.L2-窗帘框架标准",
-        "level": 2,
-        "order": 3,
-        "description": "id=NODE-L2-CURTAIN | kind=file | level=L2 | file=framework/curtain/L2-窗帘框架标准.md"
-      },
-      {
-        "id": "NODE-L2-FRONTEND",
-        "label": "L2.L2-前端框架标准",
-        "level": 2,
-        "order": 4,
-        "description": "id=NODE-L2-FRONTEND | kind=file | level=L2 | file=framework/frontend/L2-前端框架标准.md"
-      },
-      {
-        "id": "NODE-L3-LAYER",
-        "label": "L3.layer",
+        "id": "NODE-FW-0007",
+        "label": "L3.frontend.L3-组件原子层",
         "level": 3,
         "order": 1,
-        "description": "id=NODE-L3-LAYER | kind=layer | level=L3"
+        "description": "module=frontend | level=L3 | file=framework/frontend/L3-组件原子层.md"
       },
       {
-        "id": "NODE-L3-REGISTRY",
-        "label": "L3.mapping_registry",
-        "level": 3,
-        "order": 2,
-        "description": "id=NODE-L3-REGISTRY | kind=file | level=L3 | file=mapping/mapping_registry.json"
+        "id": "NODE-FW-0008",
+        "label": "L4.frontend.L4-状态与数据编排层",
+        "level": 4,
+        "order": 1,
+        "description": "module=frontend | level=L4 | file=framework/frontend/L4-状态与数据编排层.md"
+      },
+      {
+        "id": "NODE-FW-0009",
+        "label": "L5.frontend.L5-页面与路由编排层",
+        "level": 5,
+        "order": 1,
+        "description": "module=frontend | level=L5 | file=framework/frontend/L5-页面与路由编排层.md"
+      },
+      {
+        "id": "NODE-FW-0010",
+        "label": "L6.frontend.L6-业务场景与流程层",
+        "level": 6,
+        "order": 1,
+        "description": "module=frontend | level=L6 | file=framework/frontend/L6-业务场景与流程层.md"
+      },
+      {
+        "id": "NODE-FW-0011",
+        "label": "L7.frontend.L7-体验目标与验证层",
+        "level": 7,
+        "order": 1,
+        "description": "module=frontend | level=L7 | file=framework/frontend/L7-体验目标与验证层.md"
+      },
+      {
+        "id": "NODE-FW-0012",
+        "label": "L0.runtime_env.L0-运行环境识别模块",
+        "level": 0,
+        "order": 3,
+        "description": "module=runtime_env | level=L0 | file=framework/runtime_env/L0-运行环境识别模块.md"
+      },
+      {
+        "id": "NODE-FW-0013",
+        "label": "L2.shelf.L2-置物架框架标准",
+        "level": 2,
+        "order": 3,
+        "description": "module=shelf | level=L2 | file=framework/shelf/L2-置物架框架标准.md"
       }
     ],
     "edges": [
       {
-        "from": "NODE-L0-ROOT",
-        "to": "NODE-L1-LAYER",
-        "relation": "tree_child"
+        "from": "NODE-FW-0001",
+        "to": "NODE-FW-0002",
+        "relation": "framework_adjacent_level",
+        "module": "curtain",
+        "from_level": "L0",
+        "to_level": "L1"
       },
       {
-        "from": "NODE-L1-LAYER",
-        "to": "NODE-L1-CORE",
-        "relation": "tree_child"
+        "from": "NODE-FW-0002",
+        "to": "NODE-FW-0003",
+        "relation": "framework_adjacent_level",
+        "module": "curtain",
+        "from_level": "L1",
+        "to_level": "L2"
       },
       {
-        "from": "NODE-L1-LAYER",
-        "to": "NODE-L1-TRACEABILITY",
-        "relation": "tree_child"
+        "from": "NODE-FW-0004",
+        "to": "NODE-FW-0005",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L0",
+        "to_level": "L1"
       },
       {
-        "from": "NODE-L1-LAYER",
-        "to": "NODE-L1-REDUCIBILITY",
-        "relation": "tree_child"
+        "from": "NODE-FW-0005",
+        "to": "NODE-FW-0006",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L1",
+        "to_level": "L2"
       },
       {
-        "from": "NODE-L1-LAYER",
-        "to": "NODE-L2-LAYER",
-        "relation": "tree_child"
+        "from": "NODE-FW-0006",
+        "to": "NODE-FW-0007",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L2",
+        "to_level": "L3"
       },
       {
-        "from": "NODE-L2-LAYER",
-        "to": "NODE-L2-SHELF",
-        "relation": "tree_child"
+        "from": "NODE-FW-0007",
+        "to": "NODE-FW-0008",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L3",
+        "to_level": "L4"
       },
       {
-        "from": "NODE-L2-LAYER",
-        "to": "NODE-L2-CURTAIN",
-        "relation": "tree_child"
+        "from": "NODE-FW-0008",
+        "to": "NODE-FW-0009",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L4",
+        "to_level": "L5"
       },
       {
-        "from": "NODE-L2-LAYER",
-        "to": "NODE-L2-FRONTEND",
-        "relation": "tree_child"
+        "from": "NODE-FW-0009",
+        "to": "NODE-FW-0010",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L5",
+        "to_level": "L6"
       },
       {
-        "from": "NODE-L2-LAYER",
-        "to": "NODE-L3-LAYER",
-        "relation": "tree_child"
-      },
-      {
-        "from": "NODE-L3-LAYER",
-        "to": "NODE-L3-REGISTRY",
-        "relation": "tree_child"
+        "from": "NODE-FW-0010",
+        "to": "NODE-FW-0011",
+        "relation": "framework_adjacent_level",
+        "module": "frontend",
+        "from_level": "L6",
+        "to_level": "L7"
       }
     ]
   }

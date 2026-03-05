@@ -15,7 +15,7 @@ const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md")
 const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
 const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framework_tree.html");
 const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
-  "uv run python scripts/generate_framework_tree_hierarchy.py --registry mapping/mapping_registry.json --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
+  "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
 const MODULE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const LEVEL_PATTERN = /^L\d+$/i;
 const FRAMEWORK_DIRECTIVE_PREFIX = "@framework";

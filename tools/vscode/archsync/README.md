@@ -67,4 +67,9 @@ Default commands use the repository validator:
 - `uv run python scripts/validate_strict_mapping.py --json`
 
 Default framework tree generation command:
-- `uv run python scripts/generate_framework_tree_hierarchy.py --registry mapping/mapping_registry.json --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html`
+- `uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html`
+
+Tree generation behavior:
+- Source defaults to framework files: `framework/<module>/Lx-*.md`.
+- Only adjacent-level edges are generated: `Lx -> L(x+1)`.
+- Cross-level jump edges are never generated.

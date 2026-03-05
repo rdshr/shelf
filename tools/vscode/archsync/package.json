@@ -83,7 +83,7 @@
         },
         "archSync.frameworkTreeGenerateCommand": {
           "type": "string",
-          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --registry mapping/mapping_registry.json --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
+          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
           "description": "Command used by 'Refresh Framework Tree'."
         }
       }
