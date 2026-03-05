@@ -1,0 +1,305 @@
+{
+  "tree": {
+    "id": "NODE-L0-ROOT",
+    "kind": "file",
+    "level": "L0",
+    "file": "standards/L0/规范总纲与树形结构.md",
+    "children": [
+      {
+        "id": "NODE-L1-LAYER",
+        "kind": "layer",
+        "level": "L1",
+        "children": [
+          {
+            "id": "NODE-L1-CORE",
+            "kind": "file",
+            "level": "L1",
+            "file": "standards/L1/框架设计核心标准.md",
+            "children": []
+          },
+          {
+            "id": "NODE-L1-TRACEABILITY",
+            "kind": "file",
+            "level": "L1",
+            "file": "standards/L1/可追溯性标准.md",
+            "children": []
+          },
+          {
+            "id": "NODE-L1-REDUCIBILITY",
+            "kind": "file",
+            "level": "L1",
+            "file": "standards/L1/可删减性标准.md",
+            "children": []
+          },
+          {
+            "id": "NODE-L1-AGENT-RULES",
+            "kind": "file",
+            "level": "L1",
+            "file": "AGENTS.md",
+            "children": []
+          },
+          {
+            "id": "NODE-L2-LAYER",
+            "kind": "layer",
+            "level": "L2",
+            "children": [
+              {
+                "id": "NODE-L2-SHELF",
+                "kind": "file",
+                "level": "L2",
+                "file": "standards/L2/置物架框架标准.md",
+                "children": []
+              },
+              {
+                "id": "NODE-L2-CURTAIN",
+                "kind": "file",
+                "level": "L2",
+                "file": "standards/L2/窗帘框架标准.md",
+                "children": []
+              },
+              {
+                "id": "NODE-L3-LAYER",
+                "kind": "layer",
+                "level": "L3",
+                "children": [
+                  {
+                    "id": "NODE-L3-SHELF-FRAMEWORK",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "src/shelf_framework.py",
+                    "children": []
+                  },
+                  {
+                    "id": "NODE-L3-MAIN",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "src/main.py",
+                    "children": []
+                  },
+                  {
+                    "id": "NODE-L3-VALIDATOR",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "scripts/validate_strict_mapping.py",
+                    "children": []
+                  },
+                  {
+                    "id": "NODE-L3-LOGIC-EVIDENCE",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "docs/logic_record.json",
+                    "children": []
+                  },
+                  {
+                    "id": "NODE-L3-REGISTRY",
+                    "kind": "file",
+                    "level": "L3",
+                    "file": "standards/L3/mapping_registry.json",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "level_order": ["L0", "L1", "L2", "L3"],
+    "reverse_validation_command": "uv run python scripts/validate_strict_mapping.py --check-changes"
+  },
+  "mappings": [
+    {
+      "id": "MAP-G",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 1. 目标（Goal）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 1. 目标（Goal）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Goal"
+        },
+        {
+          "file": "src/main.py",
+          "symbol": "goal = Goal("
+        }
+      ]
+    },
+    {
+      "id": "MAP-B",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 2. 边界定义（Boundary）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class BoundaryDefinition"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Space3D"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Opening2D"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Footprint2D"
+        }
+      ]
+    },
+    {
+      "id": "MAP-M",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 3. 模块（最小可行基，Module）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 3. 模块（最小可行基，Module）",
+      "sync_note": "L2 module role descriptions refined; L3 symbols unchanged",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Module"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "MODULE_ROLE"
+        }
+      ]
+    },
+    {
+      "id": "MAP-COMBINATION",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 4. 组合原则（Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Rule"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class CombinationRules"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def default()"
+        }
+      ]
+    },
+    {
+      "id": "MAP-V",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "standards/L2/置物架框架标准.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class VerificationInput"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class VerificationResult"
+        },
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def verify("
+        },
+        {
+          "file": "src/main.py",
+          "symbol": "verification_result = verify("
+        }
+      ]
+    },
+    {
+      "id": "MAP-CURTAIN-G",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 1. 目标（Goal）",
+      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_anchor": "## 1. 目标（Goal）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Goal"
+        }
+      ]
+    },
+    {
+      "id": "MAP-CURTAIN-B",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_anchor": "## 2. 边界定义（Boundary）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class BoundaryDefinition"
+        }
+      ]
+    },
+    {
+      "id": "MAP-CURTAIN-M",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 3. 模块（最小可行基，Module）",
+      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_anchor": "## 3. 模块（最小可行基，Module）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class Module"
+        }
+      ]
+    },
+    {
+      "id": "MAP-CURTAIN-COMBINATION",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_anchor": "## 4. 组合原则（Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "class CombinationRules"
+        }
+      ]
+    },
+    {
+      "id": "MAP-CURTAIN-V",
+      "l0_file": "standards/L0/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "standards/L1/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "standards/L2/窗帘框架标准.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/shelf_framework.py",
+          "symbol": "def verify("
+        }
+      ]
+    }
+  ]
+}

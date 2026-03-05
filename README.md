@@ -44,3 +44,19 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 uv sync
 uv run python src/main.py
 ```
+
+## 启动前端（实时生成）
+先生成页面与初始数据：
+```bash
+uv run python src/main.py
+```
+
+再启动前端服务（含实时 `A/N` 变体生成接口）：
+```bash
+uv run python src/runtime_server.py --host 127.0.0.1 --port 4173
+```
+
+浏览器打开：
+```text
+http://127.0.0.1:4173/groups.html
+```

@@ -15,7 +15,7 @@
         "G"
       ],
       "evidence": {
-        "N": 4
+        "N": 2
       }
     },
     {
@@ -36,8 +36,8 @@
       ],
       "evidence": {
         "S": {
-          "width": 80.0,
-          "depth": 35.0,
+          "width": 2.0,
+          "depth": 2.0,
           "height": 30.0
         }
       }
@@ -50,8 +50,8 @@
       ],
       "evidence": {
         "O": {
-          "width": 65.0,
-          "height": 28.0
+          "width": 1.8,
+          "height": 1.6
         }
       }
     },
@@ -63,8 +63,8 @@
       ],
       "evidence": {
         "A": {
-          "width": 90.0,
-          "depth": 40.0
+          "width": 2.0,
+          "depth": 2.0
         }
       }
     },
@@ -96,8 +96,8 @@
       "evidence": {}
     },
     {
-      "step_id": "R1",
-      "label": "no isolated module",
+      "step_id": "C1",
+      "label": "module contract (panel requires rod+connector)",
       "depends_on": [
         "M1",
         "M2",
@@ -106,10 +106,30 @@
       "evidence": {}
     },
     {
-      "step_id": "R2",
-      "label": "connector is mandatory",
+      "step_id": "C2",
+      "label": "support continuity (rod path + connectivity)",
       "depends_on": [
-        "M2"
+        "C1",
+        "B1",
+        "B5"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "C3",
+      "label": "projection stability",
+      "depends_on": [
+        "C2",
+        "B5"
+      ],
+      "evidence": {}
+    },
+    {
+      "step_id": "C4",
+      "label": "upper-layer engagement in multi-layer mode",
+      "depends_on": [
+        "C2",
+        "B1"
       ],
       "evidence": {}
     },
@@ -117,8 +137,10 @@
       "step_id": "H1",
       "label": "efficiency improves under valid constraints",
       "depends_on": [
-        "R1",
-        "R2"
+        "C1",
+        "C2",
+        "C3",
+        "C4"
       ],
       "evidence": {}
     },
@@ -129,17 +151,31 @@
         "H1"
       ],
       "evidence": {
-        "passed": true
+        "passed": false
+      }
+    },
+    {
+      "step_id": "V2",
+      "label": "catalog validation",
+      "depends_on": [
+        "V1"
+      ],
+      "evidence": {
+        "total_types": 34,
+        "passed": 15,
+        "failed": 19,
+        "primary_groups": 4,
+        "secondary_groups": 14
       }
     },
     {
       "step_id": "C",
       "label": "conclusion",
       "depends_on": [
-        "V1"
+        "V2"
       ],
       "evidence": {
-        "adopt_now": true
+        "adopt_now": false
       }
     }
   ],
