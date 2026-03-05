@@ -36,16 +36,46 @@ ASSIGN_CALL_PATTERN = re.compile(
 LAYER_DIR_PATTERN = re.compile(r"^L(\d+)$")
 CANONICAL_BASE_ID_PATTERN = re.compile(r"^B(\d+)$")
 CANONICAL_NODE_ID_PATTERN = re.compile(r"^L(\d+)\.M([A-Za-z0-9_-]+)\.B(\d+)$")
+CANONICAL_CAPABILITY_ID_PATTERN = re.compile(r"^C(\d+)$")
+CANONICAL_VERIFY_ID_PATTERN = re.compile(r"^V(\d+)$")
 FRAMEWORK_L2_FILE_PATTERN = re.compile(r"^framework/[^/]+/L2/[^/]+\.md$")
 LAYER_TAG_PATTERN = re.compile(r"<!--\s*@layer\s+([^>]*)-->", re.IGNORECASE)
 BASE_TAG_PATTERN = re.compile(r"<!--\s*@base\s+([^>]*)-->", re.IGNORECASE)
 COMPOSE_TAG_PATTERN = re.compile(r"<!--\s*@compose\s+([^>]*)-->", re.IGNORECASE)
+FRAMEWORK_DIRECTIVE_LINE_PATTERN = re.compile(r"^\s*@framework(?:\s+(.*))?\s*$", re.MULTILINE)
+FRAMEWORK_TITLE_LINE_PATTERN = re.compile(r"^\s*#\s+(.+?)\s*$", re.MULTILINE)
+FRAMEWORK_NUMBERED_ITEM_PATTERN = re.compile(
+    r"^\s*[-*]\s*`([A-Za-z][A-Za-z0-9]*(?:\.[0-9]+)?)`",
+    re.MULTILINE,
+)
+FRAMEWORK_BOUNDARY_ITEM_LINE_PATTERN = re.compile(
+    r"^\s*[-*]\s*`([A-Za-z][A-Za-z0-9]*)`\s+.*$",
+    re.MULTILINE,
+)
+FRAMEWORK_BASE_ITEM_LINE_PATTERN = re.compile(
+    r"^\s*[-*]\s*`(B\d+)`\s+.*$",
+    re.MULTILINE,
+)
+FRAMEWORK_SOURCE_EXPR_PATTERN = re.compile(r"来源[：:]\s*`([^`]+)`")
+FRAMEWORK_SOURCE_TOKEN_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:\.[0-9]+)?")
+FRAMEWORK_RULE_ID_PATTERN = re.compile(r"^R\d+(?:\.\d+)?$")
+FRAMEWORK_RULE_TOP_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+)`\s*(.*)$")
+FRAMEWORK_RULE_CHILD_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+\.\d+)`\s*(.*)$")
+FRAMEWORK_BACKTICK_CONTENT_PATTERN = re.compile(r"`([^`]+)`")
+FRAMEWORK_SYMBOL_TOKEN_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 REQUIRED_LAYER_SECTIONS = (
     "## 1. 目标（Goal）",
     "## 2. 边界定义（Boundary）",
     "## 3. 最小可行基（Bases）",
     "## 4. 组合原则（Combination Principles）",
     "## 5. 验证（Verification）",
+)
+REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = (
+    "## 1. 能力声明",
+    "## 2. 边界定义",
+    "## 3. 最小可行基",
+    "## 4. 基组合原则",
+    "## 5. 验证",
 )
 
 Issue = dict[str, Any]
@@ -202,6 +232,42 @@ def parse_tag_attributes(raw: str) -> dict[str, str]:
     return attrs
 
 
+def find_first_h1_title(text: str) -> tuple[int, str] | None:
+    for match in FRAMEWORK_TITLE_LINE_PATTERN.finditer(text):
+        line = line_from_offset(text, match.start())
+        title = match.group(1).strip()
+        if title:
+            return line, title
+    return None
+
+
+def iter_section_bullet_lines(text: str, heading_prefix: str) -> list[tuple[int, str]]:
+    lines = text.splitlines()
+    in_section = False
+    bullets: list[tuple[int, str]] = []
+    for idx, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            if in_section:
+                break
+            if stripped.startswith(heading_prefix):
+                in_section = True
+            continue
+        if not in_section:
+            continue
+        if stripped.startswith("- ") or stripped.startswith("* "):
+            bullets.append((idx, line))
+    return bullets
+
+
+def extract_backtick_tokens(text: str) -> list[str]:
+    tokens: list[str] = []
+    for segment in FRAMEWORK_BACKTICK_CONTENT_PATTERN.findall(text):
+        for token in FRAMEWORK_SYMBOL_TOKEN_PATTERN.findall(segment):
+            tokens.append(token)
+    return tokens
+
+
 def iter_framework_layer_markdown() -> list[tuple[str, int, Path]]:
     docs: list[tuple[str, int, Path]] = []
     if not FRAMEWORK_DIR.exists():
@@ -255,6 +321,7 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
     module_levels: dict[str, set[int]] = {}
     edge_pairs: set[tuple[str, str]] = set()
     valid_compose_edges: list[tuple[str, str]] = []
+    framework_identifier_origin: dict[str, dict[str, tuple[str, int]]] = {}
 
     if not FRAMEWORK_DIR.exists():
         issues.append(
@@ -301,7 +368,411 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
         module_levels.setdefault(module_name, set()).add(level_num)
         file_text = read_text(markdown_file)
 
-        for required_heading in REQUIRED_LAYER_SECTIONS:
+        framework_directive_match = FRAMEWORK_DIRECTIVE_LINE_PATTERN.search(file_text)
+        if framework_directive_match is not None:
+            is_framework_directive_file = True
+            directive_line = line_from_offset(file_text, framework_directive_match.start())
+            directive_args = (framework_directive_match.group(1) or "").strip()
+            if directive_args:
+                issues.append(
+                    make_issue(
+                        "@framework must be plain directive without arguments",
+                        rel_file,
+                        directive_line,
+                        code="FW002",
+                    )
+                )
+
+            h1_title = find_first_h1_title(file_text)
+            if h1_title is None:
+                issues.append(
+                    make_issue(
+                        "framework file must have a level-1 title line",
+                        rel_file,
+                        1,
+                        code="FW003",
+                    )
+                )
+            else:
+                title_line, title_text = h1_title
+                if ":" not in title_text:
+                    issues.append(
+                        make_issue(
+                            "framework title must include Chinese and English names separated by ':'",
+                            rel_file,
+                            title_line,
+                            code="FW003",
+                        )
+                    )
+                else:
+                    left, right = title_text.split(":", 1)
+                    if not left.strip() or not right.strip():
+                        issues.append(
+                            make_issue(
+                                "framework title around ':' cannot be empty",
+                                rel_file,
+                                title_line,
+                                code="FW003",
+                            )
+                        )
+                    if re.search(r"[A-Za-z]", right) is None:
+                        issues.append(
+                            make_issue(
+                                "framework title English part must contain ASCII letters",
+                                rel_file,
+                                title_line,
+                                code="FW003",
+                            )
+                        )
+
+            module_identifier_origin = framework_identifier_origin.setdefault(module_name, {})
+            file_identifiers: set[str] = set()
+            for id_match in FRAMEWORK_NUMBERED_ITEM_PATTERN.finditer(file_text):
+                identifier = id_match.group(1)
+                line_num = line_from_offset(file_text, id_match.start(1))
+                file_identifiers.add(identifier)
+                previous_origin = module_identifier_origin.get(identifier)
+                if previous_origin is not None:
+                    prev_file, prev_line = previous_origin
+                    issues.append(
+                        make_issue(
+                            f"framework identifier must be unique inside module '{module_name}': {identifier}",
+                            rel_file,
+                            line_num,
+                            code="FW010",
+                            related=[
+                                {
+                                    "message": "previous declaration",
+                                    "file": prev_file,
+                                    "line": prev_line,
+                                    "column": 1,
+                                }
+                            ],
+                        )
+                    )
+                    continue
+                module_identifier_origin[identifier] = (rel_file, line_num)
+
+            for identifier in sorted(file_identifiers):
+                origin = module_identifier_origin.get(identifier)
+                line_num = origin[1] if origin and origin[0] == rel_file else 1
+                if identifier.startswith("C") and CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is None:
+                    issues.append(
+                        make_issue(
+                            f"invalid capability identifier format: {identifier}; expected C<number>",
+                            rel_file,
+                            line_num,
+                            code="FW011",
+                        )
+                    )
+                if identifier.startswith("B") and CANONICAL_BASE_ID_PATTERN.fullmatch(identifier) is None:
+                    issues.append(
+                        make_issue(
+                            f"invalid base identifier format: {identifier}; expected B<number>",
+                            rel_file,
+                            line_num,
+                            code="FW011",
+                        )
+                    )
+                if identifier.startswith("V") and CANONICAL_VERIFY_ID_PATTERN.fullmatch(identifier) is None:
+                    issues.append(
+                        make_issue(
+                            f"invalid verification identifier format: {identifier}; expected V<number>",
+                            rel_file,
+                            line_num,
+                            code="FW011",
+                        )
+                    )
+
+            capability_ids = {
+                identifier
+                for identifier in file_identifiers
+                if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is not None
+            }
+            boundary_ids: set[str] = set()
+
+            for base_item_match in FRAMEWORK_BASE_ITEM_LINE_PATTERN.finditer(file_text):
+                base_id = base_item_match.group(1)
+                base_line = base_item_match.group(0)
+                base_line_num = line_from_offset(file_text, base_item_match.start(1))
+                source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(base_line)
+                if source_match is None:
+                    issues.append(
+                        make_issue(
+                            f"{base_id} must declare source expression using '来源：`...`'",
+                            rel_file,
+                            base_line_num,
+                            code="FW020",
+                        )
+                    )
+                    continue
+
+                source_expr = source_match.group(1).strip()
+                if not source_expr:
+                    issues.append(
+                        make_issue(
+                            f"{base_id} source expression cannot be empty",
+                            rel_file,
+                            base_line_num,
+                            code="FW021",
+                        )
+                    )
+                    continue
+
+                source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
+                if not source_tokens:
+                    issues.append(
+                        make_issue(
+                            f"{base_id} source expression is invalid: {source_expr}",
+                            rel_file,
+                            base_line_num,
+                            code="FW021",
+                        )
+                    )
+                    continue
+
+                for token in source_tokens:
+                    if token not in file_identifiers:
+                        issues.append(
+                            make_issue(
+                                f"{base_id} source references undefined identifier: {token}",
+                                rel_file,
+                                base_line_num,
+                                code="FW021",
+                            )
+                        )
+
+                has_capability_ref = any(re.fullmatch(r"C\d+", token) for token in source_tokens)
+                has_boundary_ref = any(not re.fullmatch(r"C\d+", token) for token in source_tokens)
+                if not has_capability_ref or not has_boundary_ref:
+                    issues.append(
+                        make_issue(
+                            (
+                                f"{base_id} source must include at least one capability id (C*) "
+                                "and one boundary/parameter identifier"
+                            ),
+                            rel_file,
+                            base_line_num,
+                            code="FW022",
+                        )
+                    )
+
+            for boundary_line_num, boundary_line in iter_section_bullet_lines(file_text, "## 2. 边界定义"):
+                boundary_match = FRAMEWORK_BOUNDARY_ITEM_LINE_PATTERN.match(boundary_line)
+                if boundary_match is None:
+                    continue
+                boundary_id = boundary_match.group(1)
+                boundary_ids.add(boundary_id)
+                source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(boundary_line)
+                if source_match is None:
+                    issues.append(
+                        make_issue(
+                            f"{boundary_id} must declare source expression using '来源：`...`'",
+                            rel_file,
+                            boundary_line_num,
+                            code="FW030",
+                        )
+                    )
+                    continue
+
+                source_expr = source_match.group(1).strip()
+                source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
+                if not source_tokens:
+                    issues.append(
+                        make_issue(
+                            f"{boundary_id} source expression is invalid: {source_expr}",
+                            rel_file,
+                            boundary_line_num,
+                            code="FW031",
+                        )
+                    )
+                    continue
+
+                for token in source_tokens:
+                    if token not in file_identifiers:
+                        issues.append(
+                            make_issue(
+                                f"{boundary_id} source references undefined identifier: {token}",
+                                rel_file,
+                                boundary_line_num,
+                                code="FW031",
+                            )
+                        )
+
+                has_capability_ref = any(re.fullmatch(r"C\d+", token) for token in source_tokens)
+                if not has_capability_ref:
+                    issues.append(
+                        make_issue(
+                            f"{boundary_id} source must include at least one capability id (C*)",
+                            rel_file,
+                            boundary_line_num,
+                            code="FW031",
+                        )
+                    )
+
+            for identifier in sorted(file_identifiers):
+                if not identifier.startswith("R"):
+                    continue
+                if FRAMEWORK_RULE_ID_PATTERN.fullmatch(identifier) is None:
+                    origin = module_identifier_origin.get(identifier)
+                    line_num = origin[1] if origin and origin[0] == rel_file else 1
+                    issues.append(
+                        make_issue(
+                            f"invalid rule identifier format: {identifier}; expected R<number> or R<number>.<number>",
+                            rel_file,
+                            line_num,
+                            code="FW040",
+                        )
+                    )
+                    continue
+                if "." in identifier:
+                    parent = identifier.split(".", 1)[0]
+                    if parent not in file_identifiers:
+                        origin = module_identifier_origin.get(identifier)
+                        line_num = origin[1] if origin and origin[0] == rel_file else 1
+                        issues.append(
+                            make_issue(
+                                f"rule child identifier requires parent declaration: {identifier} (missing {parent})",
+                                rel_file,
+                                line_num,
+                                code="FW040",
+                            )
+                        )
+
+            rule_top_lines: dict[str, int] = {}
+            rule_child_items: dict[str, list[tuple[int, str]]] = {}
+            rule_declared_symbols: dict[str, set[str]] = {}
+            for rule_line_num, rule_line in iter_section_bullet_lines(file_text, "## 4. 基组合原则"):
+                top_match = FRAMEWORK_RULE_TOP_LINE_PATTERN.match(rule_line)
+                if top_match is not None:
+                    parent_rule = top_match.group(1)
+                    rule_top_lines.setdefault(parent_rule, rule_line_num)
+                    rule_child_items.setdefault(parent_rule, [])
+                    continue
+
+                child_match = FRAMEWORK_RULE_CHILD_LINE_PATTERN.match(rule_line)
+                if child_match is None:
+                    continue
+                child_rule = child_match.group(1)
+                parent_rule = child_rule.split(".", 1)[0]
+                content = child_match.group(2).strip()
+                rule_child_items.setdefault(parent_rule, []).append((rule_line_num, content))
+
+                if "输出结构" in content:
+                    for token in extract_backtick_tokens(content):
+                        if token in file_identifiers or token in boundary_ids:
+                            continue
+                        if (
+                            CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
+                            or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
+                            or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
+                            or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
+                        ):
+                            continue
+                        rule_declared_symbols.setdefault(parent_rule, set()).add(token)
+
+            for parent_rule, parent_line in sorted(rule_top_lines.items()):
+                child_items = rule_child_items.get(parent_rule, [])
+                required_keywords = ("参与基", "组合方式", "输出能力", "边界绑定")
+                for keyword in required_keywords:
+                    if any(keyword in content for _, content in child_items):
+                        continue
+                    issues.append(
+                        make_issue(
+                            f"{parent_rule} missing required field: {keyword}",
+                            rel_file,
+                            parent_line,
+                            code="FW041",
+                        )
+                    )
+
+            for parent_rule, child_items in rule_child_items.items():
+                for child_line, content in child_items:
+                    if "输出能力" not in content:
+                        continue
+                    capability_refs = re.findall(r"C\d+", content)
+                    if not capability_refs:
+                        issues.append(
+                            make_issue(
+                                f"{parent_rule} output capability must reference at least one C*",
+                                rel_file,
+                                child_line,
+                                code="FW050",
+                            )
+                        )
+                        continue
+                    for cap_id in capability_refs:
+                        if cap_id in capability_ids:
+                            continue
+                        issues.append(
+                            make_issue(
+                                f"{parent_rule} output capability references undefined identifier: {cap_id}",
+                                rel_file,
+                                child_line,
+                                code="FW050",
+                            )
+                        )
+
+            declared_by_order: list[tuple[int, set[str]]] = []
+            for parent_rule, symbols in rule_declared_symbols.items():
+                try:
+                    parent_num = int(parent_rule[1:])
+                except ValueError:
+                    continue
+                declared_by_order.append((parent_num, symbols))
+            declared_by_order.sort(key=lambda item: item[0])
+
+            for parent_rule, child_items in rule_child_items.items():
+                try:
+                    parent_num = int(parent_rule[1:])
+                except ValueError:
+                    continue
+                for child_line, content in child_items:
+                    for token in extract_backtick_tokens(content):
+                        if token in file_identifiers or token in boundary_ids:
+                            continue
+                        if (
+                            CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
+                            or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
+                            or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
+                            or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
+                        ):
+                            continue
+
+                        declared_in_same = token in rule_declared_symbols.get(parent_rule, set())
+                        if declared_in_same:
+                            continue
+
+                        declared_in_upstream = False
+                        for upstream_num, symbols in declared_by_order:
+                            if upstream_num >= parent_num:
+                                break
+                            if token in symbols:
+                                declared_in_upstream = True
+                                break
+                        if declared_in_upstream:
+                            continue
+
+                        issues.append(
+                            make_issue(
+                                (
+                                    f"rule symbol '{token}' is used without declaration via '输出结构' "
+                                    f"in same or upstream rules for {parent_rule}"
+                                ),
+                                rel_file,
+                                child_line,
+                                code="FW060",
+                            )
+                        )
+        else:
+            is_framework_directive_file = False
+
+        required_headings = (
+            REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS
+            if is_framework_directive_file
+            else REQUIRED_LAYER_SECTIONS
+        )
+        for required_heading in required_headings:
             if required_heading not in file_text:
                 issues.append(
                     make_issue(
@@ -312,86 +783,87 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                     )
                 )
 
-        layer_matches = list(LAYER_TAG_PATTERN.finditer(file_text))
-        if not layer_matches:
-            issues.append(
-                make_issue(
-                    "missing @layer tag",
-                    rel_file,
-                    1,
-                    code="FRAMEWORK_LAYER_TAG_MISSING",
-                )
-            )
-        else:
-            attrs = parse_tag_attributes(layer_matches[0].group(1))
-            expected_level = f"L{level_num}"
-            declared_module = attrs.get("module")
-            declared_level = attrs.get("level")
-            if declared_module != module_name:
+        if not is_framework_directive_file:
+            layer_matches = list(LAYER_TAG_PATTERN.finditer(file_text))
+            if not layer_matches:
                 issues.append(
                     make_issue(
-                        f"@layer module must be '{module_name}', got '{declared_module}'",
+                        "missing @layer tag",
                         rel_file,
-                        line_from_offset(file_text, layer_matches[0].start()),
-                        code="FRAMEWORK_LAYER_TAG_MODULE_MISMATCH",
+                        1,
+                        code="FRAMEWORK_LAYER_TAG_MISSING",
                     )
                 )
-            if declared_level != expected_level:
-                issues.append(
-                    make_issue(
-                        f"@layer level must be '{expected_level}', got '{declared_level}'",
-                        rel_file,
-                        line_from_offset(file_text, layer_matches[0].start()),
-                        code="FRAMEWORK_LAYER_TAG_LEVEL_MISMATCH",
+            else:
+                attrs = parse_tag_attributes(layer_matches[0].group(1))
+                expected_level = f"L{level_num}"
+                declared_module = attrs.get("module")
+                declared_level = attrs.get("level")
+                if declared_module != module_name:
+                    issues.append(
+                        make_issue(
+                            f"@layer module must be '{module_name}', got '{declared_module}'",
+                            rel_file,
+                            line_from_offset(file_text, layer_matches[0].start()),
+                            code="FRAMEWORK_LAYER_TAG_MODULE_MISMATCH",
+                        )
                     )
-                )
+                if declared_level != expected_level:
+                    issues.append(
+                        make_issue(
+                            f"@layer level must be '{expected_level}', got '{declared_level}'",
+                            rel_file,
+                            line_from_offset(file_text, layer_matches[0].start()),
+                            code="FRAMEWORK_LAYER_TAG_LEVEL_MISMATCH",
+                        )
+                    )
 
-        base_matches = list(BASE_TAG_PATTERN.finditer(file_text))
-        if not base_matches:
-            issues.append(
-                make_issue(
-                    "missing @base tags",
-                    rel_file,
-                    1,
-                    code="FRAMEWORK_BASE_TAG_MISSING",
-                )
-            )
-        for match in base_matches:
-            attrs = parse_tag_attributes(match.group(1))
-            base_id = attrs.get("id")
-            line = line_from_offset(file_text, match.start())
-            if base_id is None or CANONICAL_BASE_ID_PATTERN.fullmatch(base_id) is None:
+            base_matches = list(BASE_TAG_PATTERN.finditer(file_text))
+            if not base_matches:
                 issues.append(
                     make_issue(
-                        f"invalid @base id: {base_id}",
+                        "missing @base tags",
                         rel_file,
-                        line,
-                        code="FRAMEWORK_BASE_ID_INVALID",
+                        1,
+                        code="FRAMEWORK_BASE_TAG_MISSING",
                     )
                 )
-                continue
+            for match in base_matches:
+                attrs = parse_tag_attributes(match.group(1))
+                base_id = attrs.get("id")
+                line = line_from_offset(file_text, match.start())
+                if base_id is None or CANONICAL_BASE_ID_PATTERN.fullmatch(base_id) is None:
+                    issues.append(
+                        make_issue(
+                            f"invalid @base id: {base_id}",
+                            rel_file,
+                            line,
+                            code="FRAMEWORK_BASE_ID_INVALID",
+                        )
+                    )
+                    continue
 
-            node_id = f"L{level_num}.M{module_name}.{base_id}"
-            if node_id in node_origin:
-                prev_file, prev_line = node_origin[node_id]
-                issues.append(
-                    make_issue(
-                        f"duplicate canonical base node id: {node_id}",
-                        rel_file,
-                        line,
-                        code="FRAMEWORK_BASE_NODE_DUP",
-                        related=[
-                            {
-                                "message": "previous declaration",
-                                "file": prev_file,
-                                "line": prev_line,
-                                "column": 1,
-                            }
-                        ],
+                node_id = f"L{level_num}.M{module_name}.{base_id}"
+                if node_id in node_origin:
+                    prev_file, prev_line = node_origin[node_id]
+                    issues.append(
+                        make_issue(
+                            f"duplicate canonical base node id: {node_id}",
+                            rel_file,
+                            line,
+                            code="FRAMEWORK_BASE_NODE_DUP",
+                            related=[
+                                {
+                                    "message": "previous declaration",
+                                    "file": prev_file,
+                                    "line": prev_line,
+                                    "column": 1,
+                                }
+                            ],
+                        )
                     )
-                )
-                continue
-            node_origin[node_id] = (rel_file, line)
+                    continue
+                node_origin[node_id] = (rel_file, line)
 
         for match in COMPOSE_TAG_PATTERN.finditer(file_text):
             attrs = parse_tag_attributes(match.group(1))
