@@ -1,0 +1,53 @@
+{
+  "sessions": [
+    {
+      "token": "m00abW_sAhKuzgyzJB_iUicjZxaMZCTzD0nWt98S1-8",
+      "user_id": "root.local",
+      "email": "root@root.com",
+      "created_at": "2026-03-06T08:23:10.613412+00:00",
+      "expires_at": "2026-03-06T20:23:10.613412+00:00"
+    },
+    {
+      "token": "bCjB08lltFqtYKOwePXA3ICLossRxDQ5TnYrJlxq_Z8",
+      "user_id": "6d692428a8094551b6e2221381d22845",
+      "email": "applicant@test.com",
+      "created_at": "2026-03-06T08:23:10.740463+00:00",
+      "expires_at": "2026-03-06T20:23:10.740463+00:00"
+    },
+    {
+      "token": "BqzXbhBgryn9v8PWPNvlP-sp9-VmWGRJd8TgU3Of6bA",
+      "user_id": "root.local",
+      "email": "root@root.com",
+      "created_at": "2026-03-06T08:27:23.991341+00:00",
+      "expires_at": "2026-03-06T20:27:23.991341+00:00"
+    },
+    {
+      "token": "ImcTJgMd1a6WM1_nXCG_aDWqvLDKs56kg1SFVekMyFY",
+      "user_id": "root.local",
+      "email": "root@root.com",
+      "created_at": "2026-03-06T08:27:39.072736+00:00",
+      "expires_at": "2026-03-06T20:27:39.072736+00:00"
+    },
+    {
+      "token": "LPpt73fIQULETAS4_09t3Qvxjc1_D4rdtmgL3tlC5rM",
+      "user_id": "root.local",
+      "email": "root@root.com",
+      "created_at": "2026-03-06T08:27:49.655860+00:00",
+      "expires_at": "2026-03-06T20:27:49.655860+00:00"
+    },
+    {
+      "token": "pPuBxQ2PDzkaW88zwONS8Nzy3baHLCDsQxjtYrQdxrI",
+      "user_id": "6d692428a8094551b6e2221381d22845",
+      "email": "applicant@test.com",
+      "created_at": "2026-03-06T08:27:49.750930+00:00",
+      "expires_at": "2026-03-06T20:27:49.750930+00:00"
+    },
+    {
+      "token": "J_GSozZre3FKUC-grO6zF4fdKbYG8RqlGurovesIkv8",
+      "user_id": "root.local",
+      "email": "root@root.com",
+      "created_at": "2026-03-06T08:29:01.498442+00:00",
+      "expires_at": "2026-03-06T20:29:01.498442+00:00"
+    }
+  ]
+}

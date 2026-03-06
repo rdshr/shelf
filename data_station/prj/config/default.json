@@ -1,0 +1,204 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8010,
+    "public_origin": "http://127.0.0.1:8010"
+  },
+  "paths": {
+    "runtime_dir": "runtime",
+    "uploads_dir": "uploads",
+    "exports_dir": "exports",
+    "document_store_file": "documents.json",
+    "trace_store_file": "traces.jsonl",
+    "folder_store_file": "folders.json",
+    "session_store_file": "sessions.json",
+    "users_dir": "users",
+    "web_dir": "web"
+  },
+  "l1_authentication": {
+    "session_cookie_name": "data_station_session",
+    "login_title": "Data Station"
+  },
+  "l2_authentication_bootstrap": {
+    "root_user_id": "root.local",
+    "root_email": "root@root.com",
+    "root_username": "root",
+    "root_duties": ["系统管理", "用户审批", "权限调整"],
+    "root_password_salt": "root-seed-2026",
+    "root_password_iterations": 200000,
+    "root_password_hash": "2a306490549da0a7dcdfd9fad7482668b27bc3d2f20099c07a99f7b54ef39624"
+  },
+  "l2_registration_policy": {
+    "enabled": true,
+    "minimum_password_length": 3,
+    "default_password_iterations": 200000,
+    "default_role": "viewer",
+    "assignable_roles": ["viewer", "engineer", "root"]
+  },
+  "l2_session_management": {
+    "session_ttl_hours": 12,
+    "cookie_path": "/",
+    "http_only": true,
+    "same_site": "Lax"
+  },
+  "l1_folder_tree": {
+    "collapsed_by_default": true,
+    "context_menu_actions": ["移动", "清洗", "删除", "审核", "提交"]
+  },
+  "l2_folder_defaults": {
+    "folders": [
+      {
+        "folder_id": "uncategorized",
+        "name": "未分类",
+        "parent_id": null,
+        "system": true,
+        "created_by": "system"
+      },
+      {
+        "folder_id": "categorized",
+        "name": "已分类",
+        "parent_id": null,
+        "system": true,
+        "created_by": "system"
+      }
+    ]
+  },
+  "l2_folder_creation": {
+    "max_name_length": 32,
+    "max_folder_depth": 4
+  },
+  "l2_frontend_upload": {
+    "max_upload_size_bytes": 5242880,
+    "refresh_after_upload": true,
+    "default_actor_role": "engineer"
+  },
+  "l2_upload_contract": {
+    "upload_path": "/api/upload",
+    "allowed_methods": ["POST"],
+    "max_upload_size_bytes": 5242880,
+    "allowed_extensions": [".pdf", ".txt", ".md", ".png", ".jpg", ".jpeg", ".json"],
+    "required_headers": [
+      "X-Filename",
+      "X-Document-Type",
+      "X-Source",
+      "X-Request-Id"
+    ],
+    "success_message": "Upload succeeded.",
+    "duplicate_message": "Duplicate upload request reused existing result."
+  },
+  "l3_admission_interface": {
+    "sanitize_filename": true,
+    "require_content_length": true,
+    "max_header_bytes": 8192
+  },
+  "l3_payload_handling": {
+    "allow_empty_file": false,
+    "sha256_enabled": true
+  },
+  "l3_file_persistence": {
+    "filename_pattern": "{timestamp}_{uuid}_{filename}",
+    "timestamp_format": "%Y%m%d%H%M%S"
+  },
+  "l3_result_output": {
+    "success_status": 201,
+    "duplicate_status": 200
+  },
+  "l1_state_management": {
+    "initial_state": "accepted",
+    "version_start": 1,
+    "idempotent_request_field": "request_id"
+  },
+  "l2_state_registration": {
+    "initial_state": "accepted"
+  },
+  "l2_state_transition_control": {
+    "allowed_transitions": {
+      "accepted": ["processing", "processed"],
+      "processing": ["processed", "review_rejected"],
+      "processed": ["reviewed", "review_rejected"],
+      "review_rejected": ["processing"],
+      "reviewed": []
+    }
+  },
+  "l2_version_idempotency": {
+    "enable_idempotency": true,
+    "increment_on_transition": true
+  },
+  "l1_trace_management": {
+    "enabled": true
+  },
+  "l2_trace_event_intake": {
+    "required_event_fields": ["event", "subject", "resource", "request_id"]
+  },
+  "l2_trace_field_normalization": {
+    "required_normalized_fields": ["result", "reason", "version"]
+  },
+  "l2_trace_record_output": {
+    "write_json_lines": true
+  },
+  "l1_authorization_governance": {
+    "deny_if_actor_missing": true
+  },
+  "l2_authorization_input_parsing": {
+    "default_actor_role": "viewer",
+    "default_actor_id": "anonymous"
+  },
+  "l2_authorization_decision_generation": {
+    "policies": {
+      "upload.create": ["engineer", "root"],
+      "document.view": ["viewer", "engineer", "root"],
+      "process.execute": ["engineer", "root"],
+      "review.submit": ["engineer", "root"],
+      "document.export": ["viewer", "engineer", "root"],
+      "folder.create": ["engineer", "root"],
+      "admin.user.view": ["root"],
+      "admin.user.approve": ["root"],
+      "admin.user.update": ["root"]
+    }
+  },
+  "l2_authorization_scope_governance": {
+    "resource_scopes": {
+      "manual_document": ["internal"],
+      "document_collection": ["internal"],
+      "folder_tree": ["internal"],
+      "user_directory": ["internal"]
+    },
+    "role_scopes": {
+      "viewer": ["internal"],
+      "engineer": ["internal"],
+      "root": ["internal"]
+    },
+    "default_scope": "internal"
+  },
+  "l1_processing_review": {
+    "processing_target_state": "processed",
+    "review_approved_state": "reviewed",
+    "review_rejected_state": "review_rejected"
+  },
+  "l2_processing_input_preparation": {
+    "allowed_source_states": ["accepted", "review_rejected"]
+  },
+  "l2_structured_processing_service": {
+    "preview_bytes": 96,
+    "keyword_limit": 8,
+    "text_decode_charset": "utf-8"
+  },
+  "l2_review_writeback": {
+    "allowed_review_results": ["approved", "rejected"],
+    "default_review_comment": "manual review completed"
+  },
+  "l1_display_retrieval": {
+    "default_page_size": 20,
+    "max_page_size": 100
+  },
+  "l2_list_retrieval": {
+    "default_sort": "created_at_desc"
+  },
+  "l2_detail_display": {
+    "include_internal_paths": true
+  },
+  "l2_reuse_export": {
+    "export_format": "json",
+    "export_filename_pattern": "{document_id}.json"
+  }
+}

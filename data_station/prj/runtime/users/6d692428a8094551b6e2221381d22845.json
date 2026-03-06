@@ -1,0 +1,21 @@
+{
+  "user_id": "6d692428a8094551b6e2221381d22845",
+  "email": "applicant@test.com",
+  "username": "Applicant A",
+  "role": "engineer",
+  "duties": [
+    "文件接入",
+    "处理审核"
+  ],
+  "status": "approved",
+  "active": true,
+  "password_hash": "55485b897da75d20d663f1401b7b76bbde88659f0f9a44e02250ebb1ac8d1a19",
+  "password_salt": "802aec7b7478f5408aaadaad0f2fafb7",
+  "password_iterations": 200000,
+  "approved_at": "2026-03-06T08:23:10.695331+00:00",
+  "approved_by": "root.local",
+  "last_login_at": "2026-03-06T08:27:49.750630+00:00",
+  "created_at": "2026-03-06T08:23:10.653957+00:00",
+  "updated_at": "2026-03-06T08:27:49.750646+00:00",
+  "profile": {}
+}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Station</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <section id="loginScreen" class="login-screen">
+      <div class="auth-shell">
+        <div class="auth-switcher">
+          <button id="showLoginMode" type="button" class="switch-button active">登录</button>
+          <button id="showRegisterMode" type="button" class="switch-button">注册</button>
+        </div>
+
+        <form id="loginForm" class="login-card auth-card">
+          <div class="login-mark">DS</div>
+          <h1 id="loginTitle">Data Station</h1>
+          <label>
+            <span>邮箱</span>
+            <input id="loginEmail" type="email" autocomplete="username" placeholder="root@root.com" required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required />
+          </label>
+          <button type="submit">进入</button>
+          <p id="loginMessage" class="login-message"></p>
+        </form>
+
+        <form id="registerForm" class="login-card auth-card hidden">
+          <div class="login-mark soft">RG</div>
+          <h1>注册申请</h1>
+          <label>
+            <span>用户名</span>
+            <input id="registerUsername" type="text" maxlength="32" placeholder="新用户名称" required />
+          </label>
+          <label>
+            <span>邮箱</span>
+            <input id="registerEmail" type="email" autocomplete="email" placeholder="user@example.com" required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input id="registerPassword" type="password" autocomplete="new-password" placeholder="至少 3 位" required />
+          </label>
+          <label>
+            <span>职责</span>
+            <input id="registerDuties" type="text" placeholder="逗号分隔，可选" />
+          </label>
+          <button type="submit">提交申请</button>
+          <p id="registerMessage" class="login-message"></p>
+        </form>
+      </div>
+    </section>
+
+    <div id="workspaceShell" class="workspace-shell hidden">
+      <button id="drawerToggle" class="icon-button drawer-toggle" aria-label="打开目录">≡</button>
+
+      <aside id="treeDrawer" class="tree-drawer collapsed">
+        <div class="drawer-top">
+          <div class="drawer-title">目录</div>
+          <button id="drawerClose" class="icon-button ghost" aria-label="关闭目录">×</button>
+        </div>
+        <form id="folderForm" class="folder-form">
+          <input id="folderName" type="text" maxlength="32" placeholder="新建文件夹" />
+          <button type="submit" class="small-button">＋</button>
+        </form>
+        <div id="treeRoot" class="tree-root"></div>
+      </aside>
+
+      <main class="main-stage">
+        <header class="topbar">
+          <div class="brand-block">
+            <div class="brand-mark">DS</div>
+            <div>
+              <div class="brand-name">Data Station</div>
+              <div id="statusText" class="status-text">ready</div>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <div class="inline-fields compact">
+              <input id="documentType" type="text" value="manual_document" placeholder="类型" />
+              <input id="source" type="text" value="web_manual" placeholder="来源" />
+            </div>
+            <label class="upload-chip">
+              <input id="fileInput" type="file" />
+              <span id="fileLabel">选择文件</span>
+            </label>
+            <button id="uploadButton" class="accent-button">上传</button>
+            <div class="user-chip">
+              <div id="userName" class="user-name">-</div>
+              <div id="userMeta" class="user-meta">-</div>
+            </div>
+            <button id="logoutButton" class="ghost-button">退出</button>
+          </div>
+        </header>
+
+        <section class="content-grid">
+          <article class="panel spotlight-panel">
+            <div class="panel-head">
+              <div class="panel-kicker">FILE</div>
+              <h2 id="detailTitle">未选中文件</h2>
+            </div>
+            <div id="detailMeta" class="meta-grid"></div>
+            <pre id="detailResult" class="code-panel">选择左侧目录中的文件。</pre>
+          </article>
+
+          <section class="stack-panel">
+            <article class="panel side-panel">
+              <div class="panel-head slim">
+                <div class="panel-kicker">UPLOAD</div>
+                <h2>结果</h2>
+              </div>
+              <pre id="uploadResult" class="code-panel compact-panel">等待操作。</pre>
+            </article>
+
+            <article id="adminPanel" class="panel side-panel hidden">
+              <div class="panel-head slim">
+                <div class="panel-kicker">ROOT</div>
+                <h2>用户管理</h2>
+              </div>
+              <div id="adminUsers" class="admin-users"></div>
+            </article>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="contextMenu" class="context-menu hidden"></div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

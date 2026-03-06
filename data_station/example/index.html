@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文件上传最小示例</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9e1ec;
+      --text: #1d2733;
+      --muted: #5d6b7b;
+      --primary: #1366d6;
+      --primary-hover: #0f55b2;
+      --ok: #0a7a43;
+      --err: #c4372c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 18px 50px rgba(27, 52, 87, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--primary-hover); }
+    button:disabled { opacity: 0.6; cursor: default; }
+
+    .meta, .status {
+      border-radius: 12px;
+      padding: 14px;
+      background: #f7f9fc;
+      border: 1px solid var(--line);
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .status.ok { border-color: #bfe3cf; color: var(--ok); background: #f3fcf7; }
+    .status.err { border-color: #f0c5c1; color: var(--err); background: #fff7f6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>文件上传最小示例</h1>
+      <p>这个页面只做一件事：把你选中的文件发送给后端，然后把结果显示出来。</p>
+
+      <div class="row">
+        <input id="fileInput" type="file" />
+        <button id="uploadButton">上传文件</button>
+      </div>
+
+      <div id="fileMeta" class="meta">还没有选择文件。</div>
+      <div id="statusBox" class="status" style="margin-top: 12px;">等待上传。</div>
+    </div>
+  </div>
+
+  <script>
+    const MAX_SIZE = 5 * 1024 * 1024;
+    const fileInput = document.getElementById("fileInput");
+    const uploadButton = document.getElementById("uploadButton");
+    const fileMeta = document.getElementById("fileMeta");
+    const statusBox = document.getElementById("statusBox");
+
+    function setStatus(text, type) {
+      statusBox.textContent = text;
+      statusBox.className = "status";
+      if (type) {
+        statusBox.classList.add(type);
+      }
+    }
+
+    function renderMeta(file) {
+      if (!file) {
+        fileMeta.textContent = "还没有选择文件。";
+        return;
+      }
+
+      fileMeta.textContent =
+        "文件名: " + file.name + "\n" +
+        "大小: " + file.size + " bytes\n" +
+        "类型: " + (file.type || "application/octet-stream");
+    }
+
+    fileInput.addEventListener("change", () => {
+      renderMeta(fileInput.files[0]);
+      setStatus("已选择文件，点击“上传文件”开始请求。");
+    });
+
+    uploadButton.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        setStatus("请先选择一个文件。", "err");
+        return;
+      }
+
+      if (file.size === 0) {
+        setStatus("不允许上传空文件。", "err");
+        return;
+      }
+
+      if (file.size > MAX_SIZE) {
+        setStatus("前端检查失败：文件超过 5 MB。", "err");
+        return;
+      }
+
+      uploadButton.disabled = true;
+      setStatus("上传中，请稍候...");
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": file.type || "application/octet-stream",
+            "X-Filename": encodeURIComponent(file.name)
+          },
+          body: file
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          setStatus(
+            "上传失败\n" +
+            "status: " + response.status + "\n" +
+            "message: " + (result.message || "unknown error"),
+            "err"
+          );
+          return;
+        }
+
+        setStatus(
+          "上传成功\n" +
+          "filename: " + result.filename + "\n" +
+          "size: " + result.size + " bytes\n" +
+          "saved_to: " + result.saved_to,
+          "ok"
+        );
+      } catch (error) {
+        setStatus("请求失败: " + String(error), "err");
+      } finally {
+        uploadButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
