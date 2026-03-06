@@ -2,11 +2,24 @@
   "name": "archsync",
   "displayName": "ArchSync",
   "description": "ArchSync: framework tree webview + strict mapping validation guard.",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "publisher": "local",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:rdshr/shelf.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.txt",
+    "README.md",
+    "extension.js",
+    "media/**",
+    "snippets/**"
+  ],
   "categories": [
     "Linters",
     "Other"
@@ -16,8 +29,7 @@
     "onView:archSync.sidebarHome",
     "onCommand:archSync.validateNow",
     "onCommand:archSync.openFrameworkTree",
-    "onCommand:archSync.refreshFrameworkTree",
-    "onCommand:archSync.generateFrameworkScaffold"
+    "onCommand:archSync.refreshFrameworkTree"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -43,10 +55,6 @@
       {
         "command": "archSync.refreshFrameworkTree",
         "title": "ArchSync: Refresh Framework Tree"
-      },
-      {
-        "command": "archSync.generateFrameworkScaffold",
-        "title": "ArchSync: Generate Framework Scaffold"
       }
     ],
     "viewsContainers": {
@@ -97,11 +105,6 @@
           "type": "boolean",
           "default": true,
           "description": "Show notification when auto validation detects mapping issues."
-        },
-        "archSync.autoExpandFrameworkDirective": {
-          "type": "boolean",
-          "default": true,
-          "description": "Auto-expand @framework directive to markdown scaffold on save (framework/** markdown files)."
         },
         "archSync.changeValidationCommand": {
           "type": "string",

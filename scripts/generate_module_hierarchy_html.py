@@ -1094,18 +1094,18 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate interactive HTML graph for M hierarchy (separated from standards tree)."
+        description="Generate interactive HTML graph from a hierarchy JSON payload."
     )
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("docs/hierarchy/shelf_module_hierarchy.json"),
+        default=Path("docs/hierarchy/shelf_framework_tree.json"),
         help="Input hierarchy JSON path",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/hierarchy/shelf_module_hierarchy.html"),
+        default=Path("docs/hierarchy/shelf_framework_tree.html"),
         help="Output HTML path",
     )
     parser.add_argument("--width", type=int, default=1520, help="SVG width")

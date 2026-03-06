@@ -37,12 +37,18 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 
 ## VSCode 插件（ArchSync）
 - 位置：`tools/vscode/archsync`
-- 主功能：打开框架树状结构网页（Webview）
-- 内置能力：保存文件后自动运行严格映射校验，并在 Problems 面板报警
+- 入口：VSCode 侧边栏 `ArchSync` 莫比乌斯环图标
+- 主功能：打开框架树状结构网页（Webview）、刷新树图、运行严格映射校验、查看问题列表
+- 内置能力：保存文件后自动运行严格映射校验，并在 Problems 面板报警；树节点可跳转到源文档行
+- 本地安装：
+```bash
+bash tools/vscode/archsync/install_local.sh
+```
 - 主要命令：
   - `ArchSync: Open Framework Tree`
   - `ArchSync: Refresh Framework Tree`
   - `ArchSync: Validate Mapping Now`
+  - `ArchSync: Show Mapping Issues`
 
 ## 运行
 ```bash
@@ -51,12 +57,8 @@ uv run python src/main.py
 ```
 
 ## 看图（总入口）
-- 框架标准树结构图（来自 `mapping_registry.tree`）：
+- 框架标准树结构图（来自 `framework/<module>/Lx-Mn-*.md`）：
   - `docs/hierarchy/shelf_framework_tree.html`
-- M 层级关系图（仅 M 节点，不含规范/代码约束）：
-  - `docs/hierarchy/shelf_module_hierarchy.html`
-- 前端模块自动抽取层级图（基于 `framework/frontend/Lx-Mn`）：
-  - `docs/hierarchy/shelf_spec_frontend_hierarchy.html`
 - 双族分型子页面入口：
   - `docs/examples/type_subpages_valid_2x2x2_dualfamily/index.html`
 - 旧版单族分型子页面入口：
@@ -134,22 +136,7 @@ uv run python src/generate_type_gallery_3d.py \
 - `--columns`：3D 墙局部排布密度
 - `--group-3d-columns`：子页面内组级 3D 排布密度
 
-生成 M 层级关系图（根据 JSON 配置）：
-```bash
-uv run python scripts/generate_module_hierarchy_html.py \
-  --input docs/hierarchy/shelf_module_hierarchy.json \
-  --output docs/hierarchy/shelf_module_hierarchy.html
-```
-
-从 `framework/frontend/Lx-Mn` 自动抽取并生成“前端展示层级图”：
-```bash
-uv run python scripts/generate_spec_frontend_hierarchy.py \
-  --module frontend \
-  --output-json docs/hierarchy/shelf_spec_frontend_hierarchy.json \
-  --output-html docs/hierarchy/shelf_spec_frontend_hierarchy.html
-```
-
-从 `mapping/mapping_registry.json` 的 `tree` 自动抽取并生成“框架标准树结构图”：
+从 `framework/<module>/Lx-Mn-*.md` 自动抽取并生成“框架标准树结构图”：
 ```bash
 uv run python scripts/generate_framework_tree_hierarchy.py \
   --source framework \

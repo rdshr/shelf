@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.7 - 2026-03-06
+- Removed the last validator-side legacy `@layer/@base/@compose` compatibility path; framework docs now validate against one rule set only.
+- Added packaged `LICENSE.txt` so VSIX publishing no longer depends on an implicit repository license.
+- Refined install and usage docs around the packaged VSIX flow and sidebar entry.
+
+## 0.0.6 - 2026-03-06
+- Removed legacy scaffold command and auto-expand flow; the extension now stays focused on validation and tree viewing.
+- Added validator rules `FW024` / `FW025` / `FW026` to harden inline module-growth constraints.
+- Rewrote markdown snippets to neutral structure-first templates aligned with the current framework rule set.
+- Aligned generic hierarchy HTML generator defaults to the current framework tree artifacts.
+
 ## 0.0.5 - 2026-03-06
 - Enforced inline upstream module refs in `B*` lines; removed legacy `上游模块：...` style.
 - Added validator rule `FW023` for the new `B*` format constraint.

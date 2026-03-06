@@ -25,6 +25,10 @@
       {
         "id": "SYNC-20260306-inline-upstream-b-format",
         "note": "Unify B* syntax to inline upstream module refs (B*: Lx.My[...]. 来源: ...), remove legacy '上游模块' clause, and enforce with FW023."
+      },
+      {
+        "id": "SYNC-20260306-structure-first-hardening",
+        "note": "Remove legacy framework scaffold tooling, harden inline module-growth validation (FW024/FW025/FW026), and align frontend/framework wording plus plugin snippets to the structure-first model."
       }
     ]
   },

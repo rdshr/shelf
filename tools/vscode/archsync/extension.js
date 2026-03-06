@@ -17,9 +17,6 @@ const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framew
 const SIDEBAR_VIEW_ID = "archSync.sidebarHome";
 const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
   "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
-const MODULE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
-const LEVEL_PATTERN = /^L\d+$/i;
-const FRAMEWORK_DIRECTIVE_PREFIX = "@framework";
 const FRAMEWORK_RULE_HINTS = {
   FW002: "@framework 必须无参数",
   FW003: "标题必须为 中文名:EnglishName",
@@ -29,6 +26,9 @@ const FRAMEWORK_RULE_HINTS = {
   FW021: "B* 来源表达式与引用必须合法",
   FW022: "B* 来源必须包含 C* 与参数",
   FW023: "B* 禁止使用“上游模块：...”，必须内联写模块引用",
+  FW024: "非 L0 的 B* 必须在主句中内联写相邻下层模块引用",
+  FW025: "B* 的内联模块引用必须指向当前目录中真实存在的相邻下层模块文件",
+  FW026: "L0 的 B* 不能再引用其他模块，必须保持自足",
   FW030: "边界参数必须包含来源",
   FW031: "边界来源必须引用 C* 且引用合法",
   FW040: "R*/R*.* 编号必须合法并可追溯",
@@ -447,123 +447,6 @@ function activate(context) {
     await openFrameworkTree({ regenerateIfMissing: false });
   });
 
-  const generateFrameworkScaffoldDisposable = vscode.commands.registerCommand("archSync.generateFrameworkScaffold", async () => {
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder) {
-      vscode.window.showWarningMessage("ArchSync: no workspace is open.");
-      return;
-    }
-
-    const repoRoot = folder.uri.fsPath;
-    const editor = vscode.window.activeTextEditor;
-    const inferred = inferFrameworkDefaults(editor?.document.uri.fsPath, repoRoot);
-
-    const moduleId = await promptScaffoldValue({
-      title: "ArchSync: module id",
-      prompt: "Canonical module id used in node ids (Lx.Mmodule.By)",
-      value: inferred.module,
-      validateInput: (value) => (MODULE_ID_PATTERN.test(value.trim()) ? null : "Use [A-Za-z0-9_-], e.g. frontend")
-    });
-    if (!moduleId) {
-      return;
-    }
-
-    const level = await promptScaffoldValue({
-      title: "ArchSync: level",
-      prompt: "Layer level, e.g. L4",
-      value: inferred.level,
-      validateInput: (value) => (LEVEL_PATTERN.test(value.trim()) ? null : "Use L<number>, e.g. L4")
-    });
-    if (!level) {
-      return;
-    }
-
-    const title = await promptScaffoldValue({
-      title: "ArchSync: layer title",
-      prompt: "Markdown file title stem (Chinese or bilingual title)",
-      value: inferred.title,
-      validateInput: (value) => validateScaffoldTitle(value)
-    });
-    if (!title) {
-      return;
-    }
-
-    const targetOptions = [
-      {
-        label: "Write current file",
-        description: "Overwrite active markdown file",
-        value: "current"
-      },
-      {
-        label: "Write default path",
-        description: "framework/<module>/<level>-M<n>-<title>.md",
-        value: "default"
-      }
-    ];
-    const targetPick = await vscode.window.showQuickPick(targetOptions, {
-      title: "ArchSync: scaffold output",
-      placeHolder: "Choose where to write scaffold"
-    });
-    if (!targetPick) {
-      return;
-    }
-
-    if (targetPick.value === "current" && !editor) {
-      vscode.window.showWarningMessage("ArchSync: no active editor for current-file output.");
-      return;
-    }
-
-    const normalizedModule = moduleId.trim();
-    const normalizedLevel = level.trim().toUpperCase();
-    const bilingualTitle = ensureBilingualTitle(title.trim(), normalizedModule, moduleDisplayName(normalizedModule));
-    const scaffold = buildFrameworkTemplate(bilingualTitle);
-
-    let outputFilePath = null;
-    if (targetPick.value === "current" && editor) {
-      outputFilePath = editor.document.uri.fsPath;
-      const doc = editor.document;
-      const fullRange = new vscode.Range(
-        doc.positionAt(0),
-        doc.positionAt(doc.getText().length)
-      );
-      const edit = new vscode.WorkspaceEdit();
-      edit.replace(doc.uri, fullRange, scaffold);
-      await vscode.workspace.applyEdit(edit);
-    } else {
-      const defaultPath = path.join(
-        repoRoot,
-        "framework",
-        normalizedModule,
-        `${normalizedLevel}-M0-${title.trim()}.md`
-      );
-      fs.mkdirSync(path.dirname(defaultPath), { recursive: true });
-      if (fs.existsSync(defaultPath)) {
-        const action = await vscode.window.showWarningMessage(
-          `ArchSync: ${toWorkspaceRelative(defaultPath, repoRoot)} already exists.`,
-          "Overwrite",
-          "Cancel"
-        );
-        if (action !== "Overwrite") {
-          return;
-        }
-      }
-      fs.writeFileSync(defaultPath, scaffold, "utf8");
-      outputFilePath = defaultPath;
-    }
-
-    if (outputFilePath) {
-      try {
-        const uri = vscode.Uri.file(outputFilePath);
-        const doc = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(doc, { preview: false });
-      } catch (error) {
-        output.appendLine(`[framework-scaffold] open file failed: ${String(error)}`);
-      }
-    }
-
-    vscode.window.showInformationMessage("ArchSync: framework scaffold generated.");
-  });
-
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const config = vscode.workspace.getConfiguration("archSync");
     if (!config.get("enableOnSave")) {
@@ -581,50 +464,6 @@ function activate(context) {
     }
 
     scheduleValidation({ mode: "change", triggerUri: doc.uri, notifyOnFail: false, source: "save" });
-  });
-
-  const willSaveDisposable = vscode.workspace.onWillSaveTextDocument((event) => {
-    const config = vscode.workspace.getConfiguration("archSync");
-    if (!config.get("autoExpandFrameworkDirective")) {
-      return;
-    }
-
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder) {
-      return;
-    }
-
-    const doc = event.document;
-    if (doc.languageId !== "markdown") {
-      return;
-    }
-
-    const relPath = path.relative(folder.uri.fsPath, doc.uri.fsPath).replace(/\\/g, "/");
-    if (!relPath.startsWith("framework/")) {
-      return;
-    }
-
-    const directive = parseFrameworkDirective(doc.getText());
-    if (!directive) {
-      return;
-    }
-
-    event.waitUntil((async () => {
-      const defaults = inferFrameworkDefaults(doc.uri.fsPath, folder.uri.fsPath);
-      if (directive.error) {
-        vscode.window.showErrorMessage(`ArchSync: ${directive.error}`);
-        return [];
-      }
-
-      const title = ensureBilingualTitle(defaults.title, defaults.module, defaults.moduleDisplay);
-      const generated = buildFrameworkTemplate(title);
-
-      const fullRange = new vscode.Range(
-        doc.positionAt(0),
-        doc.positionAt(doc.getText().length)
-      );
-      return [vscode.TextEdit.replace(fullRange, generated)];
-    })());
   });
 
   const createDisposable = vscode.workspace.onDidCreateFiles(async (event) => {
@@ -707,8 +546,6 @@ function activate(context) {
     showIssuesDisposable,
     openFrameworkTreeDisposable,
     refreshFrameworkTreeDisposable,
-    generateFrameworkScaffoldDisposable,
-    willSaveDisposable,
     saveDisposable,
     createDisposable,
     deleteDisposable,
@@ -758,186 +595,6 @@ function execCommand(command, cwd) {
       });
     });
   });
-}
-
-async function promptScaffoldValue(options) {
-  const value = await vscode.window.showInputBox({
-    title: options.title,
-    prompt: options.prompt,
-    value: options.value || "",
-    validateInput: options.validateInput
-      ? (raw) => {
-        const result = options.validateInput(raw);
-        return result || undefined;
-      }
-      : undefined,
-    ignoreFocusOut: true
-  });
-
-  if (value === undefined) {
-    return null;
-  }
-  const cleaned = value.trim();
-  return cleaned || null;
-}
-
-function validateScaffoldTitle(value) {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "Title cannot be empty.";
-  }
-  if (trimmed.includes("/") || trimmed.includes("\\")) {
-    return "Title cannot contain path separators.";
-  }
-  return null;
-}
-
-function inferFrameworkDefaults(activeFilePath, repoRoot) {
-  const defaults = {
-    module: "frontend",
-    moduleDisplay: "前端",
-    level: "L4",
-    title: "状态与数据编排层"
-  };
-
-  if (!activeFilePath) {
-    return defaults;
-  }
-
-  const relPath = path.relative(repoRoot, activeFilePath).replace(/\\/g, "/");
-  const match = /^framework\/([^/]+)\/(L\d+)-M(\d+)-([^/]+)\.md$/i.exec(relPath);
-  if (!match) {
-    return defaults;
-  }
-
-  const moduleName = match[1];
-  return {
-    module: moduleName,
-    moduleDisplay: moduleDisplayName(moduleName),
-    level: match[2].toUpperCase(),
-    title: match[4]
-  };
-}
-
-function moduleDisplayName(moduleName) {
-  const lower = String(moduleName || "").toLowerCase();
-  if (lower === "frontend") {
-    return "前端";
-  }
-  if (lower === "shelf") {
-    return "置物架";
-  }
-  if (lower === "curtain") {
-    return "窗帘";
-  }
-  return moduleName;
-}
-
-function parseFrameworkDirective(documentText) {
-  const lines = String(documentText || "").split(/\r?\n/);
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith(FRAMEWORK_DIRECTIVE_PREFIX)) {
-      continue;
-    }
-
-    if (trimmed !== FRAMEWORK_DIRECTIVE_PREFIX) {
-      return {
-        error: "@framework must be plain directive without parameters."
-      };
-    }
-
-    return { error: null };
-  }
-
-  return null;
-}
-
-function toPascalIdentifier(raw) {
-  const parts = String(raw || "")
-    .split(/[^A-Za-z0-9]+/)
-    .filter(Boolean);
-  if (!parts.length) {
-    return "ModuleName";
-  }
-  return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("");
-}
-
-function ensureBilingualTitle(rawTitle, moduleId, moduleDisplay) {
-  const cleaned = String(rawTitle || "").trim().replace("：", ":");
-  if (cleaned.includes(":")) {
-    const parts = cleaned.split(":");
-    const left = String(parts[0] || "").trim();
-    const right = String(parts.slice(1).join(":") || "").trim();
-    if (left && right) {
-      return `${left}:${right}`;
-    }
-  }
-  const zhName = cleaned || `${moduleDisplay}模块`;
-  return `${zhName}:${toPascalIdentifier(moduleId)}`;
-}
-
-function buildFrameworkTemplate(bilingualTitle) {
-  return `# ${bilingualTitle}
-
-@framework
-
-## 1. 能力声明（Capability Statement）
-
-- \`C1\` 结构承载能力：提供可重复组装的承载结构能力。
-- \`C2\` 形态生成能力：可生成目标形态并提供可用承载单元。
-- \`C3\` 适配能力：在给定参数边界内可按需扩展和收缩。
-- \`C4\` 非能力项：不负责电控、装饰、非承载功能件等外部职责。
-
-## 2. 边界定义（Boundary / 参数）
-
-- \`N\` 层数（int）：\`N >= 1\`。来源：\`C1 + C3\`。
-- \`P\` 单层承重（number）：\`P > 0\`。来源：\`C1\`。
-- \`S\` 单层净空（space）：宽/深/高均大于 0。来源：\`C2 + C3\`。
-- \`O\` 开口尺寸（opening）：需满足可存取约束。来源：\`C2\`。
-- \`A\` 占地尺寸（footprint）：需满足场地上限约束。来源：\`C2 + C3\`。
-- \`T\` 连接公差（tolerance）：需满足装配稳定约束。来源：\`C1 + C3\`。
-- \`SF\` 安全系数（number）：\`SF >= 1\`。来源：\`C1\`。
-
-## 3. 最小可行基（Minimum Viable Bases）
-
-- \`B1\` 骨架：提供主承载路径与结构稳定性。来源：\`C1 + N + P + SF\`。
-- \`B2\` 连接接口：提供构件连接、定位与传力。来源：\`C1 + C3 + T\`。
-- \`B3\` 承载面：提供可用放置/受力平面。来源：\`C2 + S + O + A + T\`。
-
-## 4. 基组合原则（Base Combination Principles）
-
-- \`R1\` 结构通路组合
-  - \`R1.1\` 参与基：\`B1 + B2\`。
-  - \`R1.2\` 组合方式：骨架由立向与横向构件组成；稳定单元定义为骨架连接图中存在至少一个闭合环（cycle）。
-  - \`R1.3\` 输出结构：\`CP_set\`（元素：\`CP\`，每个 \`CP\` 必须绑定骨架端点或骨架交点）。
-  - \`R1.4\` 输出能力：\`C1\`。
-  - \`R1.5\` 边界绑定：\`N/P/T/SF\`。
-- \`R2\` 承载单元组合
-  - \`R2.1\` 参与基：\`B1 + B2 + B3\`。
-  - \`R2.2\` 组合方式：承载面连接点必须来自 \`CP_set\`，且连接关系满足稳定受力路径约束。
-  - \`R2.3\` 输出能力：\`C2\`。
-  - \`R2.4\` 边界绑定：\`S/O/A/T\`。
-- \`R3\` 完整功能组合
-  - \`R3.1\` 参与基：\`B1 + B2 + B3\`。
-  - \`R3.2\` 组合方式：先完成 \`R1\` 骨架与连接点，再执行 \`R2\` 承载面挂接，最后执行整体稳定复核。
-  - \`R3.3\` 输出能力：\`C1 + C2 + C3\`。
-  - \`R3.4\` 边界绑定：\`N/P/S/O/A/T/SF\`。
-- \`R4\` 禁止组合
-  - \`R4.1\` 参与基：\`B1 + B2 + B3\`。
-  - \`R4.2\` 组合方式：缺少关键基、存在游离连接点、断裂传力路径或违反边界参数的组合均无效。
-  - \`R4.3\` 输出能力：\`C4\`。
-  - \`R4.4\` 边界绑定：\`N/P/S/O/A/T/SF\`。
-
-## 5. 验证（Verification）
-
-- \`V1\` 推导一致性：每个 \`B*\` 必须能由至少一个 \`C*\` 与一个参数项推导得到。
-- \`V2\` 规则一致性：每个 \`R*\` 必须明确参与基/组合方式/输出能力/边界绑定。
-- \`V3\` 目标覆盖性：\`R1~R3\` 输出能力并集必须覆盖 \`C1~C3\`。
-- \`V4\` 边界符合性：所有有效组合必须满足绑定的参数边界。
-- \`V5\` 最小必要性：移除任一 \`B*\` 后，\`V3\` 或 \`V4\` 至少一项失败。
-- \`V6\` 结论表达：逐条输出 \`R* -> C* / 参数边界\` 的通过或失败结论。
-`;
 }
 
 async function generateFrameworkTree(repoRoot, command, output) {

@@ -1,0 +1,9 @@
+UNLICENSED
+
+Copyright (c) 2026 rdshr
+
+All rights reserved.
+
+This VSCode extension package is provided without any license grant for
+copying, modification, redistribution, or commercial use unless separately
+authorized by the repository owner.
