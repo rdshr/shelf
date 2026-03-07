@@ -23,3 +23,8 @@ node_modules/
 .codex/**
 !.codex/prompts/
 !.codex/prompts/*.md
+
+# ArchSync local icon exploration artifacts
+tools/vscode/archsync/releases/
+tools/vscode/archsync/media/archsync-candidate-*.svg
+tools/vscode/archsync/media/archsync-icon-preview.html
