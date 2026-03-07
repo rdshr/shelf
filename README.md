@@ -50,6 +50,10 @@ bash tools/vscode/archsync/install_local.sh
   - `ArchSync: Refresh Framework Tree`
   - `ArchSync: Validate Mapping Now`
   - `ArchSync: Show Mapping Issues`
+- 公开发布：
+  - `archsync-vX.Y.Z` tag 会触发 `.github/workflows/publish-archsync.yml`
+  - 自动产出 GitHub Release + `.vsix` 附件
+  - 若已配置 `OPEN_VSX_TOKEN` / `VS_MARKETPLACE_TOKEN`，会继续发布到 Open VSX / Visual Studio Marketplace
 
 ## 运行
 ```bash

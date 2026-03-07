@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.13 - 2026-03-07
+- Switched the public extension identity from `local.archsync` to `rdshr.archsync` for registry publishing.
+- Added release automation for GitHub Releases plus optional Open VSX / VS Marketplace publishing on `archsync-v*` tags.
+- Updated package metadata for public distribution links and explicit custom license reference.
+
 ## 0.0.12 - 2026-03-07
 - Added an experimental rainbow-arch Activity Bar icon direction and kept the previous tomoe glyph as an explicit rollback snapshot.
 

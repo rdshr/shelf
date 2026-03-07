@@ -21,6 +21,21 @@
    `bash tools/vscode/archsync/install_local.sh`
 2. Reload VSCode window if the sidebar icon does not appear immediately.
 
+## Public Distribution
+- GitHub Packages is not a VSCode extension gallery, so VSCode cannot install this extension from a GitHub package registry entry.
+- Public install channels for this extension are:
+  - GitHub Releases: download the `.vsix` and use `Extensions: Install from VSIX...`
+  - Open VSX: publish `rdshr.archsync` for VSCodium / compatible clients
+  - Visual Studio Marketplace: publish `rdshr.archsync` for standard VSCode installs
+- Release automation lives in `.github/workflows/publish-archsync.yml`.
+- Tagging `archsync-vX.Y.Z` packages the current source, creates a GitHub Release, and attaches the generated `.vsix`.
+- If repository secrets are configured, the same tag also publishes to:
+  - `OPEN_VSX_TOKEN`
+  - `VS_MARKETPLACE_TOKEN`
+- One-time prerequisites outside this repo:
+  - create publisher / namespace `rdshr`
+  - create the corresponding publish tokens for each registry
+
 ## Install (Dev)
 1. Open `tools/vscode/archsync` in VSCode.
 2. Press `F5` to launch Extension Development Host.
