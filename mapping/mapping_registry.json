@@ -41,6 +41,10 @@
       {
         "id": "SYNC-20260307-knowledge-base-ai-coding",
         "note": "Refactor the AI-coding sample into a structure-first stack: generic frontend structures, knowledge-base domain structures, backend knowledge contracts, and a project-instantiated knowledge_base_demo bound to the L2 framework standards."
+      },
+      {
+        "id": "SYNC-20260307-frontend-primitive-sink",
+        "note": "Sink the frontend framework to concrete L0 primitive atoms (input/trigger, text/carrier, list/hierarchy, marker/feedback), move token/runtime support to later L0 modules, and realign knowledge_base L0 modules to reference specific frontend primitives instead of a coarse component family."
       }
     ]
   },

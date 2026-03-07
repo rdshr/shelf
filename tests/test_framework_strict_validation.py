@@ -266,8 +266,8 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `V1` 运行壳必须独立成立。",
                     ],
                 ),
-                "frontend/L1-M0-基础组件模块.md": build_framework_doc(
-                    "基础组件模块:PrimitiveComponents",
+                "frontend/L1-M0-通用组件模块.md": build_framework_doc(
+                    "通用组件模块:GenericComponents",
                     [
                         "- `C1` 原子能力：定义输入与展示原子。",
                         "- `C2` 契约能力：定义组件契约。",
@@ -305,7 +305,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `P2` 参数二：摄取边界。来源：`C2 + C3`。",
                     ],
                     [
-                        "- `B1` 文件目录结构基：frontend.L1.M0[R1]。来源：`C1 + P1`。",
+                        "- `B1` 文件目录结构基：frontend.L0.M0[R1]。来源：`C1 + P1`。",
                     ],
                     [
                         "- `R1` 文件库组合",
@@ -384,8 +384,8 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `V1` 运行壳必须独立成立。",
                     ],
                 ),
-                "frontend/L1-M0-基础组件模块.md": build_framework_doc(
-                    "基础组件模块:PrimitiveComponents",
+                "frontend/L1-M0-通用组件模块.md": build_framework_doc(
+                    "通用组件模块:GenericComponents",
                     [
                         "- `C1` 原子能力：定义输入与展示原子。",
                         "- `C2` 契约能力：定义组件契约。",
@@ -423,7 +423,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `P2` 参数二：摄取边界。来源：`C2 + C3`。",
                     ],
                     [
-                        "- `B1` 文件目录结构基：frontend.L1.M0[R1]。来源：`C1 + P1`。",
+                        "- `B1` 文件目录结构基：frontend.L0.M0[R1]。来源：`C1 + P1`。",
                     ],
                     [
                         "- `R1` 文件库组合",
@@ -449,7 +449,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `P2` 参数二：响应式边界。来源：`C2 + C3`。",
                     ],
                     [
-                        "- `B1` 骨架结构基：frontend.L1.M0[R1]。来源：`C1 + P1`。",
+                        "- `B1` 骨架结构基：frontend.L0.M0[R1]。来源：`C1 + P1`。",
                     ],
                     [
                         "- `R1` 骨架组合",

@@ -35,8 +35,8 @@
         "label": "L0.frontend.M0",
         "level": 0,
         "order": 3,
-        "description": "module=frontend | level=L0 | node=L0.M0 | file=framework/frontend/L0-M0-工程与运行底座模块.md | title=L0-M0-工程与运行底座模块",
-        "source_file": "framework/frontend/L0-M0-工程与运行底座模块.md",
+        "description": "module=frontend | level=L0 | node=L0.M0 | file=framework/frontend/L0-M0-输入与触发原子模块.md | title=L0-M0-输入与触发原子模块",
+        "source_file": "framework/frontend/L0-M0-输入与触发原子模块.md",
         "source_line": 24
       },
       {
@@ -44,57 +44,93 @@
         "label": "L0.frontend.M1",
         "level": 0,
         "order": 4,
-        "description": "module=frontend | level=L0 | node=L0.M1 | file=framework/frontend/L0-M1-设计令牌与主题模块.md | title=L0-M1-设计令牌与主题模块",
-        "source_file": "framework/frontend/L0-M1-设计令牌与主题模块.md",
+        "description": "module=frontend | level=L0 | node=L0.M1 | file=framework/frontend/L0-M1-文本与承载原子模块.md | title=L0-M1-文本与承载原子模块",
+        "source_file": "framework/frontend/L0-M1-文本与承载原子模块.md",
         "source_line": 23
       },
       {
         "id": "NODE-FW-0005",
-        "label": "L0.knowledge_base.M0",
+        "label": "L0.frontend.M2",
         "level": 0,
         "order": 5,
+        "description": "module=frontend | level=L0 | node=L0.M2 | file=framework/frontend/L0-M2-列表与层级原子模块.md | title=L0-M2-列表与层级原子模块",
+        "source_file": "framework/frontend/L0-M2-列表与层级原子模块.md",
+        "source_line": 23
+      },
+      {
+        "id": "NODE-FW-0006",
+        "label": "L0.frontend.M3",
+        "level": 0,
+        "order": 6,
+        "description": "module=frontend | level=L0 | node=L0.M3 | file=framework/frontend/L0-M3-标记与反馈原子模块.md | title=L0-M3-标记与反馈原子模块",
+        "source_file": "framework/frontend/L0-M3-标记与反馈原子模块.md",
+        "source_line": 23
+      },
+      {
+        "id": "NODE-FW-0007",
+        "label": "L0.frontend.M4",
+        "level": 0,
+        "order": 7,
+        "description": "module=frontend | level=L0 | node=L0.M4 | file=framework/frontend/L0-M4-设计令牌与主题模块.md | title=L0-M4-设计令牌与主题模块",
+        "source_file": "framework/frontend/L0-M4-设计令牌与主题模块.md",
+        "source_line": 25
+      },
+      {
+        "id": "NODE-FW-0008",
+        "label": "L0.frontend.M5",
+        "level": 0,
+        "order": 8,
+        "description": "module=frontend | level=L0 | node=L0.M5 | file=framework/frontend/L0-M5-工程与运行底座模块.md | title=L0-M5-工程与运行底座模块",
+        "source_file": "framework/frontend/L0-M5-工程与运行底座模块.md",
+        "source_line": 26
+      },
+      {
+        "id": "NODE-FW-0009",
+        "label": "L0.knowledge_base.M0",
+        "level": 0,
+        "order": 9,
         "description": "module=knowledge_base | level=L0 | node=L0.M0 | file=framework/knowledge_base/L0-M0-文件库与摄取原子模块.md | title=L0-M0-文件库与摄取原子模块",
         "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0006",
+        "id": "NODE-FW-0010",
         "label": "L0.knowledge_base.M1",
         "level": 0,
-        "order": 6,
+        "order": 10,
         "description": "module=knowledge_base | level=L0 | node=L0.M1 | file=framework/knowledge_base/L0-M1-文档与目录原子模块.md | title=L0-M1-文档与目录原子模块",
         "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0007",
+        "id": "NODE-FW-0011",
         "label": "L0.knowledge_base.M2",
         "level": 0,
-        "order": 7,
+        "order": 11,
         "description": "module=knowledge_base | level=L0 | node=L0.M2 | file=framework/knowledge_base/L0-M2-对话与引用原子模块.md | title=L0-M2-对话与引用原子模块",
         "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0008",
+        "id": "NODE-FW-0012",
         "label": "L0.runtime_env.M0",
         "level": 0,
-        "order": 8,
+        "order": 12,
         "description": "module=runtime_env | level=L0 | node=L0.M0 | file=framework/runtime_env/L0-M0-运行环境识别模块.md | title=L0-M0-运行环境识别模块",
         "source_file": "framework/runtime_env/L0-M0-运行环境识别模块.md",
         "source_line": 24
       },
       {
-        "id": "NODE-FW-0009",
+        "id": "NODE-FW-0013",
         "label": "L0.shelf.M0",
         "level": 0,
-        "order": 9,
+        "order": 13,
         "description": "module=shelf | level=L0 | node=L0.M0 | file=framework/shelf/L0-M0-置物架抽象结构模块.md | title=L0-M0-置物架抽象结构模块",
         "source_file": "framework/shelf/L0-M0-置物架抽象结构模块.md",
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0010",
+        "id": "NODE-FW-0014",
         "label": "L1.backend.M0",
         "level": 1,
         "order": 1,
@@ -103,7 +139,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0011",
+        "id": "NODE-FW-0015",
         "label": "L1.curtain.M0",
         "level": 1,
         "order": 2,
@@ -112,16 +148,16 @@
         "source_line": 24
       },
       {
-        "id": "NODE-FW-0012",
+        "id": "NODE-FW-0016",
         "label": "L1.frontend.M0",
         "level": 1,
         "order": 3,
-        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-基础组件原子模块.md | title=L1-M0-基础组件原子模块",
-        "source_file": "framework/frontend/L1-M0-基础组件原子模块.md",
-        "source_line": 24
+        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-通用组件装配模块.md | title=L1-M0-通用组件装配模块",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
       },
       {
-        "id": "NODE-FW-0013",
+        "id": "NODE-FW-0017",
         "label": "L1.knowledge_base.M0",
         "level": 1,
         "order": 4,
@@ -130,7 +166,7 @@
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0014",
+        "id": "NODE-FW-0018",
         "label": "L1.knowledge_base.M1",
         "level": 1,
         "order": 5,
@@ -139,7 +175,7 @@
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0015",
+        "id": "NODE-FW-0019",
         "label": "L1.shelf.M0",
         "level": 1,
         "order": 6,
@@ -148,7 +184,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0016",
+        "id": "NODE-FW-0020",
         "label": "L2.backend.M0",
         "level": 2,
         "order": 1,
@@ -157,7 +193,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0017",
+        "id": "NODE-FW-0021",
         "label": "L2.curtain.M0",
         "level": 2,
         "order": 2,
@@ -166,16 +202,16 @@
         "source_line": 24
       },
       {
-        "id": "NODE-FW-0018",
+        "id": "NODE-FW-0022",
         "label": "L2.frontend.M0",
         "level": 2,
         "order": 3,
         "description": "module=frontend | level=L2 | node=L2.M0 | file=framework/frontend/L2-M0-前端框架标准模块.md | title=L2-M0-前端框架标准模块",
         "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
-        "source_line": 23
+        "source_line": 25
       },
       {
-        "id": "NODE-FW-0019",
+        "id": "NODE-FW-0023",
         "label": "L2.knowledge_base.M0",
         "level": 2,
         "order": 4,
@@ -184,7 +220,7 @@
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0020",
+        "id": "NODE-FW-0024",
         "label": "L2.shelf.M0",
         "level": 2,
         "order": 5,
@@ -193,7 +229,7 @@
         "source_line": 25
       },
       {
-        "id": "NODE-FW-0021",
+        "id": "NODE-FW-0025",
         "label": "L3.frontend.M0",
         "level": 3,
         "order": 1,
@@ -202,7 +238,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0022",
+        "id": "NODE-FW-0026",
         "label": "L4.frontend.M0",
         "level": 4,
         "order": 1,
@@ -211,7 +247,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0023",
+        "id": "NODE-FW-0027",
         "label": "L5.frontend.M0",
         "level": 5,
         "order": 1,
@@ -220,7 +256,7 @@
         "source_line": 23
       },
       {
-        "id": "NODE-FW-0024",
+        "id": "NODE-FW-0028",
         "label": "L6.frontend.M0",
         "level": 6,
         "order": 1,
@@ -231,8 +267,148 @@
     ],
     "edges": [
       {
-        "from": "NODE-FW-0001",
+        "from": "NODE-FW-0003",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M0",
+        "target_ref": "L0.M0",
+        "rules": "R2,R3",
+        "terms": "frontend.L0.M0[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0003",
+        "to": "NODE-FW-0011",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M0",
+        "target_ref": "L0.M2",
+        "rules": "R1,R2",
+        "terms": "frontend.L0.M0[R1,R2]",
+        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0004",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "L0.M0",
+        "rules": "R2,R3",
+        "terms": "frontend.L0.M1[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0004",
         "to": "NODE-FW-0010",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "L0.M1",
+        "rules": "R2,R3",
+        "terms": "frontend.L0.M1[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0004",
+        "to": "NODE-FW-0011",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "L0.M2",
+        "rules": "R1,R2 | R2,R3",
+        "terms": "frontend.L0.M1[R1,R2] + frontend.L0.M1[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0005",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M2",
+        "target_ref": "L0.M0",
+        "rules": "R1,R3 | R2,R3",
+        "terms": "frontend.L0.M2[R1,R3] + frontend.L0.M2[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0005",
+        "to": "NODE-FW-0010",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M2",
+        "target_ref": "L0.M1",
+        "rules": "R2,R3",
+        "terms": "frontend.L0.M2[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0006",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M3",
+        "target_ref": "L0.M0",
+        "rules": "R1,R3",
+        "terms": "frontend.L0.M3[R1,R3]",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0006",
+        "to": "NODE-FW-0010",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M3",
+        "target_ref": "L0.M1",
+        "rules": "R1,R3",
+        "terms": "frontend.L0.M3[R1,R3]",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0006",
+        "to": "NODE-FW-0011",
+        "relation": "framework_module_growth",
+        "module": "knowledge_base",
+        "from_level": "L0",
+        "to_level": "L0",
+        "source_ref": "frontend.L0.M3",
+        "target_ref": "L0.M2",
+        "rules": "R1,R3 | R2,R3",
+        "terms": "frontend.L0.M3[R1,R3] + frontend.L0.M3[R2,R3]",
+        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0001",
+        "to": "NODE-FW-0014",
         "relation": "framework_module_growth",
         "module": "backend",
         "from_level": "L0",
@@ -246,7 +422,7 @@
       },
       {
         "from": "NODE-FW-0002",
-        "to": "NODE-FW-0011",
+        "to": "NODE-FW-0015",
         "relation": "framework_module_growth",
         "module": "curtain",
         "from_level": "L0",
@@ -260,21 +436,21 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0012",
+        "to": "NODE-FW-0016",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
         "to_level": "L1",
         "source_ref": "L0.M0",
         "target_ref": "L1.M0",
-        "rules": "R1 | R1,R3 | R3",
-        "terms": "L0.M0[R1,R3] + L0.M0[R1] + L0.M0[R3]",
-        "source_file": "framework/frontend/L1-M0-基础组件原子模块.md",
-        "source_line": 24
+        "rules": "R1,R2 | R2,R3",
+        "terms": "L0.M0[R1,R2] + L0.M0[R2,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
       },
       {
-        "from": "NODE-FW-0005",
-        "to": "NODE-FW-0013",
+        "from": "NODE-FW-0009",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -287,8 +463,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0009",
-        "to": "NODE-FW-0015",
+        "from": "NODE-FW-0013",
+        "to": "NODE-FW-0019",
         "relation": "framework_module_growth",
         "module": "shelf",
         "from_level": "L0",
@@ -301,8 +477,8 @@
         "source_line": 23
       },
       {
-        "from": "NODE-FW-0005",
-        "to": "NODE-FW-0014",
+        "from": "NODE-FW-0009",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -316,21 +492,21 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0012",
+        "to": "NODE-FW-0016",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
         "to_level": "L1",
         "source_ref": "L0.M1",
         "target_ref": "L1.M0",
-        "rules": "R1,R2 | R1,R3 | R2,R3",
-        "terms": "L0.M1[R1,R2] + L0.M1[R1,R3] + L0.M1[R2,R3]",
-        "source_file": "framework/frontend/L1-M0-基础组件原子模块.md",
-        "source_line": 24
+        "rules": "R1,R2 | R2,R3",
+        "terms": "L0.M1[R1,R2] + L0.M1[R2,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
       },
       {
-        "from": "NODE-FW-0006",
-        "to": "NODE-FW-0013",
+        "from": "NODE-FW-0010",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -343,8 +519,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0006",
-        "to": "NODE-FW-0014",
+        "from": "NODE-FW-0010",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -357,8 +533,22 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0007",
-        "to": "NODE-FW-0013",
+        "from": "NODE-FW-0005",
+        "to": "NODE-FW-0016",
+        "relation": "framework_module_growth",
+        "module": "frontend",
+        "from_level": "L0",
+        "to_level": "L1",
+        "source_ref": "L0.M2",
+        "target_ref": "L1.M0",
+        "rules": "R1,R3",
+        "terms": "L0.M2[R1,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0011",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -371,8 +561,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0007",
-        "to": "NODE-FW-0014",
+        "from": "NODE-FW-0011",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -385,50 +575,50 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0012",
-        "to": "NODE-FW-0005",
-        "relation": "framework_module_growth",
-        "module": "knowledge_base",
-        "from_level": "L1",
-        "to_level": "L0",
-        "source_ref": "frontend.L1.M0",
-        "target_ref": "L0.M0",
-        "rules": "R1,R2 | R1,R3 | R2,R3",
-        "terms": "frontend.L1.M0[R1,R2] + frontend.L1.M0[R1,R3] + frontend.L1.M0[R2,R3]",
-        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
-        "source_line": 25
-      },
-      {
-        "from": "NODE-FW-0012",
-        "to": "NODE-FW-0006",
-        "relation": "framework_module_growth",
-        "module": "knowledge_base",
-        "from_level": "L1",
-        "to_level": "L0",
-        "source_ref": "frontend.L1.M0",
-        "target_ref": "L0.M1",
-        "rules": "R1,R2 | R1,R3 | R2,R3",
-        "terms": "frontend.L1.M0[R1,R2] + frontend.L1.M0[R1,R3] + frontend.L1.M0[R2,R3]",
-        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
-        "source_line": 25
-      },
-      {
-        "from": "NODE-FW-0012",
-        "to": "NODE-FW-0007",
-        "relation": "framework_module_growth",
-        "module": "knowledge_base",
-        "from_level": "L1",
-        "to_level": "L0",
-        "source_ref": "frontend.L1.M0",
-        "target_ref": "L0.M2",
-        "rules": "R1,R2 | R1,R3 | R2,R3",
-        "terms": "frontend.L1.M0[R1,R2] + frontend.L1.M0[R1,R3] + frontend.L1.M0[R2,R3]",
-        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
-        "source_line": 25
-      },
-      {
-        "from": "NODE-FW-0010",
+        "from": "NODE-FW-0006",
         "to": "NODE-FW-0016",
+        "relation": "framework_module_growth",
+        "module": "frontend",
+        "from_level": "L0",
+        "to_level": "L1",
+        "source_ref": "L0.M3",
+        "target_ref": "L1.M0",
+        "rules": "R1,R3",
+        "terms": "L0.M3[R1,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0007",
+        "to": "NODE-FW-0016",
+        "relation": "framework_module_growth",
+        "module": "frontend",
+        "from_level": "L0",
+        "to_level": "L1",
+        "source_ref": "L0.M4",
+        "target_ref": "L1.M0",
+        "rules": "R1,R3",
+        "terms": "L0.M4[R1,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0008",
+        "to": "NODE-FW-0016",
+        "relation": "framework_module_growth",
+        "module": "frontend",
+        "from_level": "L0",
+        "to_level": "L1",
+        "source_ref": "L0.M5",
+        "target_ref": "L1.M0",
+        "rules": "R1,R3",
+        "terms": "L0.M5[R1,R3]",
+        "source_file": "framework/frontend/L1-M0-通用组件装配模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0014",
+        "to": "NODE-FW-0020",
         "relation": "framework_module_growth",
         "module": "backend",
         "from_level": "L1",
@@ -441,8 +631,8 @@
         "source_line": 23
       },
       {
-        "from": "NODE-FW-0011",
-        "to": "NODE-FW-0017",
+        "from": "NODE-FW-0015",
+        "to": "NODE-FW-0021",
         "relation": "framework_module_growth",
         "module": "curtain",
         "from_level": "L1",
@@ -455,22 +645,22 @@
         "source_line": 24
       },
       {
-        "from": "NODE-FW-0012",
-        "to": "NODE-FW-0018",
+        "from": "NODE-FW-0016",
+        "to": "NODE-FW-0022",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
         "to_level": "L2",
         "source_ref": "L1.M0",
         "target_ref": "L2.M0",
-        "rules": "R1,R2,R3 | R1,R3 | R2,R3",
-        "terms": "L1.M0[R1,R2,R3] + L1.M0[R1,R3] + L1.M0[R2,R3]",
+        "rules": "R1,R2 | R1,R3 | R2,R3",
+        "terms": "L1.M0[R1,R2] + L1.M0[R1,R3] + L1.M0[R2,R3]",
         "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
-        "source_line": 23
+        "source_line": 25
       },
       {
-        "from": "NODE-FW-0013",
-        "to": "NODE-FW-0019",
+        "from": "NODE-FW-0017",
+        "to": "NODE-FW-0023",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L1",
@@ -483,8 +673,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0015",
-        "to": "NODE-FW-0020",
+        "from": "NODE-FW-0019",
+        "to": "NODE-FW-0024",
         "relation": "framework_module_growth",
         "module": "shelf",
         "from_level": "L1",
@@ -497,8 +687,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0014",
-        "to": "NODE-FW-0019",
+        "from": "NODE-FW-0018",
+        "to": "NODE-FW-0023",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L1",
@@ -511,8 +701,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0018",
-        "to": "NODE-FW-0021",
+        "from": "NODE-FW-0022",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L2",
@@ -525,8 +715,8 @@
         "source_line": 23
       },
       {
-        "from": "NODE-FW-0021",
-        "to": "NODE-FW-0022",
+        "from": "NODE-FW-0025",
+        "to": "NODE-FW-0026",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L3",
@@ -539,8 +729,8 @@
         "source_line": 23
       },
       {
-        "from": "NODE-FW-0022",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0026",
+        "to": "NODE-FW-0027",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L4",
@@ -553,8 +743,8 @@
         "source_line": 23
       },
       {
-        "from": "NODE-FW-0023",
-        "to": "NODE-FW-0024",
+        "from": "NODE-FW-0027",
+        "to": "NODE-FW-0028",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L5",

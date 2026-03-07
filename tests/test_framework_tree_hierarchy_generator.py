@@ -133,13 +133,13 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            (frontend_dir / "L1-M0-基础组件原子模块.md").write_text(
+            (frontend_dir / "L0-M0-输入与触发原子模块.md").write_text(
                 "\n".join(
                     [
-                        "# 基础组件原子模块:PrimitiveComponents",
+                        "# 输入与触发原子模块:InputTriggerAtoms",
                         "@framework",
                         "## 3. 最小可行基（Minimum Viable Bases）",
-                        "- `B1` 输入原子基：L0.M0[R1]。来源：`C1 + INPUTATOM`。",
+                        "- `B1` 输入框结构基：由值槽位构成。来源：`C1 + FIELD`。",
                     ]
                 ),
                 encoding="utf-8",
@@ -150,7 +150,7 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
                         "# 文件库原子模块:FileLibraryAtoms",
                         "@framework",
                         "## 3. 最小可行基（Minimum Viable Bases）",
-                        "- `B1` 文件目录结构基：frontend.L1.M0[R1,R3]。来源：`C1 + FILESET`。",
+                        "- `B1` 文件目录结构基：frontend.L0.M0[R1]。来源：`C1 + FILESET`。",
                     ]
                 ),
                 encoding="utf-8",
@@ -161,7 +161,7 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
             growth_edges = [edge for edge in root["edges"] if edge["relation"] == "framework_module_growth"]
             edge_pairs = {(edge["source_ref"], edge["target_ref"]) for edge in growth_edges}
 
-            self.assertIn(("frontend.L1.M0", "L0.M0"), edge_pairs)
+            self.assertIn(("frontend.L0.M0", "L0.M0"), edge_pairs)
             self.assertEqual([], [w for w in warnings if "foundation ref ignored" in w])
 
 
