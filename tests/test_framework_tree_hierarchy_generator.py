@@ -122,24 +122,13 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
             frontend_dir.mkdir(parents=True, exist_ok=True)
             knowledge_dir.mkdir(parents=True, exist_ok=True)
 
-            (frontend_dir / "L0-M0-运行底座模块.md").write_text(
+            (frontend_dir / "L1-M0-按钮原子模块.md").write_text(
                 "\n".join(
                     [
-                        "# 运行底座模块:RuntimeFoundation",
+                        "# 按钮原子模块:ButtonAtoms",
                         "@framework",
                         "## 3. 最小可行基（Minimum Viable Bases）",
-                        "- `B1` 运行壳基：定义运行壳结构。来源：`C1 + PLATFORM`。",
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            (frontend_dir / "L0-M0-输入与触发原子模块.md").write_text(
-                "\n".join(
-                    [
-                        "# 输入与触发原子模块:InputTriggerAtoms",
-                        "@framework",
-                        "## 3. 最小可行基（Minimum Viable Bases）",
-                        "- `B1` 输入框结构基：由值槽位构成。来源：`C1 + FIELD`。",
+                        "- `B1` 按钮外壳结构基：由内容槽位构成。来源：`C1 + BUTTON`。",
                     ]
                 ),
                 encoding="utf-8",
@@ -150,7 +139,7 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
                         "# 文件库原子模块:FileLibraryAtoms",
                         "@framework",
                         "## 3. 最小可行基（Minimum Viable Bases）",
-                        "- `B1` 文件目录结构基：frontend.L0.M0[R1]。来源：`C1 + FILESET`。",
+                        "- `B1` 文件目录结构基：frontend.L1.M0[R1]。来源：`C1 + FILESET`。",
                     ]
                 ),
                 encoding="utf-8",
@@ -161,7 +150,7 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
             growth_edges = [edge for edge in root["edges"] if edge["relation"] == "framework_module_growth"]
             edge_pairs = {(edge["source_ref"], edge["target_ref"]) for edge in growth_edges}
 
-            self.assertIn(("frontend.L0.M0", "L0.M0"), edge_pairs)
+            self.assertIn(("frontend.L1.M0", "L0.M0"), edge_pairs)
             self.assertEqual([], [w for w in warnings if "foundation ref ignored" in w])
 
 

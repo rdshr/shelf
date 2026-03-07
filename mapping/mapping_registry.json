@@ -45,6 +45,14 @@
       {
         "id": "SYNC-20260307-frontend-primitive-sink",
         "note": "Sink the frontend framework to concrete L0 primitive atoms (input/trigger, text/carrier, list/hierarchy, marker/feedback), move token/runtime support to later L0 modules, and realign knowledge_base L0 modules to reference specific frontend primitives instead of a coarse component family."
+      },
+      {
+        "id": "SYNC-20260307-frontend-atomic-frameworks",
+        "note": "Further split frontend L0 into standalone atomic frameworks for button, input field, textarea, file picker, text block, panel viewport, list hierarchy, and marker feedback; then realign frontend assembly and knowledge_base domain atoms to grow from these finer-grained primitive structures."
+      },
+      {
+        "id": "SYNC-20260307-frontend-common-structure-layer",
+        "note": "Insert a deeper frontend common-structure L0 (slot shell, state channel, host binding), float concrete component atoms to L1, keep the frontend standard at L2, and realign knowledge_base domain atoms to reference frontend L1 component atoms while preserving the structure-first dependency chain."
       }
     ]
   },
