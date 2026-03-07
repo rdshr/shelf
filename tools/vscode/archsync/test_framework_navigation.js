@@ -4,6 +4,7 @@ const path = require("path");
 
 const {
   resolveDefinitionTarget,
+  resolveHoverTarget,
 } = require("./framework_navigation");
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
@@ -90,7 +91,7 @@ function main() {
   });
   assert(moduleResult, "module ref should resolve");
   assert(moduleResult.filePath.endsWith("framework/curtain/L1-M0-安装与控制编排模块.md"));
-  assert(targetLineText(moduleResult).startsWith("# "));
+  assert(targetLineText(moduleResult).includes("`B1`"));
 
   const knowledgeBaseL0 = loadFrameworkFile("framework/knowledge_base/L0-M0-文件库与摄取原子模块.md");
   const externalRuleRef = locate(knowledgeBaseL0.text, "frontend.L1.M4[R1,R3]");
@@ -104,6 +105,97 @@ function main() {
   assert(externalRuleResult, "external rule ref should resolve");
   assert(externalRuleResult.filePath.endsWith("framework/frontend/L1-M4-文本块原子模块.md"));
   assert(targetLineText(externalRuleResult).includes("`R3`"));
+
+  const knowledgeBaseL2 = loadFrameworkFile("framework/knowledge_base/L0-M2-对话与引用原子模块.md");
+  const moduleHoverRef = locate(knowledgeBaseL2.text, "frontend.L1.M4[R1,R3]");
+  const hoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: moduleHoverRef.line,
+    character: moduleHoverRef.character + "frontend.L1.M4".length - 1,
+  });
+  assert(hoverResult, "module hover should resolve");
+  assert.strictEqual(hoverResult.end - hoverResult.start, "frontend.L1.M4".length);
+  assert(hoverResult.markdown.includes("**frontend.L1.M4**"));
+  assert(hoverResult.markdown.includes("能力声明"));
+  assert(hoverResult.markdown.includes("- `C1` 文本内容承载能力"));
+  assert(hoverResult.markdown.includes("最小可行基"));
+  assert(hoverResult.markdown.includes("- `B1` 文本内容结构基"));
+  assert(hoverResult.markdown.includes("基组合原则"));
+  assert(hoverResult.markdown.includes("参与基：`B1`"));
+  assert(hoverResult.markdown.includes("组合方式：先固定文本内容槽位与说明关系"));
+
+  const moduleRuleHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: moduleHoverRef.line,
+    character: moduleHoverRef.character + "frontend.L1.M4[".length + 1,
+  });
+  assert(moduleRuleHoverResult, "module rule hover should resolve");
+  assert(moduleRuleHoverResult.markdown.includes("**frontend.L1.M4 · `R1`**"));
+  assert(moduleRuleHoverResult.markdown.includes("参与基：`B1`"));
+  assert(moduleRuleHoverResult.markdown.includes("输出能力：`C1`"));
+
+  const localBaseHoverRef = locate(knowledgeBaseL2.text, "`B1` 对话序列结构基");
+  const localBaseHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: localBaseHoverRef.line,
+    character: localBaseHoverRef.character + 1,
+  });
+  assert(localBaseHoverResult, "local base hover should resolve");
+  assert(localBaseHoverResult.markdown.includes("**knowledge_base.L0.M2 · `B1`**"));
+  assert(localBaseHoverResult.markdown.includes("`B1` 对话序列结构基"));
+
+  const localBoundaryHoverRef = locate(knowledgeBaseL2.text, "`TURN` 回合边界");
+  const localBoundaryHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: localBoundaryHoverRef.line,
+    character: localBoundaryHoverRef.character + 1,
+  });
+  assert(localBoundaryHoverResult, "local boundary hover should resolve");
+  assert(localBoundaryHoverResult.markdown.includes("**knowledge_base.L0.M2 · `TURN`**"));
+  assert(localBoundaryHoverResult.markdown.includes("`TURN` 回合边界"));
+
+  const localCapabilityHoverRef = locate(knowledgeBaseL2.text, "`C1` 对话序列承载能力");
+  const localCapabilityHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: localCapabilityHoverRef.line,
+    character: localCapabilityHoverRef.character + 1,
+  });
+  assert(localCapabilityHoverResult, "local capability hover should resolve");
+  assert(localCapabilityHoverResult.markdown.includes("**knowledge_base.L0.M2 · `C1`**"));
+
+  const localRuleHoverRef = locate(knowledgeBaseL2.text, "`R1` 回合先行");
+  const localRuleHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: localRuleHoverRef.line,
+    character: localRuleHoverRef.character + 1,
+  });
+  assert(localRuleHoverResult, "local rule hover should resolve");
+  assert(localRuleHoverResult.markdown.includes("**knowledge_base.L0.M2 · `R1`**"));
+  assert(localRuleHoverResult.markdown.includes("参与基：`B1 + B2`"));
+  assert(localRuleHoverResult.markdown.includes("边界绑定：`TURN/INPUT/STATUS/A11Y`"));
+
+  const localVerificationHoverRef = locate(knowledgeBaseL2.text, "`V1` 回合完整性");
+  const localVerificationHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: knowledgeBaseL2.filePath,
+    text: knowledgeBaseL2.text,
+    line: localVerificationHoverRef.line,
+    character: localVerificationHoverRef.character + 1,
+  });
+  assert(localVerificationHoverResult, "local verification hover should resolve");
+  assert(localVerificationHoverResult.markdown.includes("**knowledge_base.L0.M2 · `V1`**"));
 }
 
 main();

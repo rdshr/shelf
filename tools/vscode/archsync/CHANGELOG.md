@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.22 - 2026-03-07
+- Expanded framework-markdown hover coverage for module refs, module rule refs, and local `B/C/R/V` plus boundary symbols.
+- Module hover cards now include combination-principle details, especially participating bases, combination method, output abilities, and boundary bindings.
+
+## 0.0.21 - 2026-03-07
+- Changed module-ref navigation so `Lx.My` / `framework.Lx.My` jumps straight to the target module's first `B*` base instead of its title.
+- Added module hover cards for whole module refs such as `frontend.L1.M4`, showing the target module's capability declarations and minimum viable bases.
+
 ## 0.0.20 - 2026-03-07
 - Added framework-markdown `Go to Definition` navigation for local `B/C/R/V` ids, boundary ids, module refs such as `L1.M0` / `frontend.L1.M4`, and rule refs inside module brackets like `frontend.L1.M4[R1,R3]`.
 

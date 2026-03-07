@@ -61,12 +61,40 @@ function registerSymbol(symbols, token, line, character) {
   });
 }
 
+function createAnchor(lineText, line) {
+  const trimmed = lineText.trim();
+  return {
+    line,
+    character: Math.max(0, lineText.indexOf(trimmed)),
+    length: Math.max(1, trimmed.length),
+  };
+}
+
+function trimListMarker(lineText) {
+  return lineText.trim().replace(/^[-*]\s*/, "");
+}
+
+function extractAfterColon(text) {
+  const match = /[:：]\s*(.+)$/.exec(text.trim());
+  return match ? match[1].trim() : "";
+}
+
 function buildDefinitionIndex(text) {
   const symbols = new Map();
   const boundaryIds = new Set();
+  const sectionHeaders = {};
+  const capabilities = [];
+  const boundaries = [];
+  const bases = [];
+  const verifications = [];
+  const rules = [];
+  const itemByToken = new Map();
+  const ruleByToken = new Map();
   const lines = text.split(/\r?\n/);
   let section = "";
   let header = null;
+  let headerText = "";
+  let currentRule = null;
 
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
     const lineText = lines[lineIndex];
@@ -74,6 +102,9 @@ function buildDefinitionIndex(text) {
     const sectionName = detectSection(trimmed);
     if (sectionName) {
       section = sectionName;
+      if (!sectionHeaders[sectionName]) {
+        sectionHeaders[sectionName] = createAnchor(lineText, lineIndex);
+      }
     } else if (trimmed.startsWith("## ")) {
       section = "";
     }
@@ -86,13 +117,26 @@ function buildDefinitionIndex(text) {
           character: headingMatch[0].length,
           length: Math.max(1, lineText.trim().length - 2),
         };
+        headerText = lineText.replace(/^\s*#\s+/, "").trim();
       }
     }
 
     if (section === "capability") {
       const match = /^\s*[-*]\s*`(C\d+)`/.exec(lineText);
       if (match) {
-        registerSymbol(symbols, match[1], lineIndex, match.index + match[0].indexOf(match[1]));
+        const token = match[1];
+        const character = match.index + match[0].indexOf(token);
+        const item = {
+          kind: "capability",
+          token,
+          text: trimListMarker(lineText),
+          line: lineIndex,
+          character,
+          length: token.length,
+        };
+        registerSymbol(symbols, token, lineIndex, character);
+        capabilities.push(item);
+        itemByToken.set(token, item);
       }
       continue;
     }
@@ -100,8 +144,20 @@ function buildDefinitionIndex(text) {
     if (section === "boundary") {
       const match = /^\s*[-*]\s*`([A-Za-z][A-Za-z0-9_]*)`/.exec(lineText);
       if (match) {
-        boundaryIds.add(match[1]);
-        registerSymbol(symbols, match[1], lineIndex, match.index + match[0].indexOf(match[1]));
+        const token = match[1];
+        const character = match.index + match[0].indexOf(token);
+        const item = {
+          kind: "boundary",
+          token,
+          text: trimListMarker(lineText),
+          line: lineIndex,
+          character,
+          length: token.length,
+        };
+        boundaryIds.add(token);
+        registerSymbol(symbols, token, lineIndex, character);
+        boundaries.push(item);
+        itemByToken.set(token, item);
       }
       continue;
     }
@@ -109,7 +165,19 @@ function buildDefinitionIndex(text) {
     if (section === "base") {
       const match = /^\s*[-*]\s*`(B\d+)`/.exec(lineText);
       if (match) {
-        registerSymbol(symbols, match[1], lineIndex, match.index + match[0].indexOf(match[1]));
+        const token = match[1];
+        const character = match.index + match[0].indexOf(token);
+        const item = {
+          kind: "base",
+          token,
+          text: trimListMarker(lineText),
+          line: lineIndex,
+          character,
+          length: token.length,
+        };
+        registerSymbol(symbols, token, lineIndex, character);
+        bases.push(item);
+        itemByToken.set(token, item);
       }
       continue;
     }
@@ -117,13 +185,61 @@ function buildDefinitionIndex(text) {
     if (section === "rule") {
       const topMatch = /^\s*[-*]\s*`(R\d+)`\s*/.exec(lineText);
       if (topMatch) {
-        registerSymbol(symbols, topMatch[1], lineIndex, topMatch.index + topMatch[0].indexOf(topMatch[1]));
+        const token = topMatch[1];
+        const character = topMatch.index + topMatch[0].indexOf(token);
+        const textValue = trimListMarker(lineText);
+        const item = {
+          kind: "rule",
+          token,
+          text: textValue,
+          title: textValue.replace(/^`R\d+`\s*/, "").trim(),
+          line: lineIndex,
+          character,
+          length: token.length,
+          participatingBases: "",
+          combination: "",
+          output: "",
+          boundary: "",
+          children: [],
+        };
+        registerSymbol(symbols, token, lineIndex, character);
+        rules.push(item);
+        ruleByToken.set(token, item);
+        itemByToken.set(token, item);
+        currentRule = item;
         continue;
       }
 
       const childMatch = /^\s*[-*]\s*`(R\d+\.\d+)`\s*/.exec(lineText);
       if (childMatch) {
-        registerSymbol(symbols, childMatch[1], lineIndex, childMatch.index + childMatch[0].indexOf(childMatch[1]));
+        const token = childMatch[1];
+        const character = childMatch.index + childMatch[0].indexOf(token);
+        const textValue = trimListMarker(lineText);
+        const parentToken = token.split(".", 1)[0];
+        const item = {
+          kind: "ruleChild",
+          token,
+          text: textValue,
+          line: lineIndex,
+          character,
+          length: token.length,
+          parentToken,
+        };
+        registerSymbol(symbols, token, lineIndex, character);
+        itemByToken.set(token, item);
+        const parentRule = ruleByToken.get(parentToken) || currentRule;
+        if (parentRule) {
+          parentRule.children.push(item);
+          if (token.endsWith(".1")) {
+            parentRule.participatingBases = extractAfterColon(textValue);
+          } else if (token.endsWith(".2")) {
+            parentRule.combination = extractAfterColon(textValue);
+          } else if (token.endsWith(".3")) {
+            parentRule.output = extractAfterColon(textValue);
+          } else if (token.endsWith(".4")) {
+            parentRule.boundary = extractAfterColon(textValue);
+          }
+        }
         if (lineText.includes("输出结构")) {
           for (const segmentMatch of lineText.matchAll(BACKTICK_SEGMENT_PATTERN)) {
             const segment = segmentMatch[1];
@@ -140,6 +256,15 @@ function buildDefinitionIndex(text) {
                 continue;
               }
               registerSymbol(symbols, token, lineIndex, segmentOffset + (tokenMatch.index || 0));
+              itemByToken.set(token, {
+                kind: "derivedSymbol",
+                token,
+                text: textValue,
+                line: lineIndex,
+                character: segmentOffset + (tokenMatch.index || 0),
+                length: token.length,
+                parentToken,
+              });
             }
           }
         }
@@ -150,14 +275,34 @@ function buildDefinitionIndex(text) {
     if (section === "verification") {
       const match = /^\s*[-*]\s*`(V\d+)`/.exec(lineText);
       if (match) {
-        registerSymbol(symbols, match[1], lineIndex, match.index + match[0].indexOf(match[1]));
+        const token = match[1];
+        const character = match.index + match[0].indexOf(token);
+        const item = {
+          kind: "verification",
+          token,
+          text: trimListMarker(lineText),
+          line: lineIndex,
+          character,
+          length: token.length,
+        };
+        registerSymbol(symbols, token, lineIndex, character);
+        verifications.push(item);
+        itemByToken.set(token, item);
       }
     }
   }
 
   return {
     header,
+    headerText,
+    sectionHeaders,
     symbols,
+    capabilities,
+    boundaries,
+    bases,
+    verifications,
+    rules,
+    itemByToken,
   };
 }
 
@@ -271,6 +416,140 @@ function resolveLocalSymbol(index, token) {
   return null;
 }
 
+function resolveModuleTarget(index) {
+  if (index.bases.length > 0) {
+    const firstBase = index.bases[0];
+    return {
+      line: firstBase.line,
+      character: firstBase.character,
+      length: firstBase.length,
+    };
+  }
+
+  if (index.sectionHeaders.base) {
+    return index.sectionHeaders.base;
+  }
+
+  return index.header;
+}
+
+function buildModuleLabel(moduleInfo) {
+  return moduleInfo
+    ? `${moduleInfo.frameworkName}.${moduleInfo.level}.${moduleInfo.moduleId}`
+    : "module";
+}
+
+function pushItemSection(parts, title, items) {
+  if (!items || items.length === 0) {
+    return;
+  }
+  parts.push("", title);
+  for (const item of items) {
+    parts.push(`- ${item.text}`);
+  }
+}
+
+function pushRuleSummary(parts, rule) {
+  const title = rule.title ? ` ${rule.title}` : "";
+  parts.push(`- \`${rule.token}\`${title}`);
+  if (rule.participatingBases) {
+    parts.push(`  参与基：${rule.participatingBases}`);
+  }
+  if (rule.combination) {
+    parts.push(`  组合方式：${rule.combination}`);
+  }
+  if (rule.output) {
+    parts.push(`  输出能力：${rule.output}`);
+  }
+  if (rule.boundary) {
+    parts.push(`  边界绑定：${rule.boundary}`);
+  }
+}
+
+function buildModuleHoverMarkdown(moduleInfo, index) {
+  const label = buildModuleLabel(moduleInfo);
+  const parts = [`**${label}**`];
+
+  if (index.headerText) {
+    parts.push(index.headerText);
+  }
+
+  pushItemSection(parts, "能力声明", index.capabilities);
+  pushItemSection(parts, "最小可行基", index.bases);
+
+  if (index.rules.length > 0) {
+    parts.push("", "基组合原则");
+    for (const rule of index.rules) {
+      pushRuleSummary(parts, rule);
+    }
+  }
+
+  return parts.join("\n");
+}
+
+function getItemForToken(index, token) {
+  const direct = index.itemByToken.get(token);
+  if (direct) {
+    return direct;
+  }
+  if (/^R\d+\.\d+$/.test(token)) {
+    return index.itemByToken.get(token.split(".", 1)[0]) || null;
+  }
+  return null;
+}
+
+function buildRuleHoverMarkdown(moduleInfo, rule) {
+  const parts = [`**${buildModuleLabel(moduleInfo)} · \`${rule.token}\`**`];
+
+  if (rule.title) {
+    parts.push(rule.title);
+  }
+  if (rule.participatingBases) {
+    parts.push("", `参与基：${rule.participatingBases}`);
+  }
+  if (rule.combination) {
+    parts.push(`组合方式：${rule.combination}`);
+  }
+  if (rule.output) {
+    parts.push(`输出能力：${rule.output}`);
+  }
+  if (rule.boundary) {
+    parts.push(`边界绑定：${rule.boundary}`);
+  }
+
+  return parts.join("\n");
+}
+
+function buildSymbolHoverMarkdown(moduleInfo, index, token) {
+  const item = getItemForToken(index, token);
+  if (!item) {
+    return null;
+  }
+
+  if (item.kind === "rule") {
+    return buildRuleHoverMarkdown(moduleInfo, item);
+  }
+
+  if (item.kind === "ruleChild") {
+    const parentRule = getItemForToken(index, item.parentToken);
+    const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
+    if (parentRule && parentRule.kind === "rule") {
+      parts.push("", `所属规则：\`${parentRule.token}\` ${parentRule.title}`);
+    }
+    return parts.join("\n");
+  }
+
+  if (item.kind === "derivedSymbol") {
+    const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
+    if (item.parentToken) {
+      parts.push("", `来源规则：\`${item.parentToken}\``);
+    }
+    return parts.join("\n");
+  }
+
+  return [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text].join("\n");
+}
+
 function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) {
   const documentInfo = getFrameworkDocumentInfo(filePath, repoRoot);
   if (!documentInfo) {
@@ -298,14 +577,15 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
     const targetText = fs.readFileSync(targetFilePath, "utf8");
     const targetIndex = buildDefinitionIndex(targetText);
     if (tokenContext.kind === "moduleRef") {
-      if (!targetIndex.header) {
+      const moduleTarget = resolveModuleTarget(targetIndex);
+      if (!moduleTarget) {
         return null;
       }
       return {
         filePath: targetFilePath,
-        line: targetIndex.header.line,
-        character: targetIndex.header.character,
-        length: targetIndex.header.length,
+        line: moduleTarget.line,
+        character: moduleTarget.character,
+        length: moduleTarget.length,
       };
     }
     const resolvedSymbol = resolveLocalSymbol(targetIndex, tokenContext.token);
@@ -333,10 +613,66 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
   };
 }
 
+function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
+  const documentInfo = getFrameworkDocumentInfo(filePath, repoRoot);
+  if (!documentInfo) {
+    return null;
+  }
+
+  const lines = text.split(/\r?\n/);
+  const lineText = lines[line] || "";
+  const tokenContext = findTokenContext(lineText, character);
+  if (!tokenContext) {
+    return null;
+  }
+
+  if (tokenContext.kind === "moduleRef" || tokenContext.kind === "moduleRule") {
+    const targetFilePath = resolveModuleFile(
+      repoRoot,
+      documentInfo.frameworkName,
+      tokenContext.frameworkName,
+      tokenContext.level,
+      tokenContext.moduleId
+    );
+    if (!targetFilePath || !fs.existsSync(targetFilePath)) {
+      return null;
+    }
+
+    const targetText = fs.readFileSync(targetFilePath, "utf8");
+    const targetIndex = buildDefinitionIndex(targetText);
+    const targetInfo = getFrameworkDocumentInfo(targetFilePath, repoRoot);
+    const markdown = tokenContext.kind === "moduleRef"
+      ? buildModuleHoverMarkdown(targetInfo, targetIndex)
+      : buildSymbolHoverMarkdown(targetInfo, targetIndex, tokenContext.token);
+    if (!markdown) {
+      return null;
+    }
+
+    return {
+      start: tokenContext.start,
+      end: tokenContext.end,
+      markdown,
+    };
+  }
+
+  const currentIndex = buildDefinitionIndex(text);
+  const markdown = buildSymbolHoverMarkdown(documentInfo, currentIndex, tokenContext.token);
+  if (!markdown) {
+    return null;
+  }
+
+  return {
+    start: tokenContext.start,
+    end: tokenContext.end,
+    markdown,
+  };
+}
+
 module.exports = {
   buildDefinitionIndex,
   findTokenContext,
   getFrameworkDocumentInfo,
   isFrameworkMarkdownFile,
   resolveDefinitionTarget,
+  resolveHoverTarget,
 };

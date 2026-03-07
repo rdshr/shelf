@@ -9,5 +9,8 @@ if [[ -z "${VSIX_PATH}" ]]; then
   exit 1
 fi
 
+# Clean up existing installs so the remote host doesn't keep multiple stale versions around.
+code --uninstall-extension local.archsync >/dev/null 2>&1 || true
+code --uninstall-extension rdshr.archsync >/dev/null 2>&1 || true
 code --install-extension "${VSIX_PATH}" --force
 echo "Installed ${VSIX_PATH}"

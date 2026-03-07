@@ -408,6 +408,38 @@ function activate(context) {
     }
   );
 
+  const frameworkHoverDisposable = vscode.languages.registerHoverProvider(
+    { language: "markdown", scheme: "file" },
+    {
+      provideHover(document, position) {
+        const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (!folder) {
+          return null;
+        }
+
+        const repoRoot = folder.uri.fsPath;
+        if (!frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, repoRoot)) {
+          return null;
+        }
+
+        const target = frameworkNavigation.resolveHoverTarget({
+          repoRoot,
+          filePath: document.uri.fsPath,
+          text: document.getText(),
+          line: position.line,
+          character: position.character,
+        });
+        if (!target) {
+          return null;
+        }
+
+        const start = new vscode.Position(position.line, target.start);
+        const end = new vscode.Position(position.line, target.end);
+        return new vscode.Hover(new vscode.MarkdownString(target.markdown), new vscode.Range(start, end));
+      }
+    }
+  );
+
   const validateNowDisposable = vscode.commands.registerCommand("archSync.validateNow", async () => {
     scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
   });
@@ -579,6 +611,7 @@ function activate(context) {
   context.subscriptions.push(
     sidebarViewDisposable,
     frameworkDefinitionDisposable,
+    frameworkHoverDisposable,
     validateNowDisposable,
     showIssuesDisposable,
     openFrameworkTreeDisposable,

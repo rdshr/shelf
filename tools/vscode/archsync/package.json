@@ -2,7 +2,7 @@
   "name": "archsync",
   "displayName": "ArchSync",
   "description": "ArchSync: framework tree webview + strict mapping validation guard.",
-  "version": "0.0.20",
+  "version": "0.0.22",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
