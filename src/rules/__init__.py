@@ -2,6 +2,7 @@ from rules.combination_rules import (
     all_module_subsets,
     build_extended_rules,
     classify_combo_sets,
+    default_combination_rules,
     geometric_type_combinations,
     module_type_combinations,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "StructuralCheck",
     "all_module_subsets",
     "build_extended_rules",
+    "default_combination_rules",
     "check_frame_connected",
     "check_frame_forbid_dangling_rods",
     "check_frame_ground_contact",

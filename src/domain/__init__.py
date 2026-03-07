@@ -9,10 +9,6 @@ from domain.models import (
     Footprint2D,
     GridEdge3D,
     GridPoint3D,
-    Goal,
-    Hypothesis,
-    LogicRecord,
-    LogicStep,
     Opening2D,
     PanelPlacement,
     Rect2D,
@@ -21,15 +17,20 @@ from domain.models import (
     VerificationInput,
     VerificationResult,
 )
+from framework_core import Base, BoundaryDefinition as FrameworkBoundaryDefinition, BoundaryItem, Capability, Goal, Hypothesis, LogicRecord, LogicStep
 
 __all__ = [
+    "Base",
     "BoundaryDefinition",
+    "BoundaryItem",
+    "Capability",
     "CandidateEvaluation",
     "DiscreteGrid",
     "EnumerationConfig",
     "EnumerationStats",
     "ExactFitSpec",
     "Footprint2D",
+    "FrameworkBoundaryDefinition",
     "GridEdge3D",
     "GridPoint3D",
     "Goal",

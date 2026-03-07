@@ -3,12 +3,29 @@ from __future__ import annotations
 from itertools import combinations
 
 from domain.enums import Module
-from shelf_framework import CombinationRules, Rule
+from framework_core import CombinationRules, Rule
+
+
+def default_combination_rules() -> CombinationRules[Module]:
+    return CombinationRules(
+        [
+            Rule(
+                rule_id="R1",
+                description="module set must not be isolated",
+                validator=lambda combo: len(combo) >= 2,
+            ),
+            Rule(
+                rule_id="R2",
+                description="connector must exist in every usable combination",
+                validator=lambda combo: Module.CONNECTOR in combo,
+            ),
+        ]
+    )
 
 
 def module_type_combinations() -> list[set[Module]]:
     """R1+R2 level type combinations from module universe {R, C, P}."""
-    return CombinationRules.default().valid_subsets(modules=list(Module))
+    return default_combination_rules().valid_subsets(universe=list(Module))
 
 
 def geometric_type_combinations() -> list[set[Module]]:
@@ -30,23 +47,14 @@ def classify_combo_sets() -> dict[str, list[list[str]]]:
 
 def build_extended_rules() -> CombinationRules:
     """Explicit rule set used in examples and teaching docs."""
-    base = [
-        Rule(
-            rule_id="R1",
-            description="module set must not be isolated",
-            validator=lambda combo: len(combo) >= 2,
-        ),
-        Rule(
-            rule_id="R2",
-            description="connector must exist in every usable combination",
-            validator=lambda combo: Module.CONNECTOR in combo,
-        ),
+    base = list(default_combination_rules().rules)
+    base.append(
         Rule(
             rule_id="R5-type",
             description="panel-only support is invalid without rods",
             validator=lambda combo: not (Module.PANEL in combo and Module.ROD not in combo),
-        ),
-    ]
+        )
+    )
     return CombinationRules(base)
 
 

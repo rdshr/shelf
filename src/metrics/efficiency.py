@@ -8,7 +8,7 @@ from domain.models import BoundaryDefinition, DiscreteGrid, StructureTopology
 
 
 @dataclass(frozen=True)
-class LayerEfficiencyTerm:
+class LayerUtilizationTerm:
     layer_index: int
     usable_area: float
     clear_height: float
@@ -17,7 +17,7 @@ class LayerEfficiencyTerm:
 
 
 @dataclass(frozen=True)
-class FrameBayEfficiencyTerm:
+class FrameBayUtilizationTerm:
     bay_index: int
     bay_cell: tuple[int, int, int]
     bay_volume: float
@@ -26,18 +26,29 @@ class FrameBayEfficiencyTerm:
 
 
 @dataclass(frozen=True)
-class EfficiencyResult:
+class UtilizationResult:
     family: str
-    target_efficiency: float
-    baseline_efficiency: float
+    target_utilization: float
+    baseline_utilization: float
     improved: bool
-    terms: Sequence[LayerEfficiencyTerm | FrameBayEfficiencyTerm]
+    terms: Sequence[LayerUtilizationTerm | FrameBayUtilizationTerm]
+
+    @property
+    def target_efficiency(self) -> float:
+        return self.target_utilization
+
+    @property
+    def baseline_efficiency(self) -> float:
+        return self.baseline_utilization
 
     def to_dict(self) -> dict[str, object]:
         return {
+            "metric_name": "space_utilization",
             "family": self.family,
-            "target_efficiency": self.target_efficiency,
-            "baseline_efficiency": self.baseline_efficiency,
+            "target_utilization": self.target_utilization,
+            "baseline_utilization": self.baseline_utilization,
+            "target_efficiency": self.target_utilization,
+            "baseline_efficiency": self.baseline_utilization,
             "improved": self.improved,
             "terms": [asdict(item) for item in self.terms],
         }
@@ -49,19 +60,24 @@ def _access_factor(boundary: BoundaryDefinition) -> float:
     return max(0.0, min(1.0, 0.5 * (width_ratio + height_ratio)))
 
 
-def calculate_shelf_efficiency(
+def _bounding_volume(boundary: BoundaryDefinition, grid: DiscreteGrid) -> float:
+    total_height = float(grid.layers_n) * grid.layer_height
+    return boundary.footprint_a.width * boundary.footprint_a.depth * total_height
+
+
+def calculate_shelf_utilization(
     topology: StructureTopology,
     boundary: BoundaryDefinition,
     grid: DiscreteGrid,
-    baseline_efficiency: float,
-) -> EfficiencyResult:
-    """eta_shelf(S) = 1/A * sum_k(A_usable_k * h_clear_k * alpha_access_k)."""
-    footprint_area = boundary.footprint_a.width * boundary.footprint_a.depth
-    if footprint_area <= 0:
-        return EfficiencyResult(
+    baseline_utilization: float,
+) -> UtilizationResult:
+    """u_shelf(S) = 1/V_total * sum_k(A_usable_k * h_clear_k * alpha_access_k)."""
+    bounding_volume = _bounding_volume(boundary, grid)
+    if bounding_volume <= 0:
+        return UtilizationResult(
             family=StructureFamily.SHELF.value,
-            target_efficiency=0.0,
-            baseline_efficiency=baseline_efficiency,
+            target_utilization=0.0,
+            baseline_utilization=baseline_utilization,
             improved=False,
             terms=[],
         )
@@ -70,7 +86,7 @@ def calculate_shelf_efficiency(
     access_factor = _access_factor(boundary)
     clear_height = boundary.space_s_per_layer.height
 
-    terms: list[LayerEfficiencyTerm] = []
+    terms: list[LayerUtilizationTerm] = []
     numerator = 0.0
     for layer in range(grid.layers_n):
         cells = occupied_by_layer.get(layer, frozenset())
@@ -78,7 +94,7 @@ def calculate_shelf_efficiency(
         contribution = usable_area * clear_height * access_factor
         numerator += contribution
         terms.append(
-            LayerEfficiencyTerm(
+            LayerUtilizationTerm(
                 layer_index=layer,
                 usable_area=usable_area,
                 clear_height=clear_height,
@@ -87,54 +103,54 @@ def calculate_shelf_efficiency(
             )
         )
 
-    target = numerator / footprint_area
-    return EfficiencyResult(
+    target_utilization = numerator / bounding_volume
+    return UtilizationResult(
         family=StructureFamily.SHELF.value,
-        target_efficiency=target,
-        baseline_efficiency=baseline_efficiency,
-        improved=target > baseline_efficiency,
+        target_utilization=target_utilization,
+        baseline_utilization=baseline_utilization,
+        improved=target_utilization > baseline_utilization,
         terms=terms,
     )
 
 
-def calculate_frame_efficiency(
+def calculate_frame_utilization(
     topology: StructureTopology,
     boundary: BoundaryDefinition,
     grid: DiscreteGrid,
-    baseline_efficiency: float,
-) -> EfficiencyResult:
+    baseline_utilization: float,
+) -> UtilizationResult:
     """
-    eta_frame = (1/A) * sum(volume(bay) * access_coeff(bay)).
+    u_frame = (1/V_total) * sum(volume(bay) * access_coeff(bay)).
     V1 uses each connected-cell bay directly as one bay term.
     """
-    footprint_area = boundary.footprint_a.width * boundary.footprint_a.depth
-    if footprint_area <= 0:
-        return EfficiencyResult(
+    bounding_volume = _bounding_volume(boundary, grid)
+    if bounding_volume <= 0:
+        return UtilizationResult(
             family=StructureFamily.FRAME.value,
-            target_efficiency=0.0,
-            baseline_efficiency=baseline_efficiency,
+            target_utilization=0.0,
+            baseline_utilization=baseline_utilization,
             improved=False,
             terms=[],
         )
 
     if not topology.frame_cells:
-        return EfficiencyResult(
+        return UtilizationResult(
             family=StructureFamily.FRAME.value,
-            target_efficiency=0.0,
-            baseline_efficiency=baseline_efficiency,
+            target_utilization=0.0,
+            baseline_utilization=baseline_utilization,
             improved=False,
             terms=[],
         )
 
     access_factor = _access_factor(boundary)
     bay_volume = grid.cell_width * grid.cell_depth * grid.layer_height
-    terms: list[FrameBayEfficiencyTerm] = []
+    terms: list[FrameBayUtilizationTerm] = []
     numerator = 0.0
     for idx, cell in enumerate(sorted(topology.frame_cells)):
         contribution = bay_volume * access_factor
         numerator += contribution
         terms.append(
-            FrameBayEfficiencyTerm(
+            FrameBayUtilizationTerm(
                 bay_index=idx,
                 bay_cell=cell,
                 bay_volume=bay_volume,
@@ -143,14 +159,49 @@ def calculate_frame_efficiency(
             )
         )
 
-    target = numerator / footprint_area
-    return EfficiencyResult(
+    target_utilization = numerator / bounding_volume
+    return UtilizationResult(
         family=StructureFamily.FRAME.value,
-        target_efficiency=target,
-        baseline_efficiency=baseline_efficiency,
-        improved=target > baseline_efficiency,
+        target_utilization=target_utilization,
+        baseline_utilization=baseline_utilization,
+        improved=target_utilization > baseline_utilization,
         terms=terms,
     )
+
+
+def calculate_utilization(
+    topology: StructureTopology,
+    boundary: BoundaryDefinition,
+    grid: DiscreteGrid,
+    baseline_utilization: float,
+) -> UtilizationResult:
+    if topology.family == StructureFamily.FRAME:
+        return calculate_frame_utilization(topology, boundary, grid, baseline_utilization)
+    return calculate_shelf_utilization(topology, boundary, grid, baseline_utilization)
+
+
+# Backward-compatible aliases kept while callers migrate to utilization terminology.
+LayerEfficiencyTerm = LayerUtilizationTerm
+FrameBayEfficiencyTerm = FrameBayUtilizationTerm
+EfficiencyResult = UtilizationResult
+
+
+def calculate_shelf_efficiency(
+    topology: StructureTopology,
+    boundary: BoundaryDefinition,
+    grid: DiscreteGrid,
+    baseline_efficiency: float,
+) -> UtilizationResult:
+    return calculate_shelf_utilization(topology, boundary, grid, baseline_efficiency)
+
+
+def calculate_frame_efficiency(
+    topology: StructureTopology,
+    boundary: BoundaryDefinition,
+    grid: DiscreteGrid,
+    baseline_efficiency: float,
+) -> UtilizationResult:
+    return calculate_frame_utilization(topology, boundary, grid, baseline_efficiency)
 
 
 def calculate_efficiency(
@@ -158,7 +209,5 @@ def calculate_efficiency(
     boundary: BoundaryDefinition,
     grid: DiscreteGrid,
     baseline_efficiency: float,
-) -> EfficiencyResult:
-    if topology.family == StructureFamily.FRAME:
-        return calculate_frame_efficiency(topology, boundary, grid, baseline_efficiency)
-    return calculate_shelf_efficiency(topology, boundary, grid, baseline_efficiency)
+) -> UtilizationResult:
+    return calculate_utilization(topology, boundary, grid, baseline_efficiency)

@@ -3,14 +3,11 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
-from shelf_framework import (
+from framework_core import Base, Capability, Goal, Hypothesis, LogicRecord, LogicStep
+from shelf_domain import (
     BoundaryDefinition,
     ExactFitSpec,
     Footprint2D,
-    Goal,
-    Hypothesis,
-    LogicRecord,
-    LogicStep,
     Opening2D,
     Space3D,
     VerificationInput,
@@ -129,12 +126,18 @@ class PanelPlacement:
         y1 = float(self.rect.y1) * grid.cell_depth
         return [(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)]
 
-    def to_exact_fit_spec(self, grid: DiscreteGrid, epsilon: float = 1e-6) -> ExactFitSpec:
+    def to_exact_fit_spec(
+        self,
+        grid: DiscreteGrid,
+        epsilon: float = 1e-6,
+        support_points: list[Point3] | None = None,
+        corner_rod_directions: list[Vector3] | None = None,
+    ) -> ExactFitSpec:
         corners = self.corners_world(grid)
         return ExactFitSpec(
             board_corners=corners,
-            support_points=corners,
-            corner_rod_directions=[(0.0, 0.0, 1.0)] * 4,
+            support_points=support_points or corners,
+            corner_rod_directions=corner_rod_directions or [(0.0, 0.0, 1.0)] * 4,
             epsilon=epsilon,
         )
 
@@ -244,8 +247,10 @@ class CandidateEvaluation:
 
 
 __all__ = [
+    "Base",
     "BoundaryDefinition",
     "CandidateEvaluation",
+    "Capability",
     "Cell",
     "Cell3D",
     "DiscreteGrid",

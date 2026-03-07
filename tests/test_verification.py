@@ -58,6 +58,9 @@ class VerificationTest(unittest.TestCase):
     def test_valid_combo_and_efficiency_pass(self) -> None:
         report = verify_structure(self.topology, self.boundary, self.grid, baseline_efficiency=0.1)
         self.assertTrue(report.passed)
+        self.assertTrue(report.utilization_improved)
+        self.assertEqual(report.target_efficiency, report.target_utilization)
+        self.assertEqual(report.baseline_efficiency, report.baseline_utilization)
 
     def test_not_improved_efficiency_fails(self) -> None:
         report = verify_structure(self.topology, self.boundary, self.grid, baseline_efficiency=999.0)

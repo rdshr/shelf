@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from shelf_framework import MODULE_ROLE, Module
+from shelf_domain import MODULE_ROLE, Module
 
 
 class StructureFamily(str, Enum):
