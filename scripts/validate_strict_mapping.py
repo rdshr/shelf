@@ -6,6 +6,7 @@ import json
 import re
 import subprocess
 import sys
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,29 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = REPO_ROOT / "mapping/mapping_registry.json"
 FRAMEWORK_DIR = REPO_ROOT / "framework"
 CORE_L1_STANDARD_FILE = "specs/框架设计核心标准.md"
+FRONTEND_L5_FILE = "framework/frontend/L5-M0-页面与路由编排模块.md"
+FRONTEND_L6_FILE = "framework/frontend/L6-M0-业务场景与流程模块.md"
+FRONTEND_L7_FILE = "framework/frontend/L7-M0-体验目标与验证模块.md"
+FRONTEND_LOGIN_L2_FILE = "framework/frontend_login/L2-M0-登录业务流程场景模块.md"
+FRONTEND_STANDARD_PREFIX = "framework/frontend/"
+FRONTEND_LOGIN_STANDARD_PREFIX = "framework/frontend_login/"
+FRAMEWORK_INSTANCE_PREFIX = "framework_instance/"
+FRONTEND_INSTANCE_PREFIX = "framework_instance/frontend/"
+FRONTEND_LOGIN_INSTANCE_PREFIX = "framework_instance/frontend_login/"
+IMPACT_REPORT_PATH = REPO_ROOT / "docs/impact/framework_instance_sync_impact.md"
+THIRD_PARTY_UI_PACKAGES = (
+    "antd",
+    "@ant-design/icons",
+    "@mui/material",
+    "@mui/icons-material",
+    "element-plus",
+    "shadcn-ui",
+    "lucide-react",
+)
+TS_IMPORT_FROM_PATTERN = re.compile(
+    r"""^\s*import\s+(?:type\s+)?(?:[\w*\s{},]+?\s+from\s+)?["']([^"']+)["']"""
+)
+TS_DYNAMIC_IMPORT_PATTERN = re.compile(r"""import\(\s*["']([^"']+)["']\s*\)""")
 
 DEFAULT_LEVEL_ORDER = ("L0", "L1", "L2", "L3")
 VALID_NODE_KINDS = {"layer", "file"}
@@ -194,6 +218,8 @@ def collect_changed_files() -> set[str]:
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
         )
         if result.returncode != 0:
@@ -208,6 +234,8 @@ def collect_changed_files() -> set[str]:
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if untracked.returncode == 0:
@@ -273,6 +301,148 @@ def extract_backtick_tokens(text: str) -> list[str]:
     return tokens
 
 
+def collect_boundary_ids(file_text: str) -> set[str]:
+    boundary_ids: set[str] = set()
+    for _, boundary_line in iter_section_bullet_lines(file_text, "## 2. 边界定义"):
+        boundary_match = FRAMEWORK_BOUNDARY_ITEM_LINE_PATTERN.match(boundary_line)
+        if boundary_match is not None:
+            boundary_ids.add(boundary_match.group(1))
+    return boundary_ids
+
+
+def validate_frontend_login_contract(registry_text: str) -> list[Issue]:
+    issues: list[Issue] = []
+
+    frontend_path = REPO_ROOT / FRONTEND_L6_FILE
+    frontend_login_path = REPO_ROOT / FRONTEND_LOGIN_L2_FILE
+    frontend_text = read_text(frontend_path)
+    frontend_login_text = read_text(frontend_login_path)
+
+    frontend_boundaries = collect_boundary_ids(frontend_text)
+    login_boundaries = collect_boundary_ids(frontend_login_text)
+
+    frontend_required = {"AUTH", "SESSION", "FALLBACK", "METRIC", "LOGINDOMAINCONTRACT"}
+    for boundary in sorted(frontend_required):
+        if boundary in frontend_boundaries:
+            continue
+        issues.append(
+            make_issue(
+                f"frontend login-flow contract missing boundary: {boundary}",
+                FRONTEND_L6_FILE,
+                find_line(frontend_text, "## 2. 边界定义"),
+                code="FW070",
+                related=[
+                    {
+                        "message": "Expected boundary declaration",
+                        "file": FRONTEND_L6_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    login_required = {"AUTH", "SESSION", "RETRY", "OBSERVE", "UPSTREAMFRONTENDCONTRACT"}
+    for boundary in sorted(login_required):
+        if boundary in login_boundaries or f"`{boundary}`" in frontend_login_text:
+            continue
+        issues.append(
+            make_issue(
+                f"frontend_login contract missing boundary/contract item: {boundary}",
+                FRONTEND_LOGIN_L2_FILE,
+                find_line(frontend_login_text, "## 2. 边界定义"),
+                code="FW071",
+                related=[
+                    {
+                        "message": "Expected boundary declaration",
+                        "file": FRONTEND_LOGIN_L2_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    if "framework/frontend_login/L2-M0-登录业务流程场景模块.md" not in frontend_text:
+        issues.append(
+            make_issue(
+                "frontend contract must reference frontend_login L2 contract file path",
+                FRONTEND_L6_FILE,
+                find_line(frontend_text, "LOGIN_DOMAIN_CONTRACT"),
+                code="FW072",
+                related=[
+                    {
+                        "message": "Expected reference target",
+                        "file": FRONTEND_L6_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    if "framework/frontend/L6-M0-业务场景与流程模块.md" not in frontend_login_text:
+        issues.append(
+            make_issue(
+                "frontend_login contract must reference frontend L6 contract file path",
+                FRONTEND_LOGIN_L2_FILE,
+                find_line(frontend_login_text, "UPSTREAMFRONTENDCONTRACT"),
+                code="FW073",
+                related=[
+                    {
+                        "message": "Expected reference target",
+                        "file": FRONTEND_LOGIN_L2_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    required_synonyms = ("FALLBACK <-> RETRY", "METRIC <-> OBSERVE")
+    for synonym_expr in required_synonyms:
+        if synonym_expr in frontend_login_text:
+            continue
+        issues.append(
+            make_issue(
+                f"frontend_login contract must define synonym mapping: {synonym_expr}",
+                FRONTEND_LOGIN_L2_FILE,
+                find_line(frontend_login_text, "## 6. 跨模块契约"),
+                code="FW074",
+                related=[
+                    {
+                        "message": "Expected synonym mapping in cross-module contract section",
+                        "file": FRONTEND_LOGIN_L2_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    if "FALLBACK" in frontend_boundaries and "RETRY" not in login_boundaries:
+        issues.append(
+            make_issue(
+                "frontend defines FALLBACK but frontend_login is missing RETRY boundary",
+                FRONTEND_LOGIN_L2_FILE,
+                find_line(frontend_login_text, "## 2. 边界定义"),
+                code="FW075",
+            )
+        )
+
+    if "METRIC" in frontend_boundaries and "OBSERVE" not in login_boundaries:
+        issues.append(
+            make_issue(
+                "frontend defines METRIC but frontend_login is missing OBSERVE boundary",
+                FRONTEND_LOGIN_L2_FILE,
+                find_line(frontend_login_text, "## 2. 边界定义"),
+                code="FW076",
+            )
+        )
+
+    return issues
+
+
 def iter_framework_layer_markdown() -> list[tuple[str, int, Path]]:
     docs: list[tuple[str, int, Path]] = []
     if not FRAMEWORK_DIR.exists():
@@ -313,6 +483,187 @@ def discover_domain_standards() -> list[str]:
 
 def discover_framework_layer_docs() -> set[str]:
     return {path.relative_to(REPO_ROOT).as_posix() for _, _, path in iter_framework_layer_markdown()}
+
+
+def to_framework_instance_file(standard_file: str) -> str | None:
+    if standard_file.startswith(FRONTEND_STANDARD_PREFIX):
+        return FRAMEWORK_INSTANCE_PREFIX + standard_file[len("framework/") :]
+    if standard_file.startswith(FRONTEND_LOGIN_STANDARD_PREFIX):
+        return FRAMEWORK_INSTANCE_PREFIX + standard_file[len("framework/") :]
+    return None
+
+
+def discover_frontend_standard_files() -> list[str]:
+    files: list[str] = []
+    for module_name, _, markdown_file in iter_framework_layer_markdown():
+        if module_name not in {"frontend", "frontend_login"}:
+            continue
+        files.append(markdown_file.relative_to(REPO_ROOT).as_posix())
+    return sorted(files)
+
+
+def is_business_layer_file(file_path: str) -> bool:
+    normalized = file_path.replace("\\", "/")
+    if not normalized.startswith("apps/"):
+        return False
+    if "/src/" not in normalized:
+        return False
+    after_src = normalized.split("/src/", 1)[1]
+    return (
+        after_src.startswith("app/")
+        or after_src.startswith("pages/")
+        or after_src.startswith("features/")
+        or after_src.startswith("processes/")
+        or after_src.startswith("entities/")
+    )
+
+
+def is_third_party_ui_import(module_name: str) -> bool:
+    return any(
+        module_name == pkg or module_name.startswith(f"{pkg}/")
+        for pkg in THIRD_PARTY_UI_PACKAGES
+    )
+
+
+def validate_no_direct_third_party_ui_imports() -> list[Issue]:
+    issues: list[Issue] = []
+    extensions = {".ts", ".tsx", ".js", ".jsx"}
+
+    for path in sorted((REPO_ROOT / "apps").rglob("*")):
+        if not path.is_file() or path.suffix not in extensions:
+            continue
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        if not is_business_layer_file(rel):
+            continue
+        content = read_text(path)
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if "@allow-third-party-ui" in line:
+                continue
+            static_match = TS_IMPORT_FROM_PATTERN.match(line)
+            modules: list[str] = []
+            if static_match is not None:
+                modules.append(static_match.group(1))
+            modules.extend(TS_DYNAMIC_IMPORT_PATTERN.findall(line))
+            for module_name in modules:
+                if not is_third_party_ui_import(module_name):
+                    continue
+                issues.append(
+                    make_issue(
+                        (
+                            "business layer must not import third-party UI package directly; "
+                            "use packages/ui wrappers/adapters instead"
+                        ),
+                        rel,
+                        idx,
+                        code="UI001",
+                        related=[
+                            {
+                                "message": f"forbidden import: {module_name}",
+                                "file": rel,
+                                "line": idx,
+                                "column": 1,
+                            }
+                        ],
+                    )
+                )
+
+    return issues
+
+
+def generate_framework_instance_impact_report(changed_files: set[str]) -> None:
+    frontend_standard_changed = sorted(
+        file_name
+        for file_name in changed_files
+        if file_name.endswith(".md")
+        and (
+            file_name.startswith(FRONTEND_STANDARD_PREFIX)
+            or file_name.startswith(FRONTEND_LOGIN_STANDARD_PREFIX)
+        )
+    )
+    lines: list[str] = [
+        "# Framework Instance Sync Impact Report",
+        "",
+        f"- generated_at: {datetime.now().isoformat(timespec='seconds')}",
+        f"- changed_file_count: {len(changed_files)}",
+        "",
+    ]
+    if not frontend_standard_changed:
+        lines.extend(
+            [
+                "## Summary",
+                "",
+                "- No frontend/framework standard markdown changes detected.",
+                "",
+            ]
+        )
+    else:
+        lines.extend(["## Impact Matrix", ""])
+        for standard_file in frontend_standard_changed:
+            instance_file = to_framework_instance_file(standard_file)
+            if instance_file is None:
+                continue
+            status = "updated" if instance_file in changed_files else "missing-update"
+            lines.append(
+                f"- `{standard_file}` -> `{instance_file}` | status=`{status}`"
+            )
+        lines.append("")
+
+    IMPACT_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    IMPACT_REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
+
+
+def validate_framework_instance_mirror() -> list[Issue]:
+    issues: list[Issue] = []
+
+    for standard_file in discover_frontend_standard_files():
+        instance_file = to_framework_instance_file(standard_file)
+        if instance_file is None:
+            continue
+
+        instance_path = REPO_ROOT / instance_file
+        if not instance_path.exists():
+            issues.append(
+                make_issue(
+                    f"missing framework instance mirror file: {instance_file}",
+                    instance_file,
+                    1,
+                    code="INST001",
+                    related=[
+                        {
+                            "message": "source standard file",
+                            "file": standard_file,
+                            "line": 1,
+                            "column": 1,
+                        }
+                    ],
+                )
+            )
+            continue
+
+        instance_text = read_text(instance_path)
+        if "@framework_instance" not in instance_text:
+            issues.append(
+                make_issue(
+                    "framework instance file must include '@framework_instance' directive",
+                    instance_file,
+                    1,
+                    code="INST002",
+                )
+            )
+
+        source_marker = f"source_standard: {standard_file}"
+        if source_marker not in instance_text:
+            issues.append(
+                make_issue(
+                    f"framework instance file must declare exact source marker: {source_marker}",
+                    instance_file,
+                    find_line(instance_text, "source_standard:"),
+                    code="INST003",
+                )
+            )
+
+    return issues
 
 
 def validate_framework_layers() -> tuple[list[Issue], set[str]]:
@@ -1750,6 +2101,7 @@ def validate_change_propagation(
     changed_files: set[str],
 ) -> list[Issue]:
     issues: list[Issue] = []
+    generate_framework_instance_impact_report(changed_files)
 
     level_order = parsed_registry.level_order
     level_files = parsed_registry.level_files
@@ -1798,6 +2150,85 @@ def validate_change_propagation(
                     ],
                 )
             )
+
+    frontend_login_trigger_files = {FRONTEND_L5_FILE, FRONTEND_L6_FILE, FRONTEND_L7_FILE}
+    frontend_trigger_touched = bool(changed_files.intersection(frontend_login_trigger_files))
+    login_l2_touched = FRONTEND_LOGIN_L2_FILE in changed_files
+    mapping_touched = REGISTRY_PATH.relative_to(REPO_ROOT).as_posix() in changed_files
+
+    if frontend_trigger_touched and not login_l2_touched:
+        issues.append(
+            make_issue(
+                "change propagation violation: frontend L5-L7 changed but frontend_login L2 not updated",
+                REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                find_level_order_line(registry_text, "L2"),
+                code="PROPAGATION_FRONTEND_LOGIN_SYNC_MISSING",
+                related=[
+                    {
+                        "message": "Expected changed file",
+                        "file": FRONTEND_LOGIN_L2_FILE,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    if (frontend_trigger_touched or login_l2_touched) and not mapping_touched:
+        issues.append(
+            make_issue(
+                "change propagation violation: frontend/frontend_login login contract changed but mapping registry not updated",
+                REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                find_line(registry_text, '"mappings"'),
+                code="PROPAGATION_FRONTEND_LOGIN_MAPPING_MISSING",
+                related=[
+                    {
+                        "message": "Expected changed file",
+                        "file": REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        )
+
+    frontend_standard_changed = sorted(
+        file_name
+        for file_name in changed_files
+        if file_name.endswith(".md")
+        and (
+            file_name.startswith(FRONTEND_STANDARD_PREFIX)
+            or file_name.startswith(FRONTEND_LOGIN_STANDARD_PREFIX)
+        )
+    )
+    for standard_file in frontend_standard_changed:
+        instance_file = to_framework_instance_file(standard_file)
+        if instance_file is None:
+            continue
+        if instance_file in changed_files:
+            continue
+        issues.append(
+            make_issue(
+                "change propagation violation: frontend standard layer changed but framework_instance mirror not updated",
+                REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                find_line(registry_text, '"reverse_validation_command"'),
+                code="PROPAGATION_INSTANCE_MIRROR_MISSING",
+                related=[
+                    {
+                        "message": "changed standard file",
+                        "file": standard_file,
+                        "line": 1,
+                        "column": 1,
+                    },
+                    {
+                        "message": "expected changed instance file",
+                        "file": instance_file,
+                        "line": 1,
+                        "column": 1,
+                    },
+                ],
+            )
+        )
 
     return issues
 
@@ -1853,6 +2284,41 @@ def main() -> int:
                     REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
                     1,
                     code="MAPPING_CONTENT_VALIDATION_FAILED",
+                )
+            )
+
+    if parsed_registry is not None:
+        try:
+            issues.extend(validate_frontend_login_contract(registry_text))
+        except Exception as exc:
+            issues.append(
+                make_issue(
+                    str(exc),
+                    REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                    1,
+                    code="FRONTEND_LOGIN_CONTRACT_VALIDATION_FAILED",
+                )
+            )
+        try:
+            issues.extend(validate_framework_instance_mirror())
+        except Exception as exc:
+            issues.append(
+                make_issue(
+                    str(exc),
+                    REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                    1,
+                    code="FRAMEWORK_INSTANCE_MIRROR_VALIDATION_FAILED",
+                )
+            )
+        try:
+            issues.extend(validate_no_direct_third_party_ui_imports())
+        except Exception as exc:
+            issues.append(
+                make_issue(
+                    str(exc),
+                    REGISTRY_PATH.relative_to(REPO_ROOT).as_posix(),
+                    1,
+                    code="THIRD_PARTY_UI_IMPORT_VALIDATION_FAILED",
                 )
             )
 

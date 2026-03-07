@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated_at": "2026-03-06",
+    "updated_at": "2026-03-07",
     "l3_sync_notes": [
       {
         "id": "SYNC-20260305-runtime-env-l0",
@@ -25,6 +25,10 @@
       {
         "id": "SYNC-20260306-inline-upstream-b-format",
         "note": "Unify B* syntax to inline upstream module refs (B*: Lx.My[...]. 来源: ...), remove legacy '上游模块' clause, and enforce with FW023."
+      },
+      {
+        "id": "SYNC-20260307-frontend-login-contract",
+        "note": "Add explicit frontend/frontend_login contract and strict consistency checks for AUTH/SESSION plus FALLBACK<->RETRY and METRIC<->OBSERVE mappings."
       }
     ]
   },
@@ -520,6 +524,22 @@
         {
           "file": "src/shelf_framework.py",
           "symbol": "def verify("
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-LOGIN-CONTRACT",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 5. 变更传导规则（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/frontend_login/L2-M0-登录业务流程场景模块.md",
+      "l2_anchor": "## 6. 跨模块契约（Cross-Module Contract）",
+      "sync_note": "Contract pair: frontend/L6.LOGINDOMAINCONTRACT <-> frontend_login/L2.UPSTREAMFRONTENDCONTRACT",
+      "impl_symbols": [
+        {
+          "file": "scripts/validate_strict_mapping.py",
+          "symbol": "def validate_frontend_login_contract("
         }
       ]
     }
