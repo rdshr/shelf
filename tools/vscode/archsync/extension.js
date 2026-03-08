@@ -1,0 +1,1882 @@
+const cp = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const vscode = require("vscode");
+const frameworkNavigation = require("./framework_navigation");
+
+const WATCH_PREFIXES = ["framework/", "specs/", "mapping/", "src/", "docs/"];
+const WATCH_FILES = new Set([
+  "AGENTS.md",
+  "README.md",
+  "scripts/validate_strict_mapping.py",
+  "scripts/generate_framework_tree_hierarchy.py"
+]);
+
+const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
+const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
+const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framework_tree.html");
+const SIDEBAR_VIEW_ID = "archSync.sidebarHome";
+const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
+  "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
+const FRAMEWORK_RULE_HINTS = {
+  FW002: "@framework 必须无参数",
+  FW003: "标题必须为 中文名:EnglishName",
+  FW010: "当前框架文件内编号必须唯一",
+  FW011: "C/B/R/V 编号格式必须合法",
+  FW020: "B* 必须包含来源",
+  FW021: "B* 来源表达式与引用必须合法",
+  FW022: "B* 来源必须包含 C* 与参数",
+  FW023: "B* 禁止使用“上游模块：...”，必须内联写模块引用",
+  FW024: "非根层模块的 B* 必须在主句中内联写本框架上游模块引用",
+  FW025: "B* 的本地内联模块引用必须指向当前框架中真实存在的更低本地层模块",
+  FW026: "当前框架最低本地层的 B* 不能引用本框架内部其他模块",
+  FW027: "外部内联模块引用的合法性以显式依赖方向为准，Lx 标签只作参考",
+  FW028: "外部内联模块引用必须指向真实存在的框架模块",
+  FW029: "框架内联模块引用图必须无环",
+  FW030: "边界参数必须包含来源",
+  FW031: "边界来源必须引用 C* 且引用合法",
+  FW040: "R*/R*.* 编号必须合法并可追溯",
+  FW041: "每个 R* 必须包含参与基/组合方式/输出能力/边界绑定",
+  FW050: "R*.输出能力必须引用已定义 C*",
+  FW060: "新符号必须通过输出结构声明后才可在规则中使用"
+};
+
+function activate(context) {
+  const output = vscode.window.createOutputChannel("ArchSync");
+  const diagnostics = vscode.languages.createDiagnosticCollection("archsync-mapping");
+  const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+  status.text = "$(check) ArchSync idle";
+  status.tooltip = "ArchSync";
+  status.command = "archSync.showIssues";
+  status.backgroundColor = undefined;
+  status.color = undefined;
+  status.show();
+
+  context.subscriptions.push(output, diagnostics, status);
+
+  let running = false;
+  let pending = null;
+  let timer = null;
+  let lastFailureSignature = "";
+  let lastRunIssues = [];
+  let lastRepoRoot = "";
+  let mappingValidationActive = true;
+  let frameworkTreePanel = null;
+  let frameworkTreeRepoRoot = "";
+  let frameworkSidebarView = null;
+  let lastValidationAt = "";
+  let lastValidationMode = "change";
+  let lastValidationPassed = null;
+  const VALIDATION_SOURCE_PRIORITY = {
+    auto: 1,
+    save: 2,
+    manual: 3
+  };
+
+  const normalizeValidationOptions = (options = {}) => ({
+    mode: options.mode === "full" ? "full" : "change",
+    triggerUri: options.triggerUri || null,
+    notifyOnFail: Boolean(options.notifyOnFail),
+    source: options.source || "auto"
+  });
+
+  const mergeValidationOptions = (left, right) => {
+    const current = normalizeValidationOptions(left);
+    const incoming = normalizeValidationOptions(right);
+    const sourcePriority = Math.max(
+      VALIDATION_SOURCE_PRIORITY[current.source] || 0,
+      VALIDATION_SOURCE_PRIORITY[incoming.source] || 0
+    );
+    const source = Object.keys(VALIDATION_SOURCE_PRIORITY)
+      .find((key) => VALIDATION_SOURCE_PRIORITY[key] === sourcePriority) || "auto";
+
+    return {
+      mode: current.mode === "full" || incoming.mode === "full" ? "full" : "change",
+      triggerUri: incoming.triggerUri || current.triggerUri,
+      notifyOnFail: current.notifyOnFail || incoming.notifyOnFail,
+      source
+    };
+  };
+
+  const runValidation = async (options = { mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" }) => {
+    const task = normalizeValidationOptions(options);
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return;
+    }
+    const repoRoot = folder.uri.fsPath;
+
+    if (!hasStandardsTree(repoRoot)) {
+      mappingValidationActive = false;
+      lastRepoRoot = repoRoot;
+      lastRunIssues = [];
+      lastFailureSignature = "";
+      lastValidationAt = "";
+      lastValidationPassed = null;
+      diagnostics.clear();
+      setStatusDisabled(status, repoRoot);
+      refreshSidebarHome();
+      return;
+    }
+    mappingValidationActive = true;
+
+    const config = vscode.workspace.getConfiguration("archSync");
+    const command = task.mode === "full"
+      ? config.get("fullValidationCommand")
+      : config.get("changeValidationCommand");
+
+    if (!command || typeof command !== "string") {
+      return;
+    }
+
+    const showProgressStatus = task.source === "manual";
+    const shouldSetErrorStatus = task.source === "save" || task.source === "manual";
+    if (showProgressStatus) {
+      status.text = "$(sync~spin) ArchSync validating";
+      status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+      status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
+    }
+    output.clear();
+    output.appendLine(`[run] ${command}`);
+
+    const execResult = await execCommand(command, repoRoot);
+    output.appendLine(execResult.stdout || "");
+    output.appendLine(execResult.stderr || "");
+
+    const parsed = parseResult(execResult.stdout, execResult.stderr, execResult.code);
+    lastRunIssues = parsed.errors;
+    lastRepoRoot = repoRoot;
+    lastValidationAt = new Date().toISOString();
+    lastValidationMode = task.mode;
+    lastValidationPassed = parsed.passed;
+    applyDiagnostics(parsed, diagnostics, repoRoot, task.triggerUri);
+    output.appendLine(`[result] passed=${parsed.passed} errors=${parsed.errors.length}`);
+
+    if (parsed.passed) {
+      status.text = "$(check) ArchSync OK";
+      status.tooltip = "ArchSync: no mapping issues";
+      status.backgroundColor = undefined;
+      status.color = undefined;
+      lastFailureSignature = "";
+    } else {
+      if (shouldSetErrorStatus) {
+        status.text = "$(error) ArchSync issues";
+        status.tooltip = buildTooltip(parsed.errors);
+        status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
+        status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
+      }
+
+      const shouldNotify = task.notifyOnFail || config.get("notifyOnAutoFail");
+      if (shouldNotify && shouldNotifyFailure(parsed.errors, lastFailureSignature)) {
+        lastFailureSignature = signature(parsed.errors);
+        const action = await vscode.window.showErrorMessage(
+          `ArchSync mapping validation failed (${parsed.errors.length} issue(s)).`,
+          "Open Problems",
+          "Open Log"
+        );
+        if (action === "Open Problems") {
+          await vscode.commands.executeCommand("workbench.actions.view.problems");
+        } else if (action === "Open Log") {
+          output.show(true);
+        }
+      }
+    }
+    refreshSidebarHome();
+  };
+
+  const scheduleValidation = (options) => {
+    const normalized = normalizeValidationOptions(options);
+    if (pending) {
+      pending = mergeValidationOptions(pending, normalized);
+    } else {
+      pending = normalized;
+    }
+
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    timer = setTimeout(async () => {
+      if (running || !pending) {
+        return;
+      }
+      running = true;
+      const task = pending;
+      pending = null;
+      try {
+        await runValidation(task);
+      } finally {
+        running = false;
+        if (pending) {
+          scheduleValidation(pending);
+        }
+      }
+    }, 250);
+  };
+
+  const openFrameworkTreeSource = async (repoRoot, relFile, line) => {
+    if (!repoRoot || !relFile || typeof relFile !== "string") {
+      return;
+    }
+
+    const normalizedRel = relFile.replace(/\\/g, "/").replace(/^\/+/, "");
+    const absPath = path.resolve(repoRoot, normalizedRel);
+    if (!fs.existsSync(absPath)) {
+      vscode.window.showWarningMessage(`ArchSync: source file not found: ${normalizedRel}`);
+      return;
+    }
+
+    const lineNumber = Number.isFinite(Number(line)) ? Math.max(1, Number(line)) : 1;
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(absPath));
+    const editor = await vscode.window.showTextDocument(doc, { preview: false });
+    const pos = new vscode.Position(lineNumber - 1, 0);
+    editor.selection = new vscode.Selection(pos, pos);
+    editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+  };
+
+  const ensureFrameworkTreePanel = () => {
+    if (!frameworkTreePanel) {
+      frameworkTreePanel = vscode.window.createWebviewPanel(
+        "archSyncFrameworkTree",
+        "ArchSync · Framework Tree",
+        vscode.ViewColumn.Active,
+        {
+          enableScripts: true,
+          retainContextWhenHidden: true
+        }
+      );
+      frameworkTreePanel.onDidDispose(() => {
+        frameworkTreePanel = null;
+        frameworkTreeRepoRoot = "";
+      });
+      frameworkTreePanel.webview.onDidReceiveMessage(async (message) => {
+        if (!message || message.type !== "archSync.openSource") {
+          return;
+        }
+        await openFrameworkTreeSource(
+          frameworkTreeRepoRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "",
+          String(message.file || ""),
+          Number(message.line || 1)
+        );
+      });
+    } else {
+      frameworkTreePanel.reveal(vscode.ViewColumn.Active, true);
+    }
+    return frameworkTreePanel;
+  };
+
+  const openFrameworkTree = async (options = { regenerateIfMissing: false }) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("ArchSync: no workspace is open.");
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    frameworkTreeRepoRoot = repoRoot;
+    const config = vscode.workspace.getConfiguration("archSync");
+    const htmlPath = resolveFrameworkTreeHtmlPath(repoRoot, config.get("frameworkTreeHtmlPath"));
+
+    if (options.regenerateIfMissing && !fs.existsSync(htmlPath)) {
+      const generateCommand = config.get("frameworkTreeGenerateCommand") || DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND;
+      await generateFrameworkTree(repoRoot, String(generateCommand), output);
+    }
+
+    const panel = ensureFrameworkTreePanel();
+    panel.webview.html = buildFrameworkTreeFallbackHtml(
+      `Loading ${toWorkspaceRelative(htmlPath, repoRoot)} ...`
+    );
+
+    if (!fs.existsSync(htmlPath)) {
+      panel.webview.html = buildFrameworkTreeFallbackHtml(
+        `Framework tree HTML not found: ${toWorkspaceRelative(htmlPath, repoRoot)}`
+      );
+      return;
+    }
+
+    try {
+      panel.webview.html = fs.readFileSync(htmlPath, "utf8");
+    } catch (error) {
+      panel.webview.html = buildFrameworkTreeFallbackHtml(
+        `Failed to read framework tree HTML: ${String(error)}`
+      );
+    }
+  };
+
+  const renderSidebarHome = () => {
+    const defaultActionItems = [
+      {
+        action: "openTree",
+        label: "打开框架树",
+        description: "直接查看树图，并保留节点跳转能力。",
+        tone: "primary"
+      },
+      {
+        action: "refreshTree",
+        label: "刷新树图产物",
+        description: "重新生成 docs/hierarchy 下的树图 HTML。",
+        tone: "ghost"
+      },
+      {
+        action: "validate",
+        label: "执行严格校验",
+        description: "运行完整 strict mapping validation。",
+        tone: "ghost"
+      },
+      {
+        action: "showIssues",
+        label: "查看问题列表",
+        description: "打开 Problems 或快速跳转到问题位置。",
+        tone: "ghost"
+      },
+      {
+        action: "openLog",
+        label: "打开运行日志",
+        description: "查看最近一次命令输出与错误详情。",
+        tone: "ghost"
+      }
+    ];
+
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return buildSidebarHomeHtml({
+        workspace: "No workspace",
+        heroTone: "unknown",
+        heroStatus: "等待工作区",
+        heroSummary: "打开仓库后，这里会显示框架树、严格映射校验和问题跳转入口。",
+        treePath: DEFAULT_FRAMEWORK_TREE_HTML,
+        mappingStatus: "Unavailable",
+        issueSummary: "No workspace",
+        treeStatus: "Unknown",
+        standardsStatus: "Unknown",
+        lastValidation: "Not available",
+        actionItems: defaultActionItems,
+        healthItems: [
+          {
+            label: "规范总纲",
+            value: "未知",
+            tone: "unknown",
+            note: STANDARDS_TREE_FILE
+          },
+          {
+            label: "框架树产物",
+            value: "未知",
+            tone: "unknown",
+            note: DEFAULT_FRAMEWORK_TREE_HTML
+          },
+          {
+            label: "严格校验",
+            value: "等待工作区",
+            tone: "unknown",
+            note: "打开仓库后自动判断是否启用。"
+          },
+          {
+            label: "最近结果",
+            value: "未运行",
+            tone: "unknown",
+            note: "本会话尚未启动校验。"
+          }
+        ],
+        issueItems: [],
+        issueEmptyText: "打开工作区后，这里会显示校验问题预览和快速跳转入口。",
+        issueOverflow: 0,
+        calloutTone: "unknown",
+        calloutTitle: "从工作区开始",
+        calloutBody: "ArchSync 侧边栏不是占位区。打开仓库后，它会变成树图入口、校验面板和问题导航工作台。"
+      });
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const config = vscode.workspace.getConfiguration("archSync");
+    const treePath = resolveFrameworkTreeHtmlPath(repoRoot, config.get("frameworkTreeHtmlPath"));
+    const standardsExists = hasStandardsTree(repoRoot);
+    const validationEnabled = standardsExists && mappingValidationActive;
+    const treeExists = fs.existsSync(treePath);
+    const issueCount = lastRunIssues.length;
+    const issueSummary = validationEnabled
+      ? (lastValidationPassed === null ? "Not run yet" : (issueCount ? `${issueCount} issue(s)` : "No issues"))
+      : "Validation disabled";
+    const lastValidation = lastValidationAt
+      ? `${lastValidationMode === "full" ? "Full" : "Change"} · ${new Date(lastValidationAt).toLocaleString()}`
+      : "Not run in this session";
+    const issueItems = lastRunIssues.slice(0, 3).map((issue, index) => {
+      const recognizedCode = normalizeFrameworkRuleCode(issue.code);
+      return {
+        index,
+        code: recognizedCode || String(issue.code || "ARCHSYNC"),
+        hint: recognizedCode ? frameworkRuleHint(recognizedCode) : "",
+        message: issue.message || "ArchSync mapping issue",
+        location: issue.file
+          ? `${issue.file}:${Number(issue.line || 1)}`
+          : `line ${Number(issue.line || 1)}`
+      };
+    });
+
+    let heroTone = "unknown";
+    let heroStatus = "等待首次校验";
+    let heroSummary = "先执行一次完整校验，把树图状态和问题列表都热起来。";
+    let calloutTone = "unknown";
+    let calloutTitle = "建议先跑一次完整校验";
+    let calloutBody = "这样能立即得到最新问题摘要，并确认严格映射守卫是否正常工作。";
+    let calloutAction = {
+      action: "validate",
+      label: "现在执行校验"
+    };
+
+    if (!standardsExists) {
+      heroTone = "error";
+      heroStatus = "严格守卫未启用";
+      heroSummary = `当前工作区缺少 ${STANDARDS_TREE_FILE}，ArchSync 会自动停用严格映射校验。`;
+      calloutTone = "error";
+      calloutTitle = "先补齐规范入口";
+      calloutBody = "没有规范总纲时，侧边栏仍可作为树图入口，但严格映射问题不会自动汇总。";
+      calloutAction = {
+        action: "openStandards",
+        label: "打开规范总纲路径"
+      };
+    } else if (!treeExists) {
+      heroStatus = "树图产物缺失";
+      heroSummary = "侧边栏已经可用，但框架树 HTML 还没准备好，下一步应该生成并打开树图。";
+      calloutTitle = "生成并打开树图";
+      calloutBody = `目标产物位于 ${toWorkspaceRelative(treePath, repoRoot)}。使用 ArchSync 可以直接生成并打开。`;
+      calloutAction = {
+        action: "openTree",
+        label: "生成树图并打开"
+      };
+    } else if (lastValidationPassed === false) {
+      heroTone = "error";
+      heroStatus = `${issueCount} 个问题待处理`;
+      heroSummary = "侧边栏现在会直接预览问题，并支持点进具体文件和行号。";
+      calloutTone = "error";
+      calloutTitle = "先处理映射问题";
+      calloutBody = "修复这些问题前，不适合继续推送或发布。可以先点下面的问题卡片，或打开完整问题列表。";
+      calloutAction = {
+        action: "showIssues",
+        label: "打开完整问题列表"
+      };
+    } else if (lastValidationPassed === true) {
+      heroTone = "ok";
+      heroStatus = "工作区状态正常";
+      heroSummary = "树图产物和严格映射校验都已接通，侧边栏现在就是你的快速入口。";
+      calloutTone = "ok";
+      calloutTitle = "继续查看框架树";
+      calloutBody = "可以直接打开树图检查结构，或在改动后随时手动刷新与复核。";
+      calloutAction = {
+        action: "openTree",
+        label: "打开框架树"
+      };
+    }
+
+    const healthItems = [
+      {
+        label: "规范总纲",
+        value: standardsExists ? "已检测" : "缺失",
+        tone: standardsExists ? "ok" : "error",
+        note: STANDARDS_TREE_FILE
+      },
+      {
+        label: "框架树产物",
+        value: treeExists ? "就绪" : "缺失",
+        tone: treeExists ? "ok" : "error",
+        note: treeExists
+          ? toWorkspaceRelative(treePath, repoRoot)
+          : `等待生成 ${toWorkspaceRelative(treePath, repoRoot)}`
+      },
+      {
+        label: "严格校验",
+        value: validationEnabled ? "启用" : "停用",
+        tone: validationEnabled ? "ok" : "error",
+        note: validationEnabled
+          ? "保存、命令和窗口切回时都会自动参与检查。"
+          : "补齐规范总纲后会自动恢复。"
+      },
+      {
+        label: "最近结果",
+        value: lastValidationPassed === null
+          ? "未运行"
+          : (lastValidationPassed ? "通过" : `${issueCount} 个问题`),
+        tone: lastValidationPassed === null
+          ? "unknown"
+          : (lastValidationPassed ? "ok" : "error"),
+        note: lastValidation
+      }
+    ];
+
+    const actionItems = [...defaultActionItems];
+    if (!standardsExists) {
+      actionItems.unshift({
+        action: "openStandards",
+        label: "打开规范总纲路径",
+        description: "检查缺失的规范入口，恢复严格校验。",
+        tone: "ghost"
+      });
+    }
+
+    let issueEmptyText = "当前没有可展示的问题。";
+    if (!validationEnabled) {
+      issueEmptyText = "当前工作区的严格映射守卫已停用，所以这里不会自动汇总问题。";
+    } else if (lastValidationPassed === null) {
+      issueEmptyText = "本会话尚未执行校验。先跑一次完整校验，侧边栏才能显示最新问题摘要。";
+    } else if (lastValidationPassed === true) {
+      issueEmptyText = "当前没有可展示的问题，ArchSync 严格映射守卫状态正常。";
+    }
+
+    return buildSidebarHomeHtml({
+      workspace: path.basename(repoRoot),
+      heroTone,
+      heroStatus,
+      heroSummary,
+      treePath: toWorkspaceRelative(treePath, repoRoot),
+      mappingStatus: validationEnabled ? "Enabled" : "Disabled",
+      issueSummary,
+      treeStatus: treeExists ? "Ready" : "Missing",
+      standardsStatus: standardsExists ? "Ready" : "Missing",
+      lastValidation,
+      actionItems,
+      healthItems,
+      issueItems,
+      issueEmptyText,
+      issueOverflow: Math.max(0, lastRunIssues.length - issueItems.length),
+      calloutTone,
+      calloutTitle,
+      calloutBody,
+      calloutAction,
+      lastValidationTone: lastValidationPassed === null
+        ? "unknown"
+        : (lastValidationPassed ? "ok" : "error")
+    });
+  };
+
+  const refreshSidebarHome = () => {
+    if (!frameworkSidebarView) {
+      return;
+    }
+    frameworkSidebarView.webview.html = renderSidebarHome();
+  };
+
+  const sidebarViewProvider = {
+    resolveWebviewView(webviewView) {
+      frameworkSidebarView = webviewView;
+      webviewView.webview.options = {
+        enableScripts: true
+      };
+      refreshSidebarHome();
+
+      webviewView.onDidDispose(() => {
+        if (frameworkSidebarView === webviewView) {
+          frameworkSidebarView = null;
+        }
+      });
+
+      webviewView.webview.onDidReceiveMessage(async (message) => {
+        if (!message || typeof message.type !== "string") {
+          return;
+        }
+
+        if (message.type === "archSync.sidebar.openTree") {
+          await openFrameworkTree({ regenerateIfMissing: true });
+          return;
+        }
+        if (message.type === "archSync.sidebar.refreshTree") {
+          await vscode.commands.executeCommand("archSync.refreshFrameworkTree");
+          return;
+        }
+        if (message.type === "archSync.sidebar.validate") {
+          scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
+          return;
+        }
+        if (message.type === "archSync.sidebar.showIssues") {
+          await vscode.commands.executeCommand("archSync.showIssues");
+          return;
+        }
+        if (message.type === "archSync.sidebar.openLog") {
+          output.show(true);
+          return;
+        }
+        if (message.type === "archSync.sidebar.openStandards") {
+          const repoRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (repoRoot) {
+            await openFrameworkTreeSource(repoRoot, STANDARDS_TREE_FILE, 1);
+          }
+          return;
+        }
+        if (message.type === "archSync.sidebar.openIssue") {
+          const index = Number(message.index);
+          if (Number.isInteger(index) && index >= 0 && index < lastRunIssues.length && lastRepoRoot) {
+            await revealIssue(lastRunIssues[index], lastRepoRoot);
+          }
+        }
+      });
+    }
+  };
+
+  const sidebarViewDisposable = vscode.window.registerWebviewViewProvider(
+    SIDEBAR_VIEW_ID,
+    sidebarViewProvider,
+    {
+      webviewOptions: {
+        retainContextWhenHidden: true
+      }
+    }
+  );
+
+  const frameworkDefinitionDisposable = vscode.languages.registerDefinitionProvider(
+    { language: "markdown", scheme: "file" },
+    {
+      provideDefinition(document, position) {
+        const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (!folder) {
+          return null;
+        }
+
+        const repoRoot = folder.uri.fsPath;
+        if (!frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, repoRoot)) {
+          return null;
+        }
+
+        const target = frameworkNavigation.resolveDefinitionTarget({
+          repoRoot,
+          filePath: document.uri.fsPath,
+          text: document.getText(),
+          line: position.line,
+          character: position.character,
+        });
+        if (!target) {
+          return null;
+        }
+
+        const targetUri = vscode.Uri.file(target.filePath);
+        const start = new vscode.Position(target.line, target.character);
+        const end = new vscode.Position(target.line, target.character + Math.max(1, target.length || 1));
+        return new vscode.Location(targetUri, new vscode.Range(start, end));
+      }
+    }
+  );
+
+  const frameworkHoverDisposable = vscode.languages.registerHoverProvider(
+    { language: "markdown", scheme: "file" },
+    {
+      provideHover(document, position) {
+        const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (!folder) {
+          return null;
+        }
+
+        const repoRoot = folder.uri.fsPath;
+        if (!frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, repoRoot)) {
+          return null;
+        }
+
+        const target = frameworkNavigation.resolveHoverTarget({
+          repoRoot,
+          filePath: document.uri.fsPath,
+          text: document.getText(),
+          line: position.line,
+          character: position.character,
+        });
+        if (!target) {
+          return null;
+        }
+
+        const start = new vscode.Position(position.line, target.start);
+        const end = new vscode.Position(position.line, target.end);
+        return new vscode.Hover(new vscode.MarkdownString(target.markdown), new vscode.Range(start, end));
+      }
+    }
+  );
+
+  const frameworkReferenceDisposable = vscode.languages.registerReferenceProvider(
+    { language: "markdown", scheme: "file" },
+    {
+      provideReferences(document, position) {
+        const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (!folder) {
+          return [];
+        }
+
+        const repoRoot = folder.uri.fsPath;
+        if (!frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, repoRoot)) {
+          return [];
+        }
+
+        const targets = frameworkNavigation.resolveReferenceTargets({
+          repoRoot,
+          filePath: document.uri.fsPath,
+          text: document.getText(),
+          line: position.line,
+          character: position.character,
+        });
+        return targets.map((target) => {
+          const targetUri = vscode.Uri.file(target.filePath);
+          const start = new vscode.Position(target.line, target.character);
+          const end = new vscode.Position(target.line, target.character + Math.max(1, target.length || 1));
+          return new vscode.Location(targetUri, new vscode.Range(start, end));
+        });
+      }
+    }
+  );
+
+  const validateNowDisposable = vscode.commands.registerCommand("archSync.validateNow", async () => {
+    scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
+  });
+
+  const showIssuesDisposable = vscode.commands.registerCommand("archSync.showIssues", async () => {
+    if (!mappingValidationActive && lastRepoRoot) {
+      vscode.window.showInformationMessage(
+        `ArchSync mapping guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+      );
+      return;
+    }
+
+    if (!lastRunIssues.length) {
+      await vscode.commands.executeCommand("workbench.actions.view.problems");
+      return;
+    }
+
+    if (lastRunIssues.length === 1 && lastRepoRoot) {
+      await revealIssue(lastRunIssues[0], lastRepoRoot);
+      return;
+    }
+
+    const picks = lastRunIssues.map((issue) => {
+      const resolved = resolveIssueFile(issue.file, lastRepoRoot);
+      const displayPath = resolved ? toWorkspaceRelative(resolved, lastRepoRoot) : "unknown";
+      const ruleCode = normalizeFrameworkRuleCode(issue.code);
+      const ruleHint = frameworkRuleHint(ruleCode);
+      return {
+        label: issue.message,
+        description: `${displayPath}:${Number(issue.line || 1)}`,
+        detail: ruleCode ? `[${ruleCode}] ${ruleHint}` : (issue.code ? `[${issue.code}]` : ""),
+        issue
+      };
+    });
+
+    const selected = await vscode.window.showQuickPick(picks, {
+      title: `ArchSync Mapping Issues (${lastRunIssues.length})`,
+      placeHolder: "Select an issue to jump to its location"
+    });
+
+    if (selected && lastRepoRoot) {
+      await revealIssue(selected.issue, lastRepoRoot);
+    }
+  });
+
+  const openFrameworkTreeDisposable = vscode.commands.registerCommand("archSync.openFrameworkTree", async () => {
+    await openFrameworkTree({ regenerateIfMissing: true });
+  });
+
+  const refreshFrameworkTreeDisposable = vscode.commands.registerCommand("archSync.refreshFrameworkTree", async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("ArchSync: no workspace is open.");
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const config = vscode.workspace.getConfiguration("archSync");
+    const generateCommand = String(
+      config.get("frameworkTreeGenerateCommand") || DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND
+    );
+
+    const ok = await generateFrameworkTree(repoRoot, generateCommand, output);
+    if (!ok) {
+      await vscode.window.showErrorMessage("ArchSync: failed to refresh framework tree.", "Open Log").then((action) => {
+        if (action === "Open Log") {
+          output.show(true);
+        }
+      });
+      return;
+    }
+
+    await openFrameworkTree({ regenerateIfMissing: false });
+  });
+
+  const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
+    const config = vscode.workspace.getConfiguration("archSync");
+    if (!config.get("enableOnSave")) {
+      return;
+    }
+
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return;
+    }
+
+    const rel = path.relative(folder.uri.fsPath, doc.uri.fsPath).replace(/\\/g, "/");
+    if (!isWatchedPath(rel)) {
+      return;
+    }
+
+    scheduleValidation({ mode: "change", triggerUri: doc.uri, notifyOnFail: false, source: "save" });
+  });
+
+  const createDisposable = vscode.workspace.onDidCreateFiles(async (event) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return;
+    }
+    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
+      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    }
+  });
+
+  const deleteDisposable = vscode.workspace.onDidDeleteFiles(async (event) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return;
+    }
+    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
+      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    }
+  });
+
+  const renameDisposable = vscode.workspace.onDidRenameFiles(async (event) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      return;
+    }
+    const uris = [];
+    for (const item of event.files) {
+      uris.push(item.oldUri, item.newUri);
+    }
+    if (anyWatchedUris(uris, folder.uri.fsPath)) {
+      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    }
+  });
+
+  const focusDisposable = vscode.window.onDidChangeWindowState(async (state) => {
+    if (!state.focused) {
+      return;
+    }
+    scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+  });
+
+  const fileWatcherDisposables = [];
+  const watcherFolder = vscode.workspace.workspaceFolders?.[0];
+  if (watcherFolder) {
+    const watcherPatterns = [
+      "framework/**",
+      "specs/**",
+      "mapping/**",
+      "src/**",
+      "docs/**",
+      "AGENTS.md",
+      "README.md",
+      "scripts/validate_strict_mapping.py",
+      "scripts/generate_framework_tree_hierarchy.py"
+    ];
+
+    for (const pattern of watcherPatterns) {
+      const watcher = vscode.workspace.createFileSystemWatcher(
+        new vscode.RelativePattern(watcherFolder, pattern)
+      );
+
+      const triggerIfWatched = (uri) => {
+        if (isWatchedUri(uri, watcherFolder.uri.fsPath)) {
+          scheduleValidation({ mode: "change", triggerUri: uri, notifyOnFail: false, source: "auto" });
+        }
+      };
+
+      watcher.onDidChange(triggerIfWatched);
+      watcher.onDidCreate(triggerIfWatched);
+      watcher.onDidDelete(triggerIfWatched);
+      fileWatcherDisposables.push(watcher);
+    }
+  }
+
+  context.subscriptions.push(
+    sidebarViewDisposable,
+    frameworkDefinitionDisposable,
+    frameworkHoverDisposable,
+    frameworkReferenceDisposable,
+    validateNowDisposable,
+    showIssuesDisposable,
+    openFrameworkTreeDisposable,
+    refreshFrameworkTreeDisposable,
+    saveDisposable,
+    createDisposable,
+    deleteDisposable,
+    renameDisposable,
+    focusDisposable,
+    ...fileWatcherDisposables
+  );
+
+  scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+}
+
+function deactivate() {}
+
+function isWatchedPath(relPath) {
+  if (!relPath || relPath.startsWith("..")) {
+    return false;
+  }
+
+  if (WATCH_FILES.has(relPath)) {
+    return true;
+  }
+
+  return WATCH_PREFIXES.some((prefix) => relPath.startsWith(prefix));
+}
+
+function anyWatchedUris(uris, workspaceRoot) {
+  for (const uri of uris) {
+    if (isWatchedUri(uri, workspaceRoot)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isWatchedUri(uri, workspaceRoot) {
+  const rel = path.relative(workspaceRoot, uri.fsPath).replace(/\\/g, "/");
+  return isWatchedPath(rel);
+}
+
+function execCommand(command, cwd) {
+  return new Promise((resolve) => {
+    cp.exec(command, { cwd, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+      resolve({
+        code: error ? error.code ?? 1 : 0,
+        stdout: stdout || "",
+        stderr: stderr || ""
+      });
+    });
+  });
+}
+
+async function generateFrameworkTree(repoRoot, command, output) {
+  output.appendLine(`[framework-tree] ${command}`);
+  const result = await execCommand(command, repoRoot);
+  output.appendLine(result.stdout || "");
+  output.appendLine(result.stderr || "");
+  output.appendLine(`[framework-tree] exit=${result.code}`);
+  return result.code === 0;
+}
+
+function parseResult(stdout, stderr, code) {
+  const text = [stdout, stderr].filter(Boolean).join("\n").trim();
+
+  try {
+    const data = JSON.parse(stdout || stderr || "{}");
+    if (typeof data.passed === "boolean" && Array.isArray(data.errors)) {
+      return {
+        passed: data.passed,
+        errors: data.errors.map(normalizeIssue)
+      };
+    }
+  } catch (_) {
+    // Fallback to text parsing below.
+  }
+
+  const errors = [];
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("- ")) {
+      errors.push(normalizeIssue(trimmed.slice(2)));
+    }
+  }
+
+  if (!errors.length && code !== 0 && text) {
+    errors.push(normalizeIssue(text));
+  }
+
+  return {
+    passed: code === 0 && errors.length === 0,
+    errors
+  };
+}
+
+function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
+  collection.clear();
+  if (parsed.passed) {
+    return;
+  }
+
+  const grouped = new Map();
+
+  for (const issue of parsed.errors) {
+    const candidateTarget = resolveIssueFile(issue.file, repoRoot);
+    const target = (candidateTarget && fs.existsSync(candidateTarget))
+      ? candidateTarget
+      : (triggerUri
+        ? triggerUri.fsPath
+        : path.join(repoRoot, REGISTRY_FILE));
+
+    if (!grouped.has(target)) {
+      grouped.set(target, []);
+    }
+
+    const startLine = Math.max(0, Number(issue.line || 1) - 1);
+    const startCol = Math.max(0, Number(issue.column || 1) - 1);
+    const range = new vscode.Range(startLine, startCol, startLine, startCol + 1);
+    const ruleCode = normalizeFrameworkRuleCode(issue.code);
+    const ruleHint = frameworkRuleHint(ruleCode);
+    const message = ruleCode
+      ? `[archsync ${ruleCode}] ${ruleHint} | ${issue.message}`
+      : `[archsync] ${issue.message}`;
+    const diag = new vscode.Diagnostic(
+      range,
+      message,
+      vscode.DiagnosticSeverity.Error
+    );
+
+    if (ruleCode) {
+      diag.code = ruleCode;
+    } else if (issue.code) {
+      diag.code = issue.code;
+    }
+
+    if (Array.isArray(issue.related) && issue.related.length) {
+      const relatedInfo = [];
+      for (const rel of issue.related) {
+        const relFile = resolveIssueFile(rel.file, repoRoot);
+        if (!relFile) {
+          continue;
+        }
+        const relLine = Math.max(0, Number(rel.line || 1) - 1);
+        const relCol = Math.max(0, Number(rel.column || 1) - 1);
+        const relRange = new vscode.Range(relLine, relCol, relLine, relCol + 1);
+        const relMessage = rel.message || "Related location";
+        relatedInfo.push(
+          new vscode.DiagnosticRelatedInformation(
+            new vscode.Location(vscode.Uri.file(relFile), relRange),
+            relMessage
+          )
+        );
+      }
+      if (relatedInfo.length) {
+        diag.relatedInformation = relatedInfo;
+      }
+    }
+
+    grouped.get(target).push(diag);
+  }
+
+  for (const [filePath, diagnostics] of grouped.entries()) {
+    collection.set(vscode.Uri.file(filePath), diagnostics);
+  }
+}
+
+function resolveIssueFile(file, repoRoot) {
+  if (!file || typeof file !== "string") {
+    return null;
+  }
+  if (path.isAbsolute(file)) {
+    return file;
+  }
+  return path.join(repoRoot, file);
+}
+
+function resolveFrameworkTreeHtmlPath(repoRoot, configuredPath) {
+  if (typeof configuredPath !== "string" || !configuredPath.trim()) {
+    return path.join(repoRoot, DEFAULT_FRAMEWORK_TREE_HTML);
+  }
+  if (path.isAbsolute(configuredPath)) {
+    return configuredPath;
+  }
+  return path.join(repoRoot, configuredPath);
+}
+
+function toWorkspaceRelative(filePath, repoRoot) {
+  const rel = path.relative(repoRoot, filePath).replace(/\\/g, "/");
+  return rel.startsWith("..") ? filePath : rel;
+}
+
+function buildFrameworkTreeFallbackHtml(message) {
+  const escaped = String(message)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArchSync · Framework Tree</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: var(--vscode-editor-background, #1e1e1e);
+      --surface: var(--vscode-editorWidget-background, rgba(37, 37, 38, 0.96));
+      --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
+      --text: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+      --muted: var(--vscode-descriptionForeground, #9da1a6);
+      --accent: var(--vscode-textLink-foreground, var(--vscode-button-background, #0e639c));
+      --code-bg: rgba(127, 127, 127, 0.12);
+    }
+
+    body.vscode-light {
+      --surface: var(--vscode-editorWidget-background, #f8f8f8);
+      --border: var(--vscode-panel-border, rgba(0, 0, 0, 0.12));
+      --code-bg: rgba(0, 0, 0, 0.05);
+    }
+
+    body.vscode-high-contrast {
+      --border: var(--vscode-contrastBorder, #ffffff);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
+    }
+
+    .card {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .message {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .next-step {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code-bg);
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--accent);
+      background: var(--code-bg);
+      font-family: var(--vscode-editor-font-family, "Cascadia Code", monospace);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ArchSync</h1>
+    <p class="message">${escaped}</p>
+    <p class="next-step">使用 <code>ArchSync: Refresh Framework Tree</code> 重新生成树图。</p>
+  </div>
+</body>
+</html>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function buildSidebarHomeHtml(model) {
+  const workspace = escapeHtml(model.workspace);
+  const heroTone = escapeHtml(model.heroTone || "unknown");
+  const heroStatus = escapeHtml(model.heroStatus || "Waiting");
+  const heroSummary = escapeHtml(model.heroSummary || "");
+  const treePath = escapeHtml(model.treePath);
+  const mappingStatus = escapeHtml(model.mappingStatus);
+  const issueSummary = escapeHtml(model.issueSummary);
+  const treeStatus = escapeHtml(model.treeStatus || "Unknown");
+  const standardsStatus = escapeHtml(model.standardsStatus || "Unknown");
+  const lastValidation = escapeHtml(model.lastValidation || "Not available");
+  const issueOverflow = Number(model.issueOverflow || 0);
+  const lastValidationTone = escapeHtml(model.lastValidationTone || "unknown");
+  const issueItems = Array.isArray(model.issueItems) ? model.issueItems : [];
+  const issueEmptyText = escapeHtml(model.issueEmptyText || "当前没有可展示的问题。");
+  const actionItems = Array.isArray(model.actionItems) ? model.actionItems : [];
+  const healthItems = Array.isArray(model.healthItems) ? model.healthItems : [];
+  const calloutTone = escapeHtml(model.calloutTone || "unknown");
+  const calloutTitle = escapeHtml(model.calloutTitle || "Next Step");
+  const calloutBody = escapeHtml(model.calloutBody || "");
+  const calloutAction = model.calloutAction && typeof model.calloutAction === "object"
+    ? {
+      action: escapeHtml(model.calloutAction.action || ""),
+      label: escapeHtml(model.calloutAction.label || "")
+    }
+    : null;
+  const summaryTiles = [
+    { label: "规范总纲", value: standardsStatus },
+    { label: "框架树", value: treeStatus },
+    { label: "严格校验", value: mappingStatus },
+    { label: "问题", value: issueSummary }
+  ];
+  const summaryTilesHtml = summaryTiles.map((item) => `
+        <div class="overview-tile">
+          <span class="overview-label">${escapeHtml(item.label)}</span>
+          <span class="overview-value">${escapeHtml(item.value)}</span>
+        </div>`).join("");
+  const metaRows = [
+    { label: "Workspace", value: workspace },
+    { label: "Tree Path", value: treePath },
+    { label: "Last Validation", value: lastValidation }
+  ];
+  const metaRowsHtml = metaRows.map((item) => `
+        <div class="meta-row">
+          <span class="meta-key">${escapeHtml(item.label)}</span>
+          <span class="meta-value">${escapeHtml(item.value)}</span>
+        </div>`).join("");
+  const actionItemsHtml = actionItems.length
+    ? actionItems.map((item) => {
+      const label = escapeHtml(item.label);
+      const description = escapeHtml(item.description);
+      const action = escapeHtml(item.action);
+      const tone = escapeHtml(item.tone || "ghost");
+      return `
+        <button type="button" class="action-card ${tone}" data-action="${action}">
+          <span class="action-label">${label}</span>
+          <span class="action-description">${description}</span>
+        </button>`;
+    }).join("")
+    : `<div class="empty-state">当前没有可执行的快捷操作。</div>`;
+  const healthItemsHtml = healthItems.length
+    ? healthItems.map((item) => {
+      const label = escapeHtml(item.label);
+      const value = escapeHtml(item.value);
+      const tone = escapeHtml(item.tone || "unknown");
+      const note = escapeHtml(item.note || "");
+      return `
+        <div class="health-item">
+          <div class="item-head">
+            <span class="item-title">${label}</span>
+            <span class="badge ${tone}">${value}</span>
+          </div>
+          <p class="item-note">${note}</p>
+        </div>`;
+    }).join("")
+    : `<div class="empty-state">当前没有可展示的工作区信号。</div>`;
+  const issuesHtml = issueItems.length
+    ? issueItems.map((item) => {
+      const code = escapeHtml(item.code);
+      const hint = escapeHtml(item.hint || "");
+      const message = escapeHtml(item.message);
+      const location = escapeHtml(item.location);
+      return `
+        <button type="button" class="issue-item" data-action="openIssue" data-index="${item.index}">
+          <div class="issue-head">
+            <span class="issue-code">${code}</span>
+            ${hint ? `<span class="issue-hint">${hint}</span>` : ""}
+          </div>
+          <span class="issue-message">${message}</span>
+          <span class="issue-location">${location}</span>
+        </button>`;
+    }).join("")
+    : `<div class="empty-state">${issueEmptyText}</div>`;
+  const overflowHtml = issueOverflow > 0
+    ? `<p class="section-note">还有 ${issueOverflow} 个问题，点击“查看问题”打开完整列表。</p>`
+    : "";
+  const calloutActionHtml = calloutAction && calloutAction.action && calloutAction.label
+    ? `<button type="button" class="note-action" data-action="${calloutAction.action}">${calloutAction.label}</button>`
+    : "";
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: var(--vscode-sideBar-background, #1e1e1e);
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-elevated: rgba(255, 255, 255, 0.03);
+      --surface-hover: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.06));
+      --surface-tint: rgba(55, 148, 255, 0.10);
+      --border: var(--vscode-sideBar-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.3)));
+      --text: var(--vscode-sideBar-foreground, var(--vscode-foreground, #cccccc));
+      --muted: var(--vscode-descriptionForeground, #9da1a6);
+      --accent: var(--vscode-textLink-foreground, var(--vscode-button-background, #0e639c));
+      --accent-strong: var(--vscode-focusBorder, var(--vscode-textLink-foreground, #3794ff));
+      --button-bg: var(--vscode-button-background, #0e639c);
+      --button-fg: var(--vscode-button-foreground, #ffffff);
+      --button-hover: var(--vscode-button-hoverBackground, #1177bb);
+      --secondary-bg: var(--vscode-button-secondaryBackground, rgba(255, 255, 255, 0.08));
+      --secondary-fg: var(--vscode-button-secondaryForeground, var(--text));
+      --secondary-hover: var(--vscode-button-secondaryHoverBackground, rgba(255, 255, 255, 0.12));
+      --badge-bg: var(--vscode-badge-background, rgba(90, 93, 94, 0.35));
+      --badge-fg: var(--vscode-badge-foreground, var(--text));
+      --selection: var(--vscode-list-activeSelectionBackground, rgba(55, 148, 255, 0.16));
+      --ok: var(--vscode-testing-iconPassed, #89d185);
+      --error: var(--vscode-testing-iconFailed, var(--vscode-errorForeground, #f48771));
+      --unknown: var(--vscode-descriptionForeground, #9da1a6);
+      --ok-bg: rgba(137, 209, 133, 0.12);
+      --error-bg: rgba(244, 135, 113, 0.12);
+      --unknown-bg: rgba(157, 161, 166, 0.12);
+      --shadow: rgba(0, 0, 0, 0.24);
+    }
+
+    body.vscode-light {
+      --surface: rgba(0, 0, 0, 0.035);
+      --surface-elevated: rgba(0, 0, 0, 0.02);
+      --surface-hover: rgba(0, 0, 0, 0.06);
+      --surface-tint: rgba(0, 122, 204, 0.08);
+      --border: var(--vscode-sideBar-border, var(--vscode-panel-border, rgba(0, 0, 0, 0.12)));
+      --secondary-bg: rgba(0, 0, 0, 0.04);
+      --secondary-hover: rgba(0, 0, 0, 0.08);
+      --selection: rgba(0, 122, 204, 0.10);
+      --ok-bg: rgba(30, 122, 58, 0.08);
+      --error-bg: rgba(196, 43, 28, 0.08);
+      --unknown-bg: rgba(90, 93, 94, 0.10);
+      --shadow: rgba(15, 23, 42, 0.10);
+    }
+
+    body.vscode-high-contrast,
+    body.vscode-high-contrast-light {
+      --border: var(--vscode-contrastBorder, #ffffff);
+      --surface: transparent;
+      --surface-elevated: transparent;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
+    }
+
+    .shell {
+      display: grid;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-elevated);
+      overflow: hidden;
+      box-shadow: 0 14px 28px -24px var(--shadow);
+    }
+
+    .hero-panel {
+      padding: 14px;
+      background:
+        linear-gradient(180deg, var(--surface-tint), transparent 58%),
+        var(--surface-elevated);
+    }
+
+    .hero-header {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title-stack {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .summary {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .overview-tile {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--surface);
+    }
+
+    body.vscode-light .overview-tile {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.72));
+    }
+
+    .overview-label,
+    .meta-key,
+    .fact-label {
+      font-size: 11px;
+      line-height: 1.45;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .overview-value {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .meta-list {
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 98px minmax(0, 1fr);
+      gap: 8px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-value,
+    .fact-value {
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .section-meta,
+    .item-note,
+    .issue-message,
+    .issue-location,
+    .empty-state,
+    .section-note,
+    .note-copy {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .stack {
+      display: grid;
+      gap: 6px;
+      padding: 10px 12px 12px;
+    }
+
+    .badge,
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: nowrap;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+    }
+
+    .badge.ok,
+    .status-badge.ok {
+      color: var(--ok);
+      background: var(--ok-bg);
+    }
+
+    .badge.error,
+    .status-badge.error {
+      color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .badge.unknown,
+    .status-badge.unknown {
+      color: var(--unknown);
+      background: var(--unknown-bg);
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+    }
+
+    button:focus-visible {
+      outline: 1px solid var(--accent-strong);
+      outline-offset: -1px;
+    }
+
+    .action-card {
+      display: grid;
+      gap: 4px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), transparent;
+      color: var(--text);
+    }
+
+    .action-card.primary {
+      background: linear-gradient(180deg, rgba(55, 148, 255, 0.18), rgba(55, 148, 255, 0.08));
+      border-color: var(--accent-strong);
+    }
+
+    .action-card.primary:hover {
+      background: linear-gradient(180deg, rgba(55, 148, 255, 0.24), rgba(55, 148, 255, 0.12));
+    }
+
+    .action-card.ghost {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--secondary-bg);
+      color: var(--secondary-fg);
+    }
+
+    .action-card.ghost:hover {
+      background: var(--secondary-hover);
+    }
+
+    .action-card:hover,
+    .issue-item:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent-strong);
+    }
+
+    .action-label {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .action-description {
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .health-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), transparent;
+    }
+
+    .item-head,
+    .issue-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .item-title {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .issue-item {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), transparent;
+      color: var(--text);
+    }
+
+    .issue-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .issue-code {
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--accent);
+    }
+
+    .issue-hint {
+      font-size: 10px;
+      line-height: 1.45;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .note-panel {
+      padding: 10px 12px 12px;
+      border-left: 2px solid var(--accent-strong);
+      background:
+        linear-gradient(180deg, rgba(55, 148, 255, 0.10), transparent 72%),
+        var(--surface-elevated);
+    }
+
+    .note-panel.ok {
+      border-left-color: var(--ok);
+    }
+
+    .note-panel.error {
+      border-left-color: var(--error);
+    }
+
+    .note-panel.unknown {
+      border-left-color: var(--unknown);
+    }
+
+    .note-copy {
+      margin-top: 0;
+    }
+
+    .note-action {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--button-fg);
+      background: var(--button-bg);
+    }
+
+    .note-action:hover {
+      background: var(--button-hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="panel hero-panel">
+      <div class="hero-header">
+        <div class="title-row">
+          <div class="title-stack">
+            <h1 class="title">ArchSync</h1>
+            <p class="summary">${heroSummary}</p>
+          </div>
+        <span class="status-badge ${heroTone}">${heroStatus}</span>
+        </div>
+        <div class="overview-grid">
+          ${summaryTilesHtml}
+        </div>
+        <div class="meta-list">
+          ${metaRowsHtml}
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">快速操作</h2>
+        <span class="section-meta">${issueSummary}</span>
+      </div>
+      <div class="stack">
+        ${actionItemsHtml}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">工作区信号</h2>
+        <span class="badge ${lastValidationTone}">最近校验</span>
+      </div>
+      <div class="stack">
+        ${healthItemsHtml}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">问题预览</h2>
+        <span class="section-meta">${issueSummary}</span>
+      </div>
+      <div class="stack">
+        ${issuesHtml}
+        ${overflowHtml}
+      </div>
+    </section>
+
+    <section class="panel note-panel ${calloutTone}">
+      <div class="panel-header">
+        <h2 class="panel-title">${calloutTitle}</h2>
+      </div>
+      <div class="stack">
+        <p class="note-copy">${calloutBody}</p>
+        ${calloutActionHtml}
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const vscode = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : null;
+    for (const button of document.querySelectorAll("button[data-action]")) {
+      button.addEventListener("click", () => {
+        if (!vscode) return;
+        const action = button.getAttribute("data-action");
+        if (!action) return;
+        const index = button.getAttribute("data-index");
+        const message = { type: "archSync.sidebar." + action };
+        if (index !== null) {
+          message.index = Number(index);
+        }
+        vscode.postMessage(message);
+      });
+    }
+  </script>
+</body>
+</html>`;
+}
+
+async function revealIssue(issue, repoRoot) {
+  const candidate = resolveIssueFile(issue.file, repoRoot);
+  const target = (candidate && fs.existsSync(candidate))
+    ? candidate
+    : path.join(repoRoot, REGISTRY_FILE);
+  const uri = vscode.Uri.file(target);
+  const doc = await vscode.workspace.openTextDocument(uri);
+  const line = Math.max(0, Number(issue.line || 1) - 1);
+  const col = Math.max(0, Number(issue.column || 1) - 1);
+  const safeLine = Math.min(line, Math.max(doc.lineCount - 1, 0));
+  const lineText = doc.lineAt(safeLine).text;
+  const safeCol = Math.min(col, lineText.length);
+  const pos = new vscode.Position(safeLine, safeCol);
+  const editor = await vscode.window.showTextDocument(doc, { preview: false });
+  editor.selection = new vscode.Selection(pos, pos);
+  editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+}
+
+function normalizeIssue(item) {
+  if (typeof item === "string") {
+    return {
+      message: item,
+      file: null,
+      line: 1,
+      column: 1,
+      code: "ARCHSYNC_MAPPING",
+      related: []
+    };
+  }
+
+  if (!item || typeof item !== "object") {
+    return {
+      message: String(item),
+      file: null,
+      line: 1,
+      column: 1,
+      code: "ARCHSYNC_MAPPING",
+      related: []
+    };
+  }
+
+  return {
+    message: String(item.message || "ArchSync mapping issue"),
+    file: item.file || null,
+    line: Number(item.line || 1),
+    column: Number(item.column || 1),
+    code: item.code || "ARCHSYNC_MAPPING",
+    related: Array.isArray(item.related) ? item.related : []
+  };
+}
+
+function normalizeFrameworkRuleCode(rawCode) {
+  const code = String(rawCode || "").trim();
+  if (!code) {
+    return "";
+  }
+  if (Object.prototype.hasOwnProperty.call(FRAMEWORK_RULE_HINTS, code)) {
+    return code;
+  }
+  return "";
+}
+
+function frameworkRuleHint(ruleCode) {
+  if (!ruleCode) {
+    return "ArchSync 规则";
+  }
+  return FRAMEWORK_RULE_HINTS[ruleCode] || "ArchSync 规则";
+}
+
+function signature(errors) {
+  return [...errors]
+    .map((e) => `${e.file || ""}:${e.line || 1}:${e.message}`)
+    .sort()
+    .join("||");
+}
+
+function shouldNotifyFailure(errors, prevSignature) {
+  return signature(errors) !== prevSignature;
+}
+
+function buildTooltip(errors) {
+  if (!errors.length) {
+    return "ArchSync";
+  }
+  const preview = errors.slice(0, 3).map((e) => `• ${e.message}`).join("\n");
+  const more = errors.length > 3 ? `\n... +${errors.length - 3} more` : "";
+  return `ArchSync\n${preview}${more}\n(click to open Problems)`;
+}
+
+function hasStandardsTree(repoRoot) {
+  return fs.existsSync(path.join(repoRoot, STANDARDS_TREE_FILE));
+}
+
+function setStatusDisabled(status, repoRoot) {
+  status.text = "$(circle-slash) ArchSync";
+  status.tooltip = `ArchSync mapping guard disabled: ${toWorkspaceRelative(
+    path.join(repoRoot, STANDARDS_TREE_FILE),
+    repoRoot
+  )} not found`;
+  status.backgroundColor = undefined;
+  status.color = undefined;
+}
+
+module.exports = {
+  activate,
+  deactivate
+};

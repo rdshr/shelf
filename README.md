@@ -34,10 +34,11 @@ bash scripts/configure_branch_protection.sh rdshr/shelf main
 ```
 - 该分支保护会将 `Strict Mapping Gate / strict-mapping` 设为必需检查，并强制 PR 审核与线性历史
 
-## VSCode 插件雏形
-- 位置：`tools/vscode/strict-mapping-guard`
-- 作用：保存文件后自动运行严格映射校验，并在 Problems 面板报警
-- 手动命令：`Strict Mapping: Validate Now`
+## VSCode 插件
+- 位置：`tools/vscode/archsync`
+- 作用：提供 ArchSync 侧边栏、框架树查看、严格映射校验与问题跳转
+- 本地安装：`bash tools/vscode/archsync/install_local.sh`
+- 手动命令：`ArchSync: Validate Mapping Now`
 
 ## 运行
 ```bash

@@ -1,0 +1,147 @@
+{
+  "name": "archsync",
+  "displayName": "ArchSync",
+  "description": "ArchSync: framework tree webview + strict mapping validation guard.",
+  "version": "0.0.30",
+  "publisher": "rdshr",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xueyu888/framework.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xueyu888/framework/issues"
+  },
+  "homepage": "https://github.com/xueyu888/framework/tree/framework/tools/vscode/archsync",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.txt",
+    "README.md",
+    "extension.js",
+    "framework_navigation.js",
+    "media/**",
+    "snippets/**"
+  ],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:archSync.sidebarHome",
+    "onCommand:archSync.validateNow",
+    "onCommand:archSync.openFrameworkTree",
+    "onCommand:archSync.refreshFrameworkTree"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "snippets": [
+      {
+        "language": "markdown",
+        "path": "./snippets/markdown.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "archSync.validateNow",
+        "title": "ArchSync: Validate Mapping Now"
+      },
+      {
+        "command": "archSync.showIssues",
+        "title": "ArchSync: Show Mapping Issues"
+      },
+      {
+        "command": "archSync.openFrameworkTree",
+        "title": "ArchSync: Open Framework Tree"
+      },
+      {
+        "command": "archSync.refreshFrameworkTree",
+        "title": "ArchSync: Refresh Framework Tree"
+      }
+    ],
+    "icons": {
+      "archsync-logo": {
+        "description": "ArchSync Activity Bar icon",
+        "default": {
+          "fontPath": "media/archsync-icons.woff2",
+          "fontCharacter": "\\ea01"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "archSyncSidebar",
+          "title": "ArchSync",
+          "icon": "$(archsync-logo)"
+        }
+      ]
+    },
+    "views": {
+      "archSyncSidebar": [
+        {
+          "id": "archSync.sidebarHome",
+          "name": "ArchSync",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "archSync.openFrameworkTree",
+          "when": "view == archSync.sidebarHome",
+          "group": "navigation@1"
+        },
+        {
+          "command": "archSync.refreshFrameworkTree",
+          "when": "view == archSync.sidebarHome",
+          "group": "navigation@2"
+        },
+        {
+          "command": "archSync.validateNow",
+          "when": "view == archSync.sidebarHome",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ArchSync",
+      "properties": {
+        "archSync.enableOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run strict mapping validation when a relevant file is saved."
+        },
+        "archSync.notifyOnAutoFail": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification when auto validation detects mapping issues."
+        },
+        "archSync.changeValidationCommand": {
+          "type": "string",
+          "default": "uv run python scripts/validate_strict_mapping.py --check-changes --json",
+          "description": "Command used for save-triggered validation."
+        },
+        "archSync.fullValidationCommand": {
+          "type": "string",
+          "default": "uv run python scripts/validate_strict_mapping.py --json",
+          "description": "Command used for manual full validation."
+        },
+        "archSync.frameworkTreeHtmlPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.html",
+          "description": "Workspace-relative path of generated framework tree HTML."
+        },
+        "archSync.frameworkTreeGenerateCommand": {
+          "type": "string",
+          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
+          "description": "Command used by 'Refresh Framework Tree'."
+        }
+      }
+    }
+  }
+}

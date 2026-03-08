@@ -1,0 +1,82 @@
+name: Publish ArchSync
+
+on:
+  push:
+    tags:
+      - "archsync-v*"
+  workflow_dispatch:
+
+jobs:
+  publish-archsync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: tools/vscode/archsync
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve package version
+        id: meta
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_VERSION="${GITHUB_REF_NAME#archsync-v}"
+            if [[ "${TAG_VERSION}" != "${VERSION}" ]]; then
+              echo "Tag ${GITHUB_REF_NAME} does not match package version ${VERSION}" >&2
+              exit 1
+            fi
+          fi
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "vsix=tools/vscode/archsync/releases/archsync-${VERSION}.vsix" >> "${GITHUB_OUTPUT}"
+
+      - name: Package VSIX
+        run: npx --yes @vscode/vsce package -o "releases/archsync-${{ steps.meta.outputs.version }}.vsix"
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: archsync-${{ steps.meta.outputs.version }}-vsix
+          path: ${{ steps.meta.outputs.vsix }}
+
+      - name: Create GitHub release
+        if: github.ref_type == 'tag'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || \
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "ArchSync ${{ steps.meta.outputs.version }}" \
+              --generate-notes
+          gh release upload "${GITHUB_REF_NAME}" "${{ steps.meta.outputs.vsix }}" --clobber
+
+      - name: Publish to Open VSX
+        if: github.ref_type == 'tag'
+        env:
+          OPEN_VSX_TOKEN: ${{ secrets.OPEN_VSX_TOKEN }}
+        run: |
+          if [[ -z "${OPEN_VSX_TOKEN}" ]]; then
+            echo "OPEN_VSX_TOKEN not configured; skipping Open VSX publish."
+            exit 0
+          fi
+          npx --yes ovsx publish "${{ steps.meta.outputs.vsix }}" -p "${OPEN_VSX_TOKEN}"
+
+      - name: Publish to VS Marketplace
+        if: github.ref_type == 'tag'
+        env:
+          VSCE_PAT: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+        run: |
+          if [[ -z "${VSCE_PAT}" ]]; then
+            echo "VS_MARKETPLACE_TOKEN not configured; skipping VS Marketplace publish."
+            exit 0
+          fi
+          npx --yes @vscode/vsce publish --packagePath "${{ steps.meta.outputs.vsix }}"
