@@ -10,6 +10,8 @@ const CORE_TOKEN_PATTERN = /R\d+\.\d+|R\d+|B\d+|C\d+|V\d+/g;
 const UPPER_SYMBOL_PATTERN = /[A-Z][A-Z0-9_]+/g;
 const BACKTICK_SEGMENT_PATTERN = /`([^`]+)`/g;
 const SYMBOL_TOKEN_PATTERN = /[A-Za-z][A-Za-z0-9_]*/g;
+const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
+const DEFAULT_INSTANCE_FILE = path.join("projects", "knowledge_base_basic", "instance.toml");
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],
@@ -18,6 +20,53 @@ const SECTION_PREFIXES = [
   ["## 4. 基组合原则", "rule"],
   ["## 5. 验证", "verification"],
 ];
+
+const FRAMEWORK_BOUNDARY_SECTION_MAP = {
+  frontend: {
+    SURFACE: {
+      primarySection: "surface",
+      relatedSections: ["surface", "surface.copy"],
+    },
+    VISUAL: {
+      primarySection: "visual",
+      relatedSections: ["visual"],
+    },
+    ROUTE: {
+      primarySection: "route",
+      relatedSections: ["route"],
+    },
+    A11Y: {
+      primarySection: "a11y",
+      relatedSections: ["a11y"],
+    },
+  },
+  knowledge_base: {
+    SURFACE: {
+      primarySection: "surface",
+      relatedSections: ["surface", "surface.copy"],
+    },
+    LIBRARY: {
+      primarySection: "library",
+      relatedSections: ["library", "library.copy"],
+    },
+    PREVIEW: {
+      primarySection: "preview",
+      relatedSections: ["preview"],
+    },
+    CHAT: {
+      primarySection: "chat",
+      relatedSections: ["chat", "chat.copy"],
+    },
+    CONTEXT: {
+      primarySection: "context",
+      relatedSections: ["context"],
+    },
+    RETURN: {
+      primarySection: "return",
+      relatedSections: ["return"],
+    },
+  },
+};
 
 function normalizePathSlashes(value) {
   return value.replace(/\\/g, "/");
@@ -405,6 +454,107 @@ function resolveModuleFile(repoRoot, currentFrameworkName, refFrameworkName, lev
   return null;
 }
 
+function buildTomlSectionIndex(text) {
+  const sections = new Map();
+  const lines = text.split(/\r?\n/);
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const lineText = lines[lineIndex];
+    const match = TOML_SECTION_PATTERN.exec(lineText);
+    if (!match) {
+      continue;
+    }
+    const sectionName = match[1];
+    sections.set(sectionName, {
+      line: lineIndex,
+      character: lineText.indexOf("["),
+      length: lineText.trim().length,
+    });
+  }
+  return sections;
+}
+
+function getBoundaryConfigMapping(frameworkName, token) {
+  const mapping = FRAMEWORK_BOUNDARY_SECTION_MAP[frameworkName];
+  if (!mapping) {
+    return null;
+  }
+  return mapping[token] || null;
+}
+
+function discoverInstanceFiles(repoRoot) {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
+    return [];
+  }
+  const files = [];
+  for (const entry of fs.readdirSync(projectsDir)) {
+    const instanceFile = path.join(projectsDir, entry, "instance.toml");
+    if (fs.existsSync(instanceFile) && fs.statSync(instanceFile).isFile()) {
+      files.push(instanceFile);
+    }
+  }
+  return files.sort();
+}
+
+function inferConfiguredFrameworks(instanceText) {
+  const frameworks = new Set();
+  for (const match of instanceText.matchAll(/^\s*(frontend|domain|backend)\s*=\s*"framework\/([^/]+)\//gm)) {
+    frameworks.add(match[2]);
+  }
+  return frameworks;
+}
+
+function resolvePreferredInstanceFile(repoRoot, frameworkName) {
+  const preferredDefault = path.join(repoRoot, DEFAULT_INSTANCE_FILE);
+  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
+    return preferredDefault;
+  }
+
+  const candidates = discoverInstanceFiles(repoRoot);
+  let bestFile = null;
+  let bestScore = -1;
+  for (const filePath of candidates) {
+    let score = 0;
+    try {
+      const frameworks = inferConfiguredFrameworks(fs.readFileSync(filePath, "utf8"));
+      if (frameworks.has(frameworkName)) {
+        score += 10;
+      }
+    } catch {
+      // Ignore broken instance files here; main parser/validator handles them elsewhere.
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestFile = filePath;
+    }
+  }
+  return bestFile;
+}
+
+function resolveBoundaryConfigTarget(repoRoot, frameworkName, token) {
+  const mapping = getBoundaryConfigMapping(frameworkName, token);
+  if (!mapping) {
+    return null;
+  }
+  const instanceFilePath = resolvePreferredInstanceFile(repoRoot, frameworkName);
+  if (!instanceFilePath || !fs.existsSync(instanceFilePath)) {
+    return null;
+  }
+  const instanceText = fs.readFileSync(instanceFilePath, "utf8");
+  const sectionIndex = buildTomlSectionIndex(instanceText);
+  const sectionTarget = sectionIndex.get(mapping.primarySection);
+  if (!sectionTarget) {
+    return null;
+  }
+  return {
+    filePath: instanceFilePath,
+    line: sectionTarget.line,
+    character: sectionTarget.character,
+    length: sectionTarget.length,
+    relatedSections: mapping.relatedSections,
+  };
+}
+
 function resolveLocalSymbol(index, token) {
   const direct = index.symbols.get(token);
   if (direct) {
@@ -520,7 +670,23 @@ function buildRuleHoverMarkdown(moduleInfo, rule) {
   return parts.join("\n");
 }
 
-function buildSymbolHoverMarkdown(moduleInfo, index, token) {
+function appendBoundaryConfigHover(parts, repoRoot, frameworkName, token) {
+  const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, token);
+  if (!boundaryTarget) {
+    return;
+  }
+  const relFile = normalizePathSlashes(path.relative(repoRoot, boundaryTarget.filePath));
+  parts.push("", "实例配置");
+  parts.push(`- 文件：\`${relFile}\``);
+  parts.push(`- 主 section：\`[${boundaryTarget.relatedSections[0]}]\``);
+  if (boundaryTarget.relatedSections.length > 1) {
+    parts.push(
+      `- 相关 section：${boundaryTarget.relatedSections.map((section) => `\`[${section}]\``).join("、")}`
+    );
+  }
+}
+
+function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot) {
   const item = getItemForToken(index, token);
   if (!item) {
     return null;
@@ -547,7 +713,11 @@ function buildSymbolHoverMarkdown(moduleInfo, index, token) {
     return parts.join("\n");
   }
 
-  return [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text].join("\n");
+  const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
+  if (item.kind === "boundary" && repoRoot && moduleInfo?.frameworkName) {
+    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, item.token);
+  }
+  return parts.join("\n");
 }
 
 function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) {
@@ -605,6 +775,22 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
   if (!resolvedLocal) {
     return null;
   }
+  const localItem = getItemForToken(index, tokenContext.token);
+  if (
+    localItem &&
+    localItem.kind === "boundary" &&
+    localItem.line !== line &&
+    documentInfo.frameworkName
+  ) {
+    const boundaryTarget = resolveBoundaryConfigTarget(
+      repoRoot,
+      documentInfo.frameworkName,
+      tokenContext.token
+    );
+    if (boundaryTarget) {
+      return boundaryTarget;
+    }
+  }
   return {
     filePath,
     line: resolvedLocal.line,
@@ -643,7 +829,7 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
     const targetInfo = getFrameworkDocumentInfo(targetFilePath, repoRoot);
     const markdown = tokenContext.kind === "moduleRef"
       ? buildModuleHoverMarkdown(targetInfo, targetIndex)
-      : buildSymbolHoverMarkdown(targetInfo, targetIndex, tokenContext.token);
+      : buildSymbolHoverMarkdown(targetInfo, targetIndex, tokenContext.token, repoRoot);
     if (!markdown) {
       return null;
     }
@@ -656,7 +842,7 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
   }
 
   const currentIndex = buildDefinitionIndex(text);
-  const markdown = buildSymbolHoverMarkdown(documentInfo, currentIndex, tokenContext.token);
+  const markdown = buildSymbolHoverMarkdown(documentInfo, currentIndex, tokenContext.token, repoRoot);
   if (!markdown) {
     return null;
   }

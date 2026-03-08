@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Added boundary-to-instance navigation for instance-exposed framework boundaries such as `SURFACE`, `LIBRARY`, `CHAT`, and `RETURN`, jumping directly to the owning `instance.toml` section.
+- Boundary hover cards now show the mapped project config file and primary related section when that boundary is instantiated as configuration.
+
 ## 0.0.24 - 2026-03-07
 - Enforced versioned bilingual release notes for ArchSync public releases.
 - Updated the publish workflow to fail when release notes or the `.vsix` asset are missing, and to use the curated notes file as the GitHub release body.

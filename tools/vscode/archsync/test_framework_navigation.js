@@ -138,7 +138,7 @@ function main() {
   assert(moduleRuleHoverResult.markdown.includes("参与基：`B1`"));
   assert(moduleRuleHoverResult.markdown.includes("输出能力：`C1`"));
 
-  const localBaseHoverRef = locate(knowledgeBaseL2.text, "`B1` 对话序列结构基");
+  const localBaseHoverRef = locate(knowledgeBaseL2.text, "`B1` 对话舞台结构基");
   const localBaseHoverResult = resolveHoverTarget({
     repoRoot,
     filePath: knowledgeBaseL2.filePath,
@@ -148,7 +148,7 @@ function main() {
   });
   assert(localBaseHoverResult, "local base hover should resolve");
   assert(localBaseHoverResult.markdown.includes("**knowledge_base.L0.M2 · `B1`**"));
-  assert(localBaseHoverResult.markdown.includes("`B1` 对话序列结构基"));
+  assert(localBaseHoverResult.markdown.includes("`B1` 对话舞台结构基"));
 
   const localBoundaryHoverRef = locate(knowledgeBaseL2.text, "`TURN` 回合边界");
   const localBoundaryHoverResult = resolveHoverTarget({
@@ -162,7 +162,7 @@ function main() {
   assert(localBoundaryHoverResult.markdown.includes("**knowledge_base.L0.M2 · `TURN`**"));
   assert(localBoundaryHoverResult.markdown.includes("`TURN` 回合边界"));
 
-  const localCapabilityHoverRef = locate(knowledgeBaseL2.text, "`C1` 对话序列承载能力");
+  const localCapabilityHoverRef = locate(knowledgeBaseL2.text, "`C1` 对话舞台承载能力");
   const localCapabilityHoverResult = resolveHoverTarget({
     repoRoot,
     filePath: knowledgeBaseL2.filePath,
@@ -173,7 +173,7 @@ function main() {
   assert(localCapabilityHoverResult, "local capability hover should resolve");
   assert(localCapabilityHoverResult.markdown.includes("**knowledge_base.L0.M2 · `C1`**"));
 
-  const localRuleHoverRef = locate(knowledgeBaseL2.text, "`R1` 回合先行");
+  const localRuleHoverRef = locate(knowledgeBaseL2.text, "`R1` 对话舞台先行");
   const localRuleHoverResult = resolveHoverTarget({
     repoRoot,
     filePath: knowledgeBaseL2.filePath,
@@ -196,6 +196,43 @@ function main() {
   });
   assert(localVerificationHoverResult, "local verification hover should resolve");
   assert(localVerificationHoverResult.markdown.includes("**knowledge_base.L0.M2 · `V1`**"));
+
+  const workbenchL2 = loadFrameworkFile("framework/knowledge_base/L2-M0-知识库工作台场景模块.md");
+  const boundaryConfigRef = locate(workbenchL2.text, "CHAT + CONTEXT + RETURN");
+  const boundaryConfigResult = resolveDefinitionTarget({
+    repoRoot,
+    filePath: workbenchL2.filePath,
+    text: workbenchL2.text,
+    line: boundaryConfigRef.line,
+    character: boundaryConfigRef.character,
+  });
+  assert(boundaryConfigResult, "instance boundary ref should resolve");
+  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/instance.toml"));
+  assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[chat]");
+
+  const boundaryDefinitionRef = locate(workbenchL2.text, "`CHAT` 对话边界");
+  const boundaryDefinitionResult = resolveDefinitionTarget({
+    repoRoot,
+    filePath: workbenchL2.filePath,
+    text: workbenchL2.text,
+    line: boundaryDefinitionRef.line,
+    character: boundaryDefinitionRef.character + 1,
+  });
+  assert(boundaryDefinitionResult, "boundary definition should still resolve locally");
+  assert(boundaryDefinitionResult.filePath.endsWith("framework/knowledge_base/L2-M0-知识库工作台场景模块.md"));
+  assert(targetLineText(boundaryDefinitionResult).includes("`CHAT` 对话边界"));
+
+  const boundaryConfigHoverResult = resolveHoverTarget({
+    repoRoot,
+    filePath: workbenchL2.filePath,
+    text: workbenchL2.text,
+    line: boundaryConfigRef.line,
+    character: boundaryConfigRef.character,
+  });
+  assert(boundaryConfigHoverResult, "boundary config hover should resolve");
+  assert(boundaryConfigHoverResult.markdown.includes("实例配置"));
+  assert(boundaryConfigHoverResult.markdown.includes("projects/knowledge_base_basic/instance.toml"));
+  assert(boundaryConfigHoverResult.markdown.includes("`[chat]`"));
 }
 
 main();
