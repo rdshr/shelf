@@ -18,6 +18,9 @@ class KnowledgeBaseDemoTest(unittest.TestCase):
         self.assertIn("历史会话", response.text)
         self.assertIn("切换知识库", response.text)
         self.assertIn("浏览知识库与文档", response.text)
+        self.assertIn('button.dataset.navId = "conversation-item";', response.text)
+        self.assertNotIn('button.id = "conversation-item";', response.text)
+        self.assertIn("gap: var(--shell-gap);", response.text)
 
     def test_auxiliary_pages_exist(self) -> None:
         list_response = self.client.get("/knowledge-bases")
