@@ -63,6 +63,9 @@ function activate(context) {
   let frameworkTreePanel = null;
   let frameworkTreeRepoRoot = "";
   let frameworkSidebarView = null;
+  let lastValidationAt = "";
+  let lastValidationMode = "change";
+  let lastValidationPassed = null;
   const VALIDATION_SOURCE_PRIORITY = {
     auto: 1,
     save: 2,
@@ -107,6 +110,8 @@ function activate(context) {
       lastRepoRoot = repoRoot;
       lastRunIssues = [];
       lastFailureSignature = "";
+      lastValidationAt = "";
+      lastValidationPassed = null;
       diagnostics.clear();
       setStatusDisabled(status, repoRoot);
       refreshSidebarHome();
@@ -140,6 +145,9 @@ function activate(context) {
     const parsed = parseResult(execResult.stdout, execResult.stderr, execResult.code);
     lastRunIssues = parsed.errors;
     lastRepoRoot = repoRoot;
+    lastValidationAt = new Date().toISOString();
+    lastValidationMode = task.mode;
+    lastValidationPassed = parsed.passed;
     applyDiagnostics(parsed, diagnostics, repoRoot, task.triggerUri);
     output.appendLine(`[result] passed=${parsed.passed} errors=${parsed.errors.length}`);
 
@@ -295,28 +303,246 @@ function activate(context) {
   };
 
   const renderSidebarHome = () => {
+    const defaultActionItems = [
+      {
+        action: "openTree",
+        label: "打开框架树",
+        description: "直接查看树图，并保留节点跳转能力。",
+        tone: "primary"
+      },
+      {
+        action: "refreshTree",
+        label: "刷新树图产物",
+        description: "重新生成 docs/hierarchy 下的树图 HTML。",
+        tone: "ghost"
+      },
+      {
+        action: "validate",
+        label: "执行严格校验",
+        description: "运行完整 strict mapping validation。",
+        tone: "ghost"
+      },
+      {
+        action: "showIssues",
+        label: "查看问题列表",
+        description: "打开 Problems 或快速跳转到问题位置。",
+        tone: "ghost"
+      },
+      {
+        action: "openLog",
+        label: "打开运行日志",
+        description: "查看最近一次命令输出与错误详情。",
+        tone: "ghost"
+      }
+    ];
+
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return buildSidebarHomeHtml({
         workspace: "No workspace",
+        heroTone: "unknown",
+        heroStatus: "等待工作区",
+        heroSummary: "打开仓库后，这里会显示框架树、严格映射校验和问题跳转入口。",
         treePath: DEFAULT_FRAMEWORK_TREE_HTML,
         mappingStatus: "Unavailable",
         issueSummary: "No workspace",
+        treeStatus: "Unknown",
+        standardsStatus: "Unknown",
+        lastValidation: "Not available",
+        actionItems: defaultActionItems,
+        healthItems: [
+          {
+            label: "规范总纲",
+            value: "未知",
+            tone: "unknown",
+            note: STANDARDS_TREE_FILE
+          },
+          {
+            label: "框架树产物",
+            value: "未知",
+            tone: "unknown",
+            note: DEFAULT_FRAMEWORK_TREE_HTML
+          },
+          {
+            label: "严格校验",
+            value: "等待工作区",
+            tone: "unknown",
+            note: "打开仓库后自动判断是否启用。"
+          },
+          {
+            label: "最近结果",
+            value: "未运行",
+            tone: "unknown",
+            note: "本会话尚未启动校验。"
+          }
+        ],
+        issueItems: [],
+        issueEmptyText: "打开工作区后，这里会显示校验问题预览和快速跳转入口。",
+        issueOverflow: 0,
+        calloutTone: "unknown",
+        calloutTitle: "从工作区开始",
+        calloutBody: "ArchSync 侧边栏不是占位区。打开仓库后，它会变成树图入口、校验面板和问题导航工作台。"
       });
     }
 
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("archSync");
     const treePath = resolveFrameworkTreeHtmlPath(repoRoot, config.get("frameworkTreeHtmlPath"));
-    const issueSummary = mappingValidationActive
-      ? (lastRunIssues.length ? `${lastRunIssues.length} issue(s)` : "No issues")
+    const standardsExists = hasStandardsTree(repoRoot);
+    const validationEnabled = standardsExists && mappingValidationActive;
+    const treeExists = fs.existsSync(treePath);
+    const issueCount = lastRunIssues.length;
+    const issueSummary = validationEnabled
+      ? (lastValidationPassed === null ? "Not run yet" : (issueCount ? `${issueCount} issue(s)` : "No issues"))
       : "Validation disabled";
+    const lastValidation = lastValidationAt
+      ? `${lastValidationMode === "full" ? "Full" : "Change"} · ${new Date(lastValidationAt).toLocaleString()}`
+      : "Not run in this session";
+    const issueItems = lastRunIssues.slice(0, 3).map((issue, index) => {
+      const recognizedCode = normalizeFrameworkRuleCode(issue.code);
+      return {
+        index,
+        code: recognizedCode || String(issue.code || "ARCHSYNC"),
+        hint: recognizedCode ? frameworkRuleHint(recognizedCode) : "",
+        message: issue.message || "ArchSync mapping issue",
+        location: issue.file
+          ? `${issue.file}:${Number(issue.line || 1)}`
+          : `line ${Number(issue.line || 1)}`
+      };
+    });
+
+    let heroTone = "unknown";
+    let heroStatus = "等待首次校验";
+    let heroSummary = "先执行一次完整校验，把树图状态和问题列表都热起来。";
+    let calloutTone = "unknown";
+    let calloutTitle = "建议先跑一次完整校验";
+    let calloutBody = "这样能立即得到最新问题摘要，并确认严格映射守卫是否正常工作。";
+    let calloutAction = {
+      action: "validate",
+      label: "现在执行校验"
+    };
+
+    if (!standardsExists) {
+      heroTone = "error";
+      heroStatus = "严格守卫未启用";
+      heroSummary = `当前工作区缺少 ${STANDARDS_TREE_FILE}，ArchSync 会自动停用严格映射校验。`;
+      calloutTone = "error";
+      calloutTitle = "先补齐规范入口";
+      calloutBody = "没有规范总纲时，侧边栏仍可作为树图入口，但严格映射问题不会自动汇总。";
+      calloutAction = {
+        action: "openStandards",
+        label: "打开规范总纲路径"
+      };
+    } else if (!treeExists) {
+      heroStatus = "树图产物缺失";
+      heroSummary = "侧边栏已经可用，但框架树 HTML 还没准备好，下一步应该生成并打开树图。";
+      calloutTitle = "生成并打开树图";
+      calloutBody = `目标产物位于 ${toWorkspaceRelative(treePath, repoRoot)}。使用 ArchSync 可以直接生成并打开。`;
+      calloutAction = {
+        action: "openTree",
+        label: "生成树图并打开"
+      };
+    } else if (lastValidationPassed === false) {
+      heroTone = "error";
+      heroStatus = `${issueCount} 个问题待处理`;
+      heroSummary = "侧边栏现在会直接预览问题，并支持点进具体文件和行号。";
+      calloutTone = "error";
+      calloutTitle = "先处理映射问题";
+      calloutBody = "修复这些问题前，不适合继续推送或发布。可以先点下面的问题卡片，或打开完整问题列表。";
+      calloutAction = {
+        action: "showIssues",
+        label: "打开完整问题列表"
+      };
+    } else if (lastValidationPassed === true) {
+      heroTone = "ok";
+      heroStatus = "工作区状态正常";
+      heroSummary = "树图产物和严格映射校验都已接通，侧边栏现在就是你的快速入口。";
+      calloutTone = "ok";
+      calloutTitle = "继续查看框架树";
+      calloutBody = "可以直接打开树图检查结构，或在改动后随时手动刷新与复核。";
+      calloutAction = {
+        action: "openTree",
+        label: "打开框架树"
+      };
+    }
+
+    const healthItems = [
+      {
+        label: "规范总纲",
+        value: standardsExists ? "已检测" : "缺失",
+        tone: standardsExists ? "ok" : "error",
+        note: STANDARDS_TREE_FILE
+      },
+      {
+        label: "框架树产物",
+        value: treeExists ? "就绪" : "缺失",
+        tone: treeExists ? "ok" : "error",
+        note: treeExists
+          ? toWorkspaceRelative(treePath, repoRoot)
+          : `等待生成 ${toWorkspaceRelative(treePath, repoRoot)}`
+      },
+      {
+        label: "严格校验",
+        value: validationEnabled ? "启用" : "停用",
+        tone: validationEnabled ? "ok" : "error",
+        note: validationEnabled
+          ? "保存、命令和窗口切回时都会自动参与检查。"
+          : "补齐规范总纲后会自动恢复。"
+      },
+      {
+        label: "最近结果",
+        value: lastValidationPassed === null
+          ? "未运行"
+          : (lastValidationPassed ? "通过" : `${issueCount} 个问题`),
+        tone: lastValidationPassed === null
+          ? "unknown"
+          : (lastValidationPassed ? "ok" : "error"),
+        note: lastValidation
+      }
+    ];
+
+    const actionItems = [...defaultActionItems];
+    if (!standardsExists) {
+      actionItems.unshift({
+        action: "openStandards",
+        label: "打开规范总纲路径",
+        description: "检查缺失的规范入口，恢复严格校验。",
+        tone: "ghost"
+      });
+    }
+
+    let issueEmptyText = "当前没有可展示的问题。";
+    if (!validationEnabled) {
+      issueEmptyText = "当前工作区的严格映射守卫已停用，所以这里不会自动汇总问题。";
+    } else if (lastValidationPassed === null) {
+      issueEmptyText = "本会话尚未执行校验。先跑一次完整校验，侧边栏才能显示最新问题摘要。";
+    } else if (lastValidationPassed === true) {
+      issueEmptyText = "当前没有可展示的问题，ArchSync 严格映射守卫状态正常。";
+    }
 
     return buildSidebarHomeHtml({
       workspace: path.basename(repoRoot),
+      heroTone,
+      heroStatus,
+      heroSummary,
       treePath: toWorkspaceRelative(treePath, repoRoot),
-      mappingStatus: mappingValidationActive ? "Enabled" : "Disabled",
+      mappingStatus: validationEnabled ? "Enabled" : "Disabled",
       issueSummary,
+      treeStatus: treeExists ? "Ready" : "Missing",
+      standardsStatus: standardsExists ? "Ready" : "Missing",
+      lastValidation,
+      actionItems,
+      healthItems,
+      issueItems,
+      issueEmptyText,
+      issueOverflow: Math.max(0, lastRunIssues.length - issueItems.length),
+      calloutTone,
+      calloutTitle,
+      calloutBody,
+      calloutAction,
+      lastValidationTone: lastValidationPassed === null
+        ? "unknown"
+        : (lastValidationPassed ? "ok" : "error")
     });
   };
 
@@ -360,6 +586,24 @@ function activate(context) {
         }
         if (message.type === "archSync.sidebar.showIssues") {
           await vscode.commands.executeCommand("archSync.showIssues");
+          return;
+        }
+        if (message.type === "archSync.sidebar.openLog") {
+          output.show(true);
+          return;
+        }
+        if (message.type === "archSync.sidebar.openStandards") {
+          const repoRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (repoRoot) {
+            await openFrameworkTreeSource(repoRoot, STANDARDS_TREE_FILE, 1);
+          }
+          return;
+        }
+        if (message.type === "archSync.sidebar.openIssue") {
+          const index = Number(message.index);
+          if (Number.isInteger(index) && index >= 0 && index < lastRunIssues.length && lastRepoRoot) {
+            await revealIssue(lastRunIssues[index], lastRepoRoot);
+          }
         }
       });
     }
@@ -818,18 +1062,88 @@ function buildFrameworkTreeFallbackHtml(message) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ArchSync · Framework Tree</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 20px; color: #183249; background: #f2f7fb; }
-    .card { max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #d6e2ec; border-radius: 12px; padding: 18px; }
-    h1 { margin: 0 0 10px; font-size: 22px; }
-    p { margin: 0; line-height: 1.6; }
-    code { background: #edf5fb; padding: 2px 6px; border-radius: 6px; }
+    :root {
+      color-scheme: light dark;
+      --bg: var(--vscode-editor-background, #1e1e1e);
+      --surface: var(--vscode-editorWidget-background, rgba(37, 37, 38, 0.96));
+      --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
+      --text: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+      --muted: var(--vscode-descriptionForeground, #9da1a6);
+      --accent: var(--vscode-textLink-foreground, var(--vscode-button-background, #0e639c));
+      --code-bg: rgba(127, 127, 127, 0.12);
+    }
+
+    body.vscode-light {
+      --surface: var(--vscode-editorWidget-background, #f8f8f8);
+      --border: var(--vscode-panel-border, rgba(0, 0, 0, 0.12));
+      --code-bg: rgba(0, 0, 0, 0.05);
+    }
+
+    body.vscode-high-contrast {
+      --border: var(--vscode-contrastBorder, #ffffff);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
+    }
+
+    .card {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .message {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .next-step {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code-bg);
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--accent);
+      background: var(--code-bg);
+      font-family: var(--vscode-editor-font-family, "Cascadia Code", monospace);
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>ArchSync · Framework Tree</h1>
-    <p>${escaped}</p>
-    <p style="margin-top:10px;">Try command <code>ArchSync: Refresh Framework Tree</code>.</p>
+    <h1>ArchSync</h1>
+    <p class="message">${escaped}</p>
+    <p class="next-step">使用 <code>ArchSync: Refresh Framework Tree</code> 重新生成树图。</p>
   </div>
 </body>
 </html>`;
@@ -844,9 +1158,103 @@ function escapeHtml(value) {
 
 function buildSidebarHomeHtml(model) {
   const workspace = escapeHtml(model.workspace);
+  const heroTone = escapeHtml(model.heroTone || "unknown");
+  const heroStatus = escapeHtml(model.heroStatus || "Waiting");
+  const heroSummary = escapeHtml(model.heroSummary || "");
   const treePath = escapeHtml(model.treePath);
   const mappingStatus = escapeHtml(model.mappingStatus);
   const issueSummary = escapeHtml(model.issueSummary);
+  const treeStatus = escapeHtml(model.treeStatus || "Unknown");
+  const standardsStatus = escapeHtml(model.standardsStatus || "Unknown");
+  const lastValidation = escapeHtml(model.lastValidation || "Not available");
+  const issueOverflow = Number(model.issueOverflow || 0);
+  const lastValidationTone = escapeHtml(model.lastValidationTone || "unknown");
+  const issueItems = Array.isArray(model.issueItems) ? model.issueItems : [];
+  const issueEmptyText = escapeHtml(model.issueEmptyText || "当前没有可展示的问题。");
+  const actionItems = Array.isArray(model.actionItems) ? model.actionItems : [];
+  const healthItems = Array.isArray(model.healthItems) ? model.healthItems : [];
+  const calloutTone = escapeHtml(model.calloutTone || "unknown");
+  const calloutTitle = escapeHtml(model.calloutTitle || "Next Step");
+  const calloutBody = escapeHtml(model.calloutBody || "");
+  const calloutAction = model.calloutAction && typeof model.calloutAction === "object"
+    ? {
+      action: escapeHtml(model.calloutAction.action || ""),
+      label: escapeHtml(model.calloutAction.label || "")
+    }
+    : null;
+  const summaryTiles = [
+    { label: "规范总纲", value: standardsStatus },
+    { label: "框架树", value: treeStatus },
+    { label: "严格校验", value: mappingStatus },
+    { label: "问题", value: issueSummary }
+  ];
+  const summaryTilesHtml = summaryTiles.map((item) => `
+        <div class="overview-tile">
+          <span class="overview-label">${escapeHtml(item.label)}</span>
+          <span class="overview-value">${escapeHtml(item.value)}</span>
+        </div>`).join("");
+  const metaRows = [
+    { label: "Workspace", value: workspace },
+    { label: "Tree Path", value: treePath },
+    { label: "Last Validation", value: lastValidation }
+  ];
+  const metaRowsHtml = metaRows.map((item) => `
+        <div class="meta-row">
+          <span class="meta-key">${escapeHtml(item.label)}</span>
+          <span class="meta-value">${escapeHtml(item.value)}</span>
+        </div>`).join("");
+  const actionItemsHtml = actionItems.length
+    ? actionItems.map((item) => {
+      const label = escapeHtml(item.label);
+      const description = escapeHtml(item.description);
+      const action = escapeHtml(item.action);
+      const tone = escapeHtml(item.tone || "ghost");
+      return `
+        <button type="button" class="action-card ${tone}" data-action="${action}">
+          <span class="action-label">${label}</span>
+          <span class="action-description">${description}</span>
+        </button>`;
+    }).join("")
+    : `<div class="empty-state">当前没有可执行的快捷操作。</div>`;
+  const healthItemsHtml = healthItems.length
+    ? healthItems.map((item) => {
+      const label = escapeHtml(item.label);
+      const value = escapeHtml(item.value);
+      const tone = escapeHtml(item.tone || "unknown");
+      const note = escapeHtml(item.note || "");
+      return `
+        <div class="health-item">
+          <div class="item-head">
+            <span class="item-title">${label}</span>
+            <span class="badge ${tone}">${value}</span>
+          </div>
+          <p class="item-note">${note}</p>
+        </div>`;
+    }).join("")
+    : `<div class="empty-state">当前没有可展示的工作区信号。</div>`;
+  const issuesHtml = issueItems.length
+    ? issueItems.map((item) => {
+      const code = escapeHtml(item.code);
+      const hint = escapeHtml(item.hint || "");
+      const message = escapeHtml(item.message);
+      const location = escapeHtml(item.location);
+      return `
+        <button type="button" class="issue-item" data-action="openIssue" data-index="${item.index}">
+          <div class="issue-head">
+            <span class="issue-code">${code}</span>
+            ${hint ? `<span class="issue-hint">${hint}</span>` : ""}
+          </div>
+          <span class="issue-message">${message}</span>
+          <span class="issue-location">${location}</span>
+        </button>`;
+    }).join("")
+    : `<div class="empty-state">${issueEmptyText}</div>`;
+  const overflowHtml = issueOverflow > 0
+    ? `<p class="section-note">还有 ${issueOverflow} 个问题，点击“查看问题”打开完整列表。</p>`
+    : "";
+  const calloutActionHtml = calloutAction && calloutAction.action && calloutAction.label
+    ? `<button type="button" class="note-action" data-action="${calloutAction.action}">${calloutAction.label}</button>`
+    : "";
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -855,100 +1263,461 @@ function buildSidebarHomeHtml(model) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f3f7fb;
-      --panel: #ffffff;
-      --text: #1f3246;
-      --muted: #4f6479;
-      --line: #d7e3ee;
-      --primary: #0b74de;
-      --primary-hover: #095fb3;
-      --ghost: #edf4fb;
-      --ghost-hover: #e2edf8;
+      color-scheme: light dark;
+      --bg: var(--vscode-sideBar-background, #1e1e1e);
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-elevated: rgba(255, 255, 255, 0.03);
+      --surface-hover: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.06));
+      --surface-tint: rgba(55, 148, 255, 0.10);
+      --border: var(--vscode-sideBar-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.3)));
+      --text: var(--vscode-sideBar-foreground, var(--vscode-foreground, #cccccc));
+      --muted: var(--vscode-descriptionForeground, #9da1a6);
+      --accent: var(--vscode-textLink-foreground, var(--vscode-button-background, #0e639c));
+      --accent-strong: var(--vscode-focusBorder, var(--vscode-textLink-foreground, #3794ff));
+      --button-bg: var(--vscode-button-background, #0e639c);
+      --button-fg: var(--vscode-button-foreground, #ffffff);
+      --button-hover: var(--vscode-button-hoverBackground, #1177bb);
+      --secondary-bg: var(--vscode-button-secondaryBackground, rgba(255, 255, 255, 0.08));
+      --secondary-fg: var(--vscode-button-secondaryForeground, var(--text));
+      --secondary-hover: var(--vscode-button-secondaryHoverBackground, rgba(255, 255, 255, 0.12));
+      --badge-bg: var(--vscode-badge-background, rgba(90, 93, 94, 0.35));
+      --badge-fg: var(--vscode-badge-foreground, var(--text));
+      --selection: var(--vscode-list-activeSelectionBackground, rgba(55, 148, 255, 0.16));
+      --ok: var(--vscode-testing-iconPassed, #89d185);
+      --error: var(--vscode-testing-iconFailed, var(--vscode-errorForeground, #f48771));
+      --unknown: var(--vscode-descriptionForeground, #9da1a6);
+      --ok-bg: rgba(137, 209, 133, 0.12);
+      --error-bg: rgba(244, 135, 113, 0.12);
+      --unknown-bg: rgba(157, 161, 166, 0.12);
+      --shadow: rgba(0, 0, 0, 0.24);
+    }
+
+    body.vscode-light {
+      --surface: rgba(0, 0, 0, 0.035);
+      --surface-elevated: rgba(0, 0, 0, 0.02);
+      --surface-hover: rgba(0, 0, 0, 0.06);
+      --surface-tint: rgba(0, 122, 204, 0.08);
+      --border: var(--vscode-sideBar-border, var(--vscode-panel-border, rgba(0, 0, 0, 0.12)));
+      --secondary-bg: rgba(0, 0, 0, 0.04);
+      --secondary-hover: rgba(0, 0, 0, 0.08);
+      --selection: rgba(0, 122, 204, 0.10);
+      --ok-bg: rgba(30, 122, 58, 0.08);
+      --error-bg: rgba(196, 43, 28, 0.08);
+      --unknown-bg: rgba(90, 93, 94, 0.10);
+      --shadow: rgba(15, 23, 42, 0.10);
+    }
+
+    body.vscode-high-contrast,
+    body.vscode-high-contrast-light {
+      --border: var(--vscode-contrastBorder, #ffffff);
+      --surface: transparent;
+      --surface-elevated: transparent;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      padding: 12px;
-      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      padding: 10px;
+      background: var(--bg);
       color: var(--text);
-      font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+      font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
     }
 
-    .card {
-      border: 1px solid var(--line);
+    .shell {
+      display: grid;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
       border-radius: 12px;
-      background: var(--panel);
-      padding: 12px;
-      box-shadow: 0 6px 16px rgba(22, 47, 74, 0.08);
+      background: var(--surface-elevated);
+      overflow: hidden;
+      box-shadow: 0 14px 28px -24px var(--shadow);
+    }
+
+    .hero-panel {
+      padding: 14px;
+      background:
+        linear-gradient(180deg, var(--surface-tint), transparent 58%),
+        var(--surface-elevated);
+    }
+
+    .hero-header {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
     }
 
     .title {
-      margin: 0 0 6px;
-      font-size: 16px;
-      font-weight: 700;
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
-    .meta {
+    .title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title-stack {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .summary {
       margin: 0;
       font-size: 12px;
-      color: var(--muted);
       line-height: 1.55;
-      word-break: break-all;
+      color: var(--muted);
     }
 
-    .meta + .meta {
-      margin-top: 4px;
-    }
-
-    .actions {
-      margin-top: 12px;
+    .overview-grid {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
     }
 
-    button {
-      border: 0;
-      border-radius: 9px;
-      padding: 8px 10px;
-      text-align: left;
+    .overview-tile {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--surface);
+    }
+
+    body.vscode-light .overview-tile {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.72));
+    }
+
+    .overview-label,
+    .meta-key,
+    .fact-label {
+      font-size: 11px;
+      line-height: 1.45;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .overview-value {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .meta-list {
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 98px minmax(0, 1fr);
+      gap: 8px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-value,
+    .fact-value {
+      min-width: 0;
       font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .section-meta,
+    .item-note,
+    .issue-message,
+    .issue-location,
+    .empty-state,
+    .section-note,
+    .note-copy {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .stack {
+      display: grid;
+      gap: 6px;
+      padding: 10px 12px 12px;
+    }
+
+    .badge,
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: nowrap;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+    }
+
+    .badge.ok,
+    .status-badge.ok {
+      color: var(--ok);
+      background: var(--ok-bg);
+    }
+
+    .badge.error,
+    .status-badge.error {
+      color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .badge.unknown,
+    .status-badge.unknown {
+      color: var(--unknown);
+      background: var(--unknown-bg);
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+      font: inherit;
       cursor: pointer;
-      transition: background 120ms ease;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
     }
 
-    button.primary {
-      color: #ffffff;
-      background: var(--primary);
+    button:focus-visible {
+      outline: 1px solid var(--accent-strong);
+      outline-offset: -1px;
     }
 
-    button.primary:hover {
-      background: var(--primary-hover);
+    .action-card {
+      display: grid;
+      gap: 4px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), transparent;
+      color: var(--text);
     }
 
-    button.ghost {
-      color: #234563;
-      background: var(--ghost);
+    .action-card.primary {
+      background: linear-gradient(180deg, rgba(55, 148, 255, 0.18), rgba(55, 148, 255, 0.08));
+      border-color: var(--accent-strong);
     }
 
-    button.ghost:hover {
-      background: var(--ghost-hover);
+    .action-card.primary:hover {
+      background: linear-gradient(180deg, rgba(55, 148, 255, 0.24), rgba(55, 148, 255, 0.12));
+    }
+
+    .action-card.ghost {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--secondary-bg);
+      color: var(--secondary-fg);
+    }
+
+    .action-card.ghost:hover {
+      background: var(--secondary-hover);
+    }
+
+    .action-card:hover,
+    .issue-item:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent-strong);
+    }
+
+    .action-label {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .action-description {
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .health-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), transparent;
+    }
+
+    .item-head,
+    .issue-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .item-title {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .issue-item {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), transparent;
+      color: var(--text);
+    }
+
+    .issue-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .issue-code {
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--accent);
+    }
+
+    .issue-hint {
+      font-size: 10px;
+      line-height: 1.45;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .note-panel {
+      padding: 10px 12px 12px;
+      border-left: 2px solid var(--accent-strong);
+      background:
+        linear-gradient(180deg, rgba(55, 148, 255, 0.10), transparent 72%),
+        var(--surface-elevated);
+    }
+
+    .note-panel.ok {
+      border-left-color: var(--ok);
+    }
+
+    .note-panel.error {
+      border-left-color: var(--error);
+    }
+
+    .note-panel.unknown {
+      border-left-color: var(--unknown);
+    }
+
+    .note-copy {
+      margin-top: 0;
+    }
+
+    .note-action {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--button-fg);
+      background: var(--button-bg);
+    }
+
+    .note-action:hover {
+      background: var(--button-hover);
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1 class="title">ArchSync</h1>
-    <p class="meta">Workspace: ${workspace}</p>
-    <p class="meta">Framework tree: ${treePath}</p>
-    <p class="meta">Mapping validation: ${mappingStatus}</p>
-    <p class="meta">Issues: ${issueSummary}</p>
+  <div class="shell">
+    <section class="panel hero-panel">
+      <div class="hero-header">
+        <div class="title-row">
+          <div class="title-stack">
+            <h1 class="title">ArchSync</h1>
+            <p class="summary">${heroSummary}</p>
+          </div>
+        <span class="status-badge ${heroTone}">${heroStatus}</span>
+        </div>
+        <div class="overview-grid">
+          ${summaryTilesHtml}
+        </div>
+        <div class="meta-list">
+          ${metaRowsHtml}
+        </div>
+      </div>
+    </section>
 
-    <div class="actions">
-      <button class="primary" data-action="openTree">打开树图</button>
-      <button class="ghost" data-action="refreshTree">刷新树图</button>
-      <button class="ghost" data-action="validate">执行校验</button>
-      <button class="ghost" data-action="showIssues">查看问题</button>
-    </div>
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">快速操作</h2>
+        <span class="section-meta">${issueSummary}</span>
+      </div>
+      <div class="stack">
+        ${actionItemsHtml}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">工作区信号</h2>
+        <span class="badge ${lastValidationTone}">最近校验</span>
+      </div>
+      <div class="stack">
+        ${healthItemsHtml}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">问题预览</h2>
+        <span class="section-meta">${issueSummary}</span>
+      </div>
+      <div class="stack">
+        ${issuesHtml}
+        ${overflowHtml}
+      </div>
+    </section>
+
+    <section class="panel note-panel ${calloutTone}">
+      <div class="panel-header">
+        <h2 class="panel-title">${calloutTitle}</h2>
+      </div>
+      <div class="stack">
+        <p class="note-copy">${calloutBody}</p>
+        ${calloutActionHtml}
+      </div>
+    </section>
   </div>
 
   <script>
@@ -958,7 +1727,12 @@ function buildSidebarHomeHtml(model) {
         if (!vscode) return;
         const action = button.getAttribute("data-action");
         if (!action) return;
-        vscode.postMessage({ type: "archSync.sidebar." + action });
+        const index = button.getAttribute("data-index");
+        const message = { type: "archSync.sidebar." + action };
+        if (index !== null) {
+          message.index = Number(index);
+        }
+        vscode.postMessage(message);
       });
     }
   </script>

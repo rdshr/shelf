@@ -350,97 +350,158 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
   <title>M Hierarchy Graph</title>
   <style>
     :root {
-      --bg-top: #f2f7fb;
-      --bg-bottom: #edf5ee;
-      --card: #ffffff;
-      --text: #16283a;
-      --sub: #4a5e74;
-      --edge: #89a8c2;
-      --edge-active: #cb6538;
-      --edge-muted: rgba(67, 103, 136, 0.14);
-      --node: #25567f;
-      --node-active: #cb6538;
-      --node-fade: #c7d5e2;
-      --label-chip: rgba(255, 255, 255, 0.9);
-      --label-chip-border: rgba(46, 79, 110, 0.14);
-      --band-a: rgba(41, 89, 126, 0.055);
-      --band-b: rgba(41, 89, 126, 0.015);
-      --shadow: 0 16px 34px rgba(15, 33, 52, 0.11);
+      color-scheme: light dark;
+      --bg: var(--vscode-editor-background, #1e1e1e);
+      --card: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.03));
+      --card-muted: rgba(255, 255, 255, 0.04);
+      --text: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+      --sub: var(--vscode-descriptionForeground, #9da1a6);
+      --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
+      --accent: var(--vscode-textLink-foreground, #3794ff);
+      --accent-strong: var(--vscode-focusBorder, var(--vscode-textLink-foreground, #3794ff));
+      --button-bg: var(--vscode-button-secondaryBackground, rgba(255, 255, 255, 0.06));
+      --button-bg-hover: var(--vscode-button-secondaryHoverBackground, rgba(255, 255, 255, 0.10));
+      --button-fg: var(--vscode-button-secondaryForeground, var(--text));
+      --pill-bg: var(--vscode-badge-background, rgba(90, 93, 94, 0.35));
+      --pill-fg: var(--vscode-badge-foreground, var(--text));
+      --canvas: var(--vscode-editor-background, #1e1e1e);
+      --graph-shell-bg: rgba(255, 255, 255, 0.02);
+      --graph-stage: rgba(255, 255, 255, 0.015);
+      --graph-guide: rgba(255, 255, 255, 0.10);
+      --graph-band-a: rgba(255, 255, 255, 0.04);
+      --graph-band-b: rgba(255, 255, 255, 0.02);
+      --graph-edge: rgba(158, 174, 190, 0.58);
+      --graph-edge-active: var(--accent);
+      --graph-edge-muted: rgba(255, 255, 255, 0.08);
+      --graph-label: var(--text);
+      --graph-label-bg: rgba(30, 30, 30, 0.82);
+      --graph-label-border: rgba(255, 255, 255, 0.08);
+      --graph-node-active: var(--accent);
     }
 
-    * { box-sizing: border-box; }
+    body.vscode-light {
+      --card: #ffffff;
+      --card-muted: #f6f8fa;
+      --border: var(--vscode-panel-border, rgba(0, 0, 0, 0.12));
+      --button-bg: #eef2f7;
+      --button-bg-hover: #e4ebf3;
+      --pill-bg: #edf1f5;
+      --pill-fg: #445366;
+      --canvas: #ffffff;
+      --graph-shell-bg: rgba(0, 0, 0, 0.025);
+      --graph-stage: rgba(0, 0, 0, 0.018);
+      --graph-guide: rgba(0, 0, 0, 0.08);
+      --graph-band-a: rgba(0, 0, 0, 0.04);
+      --graph-band-b: rgba(0, 0, 0, 0.02);
+      --graph-edge: rgba(78, 103, 131, 0.45);
+      --graph-edge-muted: rgba(0, 0, 0, 0.08);
+      --graph-label-bg: rgba(255, 255, 255, 0.86);
+      --graph-label-border: rgba(0, 0, 0, 0.09);
+    }
+
+    body.vscode-high-contrast,
+    body.vscode-high-contrast-light {
+      --border: var(--vscode-contrastBorder, #ffffff);
+      --graph-guide: var(--vscode-contrastBorder, #ffffff);
+      --graph-edge: var(--vscode-contrastActiveBorder, #f38518);
+      --graph-edge-active: var(--vscode-contrastActiveBorder, #f38518);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
       color: var(--text);
-      font-family: \"Noto Sans SC\", \"Source Han Sans SC\", \"PingFang SC\", sans-serif;
-      background:
-        radial-gradient(circle at 8% 0%, #ffffff 0%, transparent 38%),
-        radial-gradient(circle at 95% 8%, #ffffff 0%, transparent 32%),
-        linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+      font-family: var(--vscode-font-family, \"Segoe WPC\", \"Segoe UI\", sans-serif);
+      background: var(--bg);
     }
 
     .layout {
-      max-width: 1720px;
-      margin: 16px auto;
-      padding: 0 16px 18px;
+      max-width: none;
+      margin: 0 auto;
+      padding: 12px;
       display: grid;
-      grid-template-columns: minmax(0, 2.55fr) minmax(320px, 1fr);
-      gap: 16px;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 320px);
+      gap: 12px;
       align-items: start;
     }
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(29, 57, 88, 0.1);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       overflow: hidden;
     }
 
     .graph-card {
       padding: 0;
+      display: grid;
     }
 
     .head {
-      padding: 16px 20px 12px;
-      border-bottom: 1px solid #e9eef4;
-      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
     }
 
     h1 {
       margin: 0;
-      font-size: 29px;
-      letter-spacing: 0.2px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
       line-height: 1.2;
     }
 
     .desc {
-      margin: 7px 0 0;
+      margin: 6px 0 0;
       color: var(--sub);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.55;
     }
 
     .legend {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
-      padding: 10px 16px;
-      border-bottom: 1px solid #e9eef4;
-      background: #f8fcff;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+    }
+
+    .graph-shell {
+      padding: 12px;
+      background:
+        linear-gradient(180deg, rgba(55, 148, 255, 0.06), transparent 40%),
+        var(--graph-shell-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .graph-scroll {
+      overflow: auto;
+      max-height: min(76vh, 980px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--graph-stage);
+    }
+
+    .graph-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 14px;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      color: #2d4e6a;
-      border: 1px solid #d6e1ec;
-      background: #edf6ff;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--pill-fg);
+      border: 1px solid var(--border);
+      background: var(--pill-bg);
       white-space: nowrap;
     }
 
@@ -449,67 +510,163 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       align-items: center;
       gap: 6px;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      color: #244a68;
-      border: 1px solid #d4e0ec;
-      background: #f4faff;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--pill-fg);
+      border: 1px solid var(--border);
+      background: var(--card-muted);
     }
 
     .switch-pill input {
       margin: 0;
-      accent-color: #2d709e;
+      accent-color: var(--accent);
     }
 
     #graphSvg {
-      width: 100%;
+      width: auto;
+      height: auto;
       display: block;
-      background:
-        radial-gradient(circle at 50% -20%, #ffffff 0%, #f4fafe 45%, #ebf3f8 100%);
+      background: transparent;
     }
 
     .foot {
       margin: 0;
-      padding: 10px 14px;
+      padding: 10px 12px;
       color: var(--sub);
-      font-size: 12px;
-      border-top: 1px solid #e9eef4;
-      background: #f8fcff;
+      font-size: 11px;
+      border-top: 1px solid var(--border);
+      background: transparent;
     }
 
     .side {
       display: grid;
-      gap: 14px;
+      gap: 12px;
       align-content: start;
+      position: sticky;
+      top: 12px;
     }
 
     .info-card,
     .detail-card {
-      padding: 14px 14px 12px;
+      padding: 12px;
+    }
+
+    .detail-card {
+      max-height: calc(100vh - 24px);
+      overflow: auto;
     }
 
     .info-title,
     .detail-title {
       margin: 0 0 8px;
-      font-size: 17px;
-      color: #223246;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
     .meta {
       margin: 0;
       color: var(--sub);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.55;
     }
 
-    .kv {
-      margin: 7px 0;
-      font-size: 14px;
+    .stat-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .stat-row:first-child {
+      padding-top: 0;
+    }
+
+    .stat-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .stat-key {
+      color: var(--sub);
+      overflow-wrap: anywhere;
+    }
+
+    .stat-value {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .detail-empty {
+      margin: 0;
+    }
+
+    .detail-group {
+      display: grid;
+      gap: 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-group:first-child {
+      padding-top: 0;
+    }
+
+    .detail-group:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .detail-section-title {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .detail-kv {
+      display: grid;
+      gap: 4px;
+    }
+
+    .detail-key {
+      font-size: 11px;
       line-height: 1.4;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .detail-value {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .mono {
+      font-family: var(--vscode-editor-font-family, \"Cascadia Code\", monospace);
+      font-size: 11px;
+    }
+
+    .kv {
+      margin: 0 0 8px;
+      font-size: 12px;
+      line-height: 1.55;
     }
 
     .kv b {
-      color: #2a445d;
+      color: var(--sub);
+      font-weight: 600;
     }
 
     ul {
@@ -519,38 +676,81 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     li {
       margin: 3px 0;
-      font-size: 13px;
-      color: #30485f;
+      font-size: 12px;
+      color: var(--text);
       line-height: 1.45;
     }
 
+    button {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 9px;
+      font: inherit;
+      font-size: 11px;
+      color: var(--button-fg);
+      background: var(--button-bg);
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--button-bg-hover);
+    }
+
+    button:focus-visible {
+      outline: 1px solid var(--accent-strong);
+      outline-offset: -1px;
+    }
+
+    .action-row {
+      margin: 0 0 8px;
+    }
+
+    .detail-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .detail-item {
+      margin: 0 0 6px;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .detail-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding-inline: 10px;
+    }
+
     .level-band {
-      fill: var(--band-a);
-      stroke: rgba(76, 109, 136, 0.2);
+      fill: var(--graph-band-a);
+      stroke: var(--border);
       stroke-width: 1;
     }
 
     .level-band.alt {
-      fill: var(--band-b);
+      fill: var(--graph-band-b);
     }
 
     .level-guide {
-      stroke: #c7d6e4;
-      stroke-width: 1.1;
-      stroke-dasharray: 4 7;
+      stroke: var(--graph-guide);
+      stroke-width: 1;
+      stroke-dasharray: 4 6;
     }
 
     .level-label {
-      font-size: 13px;
-      fill: #274862;
-      font-weight: 700;
-      letter-spacing: 0.2px;
+      font-size: 11px;
+      fill: var(--sub);
+      font-weight: 600;
+      letter-spacing: 0.04em;
     }
 
     .edge {
       fill: none;
-      stroke: var(--edge);
-      stroke-width: 2.1;
+      stroke: var(--graph-edge);
+      stroke-width: 1.8;
       stroke-linecap: round;
       marker-end: url(#arrowDefault);
       opacity: 0.86;
@@ -558,44 +758,53 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     .edge.faded {
-      opacity: 0.06;
-      stroke: var(--edge-muted);
+      opacity: 0.12;
+      stroke: var(--graph-edge-muted);
     }
 
     .edge.active {
-      stroke: var(--edge-active);
+      stroke: var(--graph-edge-active);
       marker-end: url(#arrowActive);
       opacity: 1;
-      stroke-width: 3.4;
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 8px rgba(55, 148, 255, 0.24));
+    }
+
+    .arrow-default {
+      fill: var(--graph-edge);
+    }
+
+    .arrow-active {
+      fill: var(--graph-edge-active);
     }
 
     .node-circle {
-      fill: var(--node);
-      stroke: #ffffff;
-      stroke-width: 3;
+      fill: var(--node-fill, var(--graph-node-active));
+      stroke: var(--canvas);
+      stroke-width: 2.4;
       cursor: pointer;
-      transition: transform 140ms ease, fill 140ms ease, opacity 140ms ease;
+      transition: transform 140ms ease, opacity 140ms ease, filter 140ms ease;
       transform-origin: center;
     }
 
     .node-circle:hover {
-      transform: scale(1.03);
+      transform: scale(1.02);
     }
 
     .node-circle.faded {
-      fill: var(--node-fade);
-      opacity: 0.22;
+      opacity: 0.24;
     }
 
     .node-circle.active {
-      fill: var(--node-active);
+      fill: var(--graph-node-active);
       transform: scale(1.06);
+      filter: drop-shadow(0 0 12px rgba(55, 148, 255, 0.32));
     }
 
     .node-label {
-      fill: #1a3248;
+      fill: var(--graph-label);
       font-size: 11px;
-      font-weight: 760;
+      font-weight: 600;
       text-anchor: middle;
       dominant-baseline: hanging;
       pointer-events: none;
@@ -612,8 +821,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     .node-label-box {
-      fill: var(--label-chip);
-      stroke: var(--label-chip-border);
+      fill: var(--graph-label-bg);
+      stroke: var(--graph-label-border);
       stroke-width: 1;
       pointer-events: none;
       transition: opacity 120ms ease;
@@ -634,6 +843,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
       .side {
         grid-template-columns: 1fr 1fr;
+        position: static;
       }
 
       .detail-card {
@@ -643,24 +853,23 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     @media (max-width: 760px) {
       body {
-        font-size: 14px;
+        font-size: 13px;
       }
 
       .layout {
-        margin: 10px auto;
-        padding: 0 10px 14px;
+        padding: 10px;
       }
 
       .head {
-        padding: 14px 14px 10px;
+        padding: 12px;
       }
 
       h1 {
-        font-size: 23px;
+        font-size: 13px;
       }
 
       .desc {
-        font-size: 13px;
+        font-size: 12px;
       }
 
       .legend {
@@ -670,6 +879,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
       .side {
         grid-template-columns: 1fr;
+        position: static;
       }
     }
   </style>
@@ -691,7 +901,13 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
         </label>
         <span class=\"pill\">点击节点查看直连上游/下游关系</span>
       </div>
-      <svg id=\"graphSvg\" role=\"img\" aria-label=\"M hierarchy graph\"></svg>
+      <div class=\"graph-shell\">
+        <div class=\"graph-scroll\">
+          <div class=\"graph-stage\">
+            <svg id=\"graphSvg\" role=\"img\" aria-label=\"M hierarchy graph\"></svg>
+          </div>
+        </div>
+      </div>
       <p class=\"foot\">图中只展示 M 结构层级与组合关系，不包含代码规范与框架规范条目。</p>
     </section>
 
@@ -708,7 +924,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
       <section class=\"card detail-card\">
         <h2 class=\"detail-title\">节点详情</h2>
-        <div id=\"detailBox\" class=\"meta\">点击左侧节点查看详情。</div>
+        <div id=\"detailBox\"><p class=\"meta detail-empty\">点击左侧节点查看详情。</p></div>
       </section>
     </aside>
   </div>
@@ -729,12 +945,30 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     const relationStatsEl = document.getElementById("relationStats");
     const detailBoxEl = document.getElementById("detailBox");
 
+    function appendStatRow(container, label, value) {
+      const row = document.createElement("div");
+      row.className = "stat-row";
+
+      const key = document.createElement("span");
+      key.className = "stat-key";
+      key.textContent = label;
+
+      const val = document.createElement("span");
+      val.className = "stat-value";
+      val.textContent = value;
+
+      row.append(key, val);
+      container.appendChild(row);
+    }
+
     titleEl.textContent = graphData.title;
     descriptionEl.textContent = graphData.description;
     summaryNodesEl.textContent = `节点数: ${graphData.nodes.length}`;
     summaryEdgesEl.textContent = `关系边: ${graphData.edges.length}`;
 
     svg.setAttribute("viewBox", `0 0 ${graphData.width} ${graphData.height}`);
+    svg.setAttribute("width", String(graphData.width));
+    svg.setAttribute("height", String(graphData.height));
 
     const byId = new Map(graphData.nodes.map((node) => [node.id, node]));
     const incoming = new Map(graphData.nodes.map((node) => [node.id, []]));
@@ -766,33 +1000,28 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
         nodesInLevel.reduce((sum, node) => sum + node.y, 0) / Math.max(1, nodesInLevel.length);
       levelCenters.set(level, avgY);
 
-      const meta = document.createElement("p");
-      meta.className = "meta";
-      meta.textContent = `${graphData.level_labels[String(level)] ?? `层级 ${level}`}：${graphData.level_node_counts[String(level)] ?? 0} 个节点`;
-      levelStatsEl.appendChild(meta);
+      appendStatRow(
+        levelStatsEl,
+        graphData.level_labels[String(level)] ?? `层级 ${level}`,
+        `${graphData.level_node_counts[String(level)] ?? 0} 个节点`
+      );
     }
 
     for (const [relation, count] of Object.entries(graphData.relation_counts ?? {})) {
-      const meta = document.createElement("p");
-      meta.className = "meta";
-      meta.textContent = `${relation}：${count}`;
-      relationStatsEl.appendChild(meta);
+      appendStatRow(relationStatsEl, relation, String(count));
     }
 
     if (!relationStatsEl.children.length) {
-      const meta = document.createElement("p");
-      meta.className = "meta";
-      meta.textContent = "无关系类型统计";
-      relationStatsEl.appendChild(meta);
+      appendStatRow(relationStatsEl, "状态", "无关系类型统计");
     }
 
     const defs = document.createElementNS(SVG_NS, "defs");
     defs.innerHTML = `
       <marker id=\"arrowDefault\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\">
-        <path d=\"M0,0 L0,6 L9,3 z\" fill=\"#90a9bf\"></path>
+        <path class=\"arrow-default\" d=\"M0,0 L0,6 L9,3 z\"></path>
       </marker>
       <marker id=\"arrowActive\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\" markerUnits=\"strokeWidth\">
-        <path d=\"M0,0 L0,6 L9,3 z\" fill=\"#d1672f\"></path>
+        <path class=\"arrow-active\" d=\"M0,0 L0,6 L9,3 z\"></path>
       </marker>
     `;
     svg.appendChild(defs);
@@ -854,11 +1083,42 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     const maxLevel = Math.max(...levelNumbers);
     const levelSpan = Math.max(1, maxLevel - minLevel);
 
+    function currentThemeMode() {
+      const classList = document.body.classList;
+      if (
+        classList.contains("vscode-high-contrast") ||
+        classList.contains("vscode-high-contrast-light")
+      ) {
+        return "hc";
+      }
+      if (classList.contains("vscode-light")) {
+        return "light";
+      }
+      if (!classList.contains("vscode-dark")) {
+        if (typeof window.matchMedia === "function") {
+          return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        return "dark";
+      }
+      return "dark";
+    }
+
     function nodeColorForLevel(level) {
       const t = (level - minLevel) / levelSpan;
-      const hue = 208 - Math.round(t * 24);
-      const sat = 56 + Math.round(t * 5);
-      const light = 36 + Math.round(t * 10);
+      const mode = currentThemeMode();
+      if (mode === "hc") {
+        const light = 76 - Math.round(t * 16);
+        return `hsl(210 24% ${light}%)`;
+      }
+      if (mode === "light") {
+        const hue = 210 - Math.round(t * 12);
+        const sat = 30 + Math.round(t * 8);
+        const light = 58 - Math.round(t * 10);
+        return `hsl(${hue} ${sat}% ${light}%)`;
+      }
+      const hue = 214 - Math.round(t * 14);
+      const sat = 34 + Math.round(t * 10);
+      const light = 48 - Math.round(t * 10);
       return `hsl(${hue} ${sat}% ${light}%)`;
     }
 
@@ -894,7 +1154,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       circle.setAttribute("r", "24");
       circle.setAttribute("class", "node-circle");
       circle.setAttribute("data-id", node.id);
-      circle.style.fill = nodeColorForLevel(node.level);
+      circle.style.setProperty("--node-fill", nodeColorForLevel(node.level));
       group.appendChild(circle);
 
       const labelBox = document.createElementNS(SVG_NS, "rect");
@@ -930,6 +1190,14 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       nodeLabelBoxMap.set(node.id, labelBox);
     }
 
+    function applyThemeState() {
+      for (const node of graphData.nodes) {
+        const circle = nodeCircleMap.get(node.id);
+        if (!circle) continue;
+        circle.style.setProperty("--node-fill", nodeColorForLevel(node.level));
+      }
+    }
+
     function escapeHtml(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -941,9 +1209,9 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     function toList(items) {
       if (!Array.isArray(items) || items.length === 0) {
-        return "<li>无</li>";
+        return '<li class="detail-item">无</li>';
       }
-      return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      return items.map((item) => `<li class="detail-item">${escapeHtml(item)}</li>`).join("");
     }
 
     function formatEdgeItem(edge, mode) {
@@ -1021,20 +1289,45 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
           ? Number(node.source_line)
           : 1;
       const sourceAction = sourceFile
-        ? `<button type="button" data-open-source="1" data-file="${escapeHtml(sourceFile)}" data-line="${sourceLine}">打开源文件</button>`
+        ? `<button type="button" class="detail-action" data-open-source="1" data-file="${escapeHtml(sourceFile)}" data-line="${sourceLine}">打开源文件</button>`
         : "无";
 
       detailBoxEl.innerHTML = `
-        <p class=\"kv\"><b>ID:</b> ${escapeHtml(node.id)}</p>
-        <p class=\"kv\"><b>标签:</b> ${escapeHtml(node.label)}</p>
-        <p class=\"kv\"><b>层级:</b> ${escapeHtml(levelName)}</p>
-        <p class=\"kv\"><b>描述:</b> ${escapeHtml(node.description)}</p>
-        <p class=\"kv\"><b>来源:</b> ${sourceFile ? `${escapeHtml(sourceFile)}:${sourceLine}` : "无"}</p>
-        <p class=\"kv\"><b>跳转:</b> ${sourceAction}</p>
-        <p class=\"kv\"><b>上游节点:</b></p>
-        <ul>${toList(upItems)}</ul>
-        <p class=\"kv\"><b>下游节点:</b></p>
-        <ul>${toList(downItems)}</ul>
+        <section class=\"detail-group\">
+          <h3 class=\"detail-section-title\">节点概览</h3>
+          <div class=\"detail-kv\">
+            <span class=\"detail-key\">ID</span>
+            <span class=\"detail-value mono\">${escapeHtml(node.id)}</span>
+          </div>
+          <div class=\"detail-kv\">
+            <span class=\"detail-key\">标签</span>
+            <span class=\"detail-value\">${escapeHtml(node.label)}</span>
+          </div>
+          <div class=\"detail-kv\">
+            <span class=\"detail-key\">层级</span>
+            <span class=\"detail-value\">${escapeHtml(levelName)}</span>
+          </div>
+          <div class=\"detail-kv\">
+            <span class=\"detail-key\">描述</span>
+            <span class=\"detail-value\">${escapeHtml(node.description)}</span>
+          </div>
+        </section>
+        <section class=\"detail-group\">
+          <h3 class=\"detail-section-title\">来源与跳转</h3>
+          <div class=\"detail-kv\">
+            <span class=\"detail-key\">源文件</span>
+            <span class=\"detail-value mono\">${sourceFile ? `${escapeHtml(sourceFile)}:${sourceLine}` : "无"}</span>
+          </div>
+          <div class=\"action-row\">${sourceAction}</div>
+        </section>
+        <section class=\"detail-group\">
+          <h3 class=\"detail-section-title\">上游节点</h3>
+          <ul class=\"detail-list\">${toList(upItems)}</ul>
+        </section>
+        <section class=\"detail-group\">
+          <h3 class=\"detail-section-title\">下游节点</h3>
+          <ul class=\"detail-list\">${toList(downItems)}</ul>
+        </section>
       `;
 
       const openBtn = detailBoxEl.querySelector("[data-open-source='1']");
@@ -1071,9 +1364,19 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       for (const edgeEl of edgeElements) {
         edgeEl.classList.remove("active", "faded");
       }
-      detailBoxEl.textContent = "点击左侧节点查看详情；可通过“显示全部标签”控制整体标签密度。";
+      detailBoxEl.innerHTML =
+        '<p class="meta detail-empty">点击左侧节点查看详情；可通过“显示全部标签”控制整体标签密度。</p>';
       updateLabelVisibility();
     }
+
+    applyThemeState();
+    const themeObserver = new MutationObserver(() => {
+      applyThemeState();
+    });
+    themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
 
     svg.addEventListener("click", resetSelection);
     if (toggleLabelsEl) {
