@@ -1,6 +1,6 @@
 # IPC白名单守卫:IpcBaiMingDanShouWei
 
-@module
+@framework
 
 ## 1. 能力声明（Capability Statement）
 

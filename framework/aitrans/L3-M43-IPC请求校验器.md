@@ -1,6 +1,6 @@
 # IPC请求校验器:IpcQingQiuJiaoYanQi
 
-@module
+@framework
 
 ## 1. 能力声明（Capability Statement）
 

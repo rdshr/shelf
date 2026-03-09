@@ -1,6 +1,6 @@
 # IPC通道注册表:IpcTongDaoZhuCeBiao
 
-@module
+@framework
 
 ## 1. 能力声明（Capability Statement）
 

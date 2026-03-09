@@ -1,6 +1,6 @@
 # IPC响应装配器:IpcXiangYingZhuangPeiQi
 
-@module
+@framework
 
 ## 1. 能力声明（Capability Statement）
 
