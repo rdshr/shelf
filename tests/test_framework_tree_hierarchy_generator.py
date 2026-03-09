@@ -253,10 +253,13 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
                 "node / edge click keeps relationship selection working until drag threshold is crossed",
                 html,
             )
-            self.assertIn("window.addEventListener(\"pointerdown\", beginPan, true);", html)
+            self.assertIn("function safeSetPointerCapture(element, pointerId)", html)
+            self.assertIn("function safeReleasePointerCapture(element, pointerId)", html)
+            self.assertIn("graphScrollEl.addEventListener(\"pointerdown\", beginPan, true);", html)
+            self.assertIn("svg.addEventListener(\"pointerdown\", beginPan, true);", html)
             self.assertIn("window.addEventListener(\"pointermove\", updatePan);", html)
             self.assertIn("window.addEventListener(\"pointerup\", endPan);", html)
-            self.assertIn("graphScrollEl.contains(event.target)", html)
+            self.assertIn("panState.captured = safeSetPointerCapture(graphScrollEl, event.pointerId);", html)
             self.assertIn("selectNode(node.id);", html)
             self.assertIn("selectEdge(edgeKey);", html)
             self.assertIn("data-pan-ignore", html)

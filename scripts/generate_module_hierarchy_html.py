@@ -1681,6 +1681,36 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       return Boolean(target.closest("button, input, label, a, [data-pan-ignore='1']"));
     }
 
+    function safeSetPointerCapture(element, pointerId) {
+      if (!element || typeof element.setPointerCapture !== "function") {
+        return false;
+      }
+      try {
+        element.setPointerCapture(pointerId);
+        return true;
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    function safeReleasePointerCapture(element, pointerId) {
+      if (
+        !element ||
+        typeof element.releasePointerCapture !== "function" ||
+        typeof element.hasPointerCapture !== "function" ||
+        pointerId === null
+      ) {
+        return;
+      }
+      try {
+        if (element.hasPointerCapture(pointerId)) {
+          element.releasePointerCapture(pointerId);
+        }
+      } catch (_error) {
+        // Ignore capture teardown failures so drag cleanup still completes.
+      }
+    }
+
     function beginPan(event) {
       if (!graphScrollEl || panState.active || event.button !== 0) {
         return;
@@ -1715,10 +1745,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
           event.preventDefault();
         }
         graphScrollEl.classList.add("dragging");
-        if (typeof graphScrollEl.setPointerCapture === "function") {
-          graphScrollEl.setPointerCapture(event.pointerId);
-          panState.captured = true;
-        }
+        panState.captured = safeSetPointerCapture(graphScrollEl, event.pointerId);
       }
       if (!panState.moved) {
         return;
@@ -1734,14 +1761,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       if (event && event.pointerId !== undefined && event.pointerId !== panState.pointerId) {
         return;
       }
-      if (
-        typeof graphScrollEl.releasePointerCapture === "function" &&
-        panState.captured &&
-        panState.pointerId !== null &&
-        typeof graphScrollEl.hasPointerCapture === "function" &&
-        graphScrollEl.hasPointerCapture(panState.pointerId)
-      ) {
-        graphScrollEl.releasePointerCapture(panState.pointerId);
+      if (panState.captured) {
+        safeReleasePointerCapture(graphScrollEl, panState.pointerId);
       }
       panState.active = false;
       panState.pointerId = null;
@@ -1770,9 +1791,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       groupDragState.startDx = current.dx;
       groupDragState.startDy = current.dy;
       groupDragState.moved = false;
-      if (typeof svg.setPointerCapture === "function") {
-        svg.setPointerCapture(event.pointerId);
-      }
+      safeSetPointerCapture(svg, event.pointerId);
     }
 
     function endGroupDrag(event) {
@@ -1782,14 +1801,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       if (event && event.pointerId !== undefined && event.pointerId !== groupDragState.pointerId) {
         return;
       }
-      if (
-        typeof svg.releasePointerCapture === "function" &&
-        groupDragState.pointerId !== null &&
-        typeof svg.hasPointerCapture === "function" &&
-        svg.hasPointerCapture(groupDragState.pointerId)
-      ) {
-        svg.releasePointerCapture(groupDragState.pointerId);
-      }
+      safeReleasePointerCapture(svg, groupDragState.pointerId);
       groupDragState.active = false;
       groupDragState.pointerId = null;
       groupDragState.frameworkName = "";
@@ -3018,7 +3030,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       );
     }
 
-    window.addEventListener("pointerdown", beginPan, true);
+    graphScrollEl.addEventListener("pointerdown", beginPan, true);
+    svg.addEventListener("pointerdown", beginPan, true);
     window.addEventListener("pointermove", updatePan);
     window.addEventListener("pointerup", endPan);
     window.addEventListener("pointercancel", endPan);
