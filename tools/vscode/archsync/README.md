@@ -20,6 +20,7 @@
 - Disabled status text no longer shows `n/a`.
 - Auto-fail notification provides buttons: `Open Problems` / `Open Log`.
 - Provides manual commands for validation and framework tree viewing.
+- Provides a direct fallback command to insert the standard `@framework` module template even when editor snippet suggestions are not showing.
 
 ## Install (Local)
 1. Install latest packaged VSIX:
@@ -53,13 +54,17 @@
 - Explicit rollback snapshot for the previous tomoe build is `media/archsync-backup-0.0.11-tomoe-triad.svg`.
 
 ## Commands
+- `ArchSync: Insert Framework Module Template`
 - `ArchSync: Open Framework Tree`
 - `ArchSync: Refresh Framework Tree`
 - `ArchSync: Validate Mapping Now`
 - `ArchSync: Show Mapping Issues`
 
 ## Markdown Snippets
-- `@framework`: insert neutral module template only.
+- `@framework`: insert the standard framework module template.
+- The `@framework` template entry is a repository-side hard authoring contract and must not be removed without an equally direct, default-available replacement.
+- If editor snippet suggestions are not cooperating, use `ArchSync: Insert Framework Module Template` as the explicit fallback entry.
+- Framework-markdown completion also covers the fixed skeleton directly: `@framework`、五个主章节标题、`C/P/B/R/V` 条目，以及 `R*.1~R*.4` 子项。
 - `B`: insert one `B*` line format only.
 - `R`: insert one `R*` + `R*.*` rule block format only.
 

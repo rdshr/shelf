@@ -2,7 +2,7 @@
   "name": "archsync",
   "displayName": "ArchSync",
   "description": "ArchSync: framework tree webview + strict mapping validation guard.",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -21,6 +21,7 @@
     "LICENSE.txt",
     "README.md",
     "extension.js",
+    "framework_completion.js",
     "framework_navigation.js",
     "media/**",
     "snippets/**"
@@ -32,6 +33,7 @@
   "activationEvents": [
     "onStartupFinished",
     "onView:archSync.sidebarHome",
+    "onCommand:archSync.insertFrameworkModuleTemplate",
     "onCommand:archSync.validateNow",
     "onCommand:archSync.openFrameworkTree",
     "onCommand:archSync.refreshFrameworkTree"
@@ -45,6 +47,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "archSync.insertFrameworkModuleTemplate",
+        "title": "ArchSync: Insert Framework Module Template"
+      },
       {
         "command": "archSync.validateNow",
         "title": "ArchSync: Validate Mapping Now"

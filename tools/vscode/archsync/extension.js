@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const vscode = require("vscode");
 const frameworkNavigation = require("./framework_navigation");
+const frameworkCompletion = require("./framework_completion");
 
 const WATCH_PREFIXES = ["framework/", "specs/", "mapping/", "src/", "docs/"];
 const WATCH_FILES = new Set([
@@ -716,9 +717,90 @@ function activate(context) {
     }
   );
 
+  const frameworkCompletionDisposable = vscode.languages.registerCompletionItemProvider(
+    { language: "markdown", scheme: "file" },
+    {
+      provideCompletionItems(document, position) {
+        const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const repoRoot = folder?.uri.fsPath || "";
+        const isFrameworkFile = repoRoot
+          ? frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, repoRoot)
+          : false;
+        const lineText = document.lineAt(position.line).text;
+        const linePrefix = lineText.slice(0, position.character);
+        const wordRange = document.getWordRangeAtPosition(position, /[@A-Za-z_][A-Za-z0-9_.-]*/);
+        const wordPrefix = wordRange
+          ? document.getText(new vscode.Range(wordRange.start, position))
+          : "";
+
+        const entries = frameworkCompletion.getFrameworkCompletionEntries(
+          linePrefix,
+          wordPrefix,
+          isFrameworkFile
+        );
+        if (!entries.length) {
+          return undefined;
+        }
+
+        return entries.map((entry, index) => {
+          const item = new vscode.CompletionItem(
+            entry.label,
+            vscode.CompletionItemKind.Snippet
+          );
+          item.detail = entry.detail;
+          item.documentation = new vscode.MarkdownString(entry.documentation);
+          item.insertText = new vscode.SnippetString(entry.insertText);
+          item.insertTextFormat = vscode.InsertTextFormat.Snippet;
+          item.sortText = String(index).padStart(3, "0");
+          item.filterText = entry.label;
+          return item;
+        });
+      }
+    },
+    "@",
+    "#",
+    "-",
+    "`",
+    "."
+  );
+
   const validateNowDisposable = vscode.commands.registerCommand("archSync.validateNow", async () => {
     scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
   });
+
+  const insertFrameworkTemplateDisposable = vscode.commands.registerCommand(
+    "archSync.insertFrameworkModuleTemplate",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showWarningMessage("ArchSync: no active editor for framework template insertion.");
+        return;
+      }
+
+      if (editor.document.languageId !== "markdown") {
+        vscode.window.showWarningMessage("ArchSync: framework module template can only be inserted into Markdown files.");
+        return;
+      }
+
+      let snippetText = "";
+      try {
+        snippetText = frameworkCompletion.getFrameworkTemplateSnippetText();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        output.appendLine(`[template] ${message}`);
+        vscode.window.showErrorMessage("ArchSync: failed to load the @framework module template.");
+        return;
+      }
+
+      const inserted = await editor.insertSnippet(
+        new vscode.SnippetString(snippetText),
+        editor.selections
+      );
+      if (!inserted) {
+        vscode.window.showWarningMessage("ArchSync: framework module template insertion was cancelled.");
+      }
+    }
+  );
 
   const showIssuesDisposable = vscode.commands.registerCommand("archSync.showIssues", async () => {
     if (!mappingValidationActive && lastRepoRoot) {
@@ -889,6 +971,8 @@ function activate(context) {
     frameworkDefinitionDisposable,
     frameworkHoverDisposable,
     frameworkReferenceDisposable,
+    frameworkCompletionDisposable,
+    insertFrameworkTemplateDisposable,
     validateNowDisposable,
     showIssuesDisposable,
     openFrameworkTreeDisposable,

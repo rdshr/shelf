@@ -3,6 +3,10 @@
     "updated_at": "2026-03-09",
     "l3_sync_notes": [
       {
+        "id": "SYNC-20260309-framework-template-entry",
+        "note": "Promote plain @framework standard-template generation to a hard repository authoring constraint, and keep the active framework/tooling chain aligned with a non-removable direct entry plus regression coverage."
+      },
+      {
         "id": "SYNC-20260309-product-spec-comment-style",
         "note": "Require product_spec.toml and implementation_config.toml to use detailed Chinese comments as the primary human-and-AI discussion surface, and sync the active frontend/knowledge_base/backend framework modules to this authoring rule."
       },

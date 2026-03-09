@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.0.35 - 2026-03-09
+- Added framework-markdown fixed-shape completions in ArchSync. `@framework`, the five standard section headings, `C/P/B/R/V` entries, and `R*.1~R*.4` child lines now have direct completion support instead of relying on snippet discovery alone.
+- Added an explicit `ArchSync: Insert Framework Module Template` fallback command and regression coverage so the `@framework` standard-template entry remains a non-removable authoring contract.
+- Synced repository standards with this requirement: the plain `@framework` template entry is now treated as a hard framework-authoring constraint, not an optional editor convenience.
+
 ## 0.0.34 - 2026-03-09
 - Published a packaging / documentation sync release so the versioned ArchSync metadata tracks the current repository-side framework-tree interaction updates and the new Chinese-first product-spec authoring guidance.
 - This release does not add new extension-side commands; the main visible changes come from the refreshed workspace framework-tree generator/artifacts and the updated spec-writing conventions in the repository.

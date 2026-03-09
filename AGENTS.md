@@ -7,6 +7,7 @@
 - `projects/<project_id>/product_spec.toml` 与 `projects/<project_id>/implementation_config.toml` 默认应使用中文注释，作为人与 AI 协作讨论的主入口。
 - 上述 TOML 文件在篇幅可控时，应优先提供详细注释而不是极简标签；至少在文件头和每个主 section 前说明职责边界、讨论重点与与相邻层的分界。
 - `Product Spec` 注释必须解释产品真相，不得混入仅属于实现层的技巧；`Implementation Config` 注释必须解释实现细化，不得伪装成产品真相。
+- 面向 `framework/*.md` 的标准模板起手能力属于仓库基本作者入口，不得移除。当前保底入口为 ArchSync 的 `@framework` 模板与显式插入命令；若未来重构，必须提供同等直接、默认可用、可测试的替代能力。
 
 ## 工程执行规范（强制）
 
