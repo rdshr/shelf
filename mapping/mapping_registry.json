@@ -140,6 +140,13 @@
                 "children": []
               },
               {
+                "id": "NODE-L2-HYK-BACKEND",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/hyk/L2-M0-后端项目框架.md",
+                "children": []
+              },
+              {
                 "id": "NODE-L3-LAYER",
                 "kind": "layer",
                 "level": "L3",
@@ -612,6 +619,81 @@
       "l1_file": "specs/框架设计核心标准.md",
       "l1_anchor": "## 5. 验证（Verification）",
       "l2_file": "framework/backend/L2-M0-知识库接口框架标准模块.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_demo/backend.py",
+          "symbol": "def verify_knowledge_base_backend("
+        }
+      ]
+    },
+    {
+      "id": "MAP-HYK-BACKEND-CAPABILITY",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 1. 能力声明（Capability Statement）",
+      "l2_file": "framework/hyk/L2-M0-后端项目框架.md",
+      "l2_anchor": "## 1. 能力声明（Capability Statement）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_demo/backend.py",
+          "symbol": "KNOWLEDGE_BASE_API_CAPABILITIES = ("
+        }
+      ]
+    },
+    {
+      "id": "MAP-HYK-BACKEND-B",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/hyk/L2-M0-后端项目框架.md",
+      "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_demo/backend.py",
+          "symbol": "KNOWLEDGE_BASE_API_BOUNDARY = BoundaryDefinition("
+        }
+      ]
+    },
+    {
+      "id": "MAP-HYK-BACKEND-BASE",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 3. 最小可行基（Bases）",
+      "l2_file": "framework/hyk/L2-M0-后端项目框架.md",
+      "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_demo/backend.py",
+          "symbol": "KNOWLEDGE_BASE_API_BASES = ("
+        }
+      ]
+    },
+    {
+      "id": "MAP-HYK-BACKEND-COMBINATION",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "framework/hyk/L2-M0-后端项目框架.md",
+      "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_demo/backend.py",
+          "symbol": "def build_knowledge_base_router("
+        }
+      ]
+    },
+    {
+      "id": "MAP-HYK-BACKEND-V",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "framework/hyk/L2-M0-后端项目框架.md",
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {
