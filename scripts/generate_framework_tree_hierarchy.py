@@ -430,6 +430,11 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
             add_warning(
                 f"module '{module_name}' has no L0 base (lowest existing level: L{levels[0]})."
             )
+    max_level_by_module = {
+        module_name: max(levels)
+        for module_name, levels in module_level_files.items()
+        if levels
+    }
 
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
@@ -536,11 +541,11 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
                 source_ref_local = f"L{source_level}.{source_module}"
                 qualified_lookup = f"{source_framework}:{source_ref_local}"
 
-                if source_framework == module_name and source_level >= level_num:
+                if source_framework == module_name and source_ref_local == target_ref:
                     add_warning(
                         (
-                            f"{source_file}:{source_line}: local upstream ref ignored "
-                            f"({source_ref} -> {target_ref}); local refs must point to a lower layer than L{level_num}"
+                            f"{source_file}:{source_line}: self module ref ignored "
+                            f"({source_ref} -> {target_ref})"
                         )
                     )
                     continue
@@ -577,7 +582,7 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
                     edge_bucket["terms"].add(source_ref)
             continue
 
-        if level_num == 0:
+        if level_num == 0 or level_num == max_level_by_module.get(module_name, level_num):
             continue
 
         add_warning(

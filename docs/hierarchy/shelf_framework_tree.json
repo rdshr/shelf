@@ -1,7 +1,7 @@
 {
   "root": {
     "title": "框架标准树结构图",
-    "description": "从 framework/<module>/Lx-Mn-*.md 自动生成；模块级节点为文件级 M 编号（Lx.Mn），边来自基中显式上游模块引用；按 framework 文件夹分组展示，组间位置由跨框架引用决定；Lx 只表示各 framework 自己的本地层。 警告数量=17。",
+    "description": "从 framework/<module>/Lx-Mn-*.md 自动生成；模块级节点为文件级 M 编号（Lx.Mn），边来自基中显式上游模块引用；按 framework 文件夹分组展示，组间位置由跨框架引用决定；Lx 只表示各 framework 自己的本地层。",
     "level_labels": {
       "0": "L0 标准层",
       "1": "L1 标准层",
@@ -41,8 +41,8 @@
           "0": 1,
           "1": 1,
           "2": 3,
-          "3": 3,
-          "4": 3
+          "3": 5,
+          "4": 7
         }
       }
     ],
@@ -166,7 +166,7 @@
         "base_items": [
           {
             "token": "B1",
-            "text": "文档分块：对已完成归一化的文档执行资格识别，判断其是否具备进入清洗流程的资格；对于具备清洗资格的文档，按照输入分块标准将文档分为多个内容块，再按稳定输出格式生成新的分块结果文件；每个块记录都必须保留原文映射并预留属性扩展接口；本基向下引用 `L1.M0[B1,B2,B3]` 作为展开",
+            "text": "文档分块：`L1.M0[B1,B2,B3]`；对已完成归一化的文档执行资格识别，判断其是否具备进入清洗流程的资格；对于具备清洗资格的文档，按照输入分块标准将文档分为多个内容块，再按稳定输出格式生成新的分块结果文件；每个块记录都必须保留原文映射并预留属性扩展接口",
             "line": "33"
           },
           {
@@ -570,17 +570,17 @@
         "base_items": [
           {
             "token": "B1",
-            "text": "资格识别结构基：向下引用 `L2.M0[B1,B2,B3]` 作为展开",
+            "text": "资格识别结构基：`L2.M0[B1,B2,B3]`",
             "line": "30"
           },
           {
             "token": "B2",
-            "text": "分块结果构造结构基：向下引用 `L2.M1[B1,B2,B3]` 作为展开",
+            "text": "分块结果构造结构基：`L2.M1[B1,B2,B3]`",
             "line": "31"
           },
           {
             "token": "B3",
-            "text": "结果输出结构基：向下引用 `L2.M2[B1,B2,B3]` 作为展开",
+            "text": "结果输出结构基：`L2.M2[B1,B2,B3]`",
             "line": "32"
           }
         ]
@@ -1583,17 +1583,17 @@
         "base_items": [
           {
             "token": "B1",
-            "text": "属性读取结构基",
+            "text": "属性读取结构基：`L3.M0[B1]`",
             "line": "23"
           },
           {
             "token": "B2",
-            "text": "简单对比结构基",
+            "text": "简单对比结构基：`L3.M0[B2]`",
             "line": "24"
           },
           {
             "token": "B3",
-            "text": "资格结果封装结构基",
+            "text": "资格结果封装结构基：`L3.M0[B3]`",
             "line": "25"
           }
         ]
@@ -1635,17 +1635,17 @@
         "base_items": [
           {
             "token": "B1",
-            "text": "分块规范结构基：向下引用 `L3.M0[B1,B2,B3]` 作为展开",
+            "text": "分块规范结构基：`L3.M1[B1,B2,B3]`",
             "line": "29"
           },
           {
             "token": "B2",
-            "text": "分块执行器结构基：向下引用 `L3.M1[B1,B2,B3]` 作为展开",
+            "text": "分块执行器结构基：`L3.M2[B1,B2,B3]`",
             "line": "30"
           },
           {
             "token": "B3",
-            "text": "结果格式器结构基：向下引用 `L3.M2[B1,B2,B3]` 作为展开",
+            "text": "结果格式器结构基：`L3.M3[B1,B2,B3]`",
             "line": "31"
           }
         ]
@@ -1687,17 +1687,17 @@
         "base_items": [
           {
             "token": "B1",
-            "text": "结果模型结构基",
+            "text": "结果模型结构基：`L3.M4[B1]`",
             "line": "22"
           },
           {
             "token": "B2",
-            "text": "序列化器结构基",
+            "text": "序列化器结构基：`L3.M4[B2]`",
             "line": "23"
           },
           {
             "token": "B3",
-            "text": "文件写入器结构基",
+            "text": "文件写入器结构基：`L3.M4[B3]`",
             "line": "24"
           }
         ]
@@ -1935,12 +1935,324 @@
         "label": "L3.data_washer.M0",
         "level": 3,
         "order": 5,
-        "description": "module=data_washer | level=L3 | node=L3.M0 | file=framework/data_washer/L3/L3-M0-分块规范模块.md | title=L3-M0-分块规范模块",
-        "source_file": "framework/data_washer/L3/L3-M0-分块规范模块.md",
-        "source_line": 21,
+        "description": "module=data_washer | level=L3 | node=L3.M0 | file=framework/data_washer/L3/L3-M0-资格识别模块.md | title=L3-M0-资格识别模块",
+        "source_file": "framework/data_washer/L3/L3-M0-资格识别模块.md",
+        "source_line": 23,
         "doc_line": 1,
         "module_name": "data_washer",
         "module_ref": "L3.M0",
+        "module_title": "资格识别模块:Qualify",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "属性读取能力：提供对归一文档变量按指定读取目标执行属性读取的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "简单对比能力：提供将读取结果与对比目标执行简单对比并得出资格结论的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "资格结果封装能力：提供对资格识别结果执行稳定封装的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责分块规则执行与分块结果文件产出",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "属性读取结构基：`L4.M0[B1]`",
+            "line": "23"
+          },
+          {
+            "token": "B2",
+            "text": "简单对比结构基：`L4.M0[B2]`",
+            "line": "24"
+          },
+          {
+            "token": "B3",
+            "text": "资格结果封装结构基：`L4.M0[B3]`",
+            "line": "25"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0036",
+        "label": "L3.data_washer.M1",
+        "level": 3,
+        "order": 6,
+        "description": "module=data_washer | level=L3 | node=L3.M1 | file=framework/data_washer/L3/L3-M1-分块规范模块.md | title=L3-M1-分块规范模块",
+        "source_file": "framework/data_washer/L3/L3-M1-分块规范模块.md",
+        "source_line": 21,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L3.M1",
+        "module_title": "分块规范模块:ChunkSpec",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "规则集组织能力：提供对分块规则集合建立稳定结构表达的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "边界策略组织能力：提供对分块边界策略建立稳定结构表达的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "规范模型组织能力：提供将规则集与边界策略组装为稳定分块规范模型的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责文档扫描、规则匹配与结果格式化",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "规则集结构基：`L4.M1[B1]`",
+            "line": "21"
+          },
+          {
+            "token": "B2",
+            "text": "边界策略结构基：`L4.M1[B2]`",
+            "line": "22"
+          },
+          {
+            "token": "B3",
+            "text": "规范模型结构基：`L4.M1[B3]`",
+            "line": "23"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0037",
+        "label": "L3.data_washer.M2",
+        "level": 3,
+        "order": 7,
+        "description": "module=data_washer | level=L3 | node=L3.M2 | file=framework/data_washer/L3/L3-M2-分块执行器模块.md | title=L3-M2-分块执行器模块",
+        "source_file": "framework/data_washer/L3/L3-M2-分块执行器模块.md",
+        "source_line": 26,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L3.M2",
+        "module_title": "分块执行器模块:ChunkExec",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "文档扫描能力：提供对归一文档执行顺序扫描的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "规则匹配能力：提供依据分块规范将扫描结果执行规则匹配的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "分块组装能力：提供依据匹配结果组装稳定分块集合的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责分块规范建模与结果格式化",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "文档扫描器结构基：`L4.M2[B1,B2,B3]`",
+            "line": "26"
+          },
+          {
+            "token": "B2",
+            "text": "规则匹配器结构基：`L4.M3[B1,B2,B3]`",
+            "line": "27"
+          },
+          {
+            "token": "B3",
+            "text": "分块器结构基：`L4.M4[B1,B2,B3]`",
+            "line": "28"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0038",
+        "label": "L3.data_washer.M3",
+        "level": 3,
+        "order": 8,
+        "description": "module=data_washer | level=L3 | node=L3.M3 | file=framework/data_washer/L3/L3-M3-结果格式器模块.md | title=L3-M3-结果格式器模块",
+        "source_file": "framework/data_washer/L3/L3-M3-结果格式器模块.md",
+        "source_line": 24,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L3.M3",
+        "module_title": "结果格式器模块:ChunkFormat",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "追踪绑定能力：提供对分块集合绑定稳定追踪标识的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "映射绑定能力：提供对分块集合绑定原文映射与属性扩展信息的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "结果模型组织能力：提供按结果格式要求组织稳定结果模型的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责分块规范建模与分块执行",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "追踪绑定器结构基：`L4.M5[B1]`",
+            "line": "24"
+          },
+          {
+            "token": "B2",
+            "text": "映射绑定器结构基：`L4.M5[B2]`",
+            "line": "25"
+          },
+          {
+            "token": "B3",
+            "text": "结果模型结构基：`L4.M5[B3]`",
+            "line": "26"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0039",
+        "label": "L3.data_washer.M4",
+        "level": 3,
+        "order": 9,
+        "description": "module=data_washer | level=L3 | node=L3.M4 | file=framework/data_washer/L3/L3-M4-结果输出模块.md | title=L3-M4-结果输出模块",
+        "source_file": "framework/data_washer/L3/L3-M4-结果输出模块.md",
+        "source_line": 22,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L3.M4",
+        "module_title": "结果输出模块:ResultOutput",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "结果模型组织能力：提供对上游结果对象集合建立稳定结果模型的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "序列化能力：提供按目标输出格式将结果模型转换为可写入内容的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "文件写入能力：提供生成新的结果文件并完成写入的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责结果对象构造与原文内容读取",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "结果模型结构基：`L4.M6[B1]`",
+            "line": "22"
+          },
+          {
+            "token": "B2",
+            "text": "序列化器结构基：`L4.M6[B2]`",
+            "line": "23"
+          },
+          {
+            "token": "B3",
+            "text": "文件写入器结构基：`L4.M6[B3]`",
+            "line": "24"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0040",
+        "label": "L4.data_washer.M0",
+        "level": 4,
+        "order": 1,
+        "description": "module=data_washer | level=L4 | node=L4.M0 | file=framework/data_washer/L4/L4-M0-资格识别模块.md | title=L4-M0-资格识别模块",
+        "source_file": "framework/data_washer/L4/L4-M0-资格识别模块.md",
+        "source_line": 23,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L4.M0",
+        "module_title": "资格识别模块:Qualify",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "属性读取能力：提供对归一文档变量按指定读取目标执行属性读取的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "简单对比能力：提供将读取结果与对比目标执行简单对比并得出资格结论的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "资格结果封装能力：提供对资格识别结果执行稳定封装的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责分块规则执行与分块结果文件产出",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "属性读取结构基",
+            "line": "23"
+          },
+          {
+            "token": "B2",
+            "text": "简单对比结构基",
+            "line": "24"
+          },
+          {
+            "token": "B3",
+            "text": "资格结果封装结构基",
+            "line": "25"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0041",
+        "label": "L4.data_washer.M1",
+        "level": 4,
+        "order": 2,
+        "description": "module=data_washer | level=L4 | node=L4.M1 | file=framework/data_washer/L4/L4-M1-分块规范模块.md | title=L4-M1-分块规范模块",
+        "source_file": "framework/data_washer/L4/L4-M1-分块规范模块.md",
+        "source_line": 21,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L4.M1",
         "module_title": "分块规范模块:ChunkSpec",
         "capability_items": [
           {
@@ -1983,120 +2295,16 @@
         ]
       },
       {
-        "id": "NODE-FW-0036",
-        "label": "L3.data_washer.M1",
-        "level": 3,
-        "order": 6,
-        "description": "module=data_washer | level=L3 | node=L3.M1 | file=framework/data_washer/L3/L3-M1-分块执行器模块.md | title=L3-M1-分块执行器模块",
-        "source_file": "framework/data_washer/L3/L3-M1-分块执行器模块.md",
-        "source_line": 26,
-        "doc_line": 1,
-        "module_name": "data_washer",
-        "module_ref": "L3.M1",
-        "module_title": "分块执行器模块:ChunkExec",
-        "capability_items": [
-          {
-            "token": "C1",
-            "text": "文档扫描能力：提供对归一文档执行顺序扫描的能力",
-            "line": "7"
-          },
-          {
-            "token": "C2",
-            "text": "规则匹配能力：提供依据分块规范将扫描结果执行规则匹配的能力",
-            "line": "8"
-          },
-          {
-            "token": "C3",
-            "text": "分块组装能力：提供依据匹配结果组装稳定分块集合的能力",
-            "line": "9"
-          },
-          {
-            "token": "C4",
-            "text": "非能力项：不负责分块规范建模与结果格式化",
-            "line": "10"
-          }
-        ],
-        "base_items": [
-          {
-            "token": "B1",
-            "text": "文档扫描器结构基：向下引用 `L4.M0[B1,B2,B3]` 作为展开",
-            "line": "26"
-          },
-          {
-            "token": "B2",
-            "text": "规则匹配器结构基：向下引用 `L4.M1[B1,B2,B3]` 作为展开",
-            "line": "27"
-          },
-          {
-            "token": "B3",
-            "text": "分块器结构基：向下引用 `L4.M2[B1,B2,B3]` 作为展开",
-            "line": "28"
-          }
-        ]
-      },
-      {
-        "id": "NODE-FW-0037",
-        "label": "L3.data_washer.M2",
-        "level": 3,
-        "order": 7,
-        "description": "module=data_washer | level=L3 | node=L3.M2 | file=framework/data_washer/L3/L3-M2-结果格式器模块.md | title=L3-M2-结果格式器模块",
-        "source_file": "framework/data_washer/L3/L3-M2-结果格式器模块.md",
-        "source_line": 24,
-        "doc_line": 1,
-        "module_name": "data_washer",
-        "module_ref": "L3.M2",
-        "module_title": "结果格式器模块:ChunkFormat",
-        "capability_items": [
-          {
-            "token": "C1",
-            "text": "追踪绑定能力：提供对分块集合绑定稳定追踪标识的能力",
-            "line": "7"
-          },
-          {
-            "token": "C2",
-            "text": "映射绑定能力：提供对分块集合绑定原文映射与属性扩展信息的能力",
-            "line": "8"
-          },
-          {
-            "token": "C3",
-            "text": "结果模型组织能力：提供按结果格式要求组织稳定结果模型的能力",
-            "line": "9"
-          },
-          {
-            "token": "C4",
-            "text": "非能力项：不负责分块规范建模与分块执行",
-            "line": "10"
-          }
-        ],
-        "base_items": [
-          {
-            "token": "B1",
-            "text": "追踪绑定器结构基",
-            "line": "24"
-          },
-          {
-            "token": "B2",
-            "text": "映射绑定器结构基",
-            "line": "25"
-          },
-          {
-            "token": "B3",
-            "text": "结果模型结构基",
-            "line": "26"
-          }
-        ]
-      },
-      {
-        "id": "NODE-FW-0038",
-        "label": "L4.data_washer.M0",
+        "id": "NODE-FW-0042",
+        "label": "L4.data_washer.M2",
         "level": 4,
-        "order": 1,
-        "description": "module=data_washer | level=L4 | node=L4.M0 | file=framework/data_washer/L4/L4-M0-文档扫描器模块.md | title=L4-M0-文档扫描器模块",
-        "source_file": "framework/data_washer/L4/L4-M0-文档扫描器模块.md",
+        "order": 3,
+        "description": "module=data_washer | level=L4 | node=L4.M2 | file=framework/data_washer/L4/L4-M2-文档扫描器模块.md | title=L4-M2-文档扫描器模块",
+        "source_file": "framework/data_washer/L4/L4-M2-文档扫描器模块.md",
         "source_line": 23,
         "doc_line": 1,
         "module_name": "data_washer",
-        "module_ref": "L4.M0",
+        "module_ref": "L4.M2",
         "module_title": "文档扫描器模块:DocScan",
         "capability_items": [
           {
@@ -2139,16 +2347,16 @@
         ]
       },
       {
-        "id": "NODE-FW-0039",
-        "label": "L4.data_washer.M1",
+        "id": "NODE-FW-0043",
+        "label": "L4.data_washer.M3",
         "level": 4,
-        "order": 2,
-        "description": "module=data_washer | level=L4 | node=L4.M1 | file=framework/data_washer/L4/L4-M1-规则匹配器模块.md | title=L4-M1-规则匹配器模块",
-        "source_file": "framework/data_washer/L4/L4-M1-规则匹配器模块.md",
+        "order": 4,
+        "description": "module=data_washer | level=L4 | node=L4.M3 | file=framework/data_washer/L4/L4-M3-规则匹配器模块.md | title=L4-M3-规则匹配器模块",
+        "source_file": "framework/data_washer/L4/L4-M3-规则匹配器模块.md",
         "source_line": 23,
         "doc_line": 1,
         "module_name": "data_washer",
-        "module_ref": "L4.M1",
+        "module_ref": "L4.M3",
         "module_title": "规则匹配器模块:RuleMatch",
         "capability_items": [
           {
@@ -2191,16 +2399,16 @@
         ]
       },
       {
-        "id": "NODE-FW-0040",
-        "label": "L4.data_washer.M2",
+        "id": "NODE-FW-0044",
+        "label": "L4.data_washer.M4",
         "level": 4,
-        "order": 3,
-        "description": "module=data_washer | level=L4 | node=L4.M2 | file=framework/data_washer/L4/L4-M2-分块器模块.md | title=L4-M2-分块器模块",
-        "source_file": "framework/data_washer/L4/L4-M2-分块器模块.md",
+        "order": 5,
+        "description": "module=data_washer | level=L4 | node=L4.M4 | file=framework/data_washer/L4/L4-M4-分块器模块.md | title=L4-M4-分块器模块",
+        "source_file": "framework/data_washer/L4/L4-M4-分块器模块.md",
         "source_line": 24,
         "doc_line": 1,
         "module_name": "data_washer",
-        "module_ref": "L4.M2",
+        "module_ref": "L4.M4",
         "module_title": "分块器模块:ChunkAssemble",
         "capability_items": [
           {
@@ -2239,6 +2447,110 @@
             "token": "B3",
             "text": "块集合结构基",
             "line": "26"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0045",
+        "label": "L4.data_washer.M5",
+        "level": 4,
+        "order": 6,
+        "description": "module=data_washer | level=L4 | node=L4.M5 | file=framework/data_washer/L4/L4-M5-结果格式器模块.md | title=L4-M5-结果格式器模块",
+        "source_file": "framework/data_washer/L4/L4-M5-结果格式器模块.md",
+        "source_line": 24,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L4.M5",
+        "module_title": "结果格式器模块:ChunkFormat",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "追踪绑定能力：提供对分块集合绑定稳定追踪标识的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "映射绑定能力：提供对分块集合绑定原文映射与属性扩展信息的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "结果模型组织能力：提供按结果格式要求组织稳定结果模型的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责分块规范建模与分块执行",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "追踪绑定器结构基",
+            "line": "24"
+          },
+          {
+            "token": "B2",
+            "text": "映射绑定器结构基",
+            "line": "25"
+          },
+          {
+            "token": "B3",
+            "text": "结果模型结构基",
+            "line": "26"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0046",
+        "label": "L4.data_washer.M6",
+        "level": 4,
+        "order": 7,
+        "description": "module=data_washer | level=L4 | node=L4.M6 | file=framework/data_washer/L4/L4-M6-结果输出模块.md | title=L4-M6-结果输出模块",
+        "source_file": "framework/data_washer/L4/L4-M6-结果输出模块.md",
+        "source_line": 22,
+        "doc_line": 1,
+        "module_name": "data_washer",
+        "module_ref": "L4.M6",
+        "module_title": "结果输出模块:ResultOutput",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "结果模型组织能力：提供对上游结果对象集合建立稳定结果模型的能力",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "序列化能力：提供按目标输出格式将结果模型转换为可写入内容的能力",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "文件写入能力：提供生成新的结果文件并完成写入的能力",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责结果对象构造与原文内容读取",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "结果模型结构基",
+            "line": "22"
+          },
+          {
+            "token": "B2",
+            "text": "序列化器结构基",
+            "line": "23"
+          },
+          {
+            "token": "B3",
+            "text": "文件写入器结构基",
+            "line": "24"
           }
         ]
       }
@@ -2327,6 +2639,20 @@
         "terms": "L0.M0[R1,R2,R4] + L0.M0[R4]",
         "source_file": "framework/data_station/L1/L1-M5-展示检索模块框架标准.md",
         "source_line": 23
+      },
+      {
+        "from": "NODE-FW-0009",
+        "to": "NODE-FW-0002",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L1",
+        "to_level": "L0",
+        "source_ref": "L1.M0",
+        "target_ref": "L0.M0",
+        "rules": "B1,B2,B3",
+        "terms": "L1.M0[B1,B2,B3]",
+        "source_file": "framework/data_washer/L0/L0-M0-数据清洗.md",
+        "source_line": 33
       },
       {
         "from": "NODE-FW-0003",
@@ -2581,6 +2907,48 @@
         "source_line": 22
       },
       {
+        "from": "NODE-FW-0028",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L2",
+        "to_level": "L1",
+        "source_ref": "L2.M0",
+        "target_ref": "L1.M0",
+        "rules": "B1,B2,B3",
+        "terms": "L2.M0[B1,B2,B3]",
+        "source_file": "framework/data_washer/L1/L1-M0-文档分块.md",
+        "source_line": 30
+      },
+      {
+        "from": "NODE-FW-0029",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L2",
+        "to_level": "L1",
+        "source_ref": "L2.M1",
+        "target_ref": "L1.M0",
+        "rules": "B1,B2,B3",
+        "terms": "L2.M1[B1,B2,B3]",
+        "source_file": "framework/data_washer/L1/L1-M0-文档分块.md",
+        "source_line": 30
+      },
+      {
+        "from": "NODE-FW-0030",
+        "to": "NODE-FW-0009",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L2",
+        "to_level": "L1",
+        "source_ref": "L2.M2",
+        "target_ref": "L1.M0",
+        "rules": "B1,B2,B3",
+        "terms": "L2.M2[B1,B2,B3]",
+        "source_file": "framework/data_washer/L1/L1-M0-文档分块.md",
+        "source_line": 30
+      },
+      {
         "from": "NODE-FW-0011",
         "to": "NODE-FW-0031",
         "relation": "framework_module_growth",
@@ -2635,6 +3003,174 @@
         "terms": "L2.M1[R2,R3]",
         "source_file": "framework/data_station/L3/L3-M3-结果输出接口框架标准.md",
         "source_line": 23
+      },
+      {
+        "from": "NODE-FW-0035",
+        "to": "NODE-FW-0028",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L3",
+        "to_level": "L2",
+        "source_ref": "L3.M0",
+        "target_ref": "L2.M0",
+        "rules": "B1 | B2 | B3",
+        "terms": "L3.M0[B1] + L3.M0[B2] + L3.M0[B3]",
+        "source_file": "framework/data_washer/L2/L2-M0-资格识别模块.md",
+        "source_line": 23
+      },
+      {
+        "from": "NODE-FW-0036",
+        "to": "NODE-FW-0029",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L3",
+        "to_level": "L2",
+        "source_ref": "L3.M1",
+        "target_ref": "L2.M1",
+        "rules": "B1,B2,B3",
+        "terms": "L3.M1[B1,B2,B3]",
+        "source_file": "framework/data_washer/L2/L2-M1-分块结果构造模块.md",
+        "source_line": 29
+      },
+      {
+        "from": "NODE-FW-0037",
+        "to": "NODE-FW-0029",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L3",
+        "to_level": "L2",
+        "source_ref": "L3.M2",
+        "target_ref": "L2.M1",
+        "rules": "B1,B2,B3",
+        "terms": "L3.M2[B1,B2,B3]",
+        "source_file": "framework/data_washer/L2/L2-M1-分块结果构造模块.md",
+        "source_line": 29
+      },
+      {
+        "from": "NODE-FW-0038",
+        "to": "NODE-FW-0029",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L3",
+        "to_level": "L2",
+        "source_ref": "L3.M3",
+        "target_ref": "L2.M1",
+        "rules": "B1,B2,B3",
+        "terms": "L3.M3[B1,B2,B3]",
+        "source_file": "framework/data_washer/L2/L2-M1-分块结果构造模块.md",
+        "source_line": 29
+      },
+      {
+        "from": "NODE-FW-0039",
+        "to": "NODE-FW-0030",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L3",
+        "to_level": "L2",
+        "source_ref": "L3.M4",
+        "target_ref": "L2.M2",
+        "rules": "B1 | B2 | B3",
+        "terms": "L3.M4[B1] + L3.M4[B2] + L3.M4[B3]",
+        "source_file": "framework/data_washer/L2/L2-M2-结果输出模块.md",
+        "source_line": 22
+      },
+      {
+        "from": "NODE-FW-0040",
+        "to": "NODE-FW-0035",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M0",
+        "target_ref": "L3.M0",
+        "rules": "B1 | B2 | B3",
+        "terms": "L4.M0[B1] + L4.M0[B2] + L4.M0[B3]",
+        "source_file": "framework/data_washer/L3/L3-M0-资格识别模块.md",
+        "source_line": 23
+      },
+      {
+        "from": "NODE-FW-0041",
+        "to": "NODE-FW-0036",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M1",
+        "target_ref": "L3.M1",
+        "rules": "B1 | B2 | B3",
+        "terms": "L4.M1[B1] + L4.M1[B2] + L4.M1[B3]",
+        "source_file": "framework/data_washer/L3/L3-M1-分块规范模块.md",
+        "source_line": 21
+      },
+      {
+        "from": "NODE-FW-0042",
+        "to": "NODE-FW-0037",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M2",
+        "target_ref": "L3.M2",
+        "rules": "B1,B2,B3",
+        "terms": "L4.M2[B1,B2,B3]",
+        "source_file": "framework/data_washer/L3/L3-M2-分块执行器模块.md",
+        "source_line": 26
+      },
+      {
+        "from": "NODE-FW-0043",
+        "to": "NODE-FW-0037",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M3",
+        "target_ref": "L3.M2",
+        "rules": "B1,B2,B3",
+        "terms": "L4.M3[B1,B2,B3]",
+        "source_file": "framework/data_washer/L3/L3-M2-分块执行器模块.md",
+        "source_line": 26
+      },
+      {
+        "from": "NODE-FW-0044",
+        "to": "NODE-FW-0037",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M4",
+        "target_ref": "L3.M2",
+        "rules": "B1,B2,B3",
+        "terms": "L4.M4[B1,B2,B3]",
+        "source_file": "framework/data_washer/L3/L3-M2-分块执行器模块.md",
+        "source_line": 26
+      },
+      {
+        "from": "NODE-FW-0045",
+        "to": "NODE-FW-0038",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M5",
+        "target_ref": "L3.M3",
+        "rules": "B1 | B2 | B3",
+        "terms": "L4.M5[B1] + L4.M5[B2] + L4.M5[B3]",
+        "source_file": "framework/data_washer/L3/L3-M3-结果格式器模块.md",
+        "source_line": 24
+      },
+      {
+        "from": "NODE-FW-0046",
+        "to": "NODE-FW-0039",
+        "relation": "framework_module_growth",
+        "module": "data_washer",
+        "from_level": "L4",
+        "to_level": "L3",
+        "source_ref": "L4.M6",
+        "target_ref": "L3.M4",
+        "rules": "B1 | B2 | B3",
+        "terms": "L4.M6[B1] + L4.M6[B2] + L4.M6[B3]",
+        "source_file": "framework/data_washer/L3/L3-M4-结果输出模块.md",
+        "source_line": 22
       }
     ]
   }
