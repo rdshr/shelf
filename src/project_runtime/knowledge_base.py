@@ -111,6 +111,22 @@ def _normalize_project_path(project_file: str | Path) -> Path:
     return project_path
 
 
+def _normalize_product_spec_path(product_spec_file: str | Path) -> Path:
+    product_spec_path = _normalize_project_path(product_spec_file)
+    if product_spec_path.name != "instance.toml":
+        return product_spec_path
+
+    legacy_instance_path = product_spec_path
+    migrated_product_spec_path = legacy_instance_path.with_name("product_spec.toml")
+    if migrated_product_spec_path.exists():
+        return migrated_product_spec_path
+
+    raise FileNotFoundError(
+        "legacy instance.toml input requires sibling product_spec.toml: "
+        f"{migrated_product_spec_path}"
+    )
+
+
 def _implementation_config_path_for(product_spec_path: Path) -> Path:
     return product_spec_path.parent / "implementation_config.toml"
 
@@ -1642,7 +1658,7 @@ def _compile_project(
 def load_knowledge_base_project(
     product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
 ) -> KnowledgeBaseProject:
-    product_spec_path = _normalize_project_path(product_spec_file)
+    product_spec_path = _normalize_product_spec_path(product_spec_file)
     implementation_config_path = _implementation_config_path_for(product_spec_path)
     product_spec = _load_product_spec(product_spec_path)
     implementation = _load_implementation_config(implementation_config_path)
@@ -1653,7 +1669,7 @@ def materialize_knowledge_base_project(
     product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
     output_dir: str | Path | None = None,
 ) -> KnowledgeBaseProject:
-    product_spec_path = _normalize_project_path(product_spec_file)
+    product_spec_path = _normalize_product_spec_path(product_spec_file)
     project = load_knowledge_base_project(product_spec_path)
     generated_dir = product_spec_path.parent / "generated"
     output_path = _normalize_project_path(output_dir) if output_dir is not None else generated_dir

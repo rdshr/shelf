@@ -11,6 +11,7 @@ from project_runtime.app_factory import build_project_app
 from project_runtime.knowledge_base import (
     DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
     load_knowledge_base_project,
+    materialize_knowledge_base_project,
 )
 
 
@@ -39,6 +40,30 @@ DEFAULT_IMPLEMENTATION_CONFIG = textwrap.dedent(
 
 
 class ProjectRuntimeTest(unittest.TestCase):
+    def test_materialize_accepts_legacy_instance_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            product_spec_file = project_dir / "product_spec.toml"
+            implementation_config_file = project_dir / "implementation_config.toml"
+            instance_file = project_dir / "instance.toml"
+            product_spec_file.write_text(
+                Path("projects/knowledge_base_basic/product_spec.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            implementation_config_file.write_text(
+                Path("projects/knowledge_base_basic/implementation_config.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            instance_file.write_text(
+                Path("projects/knowledge_base_basic/instance.toml").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+
+            project = materialize_knowledge_base_project(instance_file)
+
+        self.assertEqual(project.product_spec_file, product_spec_file.as_posix())
+        self.assertIsNotNone(project.generated_artifacts)
+
     def test_load_default_product_spec(self) -> None:
         project = load_knowledge_base_project(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
 

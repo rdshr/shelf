@@ -83,7 +83,7 @@ REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = (
     "## 5. 验证",
 )
 PROJECT_ALLOWED_TOP_LEVEL_DIRS = {"assets", "generated"}
-PROJECT_ALLOWED_ROOT_FILES = {"product_spec.toml", "implementation_config.toml"}
+PROJECT_ALLOWED_ROOT_FILES = {"product_spec.toml", "implementation_config.toml", "instance.toml"}
 PROJECT_ALLOWED_DOC_SUFFIXES = {".md"}
 PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS = {
     "project",
