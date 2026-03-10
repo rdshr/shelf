@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.0.38 - 2026-03-10
+- Synced Shelf AI packaged metadata to the renamed `xueyu888/shelf` repository, so release, issue, and homepage links now resolve to the live public repo.
+- Refreshed the repository-facing presentation so Shelf emphasizes logically self-consistent design rather than intuition-led structure, keeping the public positioning aligned with the framework philosophy.
+- This release is a packaging and public-entry consistency update; extension functionality is unchanged.
+
 ## 0.0.37 - 2026-03-10
 - Renamed the VS Code companion to Shelf AI across package metadata, command labels, view ids, media assets, and release automation.
 - Updated current documentation, install flows, and knowledge-base reference branding so Shelf becomes the single public name across the repository and extension.

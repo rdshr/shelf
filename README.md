@@ -11,6 +11,10 @@
 
 Shelf turns design into an executable engineering system.
 
+It assumes good design is logically constructed, not intuition-assembled.
+If a structure cannot explain its boundaries, composition, and verification logic,
+it is not ready to become code.
+
 Instead of asking AI to "just write code", Shelf gives AI a real structure to work inside:
 
 - `framework/*.md` defines reusable framework structure
@@ -19,7 +23,7 @@ Instead of asking AI to "just write code", Shelf gives AI a real structure to wo
 - `scripts/materialize_project.py` materializes artifacts
 - `scripts/validate_strict_mapping.py` checks whether the chain is still consistent
 
-中文一句话：**Shelf 不是 prompt-first 的 AI 编程工具，而是把设计先写成结构语言，再让 AI 在这个结构里写代码。**
+中文一句话：**Shelf 不是 prompt-first 的 AI 编程工具，而是先把设计写成逻辑自洽的结构语言，而不是凭感觉拼装，再让 AI 在这个结构里写代码。**
 
 > If you think design is the real bottleneck in AI coding, Shelf is built for that problem.
 
@@ -59,6 +63,14 @@ They are much worse at preserving:
 
 Shelf is opinionated about that gap.
 
+In Shelf, design is not treated as taste, mood, or loose intention.
+It is treated as a logical construction:
+
+- boundaries should be explicit
+- bases should have sources
+- composition should follow declared rules
+- verification should explain why the structure is still valid
+
 It treats AI coding as a convergence chain:
 
 `Framework -> Product Spec -> Implementation Config -> Code -> Evidence`
@@ -73,12 +85,14 @@ That is the core idea of this repository.
 | Specs as helper docs | Framework docs as first-class source |
 | Product and implementation often mixed together | `Product Spec` and `Implementation Config` are explicitly separated |
 | Code becomes the default truth | Code is downstream from framework and config |
+| Design often relies on intuition and patching | Design is expected to be logically self-consistent and explainable |
 | Validation is optional | Strict mapping validation is built in |
 | Generated output is the end | Generated output is evidence, not the source of truth |
 
 Shelf is not trying to be another chat wrapper, prompt pack, or generic agent shell.
 
 It is trying to be a **framework-native language for AI coding**.
+It is a way to make design legible as logic before implementation starts.
 
 ## The Core Model
 
