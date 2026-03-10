@@ -5,6 +5,7 @@ description = "Logic-consistent shelf framework with executable Python reference
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "openpyxl>=3.1.5",
     "pillow>=12.1.1",
 ]
 
