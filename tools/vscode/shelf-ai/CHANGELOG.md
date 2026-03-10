@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.0.40 - 2026-03-10
+- Switched Shelf AI from a framework-tree-only view to a workspace governance-tree flow. The extension now reads the workspace governance tree, opens the governance-tree view directly, and surfaces the recent touched / affected node closure inside the sidebar.
+- Moved strict validation to the same workspace-governance source used by the extension. Validation now resolves affected projects and checks through governance-tree closure instead of relying on framework-tree-only path heuristics.
+- Added governance-tree regression coverage and updated the packaged docs so the published extension explains the current single-tree workflow more accurately.
+
 ## 0.0.39 - 2026-03-10
 - Turned Shelf AI into a background workspace guard instead of a validation-only companion. Relevant saves, file operations, external file changes, and focus returns are now classified before validation, so the extension can decide when to materialize affected projects, when to run Python type checks, and when to surface guard failures.
 - Added generated-artifact protection plus `normal` / `strict` guard modes. Direct edits under `projects/*/generated/*` are now always detected, with strict mode attempting automatic restore through project materialization.
