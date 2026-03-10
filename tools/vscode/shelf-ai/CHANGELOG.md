@@ -7,7 +7,7 @@
 - Added generated-artifact protection plus `normal` / `strict` guard modes. Direct edits under `projects/*/generated/*` are now always detected, with strict mode attempting automatic restore through project materialization.
 - Added git-hook awareness and one-click installation from the extension UI so repository `pre-push` enforcement is easier to keep enabled across contributor machines.
 - Added packaged configuration for guard behavior (`guardMode`, `autoMaterialize`, generated protection, mypy-on-change, hook prompt, materialize command, type-check command) and updated the packaged docs / regression tests accordingly.
-- Added a versioned repository-side architecture presentation and generator script for explaining the current Shelf AI structure, capabilities, and Codex-facing guard model.
+- Added a repository-side architecture presentation generator script for explaining the current Shelf AI structure, capabilities, and Codex-facing guard model without checking the binary presentation into git.
 
 ## 0.0.38 - 2026-03-10
 - Synced Shelf AI packaged metadata to the renamed `xueyu888/shelf` repository, so release, issue, and homepage links now resolve to the live public repo.
