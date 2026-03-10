@@ -402,7 +402,7 @@
         "level": 4,
         "description": "kind=code_symbol | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:_build_backend_spec | symbol_id=kb.backend.surface_spec",
         "source_file": "src/project_runtime/knowledge_base.py",
-        "source_line": 1336,
+        "source_line": 1380,
         "node_kind": "code_symbol",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -464,7 +464,7 @@
         "level": 4,
         "description": "kind=code_symbol | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/app.py | locator=function:root | symbol_id=kb.runtime.page_routes",
         "source_file": "src/knowledge_base_runtime/app.py",
-        "source_line": 26,
+        "source_line": 27,
         "node_kind": "code_symbol",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -490,7 +490,7 @@
         "level": 4,
         "description": "kind=code_symbol | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:_build_ui_spec | symbol_id=kb.ui.surface_spec",
         "source_file": "src/project_runtime/knowledge_base.py",
-        "source_line": 1166,
+        "source_line": 1195,
         "node_kind": "code_symbol",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -502,6 +502,7 @@
           "project:knowledge_base_basic:framework:module:frontend.L2.M0:rule:R3",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+          "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:chat",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return"
         ],
@@ -1127,7 +1128,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 88,
+        "source_line": 102,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1147,7 +1148,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 129,
+        "source_line": 143,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1167,7 +1168,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 153,
+        "source_line": 167,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1187,7 +1188,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 97,
+        "source_line": 111,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1207,7 +1208,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 117,
+        "source_line": 131,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1227,7 +1228,7 @@
         "level": 5,
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
-        "source_line": 162,
+        "source_line": 176,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1248,6 +1249,26 @@
         "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
         "source_file": "projects/knowledge_base_basic/product_spec.toml",
         "source_line": 76,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null
+      },
+      {
+        "id": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
+        "label": "showcase_page",
+        "level": 5,
+        "description": "kind=product_section | layer=Product Spec | project_id=knowledge_base_basic | file=projects/knowledge_base_basic/product_spec.toml",
+        "source_file": "projects/knowledge_base_basic/product_spec.toml",
+        "source_line": 90,
         "node_kind": "product_section",
         "layer": "Product Spec",
         "project_id": "knowledge_base_basic",
@@ -1600,6 +1621,11 @@
       },
       {
         "from": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
+        "to": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
         "to": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface",
         "relation": "tree_child"
       }
@@ -1758,7 +1784,14 @@
             "file": "projects/knowledge_base_basic/product_spec.toml",
             "ref_kind": "section",
             "ref_id": "route",
-            "digest": "sha256:1013a7244bed335d44c0d761a3e6f9f9e13318ceccc8a97ced3e5211220ff569"
+            "digest": "sha256:bfcd0b7eed058e5d61a41867293ad1e5ff74a9d9eac77d0796a1a95e0f9e466a"
+          },
+          {
+            "layer": "product_spec",
+            "file": "projects/knowledge_base_basic/product_spec.toml",
+            "ref_kind": "section",
+            "ref_id": "showcase_page",
+            "digest": "sha256:7576523f7dcff4f85ab9973c128fd7bfa05b8fa33136487e215eaeba992882ff"
           },
           {
             "layer": "product_spec",
@@ -2125,7 +2158,7 @@
                 "file": "src/project_runtime/knowledge_base.py",
                 "locator": "function:_build_backend_spec",
                 "annotation": "governed_symbol",
-                "line": 1336
+                "line": 1380
               }
             ],
             "derived_from": [
@@ -2291,7 +2324,7 @@
             "expected": {
               "extractor": "frontend.surface_contract.v1",
               "comparator": "surface_contract_exact.v1",
-              "fingerprint": "sha256:1ab929c89e93fd513308cb10f9f0e14dc16177f4be1f33492271e3b88e4c3443",
+              "fingerprint": "sha256:578bf8e0ac02ad035ba541f34a137c8cc60cafa378f0a2da0757ecdfffb358dd",
               "evidence": {
                 "module_id": "frontend.L2.M0",
                 "shell": "conversation_sidebar_shell",
@@ -2316,6 +2349,7 @@
                   "submit_chat",
                   "open_citation_drawer",
                   "browse_knowledge_bases",
+                  "open_basketball_showcase",
                   "open_knowledge_base_detail",
                   "open_document_detail",
                   "return_from_citation",
@@ -2351,6 +2385,7 @@
                 "route_contract": {
                   "home": "/",
                   "workbench": "/knowledge-base",
+                  "basketball_showcase": "/knowledge-base/cxk-basketball",
                   "knowledge_list": "/knowledge-bases",
                   "knowledge_detail": "/knowledge-bases/details",
                   "document_detail_prefix": "/knowledge-bases/details/documents",
@@ -2414,37 +2449,43 @@
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:root",
                 "annotation": "governed_symbol",
-                "line": 26
+                "line": 27
               },
               {
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:knowledge_base_page",
                 "annotation": "governed_symbol",
-                "line": 35
+                "line": 36
+              },
+              {
+                "file": "src/knowledge_base_runtime/app.py",
+                "locator": "function:basketball_showcase_page",
+                "annotation": "governed_symbol",
+                "line": 41
               },
               {
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:knowledge_base_list_page",
                 "annotation": "governed_symbol",
-                "line": 40
+                "line": 46
               },
               {
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:knowledge_base_detail_page",
                 "annotation": "governed_symbol",
-                "line": 45
+                "line": 51
               },
               {
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:document_detail_page",
                 "annotation": "governed_symbol",
-                "line": 53
+                "line": 59
               },
               {
                 "file": "src/knowledge_base_runtime/app.py",
                 "locator": "function:product_spec",
                 "annotation": "governed_symbol",
-                "line": 65
+                "line": 71
               }
             ],
             "derived_from": [
@@ -2458,10 +2499,11 @@
             "expected": {
               "extractor": "python.runtime_routes.v1",
               "comparator": "exact_contract.v1",
-              "fingerprint": "sha256:c2e790030006161aab1e5a5c2a5b91c192b4ca49055632adcdd10403112531ac",
+              "fingerprint": "sha256:073f316317a1b6be81f8dc4bf7a48c6928e0372add6ca7c8f15b9cb3c11bb6a9",
               "evidence": {
                 "home": "/",
                 "chat_home": "/knowledge-base",
+                "basketball_showcase": "/knowledge-base/cxk-basketball",
                 "knowledge_list": "/knowledge-bases",
                 "knowledge_detail": "/knowledge-bases/details/{knowledge_base_id}",
                 "document_detail": "/knowledge-bases/details/documents/{document_id}",
@@ -2487,7 +2529,7 @@
                 "file": "src/project_runtime/knowledge_base.py",
                 "locator": "function:_build_ui_spec",
                 "annotation": "governed_symbol",
-                "line": 1166
+                "line": 1195
               }
             ],
             "derived_from": [
@@ -2496,6 +2538,7 @@
               "project:knowledge_base_basic:framework:module:frontend.L2.M0:rule:R3",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+              "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:chat",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return"
             ],
@@ -2503,7 +2546,7 @@
             "expected": {
               "extractor": "python.ui_surface.v1",
               "comparator": "surface_contract_exact.v1",
-              "fingerprint": "sha256:51be8f924af3d09466c60fe3bbeb845aaf6c9537699a370266566265a4eda2ea",
+              "fingerprint": "sha256:a0e393d573a286c8353520741af57908f8a5008d3c05e5c810403c8237c3280d",
               "evidence": {
                 "derived_from": {
                   "framework_modules": {
@@ -2544,6 +2587,7 @@
                     "citation_drawer"
                   ],
                   "secondary_pages": [
+                    "basketball_showcase",
                     "knowledge_list",
                     "knowledge_detail",
                     "document_detail"
@@ -2562,6 +2606,10 @@
                       "citation_drawer",
                       "knowledge_switch_dialog"
                     ]
+                  },
+                  "basketball_showcase": {
+                    "path": "/knowledge-base/cxk-basketball",
+                    "title": "蔡徐坤打球特别页"
                   },
                   "knowledge_list": {
                     "path": "/knowledge-bases",
@@ -2632,7 +2680,7 @@
             "expected": {
               "extractor": "python.workbench_surface.v1",
               "comparator": "surface_contract_exact.v1",
-              "fingerprint": "sha256:c603c91616784c8afcf2887f5d08c83bd2d9a17fb52a86cdf1b8b2c52125948d",
+              "fingerprint": "sha256:7b11649593dcee92c0fc1d3bc4444836ea55922cd65af1537b22c85ab4f3c788",
               "evidence": {
                 "module_id": "knowledge_base.L2.M0",
                 "layout_variant": "chatgpt_knowledge_client",
@@ -2640,6 +2688,7 @@
                   "conversation_sidebar",
                   "chat_main",
                   "citation_drawer",
+                  "basketball_showcase_page",
                   "knowledge_list_page",
                   "knowledge_detail_page",
                   "document_detail_page"
@@ -3098,6 +3147,7 @@
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+              "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
               "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface"
             ],
             "kind": "product_file",
@@ -3187,7 +3237,19 @@
             "file": "projects/knowledge_base_basic/product_spec.toml",
             "ref_kind": "section",
             "ref_id": "route",
-            "digest": "sha256:1013a7244bed335d44c0d761a3e6f9f9e13318ceccc8a97ced3e5211220ff569"
+            "digest": "sha256:bfcd0b7eed058e5d61a41867293ad1e5ff74a9d9eac77d0796a1a95e0f9e466a"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
+            "parent": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "showcase_page",
+            "file": "projects/knowledge_base_basic/product_spec.toml",
+            "ref_kind": "section",
+            "ref_id": "showcase_page",
+            "digest": "sha256:7576523f7dcff4f85ab9973c128fd7bfa05b8fa33136487e215eaeba992882ff"
           },
           {
             "node_id": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface",
@@ -3292,6 +3354,7 @@
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+        "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface"
       ],
       "specs/code/Python实现质量标准.md": [
@@ -3398,6 +3461,7 @@
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
+      "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml",
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface": "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml"
     },
     "children_index": {
@@ -3493,6 +3557,7 @@
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+        "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface"
       ],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:a11y": [],
@@ -3502,6 +3567,7 @@
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route": [],
+      "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface": [],
       "standards:NODE-L0-ROOT": [],
       "standards:NODE-L1-CODE-PYTHON": [],
@@ -3603,6 +3669,7 @@
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:chat",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+        "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface"
       ],
       "project:knowledge_base_basic:code:symbol:kb.workbench.surface_contract": [
@@ -3670,6 +3737,7 @@
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route": [],
+      "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page": [],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface": [],
       "standards:NODE-L0-ROOT": [],
       "standards:NODE-L1-CODE-PYTHON": [],
@@ -3826,6 +3894,9 @@
         "project:knowledge_base_basic:code:symbol:kb.runtime.page_routes",
         "project:knowledge_base_basic:code:symbol:kb.ui.surface_spec"
       ],
+      "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page": [
+        "project:knowledge_base_basic:code:symbol:kb.ui.surface_spec"
+      ],
       "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface": [
         "project:knowledge_base_basic:code:symbol:kb.frontend.surface_contract",
         "project:knowledge_base_basic:code:symbol:kb.ui.surface_spec",
@@ -3894,6 +3965,7 @@
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:preview",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:return",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:route",
+          "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:showcase_page",
           "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec.toml:section:surface"
         ],
         "evidence_root_id": "project:knowledge_base_basic:evidence"
