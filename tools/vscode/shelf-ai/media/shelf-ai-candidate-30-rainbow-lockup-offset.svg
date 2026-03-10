@@ -1,0 +1,16 @@
+<svg width="256" height="180" viewBox="0 0 256 180" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <path fill="#F51515" d="M32 108A96 96 0 0 1 224 108H210A82 82 0 0 0 46 108H32Z" />
+  <path fill="#F1DF00" d="M54 108A75.5 75.5 0 0 1 205 108H191A61.5 61.5 0 0 0 68 108H54Z" />
+  <path fill="#10A43A" d="M73 108A56 56 0 0 1 185 108H171A42 42 0 0 0 87 108H73Z" />
+  <path fill="#1097E2" d="M97 108A31.5 31.5 0 0 1 160 108H147A18 18 0 0 0 111 108H97Z" />
+  <path fill="#4A57B8" d="M116 108A16 16 0 0 1 148 108H136A5 5 0 0 0 126 108H116Z" />
+  <text
+    x="128"
+    y="156"
+    fill="#1B1B1B"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="38"
+    letter-spacing="2"
+    text-anchor="middle"
+  >Shelf AI</text>
+</svg>

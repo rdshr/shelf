@@ -1,0 +1,51 @@
+<svg width="960" height="420" viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <rect width="960" height="420" fill="#F8FAFC" />
+  <text x="48" y="46" fill="#0F172A" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="28" font-weight="700">
+    Shelf rainbow lockup options
+  </text>
+  <text x="48" y="76" fill="#475569" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">
+    Three variations based on uneven stripe lengths, using the rhythm of the five letters in "Shelf".
+  </text>
+
+  <g>
+    <rect x="40" y="104" width="260" height="270" rx="18" fill="#FFFFFF" stroke="#E2E8F0" />
+    <text x="64" y="136" fill="#0F172A" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">A. Suffix rhythm</text>
+    <text x="64" y="160" fill="#64748B" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">Shortens like Shelf / helf / elf / lf / f</text>
+    <g transform="translate(42 156)">
+      <path fill="#F51515" d="M32 108A96 96 0 0 1 224 108H210A82 82 0 0 0 46 108H32Z" />
+      <path fill="#F1DF00" d="M50 108A78 78 0 0 1 194 108H180A64 64 0 0 0 64 108H50Z" />
+      <path fill="#10A43A" d="M68 108A60 60 0 0 1 170 108H156A46 46 0 0 0 82 108H68Z" />
+      <path fill="#1097E2" d="M86 108A42 42 0 0 1 146 108H132A28 28 0 0 0 100 108H86Z" />
+      <path fill="#4A57B8" d="M104 108A24 24 0 0 1 134 108H120A10 10 0 0 0 118 108H104Z" />
+      <text x="128" y="156" fill="#1B1B1B" font-family="Georgia, 'Times New Roman', serif" font-size="38" letter-spacing="2" text-anchor="middle">Shelf AI</text>
+    </g>
+  </g>
+
+  <g>
+    <rect x="350" y="104" width="260" height="270" rx="18" fill="#FFFFFF" stroke="#E2E8F0" />
+    <text x="374" y="136" fill="#0F172A" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">B. Centered rhythm</text>
+    <text x="374" y="160" fill="#64748B" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">Uneven lengths, but visually centered</text>
+    <g transform="translate(352 156)">
+      <path fill="#F51515" d="M32 108A96 96 0 0 1 224 108H210A82 82 0 0 0 46 108H32Z" />
+      <path fill="#F1DF00" d="M56 108A72 72 0 0 1 200 108H186A58 58 0 0 0 70 108H56Z" />
+      <path fill="#10A43A" d="M74 108A54 54 0 0 1 182 108H168A40 40 0 0 0 88 108H74Z" />
+      <path fill="#1097E2" d="M95 108A33 33 0 0 1 161 108H148A20 20 0 0 0 108 108H95Z" />
+      <path fill="#4A57B8" d="M109 108A19 19 0 0 1 147 108H136A8 8 0 0 0 120 108H109Z" />
+      <text x="128" y="156" fill="#1B1B1B" font-family="Georgia, 'Times New Roman', serif" font-size="38" letter-spacing="2" text-anchor="middle">Shelf AI</text>
+    </g>
+  </g>
+
+  <g>
+    <rect x="660" y="104" width="260" height="270" rx="18" fill="#FFFFFF" stroke="#E2E8F0" />
+    <text x="684" y="136" fill="#0F172A" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">C. Offset rhythm</text>
+    <text x="684" y="160" fill="#64748B" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">Both sides stagger for a stronger cadence</text>
+    <g transform="translate(662 156)">
+      <path fill="#F51515" d="M32 108A96 96 0 0 1 224 108H210A82 82 0 0 0 46 108H32Z" />
+      <path fill="#F1DF00" d="M54 108A75.5 75.5 0 0 1 205 108H191A61.5 61.5 0 0 0 68 108H54Z" />
+      <path fill="#10A43A" d="M73 108A56 56 0 0 1 185 108H171A42 42 0 0 0 87 108H73Z" />
+      <path fill="#1097E2" d="M97 108A31.5 31.5 0 0 1 160 108H147A18 18 0 0 0 111 108H97Z" />
+      <path fill="#4A57B8" d="M116 108A16 16 0 0 1 148 108H136A5 5 0 0 0 126 108H116Z" />
+      <text x="128" y="156" fill="#1B1B1B" font-family="Georgia, 'Times New Roman', serif" font-size="38" letter-spacing="2" text-anchor="middle">Shelf AI</text>
+    </g>
+  </g>
+</svg>

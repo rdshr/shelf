@@ -1,15 +1,31 @@
-# Shelf
+<p align="center">
+  <img src="./tools/vscode/shelf-ai/media/shelf-ai-candidate-27-rainbow-lockup.svg" alt="Shelf AI rainbow logo" width="220" />
+</p>
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](./pyproject.toml)
-[![uv](https://img.shields.io/badge/deps-uv-6A5ACD)](https://github.com/astral-sh/uv)
-[![VSCode](https://img.shields.io/badge/VSCode-Shelf AI-007ACC?logo=visualstudiocode&logoColor=white)](./tools/vscode/shelf-ai)
-[![GitHub stars](https://img.shields.io/github/stars/xueyu888/shelf?style=social)](https://github.com/xueyu888/shelf/stargazers)
-[![Strict Mapping Gate](https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml/badge.svg)](https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml)
-[![Latest Release](https://img.shields.io/github/v/release/xueyu888/shelf?display_name=tag)](https://github.com/xueyu888/shelf/releases)
+<h1 align="center">Shelf</h1>
 
-**Structure-first AI coding framework.**
+<p align="center">
+  <strong>Structure-first AI coding framework.</strong>
+</p>
 
-Shelf turns design into an executable engineering system.
+<p align="center">
+  Shelf turns design into an executable engineering system.
+  <br />
+  Good design should be logically constructed, not intuition-assembled.
+</p>
+
+<p align="center">
+  <a href="./pyproject.toml"><img src="https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python 3.11+" /></a>
+  <a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/badge/deps-uv-6A5ACD" alt="uv" /></a>
+  <a href="./tools/vscode/shelf-ai"><img src="https://img.shields.io/badge/VSCode-Shelf%20AI-007ACC?logo=visualstudiocode&logoColor=white" alt="VS Code Shelf AI" /></a>
+  <a href="https://github.com/xueyu888/shelf/stargazers"><img src="https://img.shields.io/github/stars/xueyu888/shelf?style=social" alt="GitHub stars" /></a>
+  <a href="https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml"><img src="https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml/badge.svg" alt="Strict Mapping Gate" /></a>
+  <a href="https://github.com/xueyu888/shelf/releases"><img src="https://img.shields.io/github/v/release/xueyu888/shelf?display_name=tag" alt="Latest Release" /></a>
+</p>
+
+<p align="center">
+  <sub>README uses the rainbow brand mark. Shelf AI inside VS Code stays monochrome because Activity Bar product icons are single-color.</sub>
+</p>
 
 It assumes good design is logically constructed, not intuition-assembled.
 If a structure cannot explain its boundaries, composition, and verification logic,
