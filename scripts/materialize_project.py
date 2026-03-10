@@ -9,7 +9,7 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_runtime.knowledge_base import materialize_knowledge_base_project
+from project_runtime import materialize_registered_project
 
 
 def discover_product_spec_files() -> list[Path]:
@@ -41,7 +41,7 @@ def main() -> int:
         return 1
 
     for product_spec_file in product_spec_files:
-        project = materialize_knowledge_base_project(product_spec_file)
+        project = materialize_registered_project(product_spec_file)
         assert project.generated_artifacts is not None
         print(
             "[OK] materialized",

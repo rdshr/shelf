@@ -7,6 +7,10 @@ import unittest
 
 from fastapi.testclient import TestClient
 
+from project_runtime import (
+    get_default_project_template_registration,
+    resolve_project_template_registration,
+)
 from project_runtime.app_factory import build_project_app
 from project_runtime.knowledge_base import (
     DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
@@ -39,6 +43,19 @@ DEFAULT_IMPLEMENTATION_CONFIG = textwrap.dedent(
 
 
 class ProjectRuntimeTest(unittest.TestCase):
+    def test_template_registry_resolves_default_project(self) -> None:
+        default_registration = get_default_project_template_registration()
+        resolved_registration = resolve_project_template_registration(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
+
+        self.assertEqual(default_registration.template_id, "knowledge_base_workbench")
+        self.assertEqual(resolved_registration.template_id, default_registration.template_id)
+        self.assertEqual(
+            resolved_registration.default_product_spec_file.resolve(),
+            DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE.resolve(),
+        )
+        self.assertIn("project", resolved_registration.product_spec_layout.required_top_level_keys)
+        self.assertIn("frontend", resolved_registration.implementation_config_layout.required_top_level_keys)
+
     def test_load_default_product_spec(self) -> None:
         project = load_knowledge_base_project(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
 

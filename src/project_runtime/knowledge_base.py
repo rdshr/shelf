@@ -10,13 +10,43 @@ import tomllib
 from typing import Any
 
 from framework_ir import FrameworkModuleIR, load_framework_registry, parse_framework_module
+from project_runtime.template_registry import (
+    ProjectTemplateRegistration,
+    config_layout,
+    register_project_template,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE = REPO_ROOT / "projects/knowledge_base_basic/product_spec.toml"
 DEFAULT_KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_FILE = (
     REPO_ROOT / "projects/knowledge_base_basic/implementation_config.toml"
 )
-SUPPORTED_PROJECT_TEMPLATE = "knowledge_base_workbench"
+KNOWLEDGE_BASE_TEMPLATE_ID = "knowledge_base_workbench"
+KNOWLEDGE_BASE_PRODUCT_SPEC_LAYOUT = config_layout(
+    {
+        "project",
+        "framework",
+        "surface",
+        "visual",
+        "route",
+        "a11y",
+        "library",
+        "preview",
+        "chat",
+        "context",
+        "return",
+        "documents",
+    },
+    {
+        "surface": {"copy"},
+        "library": {"copy"},
+        "chat": {"copy"},
+    },
+)
+KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT = config_layout(
+    {"frontend", "backend", "evidence", "artifacts"},
+    {},
+)
 
 SURFACE_PRESETS: dict[str, dict[str, str]] = {
     "sand": {
@@ -1385,7 +1415,7 @@ def _validate_product_spec(
     domain_ir: FrameworkModuleIR,
     backend_ir: FrameworkModuleIR,
 ) -> None:
-    if product_spec.metadata.template != SUPPORTED_PROJECT_TEMPLATE:
+    if product_spec.metadata.template != KNOWLEDGE_BASE_TEMPLATE_ID:
         raise ValueError(f"unsupported project template: {product_spec.metadata.template}")
     if product_spec.surface.shell != "conversation_sidebar_shell":
         raise ValueError("surface.shell must be conversation_sidebar_shell")
@@ -1681,3 +1711,23 @@ def materialize_knowledge_base_project(
     generation_manifest_path.write_text(payloads["generation_manifest_json"], encoding="utf-8")
 
     return project
+
+
+def register_knowledge_base_template() -> ProjectTemplateRegistration:
+    def _build_runtime_app(project: KnowledgeBaseProject) -> Any:
+        from knowledge_base_runtime.app import build_knowledge_base_runtime_app
+
+        return build_knowledge_base_runtime_app(project)
+
+    return register_project_template(
+        ProjectTemplateRegistration(
+            template_id=KNOWLEDGE_BASE_TEMPLATE_ID,
+            default_product_spec_file=DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
+            product_spec_layout=KNOWLEDGE_BASE_PRODUCT_SPEC_LAYOUT,
+            implementation_config_layout=KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT,
+            load_project=load_knowledge_base_project,
+            materialize_project=materialize_knowledge_base_project,
+            build_app=_build_runtime_app,
+        ),
+        default=True,
+    )

@@ -16,6 +16,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
+
+from project_runtime import (
+    get_default_project_template_registration,
+    materialize_registered_project,
+    resolve_project_template_registration,
+)
+
 REGISTRY_PATH = REPO_ROOT / "mapping/mapping_registry.json"
 FRAMEWORK_DIR = REPO_ROOT / "framework"
 PROJECTS_DIR = REPO_ROOT / "projects"
@@ -85,33 +92,6 @@ REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = (
 PROJECT_ALLOWED_TOP_LEVEL_DIRS = {"assets", "generated"}
 PROJECT_ALLOWED_ROOT_FILES = {"product_spec.toml", "implementation_config.toml"}
 PROJECT_ALLOWED_DOC_SUFFIXES = {".md"}
-PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS = {
-    "project",
-    "framework",
-    "surface",
-    "visual",
-    "route",
-    "a11y",
-    "library",
-    "preview",
-    "chat",
-    "context",
-    "return",
-    "documents",
-}
-PRODUCT_SPEC_ALLOWED_TOP_LEVEL_KEYS = set(PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS)
-PRODUCT_SPEC_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {
-    "surface": {"copy"},
-    "library": {"copy"},
-    "chat": {"copy"},
-}
-PRODUCT_SPEC_ALLOWED_NESTED_TABLES: dict[str, set[str]] = {
-    key: set(value) for key, value in PRODUCT_SPEC_REQUIRED_NESTED_TABLES.items()
-}
-IMPLEMENTATION_CONFIG_REQUIRED_TOP_LEVEL_KEYS = {"frontend", "backend", "evidence", "artifacts"}
-IMPLEMENTATION_CONFIG_ALLOWED_TOP_LEVEL_KEYS = set(IMPLEMENTATION_CONFIG_REQUIRED_TOP_LEVEL_KEYS)
-IMPLEMENTATION_CONFIG_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {}
-IMPLEMENTATION_CONFIG_ALLOWED_NESTED_TABLES: dict[str, set[str]] = {}
 
 Issue = dict[str, Any]
 
@@ -381,13 +361,33 @@ def validate_project_configuration_layout(product_spec_files: list[Path] | None 
         return issues
 
     for product_spec_file in project_product_spec_files:
+        try:
+            template_registration = resolve_project_template_registration(product_spec_file)
+        except Exception as exc:
+            if "unsupported project template" in str(exc):
+                rel_product_spec_file = product_spec_file.relative_to(REPO_ROOT).as_posix()
+                issues.append(
+                    make_issue(
+                        str(exc),
+                        rel_product_spec_file,
+                        find_line(read_text(product_spec_file), 'template = "'),
+                        code="PROJECT_TEMPLATE_UNSUPPORTED",
+                    )
+                )
+            template_registration = get_default_project_template_registration()
+
+        product_spec_layout = template_registration.product_spec_layout
         issues.extend(
             _validate_project_toml_layout(
                 product_spec_file,
-                required_top_level_keys=PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS,
-                allowed_top_level_keys=PRODUCT_SPEC_ALLOWED_TOP_LEVEL_KEYS,
-                required_nested_tables=PRODUCT_SPEC_REQUIRED_NESTED_TABLES,
-                allowed_nested_tables=PRODUCT_SPEC_ALLOWED_NESTED_TABLES,
+                required_top_level_keys=set(product_spec_layout.required_top_level_keys),
+                allowed_top_level_keys=set(product_spec_layout.allowed_top_level_keys),
+                required_nested_tables={
+                    key: set(value) for key, value in product_spec_layout.required_nested_tables.items()
+                },
+                allowed_nested_tables={
+                    key: set(value) for key, value in product_spec_layout.allowed_nested_tables.items()
+                },
                 parse_error_code="PROJECT_PRODUCT_SPEC_PARSE_FAILED",
                 missing_section_code="PROJECT_PRODUCT_SPEC_SECTION_MISSING",
                 unknown_section_code="PROJECT_PRODUCT_SPEC_SECTION_UNKNOWN",
@@ -415,13 +415,18 @@ def validate_project_configuration_layout(product_spec_files: list[Path] | None 
                 )
             )
             continue
+        implementation_layout = template_registration.implementation_config_layout
         issues.extend(
             _validate_project_toml_layout(
                 implementation_config_file,
-                required_top_level_keys=IMPLEMENTATION_CONFIG_REQUIRED_TOP_LEVEL_KEYS,
-                allowed_top_level_keys=IMPLEMENTATION_CONFIG_ALLOWED_TOP_LEVEL_KEYS,
-                required_nested_tables=IMPLEMENTATION_CONFIG_REQUIRED_NESTED_TABLES,
-                allowed_nested_tables=IMPLEMENTATION_CONFIG_ALLOWED_NESTED_TABLES,
+                required_top_level_keys=set(implementation_layout.required_top_level_keys),
+                allowed_top_level_keys=set(implementation_layout.allowed_top_level_keys),
+                required_nested_tables={
+                    key: set(value) for key, value in implementation_layout.required_nested_tables.items()
+                },
+                allowed_nested_tables={
+                    key: set(value) for key, value in implementation_layout.allowed_nested_tables.items()
+                },
                 parse_error_code="PROJECT_IMPLEMENTATION_CONFIG_PARSE_FAILED",
                 missing_section_code="PROJECT_IMPLEMENTATION_CONFIG_SECTION_MISSING",
                 unknown_section_code="PROJECT_IMPLEMENTATION_CONFIG_SECTION_UNKNOWN",
@@ -444,7 +449,7 @@ def validate_project_generation_discipline(
     issues.extend(validate_project_configuration_layout(project_product_spec_files))
 
     try:
-        from project_runtime.knowledge_base import materialize_knowledge_base_project
+        materialize_registered_project
     except Exception as exc:
         issues.append(
             make_issue(
@@ -531,7 +536,7 @@ def validate_project_generation_discipline(
         try:
             with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
                 temp_generated_dir = Path(temp_dir) / "generated"
-                materialize_knowledge_base_project(product_spec_file, output_dir=temp_generated_dir)
+                materialize_registered_project(product_spec_file, output_dir=temp_generated_dir)
                 for required_name in expected_generated_files:
                     actual_file = actual_generated_dir / required_name
                     expected_file = temp_generated_dir / required_name
