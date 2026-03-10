@@ -4,14 +4,7 @@ const path = require("path");
 const vscode = require("vscode");
 const frameworkNavigation = require("./framework_navigation");
 const frameworkCompletion = require("./framework_completion");
-
-const WATCH_PREFIXES = ["framework/", "specs/", "mapping/", "src/", "docs/"];
-const WATCH_FILES = new Set([
-  "AGENTS.md",
-  "README.md",
-  "scripts/validate_strict_mapping.py",
-  "scripts/generate_framework_tree_hierarchy.py"
-]);
+const workspaceGuard = require("./guarding");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
 const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
@@ -19,6 +12,10 @@ const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framew
 const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
 const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
   "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
+const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
+const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
+const DEFAULT_INSTALL_GIT_HOOKS_COMMAND = "bash scripts/install_git_hooks.sh";
+const GENERATED_EVENT_SUPPRESSION_MS = 2500;
 const FRAMEWORK_RULE_HINTS = {
   FW002: "@framework 必须无参数",
   FW003: "标题必须为 中文名:EnglishName",
@@ -68,15 +65,43 @@ function activate(context) {
   let lastValidationAt = "";
   let lastValidationMode = "change";
   let lastValidationPassed = null;
+  let gitHooksReady = null;
+  let gitHooksDetail = "Not checked in this session";
+  let gitHooksPrompted = false;
+  const suppressedGeneratedDirectories = new Map();
   const VALIDATION_SOURCE_PRIORITY = {
     auto: 1,
     save: 2,
     manual: 3
   };
 
+  const normalizeTriggerUris = (options = {}) => {
+    const inputs = [];
+    if (options.triggerUri) {
+      inputs.push(options.triggerUri);
+    }
+    if (Array.isArray(options.triggerUris)) {
+      inputs.push(...options.triggerUris);
+    }
+
+    const seen = new Set();
+    const normalized = [];
+    for (const uri of inputs) {
+      if (!uri || !uri.fsPath) {
+        continue;
+      }
+      if (seen.has(uri.fsPath)) {
+        continue;
+      }
+      seen.add(uri.fsPath);
+      normalized.push(uri);
+    }
+    return normalized;
+  };
+
   const normalizeValidationOptions = (options = {}) => ({
     mode: options.mode === "full" ? "full" : "change",
-    triggerUri: options.triggerUri || null,
+    triggerUris: normalizeTriggerUris(options),
     notifyOnFail: Boolean(options.notifyOnFail),
     source: options.source || "auto"
   });
@@ -93,13 +118,92 @@ function activate(context) {
 
     return {
       mode: current.mode === "full" || incoming.mode === "full" ? "full" : "change",
-      triggerUri: incoming.triggerUri || current.triggerUri,
+      triggerUris: normalizeTriggerUris({
+        triggerUris: [...current.triggerUris, ...incoming.triggerUris]
+      }),
       notifyOnFail: current.notifyOnFail || incoming.notifyOnFail,
       source
     };
   };
 
-  const runValidation = async (options = { mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" }) => {
+  const pruneSuppressedGeneratedDirectories = () => {
+    const now = Date.now();
+    for (const [generatedDir, expiresAt] of suppressedGeneratedDirectories.entries()) {
+      if (expiresAt <= now) {
+        suppressedGeneratedDirectories.delete(generatedDir);
+      }
+    }
+  };
+
+  const isSuppressedGeneratedPath = (relPath) => {
+    pruneSuppressedGeneratedDirectories();
+    const normalized = workspaceGuard.normalizeRelPath(relPath);
+    for (const [generatedDir] of suppressedGeneratedDirectories.entries()) {
+      if (normalized === generatedDir || normalized.startsWith(`${generatedDir}/`)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const suppressGeneratedEventsForProjectSpecs = (repoRoot, productSpecFiles) => {
+    const expiresAt = Date.now() + GENERATED_EVENT_SUPPRESSION_MS;
+    for (const productSpecFile of productSpecFiles) {
+      const generatedDir = path.join(path.dirname(productSpecFile), "generated");
+      const generatedRel = workspaceGuard.normalizeRelPath(path.relative(repoRoot, generatedDir));
+      if (generatedRel) {
+        suppressedGeneratedDirectories.set(generatedRel, expiresAt);
+      }
+    }
+  };
+
+  const runParsedCommand = async (label, command, repoRoot, parseFn) => {
+    output.appendLine(`[${label}] ${command}`);
+    const execResult = await execCommand(command, repoRoot);
+    output.appendLine(execResult.stdout || "");
+    output.appendLine(execResult.stderr || "");
+    return parseFn(execResult.stdout, execResult.stderr, execResult.code);
+  };
+
+  const refreshGitHookStatus = async ({ promptIfMissing = false } = {}) => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      gitHooksReady = null;
+      gitHooksDetail = "No workspace";
+      refreshSidebarHome();
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const result = await execCommand("git config --get core.hooksPath", repoRoot);
+    const configured = (result.stdout || "").trim();
+    const expected = path.resolve(repoRoot, ".githooks");
+    const resolved = configured
+      ? path.resolve(repoRoot, configured)
+      : "";
+    gitHooksReady = Boolean(configured) && resolved === expected;
+    gitHooksDetail = gitHooksReady
+      ? configured
+      : (configured || "core.hooksPath is not set to .githooks");
+    refreshSidebarHome();
+
+    const config = vscode.workspace.getConfiguration("shelf");
+    if (!promptIfMissing || gitHooksReady || !config.get("promptInstallGitHooks") || gitHooksPrompted) {
+      return;
+    }
+
+    gitHooksPrompted = true;
+    const action = await vscode.window.showInformationMessage(
+      "Shelf recommends enabling the repository git hooks so pre-push checks cannot be skipped.",
+      "Install Hooks",
+      "Later"
+    );
+    if (action === "Install Hooks") {
+      await vscode.commands.executeCommand("shelf.installGitHooks");
+    }
+  };
+
+  const runValidation = async (options = { mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" }) => {
     const task = normalizeValidationOptions(options);
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
@@ -138,40 +242,140 @@ function activate(context) {
       status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
     }
     output.clear();
-    output.appendLine(`[run] ${command}`);
+    pruneSuppressedGeneratedDirectories();
 
-    const execResult = await execCommand(command, repoRoot);
-    output.appendLine(execResult.stdout || "");
-    output.appendLine(execResult.stderr || "");
+    const relPaths = task.triggerUris
+      .map((uri) => workspaceGuard.normalizeRelPath(path.relative(repoRoot, uri.fsPath)))
+      .filter(Boolean)
+      .filter((relPath) => !isSuppressedGeneratedPath(relPath));
+    const changePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
 
-    const parsed = parseResult(execResult.stdout, execResult.stderr, execResult.code);
-    lastRunIssues = parsed.errors;
+    const combinedIssues = [];
+    const materializedProjectSpecs = new Set();
+
+    if (config.get("protectGeneratedFiles") && changePlan.protectedGeneratedPaths.length) {
+      const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
+      if (guardMode === "strict") {
+        if (changePlan.protectedProjectSpecs.length) {
+          const restoreCommand = buildMaterializeCommand(
+            String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
+            changePlan.protectedProjectSpecs
+          );
+          const restoreResult = await runParsedCommand(
+            "materialize",
+            restoreCommand,
+            repoRoot,
+            (stdout, stderr, code) => parseStageFailure(
+              "SHELF_GENERATED_PROTECT",
+              "Generated artifacts were edited directly and Shelf could not restore them.",
+              stdout,
+              stderr,
+              code
+            )
+          );
+          if (restoreResult.passed) {
+            for (const productSpecFile of changePlan.protectedProjectSpecs) {
+              materializedProjectSpecs.add(productSpecFile);
+            }
+            suppressGeneratedEventsForProjectSpecs(repoRoot, changePlan.protectedProjectSpecs);
+          } else {
+            combinedIssues.push(...restoreResult.errors);
+          }
+        } else {
+          for (const relPath of changePlan.protectedGeneratedPaths) {
+            combinedIssues.push(normalizeIssue({
+              message: "Generated artifacts were edited directly and Shelf could not determine which project to restore.",
+              file: relPath,
+              line: 1,
+              column: 1,
+              code: "SHELF_GENERATED_PROTECT",
+            }));
+          }
+        }
+      } else {
+        for (const relPath of changePlan.protectedGeneratedPaths) {
+          combinedIssues.push(normalizeIssue({
+            message: "Direct edits under projects/*/generated/* are forbidden. Change framework/product spec/implementation config and re-materialize instead.",
+            file: relPath,
+            line: 1,
+            column: 1,
+            code: "SHELF_GENERATED_EDIT",
+          }));
+        }
+      }
+    }
+
+    const pendingMaterializeProjects = changePlan.materializeProjects
+      .filter((productSpecFile) => !materializedProjectSpecs.has(productSpecFile));
+
+    if (config.get("autoMaterialize") && pendingMaterializeProjects.length) {
+      const materializeCommand = buildMaterializeCommand(
+        String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
+        pendingMaterializeProjects
+      );
+      const materializeResult = await runParsedCommand(
+        "materialize",
+        materializeCommand,
+        repoRoot,
+        (stdout, stderr, code) => parseStageFailure(
+          "SHELF_MATERIALIZE",
+          "Shelf auto-materialization failed.",
+          stdout,
+          stderr,
+          code
+        )
+      );
+      if (materializeResult.passed) {
+        for (const productSpecFile of pendingMaterializeProjects) {
+          materializedProjectSpecs.add(productSpecFile);
+        }
+        suppressGeneratedEventsForProjectSpecs(repoRoot, pendingMaterializeProjects);
+      } else {
+        combinedIssues.push(...materializeResult.errors);
+      }
+    }
+
+    if (config.get("runMypyOnPythonChanges") && changePlan.shouldRunMypy) {
+      const mypyCommand = String(config.get("typeCheckCommand") || DEFAULT_TYPE_CHECK_COMMAND);
+      const mypyResult = await runParsedCommand("mypy", mypyCommand, repoRoot, parseMypyResult);
+      combinedIssues.push(...mypyResult.errors);
+    }
+
+    const parsed = await runParsedCommand("validate", String(command), repoRoot, parseResult);
+    combinedIssues.push(...parsed.errors);
+
+    const combined = {
+      passed: parsed.passed && combinedIssues.length === 0,
+      errors: combinedIssues
+    };
+
+    lastRunIssues = combined.errors;
     lastRepoRoot = repoRoot;
     lastValidationAt = new Date().toISOString();
     lastValidationMode = task.mode;
-    lastValidationPassed = parsed.passed;
-    applyDiagnostics(parsed, diagnostics, repoRoot, task.triggerUri);
-    output.appendLine(`[result] passed=${parsed.passed} errors=${parsed.errors.length}`);
+    lastValidationPassed = combined.passed;
+    applyDiagnostics(combined, diagnostics, repoRoot, task.triggerUris[0] || null);
+    output.appendLine(`[result] passed=${combined.passed} errors=${combined.errors.length}`);
 
-    if (parsed.passed) {
+    if (combined.passed) {
       status.text = "$(check) Shelf OK";
-      status.tooltip = "Shelf: no mapping issues";
+      status.tooltip = "Shelf: no guard issues";
       status.backgroundColor = undefined;
       status.color = undefined;
       lastFailureSignature = "";
     } else {
       if (shouldSetErrorStatus) {
         status.text = "$(error) Shelf issues";
-        status.tooltip = buildTooltip(parsed.errors);
+        status.tooltip = buildTooltip(combined.errors);
         status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
         status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
       }
 
       const shouldNotify = task.notifyOnFail || config.get("notifyOnAutoFail");
-      if (shouldNotify && shouldNotifyFailure(parsed.errors, lastFailureSignature)) {
-        lastFailureSignature = signature(parsed.errors);
+      if (shouldNotify && shouldNotifyFailure(combined.errors, lastFailureSignature)) {
+        lastFailureSignature = signature(combined.errors);
         const action = await vscode.window.showErrorMessage(
-          `Shelf mapping validation failed (${parsed.errors.length} issue(s)).`,
+          `Shelf guard failed (${combined.errors.length} issue(s)).`,
           "Open Problems",
           "Open Log"
         );
@@ -366,6 +570,18 @@ function activate(context) {
             note: DEFAULT_FRAMEWORK_TREE_HTML
           },
           {
+            label: "守卫模式",
+            value: "未知",
+            tone: "unknown",
+            note: "打开工作区后读取 shelf.guardMode。"
+          },
+          {
+            label: "Git Hooks",
+            value: "未知",
+            tone: "unknown",
+            note: "打开工作区后检查 .githooks 是否已启用。"
+          },
+          {
             label: "严格校验",
             value: "等待工作区",
             tone: "unknown",
@@ -393,6 +609,7 @@ function activate(context) {
     const standardsExists = hasStandardsTree(repoRoot);
     const validationEnabled = standardsExists && mappingValidationActive;
     const treeExists = fs.existsSync(treePath);
+    const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
     const issueCount = lastRunIssues.length;
     const issueSummary = validationEnabled
       ? (lastValidationPassed === null ? "Not run yet" : (issueCount ? `${issueCount} issue(s)` : "No issues"))
@@ -468,6 +685,16 @@ function activate(context) {
       };
     }
 
+    if (gitHooksReady === false) {
+      calloutTone = "error";
+      calloutTitle = "补齐 Git Hooks";
+      calloutBody = "当前仓库还没有启用 .githooks，pre-push 严格校验可以被绕开。先安装 hooks，再继续协作。";
+      calloutAction = {
+        action: "installHooks",
+        label: "安装 Git Hooks"
+      };
+    }
+
     const healthItems = [
       {
         label: "规范总纲",
@@ -482,6 +709,22 @@ function activate(context) {
         note: treeExists
           ? toWorkspaceRelative(treePath, repoRoot)
           : `等待生成 ${toWorkspaceRelative(treePath, repoRoot)}`
+      },
+      {
+        label: "守卫模式",
+        value: guardMode === "strict" ? "Strict" : "Normal",
+        tone: guardMode === "strict" ? "ok" : "unknown",
+        note: guardMode === "strict"
+          ? "发现 generated 直改时会自动回滚并重物化。"
+          : "发现 generated 直改时会报告问题，但不会强制回滚。"
+      },
+      {
+        label: "Git Hooks",
+        value: gitHooksReady === null ? "未检查" : (gitHooksReady ? "就绪" : "缺失"),
+        tone: gitHooksReady === null ? "unknown" : (gitHooksReady ? "ok" : "error"),
+        note: gitHooksReady
+          ? gitHooksDetail
+          : `需要指向 .githooks。当前状态：${gitHooksDetail}`
       },
       {
         label: "严格校验",
@@ -510,6 +753,14 @@ function activate(context) {
         label: "打开规范总纲路径",
         description: "检查缺失的规范入口，恢复严格校验。",
         tone: "ghost"
+      });
+    }
+    if (gitHooksReady === false) {
+      actionItems.unshift({
+        action: "installHooks",
+        label: "安装 Git Hooks",
+        description: "启用 .githooks，确保 pre-push 校验不能被跳过。",
+        tone: "primary"
       });
     }
 
@@ -583,7 +834,7 @@ function activate(context) {
           return;
         }
         if (message.type === "shelf.sidebar.validate") {
-          scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
+          scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
           return;
         }
         if (message.type === "shelf.sidebar.showIssues") {
@@ -599,6 +850,10 @@ function activate(context) {
           if (repoRoot) {
             await openFrameworkTreeSource(repoRoot, STANDARDS_TREE_FILE, 1);
           }
+          return;
+        }
+        if (message.type === "shelf.sidebar.installHooks") {
+          await vscode.commands.executeCommand("shelf.installGitHooks");
           return;
         }
         if (message.type === "shelf.sidebar.openIssue") {
@@ -765,7 +1020,42 @@ function activate(context) {
   );
 
   const validateNowDisposable = vscode.commands.registerCommand("shelf.validateNow", async () => {
-    scheduleValidation({ mode: "full", triggerUri: null, notifyOnFail: true, source: "manual" });
+    scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
+  });
+
+  const installGitHooksDisposable = vscode.commands.registerCommand("shelf.installGitHooks", async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      return;
+    }
+
+    const repoRoot = folder.uri.fsPath;
+    const result = await runParsedCommand(
+      "git-hooks",
+      DEFAULT_INSTALL_GIT_HOOKS_COMMAND,
+      repoRoot,
+      (stdout, stderr, code) => parseStageFailure(
+        "SHELF_GIT_HOOKS",
+        "Shelf failed to install the repository git hooks.",
+        stdout,
+        stderr,
+        code
+      )
+    );
+
+    if (result.passed) {
+      vscode.window.showInformationMessage("Shelf: repository git hooks installed.");
+    } else {
+      const action = await vscode.window.showErrorMessage(
+        "Shelf: failed to install repository git hooks.",
+        "Open Log"
+      );
+      if (action === "Open Log") {
+        output.show(true);
+      }
+    }
+    await refreshGitHookStatus({ promptIfMissing: false });
   });
 
   const insertFrameworkTemplateDisposable = vscode.commands.registerCommand(
@@ -884,12 +1174,12 @@ function activate(context) {
       return;
     }
 
-    const rel = path.relative(folder.uri.fsPath, doc.uri.fsPath).replace(/\\/g, "/");
-    if (!isWatchedPath(rel)) {
+    const rel = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, doc.uri.fsPath));
+    if (!workspaceGuard.isWatchedPath(rel) || isSuppressedGeneratedPath(rel)) {
       return;
     }
 
-    scheduleValidation({ mode: "change", triggerUri: doc.uri, notifyOnFail: false, source: "save" });
+    scheduleValidation({ mode: "change", triggerUris: [doc.uri], notifyOnFail: false, source: "save" });
   });
 
   const createDisposable = vscode.workspace.onDidCreateFiles(async (event) => {
@@ -897,8 +1187,12 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
-      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    const triggerUris = event.files.filter((uri) => {
+      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
+      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    });
+    if (triggerUris.length) {
+      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
     }
   });
 
@@ -907,8 +1201,12 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    if (anyWatchedUris(event.files, folder.uri.fsPath)) {
-      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    const triggerUris = event.files.filter((uri) => {
+      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
+      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    });
+    if (triggerUris.length) {
+      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
     }
   });
 
@@ -921,8 +1219,12 @@ function activate(context) {
     for (const item of event.files) {
       uris.push(item.oldUri, item.newUri);
     }
-    if (anyWatchedUris(uris, folder.uri.fsPath)) {
-      scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    const triggerUris = uris.filter((uri) => {
+      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
+      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    });
+    if (triggerUris.length) {
+      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
     }
   });
 
@@ -930,22 +1232,15 @@ function activate(context) {
     if (!state.focused) {
       return;
     }
-    scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+    scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
   });
 
   const fileWatcherDisposables = [];
   const watcherFolder = vscode.workspace.workspaceFolders?.[0];
   if (watcherFolder) {
     const watcherPatterns = [
-      "framework/**",
-      "specs/**",
-      "mapping/**",
-      "src/**",
-      "docs/**",
-      "AGENTS.md",
-      "README.md",
-      "scripts/validate_strict_mapping.py",
-      "scripts/generate_framework_tree_hierarchy.py"
+      ...workspaceGuard.WATCH_PREFIXES.map((prefix) => `${prefix}**`),
+      ...workspaceGuard.WATCH_FILES,
     ];
 
     for (const pattern of watcherPatterns) {
@@ -954,8 +1249,9 @@ function activate(context) {
       );
 
       const triggerIfWatched = (uri) => {
-        if (isWatchedUri(uri, watcherFolder.uri.fsPath)) {
-          scheduleValidation({ mode: "change", triggerUri: uri, notifyOnFail: false, source: "auto" });
+        const relPath = workspaceGuard.normalizeRelPath(path.relative(watcherFolder.uri.fsPath, uri.fsPath));
+        if (workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath)) {
+          scheduleValidation({ mode: "change", triggerUris: [uri], notifyOnFail: false, source: "auto" });
         }
       };
 
@@ -974,6 +1270,7 @@ function activate(context) {
     frameworkCompletionDisposable,
     insertFrameworkTemplateDisposable,
     validateNowDisposable,
+    installGitHooksDisposable,
     showIssuesDisposable,
     openFrameworkTreeDisposable,
     refreshFrameworkTreeDisposable,
@@ -985,36 +1282,11 @@ function activate(context) {
     ...fileWatcherDisposables
   );
 
-  scheduleValidation({ mode: "change", triggerUri: null, notifyOnFail: false, source: "auto" });
+  scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
+  void refreshGitHookStatus({ promptIfMissing: true });
 }
 
 function deactivate() {}
-
-function isWatchedPath(relPath) {
-  if (!relPath || relPath.startsWith("..")) {
-    return false;
-  }
-
-  if (WATCH_FILES.has(relPath)) {
-    return true;
-  }
-
-  return WATCH_PREFIXES.some((prefix) => relPath.startsWith(prefix));
-}
-
-function anyWatchedUris(uris, workspaceRoot) {
-  for (const uri of uris) {
-    if (isWatchedUri(uri, workspaceRoot)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isWatchedUri(uri, workspaceRoot) {
-  const rel = path.relative(workspaceRoot, uri.fsPath).replace(/\\/g, "/");
-  return isWatchedPath(rel);
-}
 
 function execCommand(command, cwd) {
   return new Promise((resolve) => {
@@ -1035,6 +1307,28 @@ async function generateFrameworkTree(repoRoot, command, output) {
   output.appendLine(result.stderr || "");
   output.appendLine(`[framework-tree] exit=${result.code}`);
   return result.code === 0;
+}
+
+function shellQuote(value) {
+  const text = String(value ?? "");
+  if (!text) {
+    return "''";
+  }
+  if (/^[A-Za-z0-9_./:-]+$/.test(text)) {
+    return text;
+  }
+  return `'${text.replace(/'/g, `'\"'\"'`)}'`;
+}
+
+function buildMaterializeCommand(baseCommand, productSpecFiles) {
+  const files = [...new Set((productSpecFiles || []).filter(Boolean))];
+  if (!files.length) {
+    return String(baseCommand || DEFAULT_MATERIALIZE_COMMAND);
+  }
+  const projectArgs = files
+    .map((productSpecFile) => `--project ${shellQuote(productSpecFile)}`)
+    .join(" ");
+  return `${String(baseCommand || DEFAULT_MATERIALIZE_COMMAND)} ${projectArgs}`.trim();
 }
 
 function parseResult(stdout, stderr, code) {
@@ -1062,6 +1356,94 @@ function parseResult(stdout, stderr, code) {
 
   if (!errors.length && code !== 0 && text) {
     errors.push(normalizeIssue(text));
+  }
+
+  return {
+    passed: code === 0 && errors.length === 0,
+    errors
+  };
+}
+
+function parseStageFailure(code, message, stdout, stderr, exitCode) {
+  const parsed = parseResult(stdout, stderr, exitCode);
+  if (parsed.passed) {
+    return parsed;
+  }
+
+  if (parsed.errors.length) {
+    return {
+      passed: false,
+      errors: parsed.errors.map((issue) => normalizeIssue({
+        ...issue,
+        code,
+      }))
+    };
+  }
+
+  const detail = [stdout, stderr]
+    .filter(Boolean)
+    .map((value) => String(value).trim())
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+
+  return {
+    passed: false,
+    errors: [normalizeIssue({
+      message: detail ? `${message}\n${detail}` : message,
+      file: null,
+      line: 1,
+      column: 1,
+      code,
+    })]
+  };
+}
+
+function parseMypyResult(stdout, stderr, code) {
+  const text = [stdout, stderr].filter(Boolean).join("\n");
+  const errors = [];
+  const seen = new Set();
+  const linePattern = /^(.*):(\d+)(?::(\d+))?:\s*(error|note):\s*(.+)$/;
+
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+    const match = line.match(linePattern);
+    if (!match || match[4] !== "error") {
+      continue;
+    }
+
+    const issue = normalizeIssue({
+      message: match[5],
+      file: workspaceGuard.normalizeRelPath(match[1]),
+      line: Number(match[2] || 1),
+      column: Number(match[3] || 1),
+      code: "SHELF_MYPY",
+    });
+    const key = `${issue.file}:${issue.line}:${issue.column}:${issue.message}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    errors.push(issue);
+  }
+
+  if (!errors.length && code !== 0) {
+    const fallback = [stdout, stderr]
+      .filter(Boolean)
+      .map((value) => String(value).trim())
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+    errors.push(normalizeIssue({
+      message: fallback || "mypy failed.",
+      file: null,
+      line: 1,
+      column: 1,
+      code: "SHELF_MYPY",
+    }));
   }
 
   return {

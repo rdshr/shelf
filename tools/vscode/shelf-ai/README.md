@@ -14,6 +14,10 @@
 - Runs strict mapping validation automatically on startup.
 - Runs strict mapping validation on save/create/rename/delete for relevant files.
 - Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
+- Auto-materializes affected `projects/*` when `framework/*.md`, `product_spec.toml`, or `implementation_config.toml` changes.
+- Optionally runs `mypy` after relevant Python changes under `src/`, `scripts/`, or `tests/`.
+- Guards `projects/*/generated/*` from direct edits; `strict` mode restores them by re-materializing the owning project.
+- Checks whether repository `.githooks` are enabled and offers a one-click install command when missing.
 - Auto-disables validation for repositories that do not contain `specs/规范总纲与树形结构.md`.
 - Shows validation issues in VSCode Problems panel.
 - Status bar (`Shelf AI issues`) is clickable and opens an issue picker for direct file/line jump.
@@ -21,6 +25,7 @@
 - Auto-fail notification provides buttons: `Open Problems` / `Open Log`.
 - Provides manual commands for validation and framework tree viewing.
 - Provides a direct fallback command to insert the standard `@framework` module template even when editor snippet suggestions are not showing.
+- Uses the VSCode output channel for recent command output only; it does not create persistent log files in the repository.
 
 ## Install (Local)
 1. Package the current source version and install it into local VSCode:
@@ -59,6 +64,7 @@
 
 ## Commands
 - `Shelf: Insert Framework Module Template`
+- `Shelf: Install Git Hooks`
 - `Shelf: Open Framework Tree`
 - `Shelf: Refresh Framework Tree`
 - `Shelf: Validate Mapping Now`
@@ -96,14 +102,31 @@
 ## Configuration
 - `shelf.enableOnSave`
 - `shelf.notifyOnAutoFail`
+- `shelf.guardMode`
+- `shelf.autoMaterialize`
+- `shelf.runMypyOnPythonChanges`
+- `shelf.protectGeneratedFiles`
+- `shelf.promptInstallGitHooks`
 - `shelf.changeValidationCommand`
 - `shelf.fullValidationCommand`
 - `shelf.frameworkTreeHtmlPath`
 - `shelf.frameworkTreeGenerateCommand`
+- `shelf.materializeCommand`
+- `shelf.typeCheckCommand`
 
 Default commands use the repository validator:
 - `uv run python scripts/validate_strict_mapping.py --check-changes --json`
 - `uv run python scripts/validate_strict_mapping.py --json`
+- `uv run python scripts/materialize_project.py`
+- `uv run mypy`
+
+Guard behavior:
+- `shelf.guardMode = normal`: report direct edits under `projects/*/generated/*`, but do not overwrite the file.
+- `shelf.guardMode = strict`: re-run materialization for the owning project and treat restore failure as a hard guard issue.
+- `shelf.autoMaterialize = true`: when upstream framework or project truth files change, Shelf appends `--project <product_spec.toml>` and materializes the affected projects automatically.
+- `shelf.protectGeneratedFiles = true`: direct edits under generated artifacts are always surfaced; `strict` mode upgrades this to automatic restore.
+- `shelf.runMypyOnPythonChanges = true`: Python-only checks are scoped to relevant source changes so routine Markdown work does not trigger mypy.
+- `shelf.promptInstallGitHooks = true`: prompt once per session if `core.hooksPath` is not set to the repository `.githooks`.
 
 Default framework tree generation command:
 - `uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html`

@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: structure-first framework tree workspace and strict mapping guard.",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -21,6 +21,7 @@
     "LICENSE.txt",
     "README.md",
     "extension.js",
+    "guarding.js",
     "framework_completion.js",
     "framework_navigation.js",
     "media/**",
@@ -34,6 +35,7 @@
     "onStartupFinished",
     "onView:shelf.sidebarHome",
     "onCommand:shelf.insertFrameworkModuleTemplate",
+    "onCommand:shelf.installGitHooks",
     "onCommand:shelf.validateNow",
     "onCommand:shelf.openFrameworkTree",
     "onCommand:shelf.refreshFrameworkTree"
@@ -54,6 +56,10 @@
       {
         "command": "shelf.validateNow",
         "title": "Shelf: Validate Mapping Now"
+      },
+      {
+        "command": "shelf.installGitHooks",
+        "title": "Shelf: Install Git Hooks"
       },
       {
         "command": "shelf.showIssues",
@@ -111,6 +117,11 @@
           "command": "shelf.validateNow",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@3"
+        },
+        {
+          "command": "shelf.installGitHooks",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@4"
         }
       ]
     },
@@ -126,6 +137,35 @@
           "type": "boolean",
           "default": true,
           "description": "Show notification when auto validation detects mapping issues."
+        },
+        "shelf.guardMode": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "strict"
+          ],
+          "default": "normal",
+          "description": "Choose whether Shelf only reports generated-artifact edits or automatically restores them."
+        },
+        "shelf.autoMaterialize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run project materialization when framework, product spec, or implementation config changes."
+        },
+        "shelf.runMypyOnPythonChanges": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run mypy after relevant Python changes under src/, scripts/, or tests/."
+        },
+        "shelf.protectGeneratedFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Guard projects/*/generated/* from direct edits."
+        },
+        "shelf.promptInstallGitHooks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prompt once per session to enable the repository .githooks path when missing."
         },
         "shelf.changeValidationCommand": {
           "type": "string",
@@ -146,6 +186,16 @@
           "type": "string",
           "default": "uv run python scripts/generate_framework_tree_hierarchy.py --source framework --framework-dir framework --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
           "description": "Command used by 'Refresh Framework Tree'."
+        },
+        "shelf.materializeCommand": {
+          "type": "string",
+          "default": "uv run python scripts/materialize_project.py",
+          "description": "Base command used for Shelf auto-materialization. Shelf appends --project arguments for affected product specs."
+        },
+        "shelf.typeCheckCommand": {
+          "type": "string",
+          "default": "uv run mypy",
+          "description": "Command used when Shelf runs Python type checks after relevant source changes."
         }
       }
     }

@@ -27,16 +27,41 @@ function main() {
     (packageJson.files || []).includes("framework_completion.js"),
     "package.json must package framework_completion.js"
   );
+  assert(
+    (packageJson.files || []).includes("guarding.js"),
+    "package.json must package guarding.js"
+  );
 
   const commandContribution = (packageJson.contributes?.commands || []).find(
     (item) => item.command === "shelf.insertFrameworkModuleTemplate"
   );
   assert(commandContribution, "package.json must contribute the framework template insert command");
+  const installHooksCommand = (packageJson.contributes?.commands || []).find(
+    (item) => item.command === "shelf.installGitHooks"
+  );
+  assert(installHooksCommand, "package.json must contribute the git hooks install command");
 
   assert(
     (packageJson.activationEvents || []).includes("onCommand:shelf.insertFrameworkModuleTemplate"),
     "package.json must activate on the framework template insert command"
   );
+  assert(
+    (packageJson.activationEvents || []).includes("onCommand:shelf.installGitHooks"),
+    "package.json must activate on the git hooks install command"
+  );
+
+  const configuration = packageJson.contributes?.configuration?.properties || {};
+  for (const key of [
+    "shelf.guardMode",
+    "shelf.autoMaterialize",
+    "shelf.runMypyOnPythonChanges",
+    "shelf.protectGeneratedFiles",
+    "shelf.promptInstallGitHooks",
+    "shelf.materializeCommand",
+    "shelf.typeCheckCommand",
+  ]) {
+    assert(Object.prototype.hasOwnProperty.call(configuration, key), `package.json must expose ${key}`);
+  }
 
   const frameworkSnippet = snippetJson["@framework Module Template"];
   assert(frameworkSnippet, "markdown snippets must keep the @framework module template");
@@ -69,6 +94,10 @@ function main() {
     "extension.js must register the framework template insert command"
   );
   assert(
+    /registerCommand\s*\(\s*"shelf\.installGitHooks"/.test(extensionSource),
+    "extension.js must register the git hooks install command"
+  );
+  assert(
     /registerCompletionItemProvider\s*\(/.test(extensionSource),
     "extension.js must register a markdown completion provider"
   );
@@ -77,8 +106,16 @@ function main() {
     "README must document the framework template insert command"
   );
   assert(
+    readme.includes("Shelf: Install Git Hooks"),
+    "README must document the git hooks install command"
+  );
+  assert(
     readme.includes("The `@framework` template entry is a repository-side hard authoring contract"),
     "README must document the non-removable @framework authoring contract"
+  );
+  assert(
+    readme.includes("shelf.guardMode = strict"),
+    "README must document strict guard mode"
   );
 
   const atEntries = frameworkCompletion.getFrameworkCompletionEntries("@", "@", false);

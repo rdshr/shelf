@@ -11,6 +11,7 @@ dependencies = [
     "mypy>=1.19.1",
     "plotly>=6.5.2",
     "pyqt6>=6.10.2",
+    "python-pptx>=1.0.2",
     "uvicorn>=0.41.0",
 ]
 
