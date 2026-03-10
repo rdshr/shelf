@@ -3,9 +3,9 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](./pyproject.toml)
 [![uv](https://img.shields.io/badge/deps-uv-6A5ACD)](https://github.com/astral-sh/uv)
 [![VSCode](https://img.shields.io/badge/VSCode-ArchSync-007ACC?logo=visualstudiocode&logoColor=white)](./tools/vscode/archsync)
-[![GitHub stars](https://img.shields.io/github/stars/xueyu888/shelf?style=social)](https://github.com/xueyu888/shelf/stargazers)
-[![Strict Mapping Gate](https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml/badge.svg)](https://github.com/xueyu888/shelf/actions/workflows/strict-mapping-gate.yml)
-[![Latest Release](https://img.shields.io/github/v/release/xueyu888/shelf?display_name=tag)](https://github.com/xueyu888/shelf/releases)
+[![GitHub stars](https://img.shields.io/github/stars/xueyu888/framework?style=social)](https://github.com/xueyu888/framework/stargazers)
+[![Strict Mapping Gate](https://github.com/xueyu888/framework/actions/workflows/strict-mapping-gate.yml/badge.svg)](https://github.com/xueyu888/framework/actions/workflows/strict-mapping-gate.yml)
+[![Latest Release](https://img.shields.io/github/v/release/xueyu888/framework?display_name=tag)](https://github.com/xueyu888/framework/releases)
 
 **Structure-first AI coding framework.**
 
@@ -282,7 +282,7 @@ WSL note:
 More:
 
 - [ArchSync README](./tools/vscode/archsync/README.md)
-- [GitHub Releases](https://github.com/xueyu888/shelf/releases)
+- [GitHub Releases](https://github.com/xueyu888/framework/releases)
 
 Main commands:
 

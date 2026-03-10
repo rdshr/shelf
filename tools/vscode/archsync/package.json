@@ -7,12 +7,12 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xueyu888/shelf.git"
+    "url": "https://github.com/xueyu888/framework.git"
   },
   "bugs": {
-    "url": "https://github.com/xueyu888/shelf/issues"
+    "url": "https://github.com/xueyu888/framework/issues"
   },
-  "homepage": "https://github.com/xueyu888/shelf/tree/main/tools/vscode/archsync",
+  "homepage": "https://github.com/xueyu888/framework/tree/main/tools/vscode/archsync",
   "engines": {
     "vscode": "^1.85.0"
   },

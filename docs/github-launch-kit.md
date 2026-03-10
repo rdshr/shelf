@@ -102,7 +102,7 @@ Recommended:
 
 `It includes strict mapping validation, project materialization, a runnable reference app, and a VS Code companion.`
 
-`Repo: https://github.com/xueyu888/shelf`
+`Repo: https://github.com/xueyu888/framework`
 
 ## Hacker News title options
 

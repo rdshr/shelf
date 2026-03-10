@@ -3,9 +3,9 @@
 ## Unreleased
 
 ## 0.0.36 - 2026-03-10
-- Updated ArchSync packaged metadata and public links after the repository rename from `framework` to `shelf`, so repository, issues, and homepage targets now point to the canonical public location.
+- Updated ArchSync packaged metadata and public links so repository, issues, and homepage targets stay aligned with the current public GitHub location.
 - Added explicit WSL-aware local install guidance to the packaged README, clarifying how to install and verify ArchSync from a WSL workspace attached through VS Code.
-- This release is mainly a packaging, distribution, and onboarding sync for the renamed repository and the current public-facing workflow.
+- This release is mainly a packaging, distribution, and onboarding sync for the current public-facing workflow.
 
 ## 0.0.35 - 2026-03-09
 - Added framework-markdown fixed-shape completions in ArchSync. `@framework`, the five standard section headings, `C/P/B/R/V` entries, and `R*.1~R*.4` child lines now have direct completion support instead of relying on snippet discovery alone.
