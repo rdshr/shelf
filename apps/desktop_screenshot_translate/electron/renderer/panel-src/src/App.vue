@@ -16,6 +16,7 @@ function createEmptyPayload() {
       capturePreviewDataUrl: null,
       sourceText: '尚未捕获结果',
       translatedText: '完成截图后将在此显示译文结果。',
+      sourceLanguage: 'auto',
       selection: {
         width: 0,
         height: 0,
@@ -54,6 +55,7 @@ const selectionText = computed(() => {
   return `区域：${selection.width} x ${selection.height}`;
 });
 const shortcutText = computed(() => `快捷键：${appState.payload.result.shortcut}`);
+const sourceLanguageText = computed(() => `源语言：${appState.payload.result.sourceLanguage || 'auto'}`);
 const providerText = computed(() => {
   const meta = appState.payload.result.captureMeta;
   if (!meta) {
@@ -190,6 +192,10 @@ window.aitransDesktop.getProjectSummary().then((summary) => {
             <div class="meta-item">
               <span class="meta-key">状态</span>
               <span class="meta-value">{{ statusText }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-key">语言</span>
+              <span class="meta-value">{{ sourceLanguageText }}</span>
             </div>
           </div>
         </section>

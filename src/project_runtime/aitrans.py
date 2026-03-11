@@ -918,6 +918,13 @@ def _validate_implementation_config(
         raise ValueError(
             "providers.translation_endpoint_source must be env_or_local_gateway or env_then_official_default",
         )
+    if implementation.providers.source_language_detection not in {
+        "provider_auto",
+        "provider_auto_or_heuristic_fallback",
+    }:
+        raise ValueError(
+            "providers.source_language_detection must be provider_auto or provider_auto_or_heuristic_fallback",
+        )
     if implementation.providers.secret_source not in {
         "setup_ui_managed_runtime_store_or_env",
         "windows_credential_manager_or_env",

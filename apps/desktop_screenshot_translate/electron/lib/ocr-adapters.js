@@ -16,6 +16,65 @@ const TESSERACT_LANGUAGE_MAP = {
   ja: 'jpn',
 };
 
+function detectSourceLanguageFromText(text) {
+  if (typeof text !== 'string' || !text.trim()) {
+    return {
+      code: 'auto',
+      strategy: 'empty_text_fallback',
+    };
+  }
+
+  let latin = 0;
+  let kana = 0;
+  let han = 0;
+
+  for (const char of text) {
+    const codePoint = char.codePointAt(0) || 0;
+    if ((codePoint >= 0x0041 && codePoint <= 0x007A) || (codePoint >= 0x00C0 && codePoint <= 0x024F)) {
+      latin += 1;
+      continue;
+    }
+    if (
+      (codePoint >= 0x3040 && codePoint <= 0x309F)
+      || (codePoint >= 0x30A0 && codePoint <= 0x30FF)
+      || (codePoint >= 0x31F0 && codePoint <= 0x31FF)
+    ) {
+      kana += 1;
+      continue;
+    }
+    if (
+      (codePoint >= 0x3400 && codePoint <= 0x4DBF)
+      || (codePoint >= 0x4E00 && codePoint <= 0x9FFF)
+      || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
+    ) {
+      han += 1;
+    }
+  }
+
+  if (kana > 0) {
+    return {
+      code: 'ja',
+      strategy: 'heuristic_post_ocr',
+    };
+  }
+  if (han > 0) {
+    return {
+      code: 'zh',
+      strategy: 'heuristic_post_ocr',
+    };
+  }
+  if (latin > 0) {
+    return {
+      code: 'en',
+      strategy: 'heuristic_post_ocr',
+    };
+  }
+  return {
+    code: 'auto',
+    strategy: 'heuristic_post_ocr',
+  };
+}
+
 function buildTesseractLanguages(productSpec) {
   const mapped = [];
   for (const item of productSpec.pipeline.source_languages || []) {
@@ -57,15 +116,18 @@ async function recognizeWithTesseract(imagePath, productSpec, implementationConf
     const stderr = (result.stderr || '').trim();
     throw new Error(stderr || 'tesseract returned empty OCR text');
   }
+  const sourceLanguage = detectSourceLanguageFromText(text);
   return {
     provider: 'tesseract',
     text,
+    sourceLanguage: sourceLanguage.code,
     diagnostics: {
       languages,
       executable,
       executableSource: source,
       tessdataDir,
       stderr: (result.stderr || '').trim(),
+      sourceLanguageDetection: sourceLanguage.strategy,
     },
   };
 }

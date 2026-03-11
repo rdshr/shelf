@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { resolveAppRoot } = require('./runtime-overrides');
+const { loadRuntimeOverrides, resolveAppRoot } = require('./runtime-overrides');
 
 function getRepoRoot() {
   return path.resolve(__dirname, '../../../../');
@@ -69,7 +69,12 @@ function loadProjectConfig() {
   const implementationBundleText = fs.readFileSync(implementationBundlePath, 'utf-8');
   const implementationConfig = extractEmbeddedJson(implementationBundleText, 'IMPLEMENTATION_CONFIG');
   const runtimeBundle = extractEmbeddedJson(implementationBundleText, 'RUNTIME_BUNDLE');
-  const shortcut = process.env.AITRANS_CAPTURE_SHORTCUT || 'CommandOrControl+Shift+1';
+  const runtimeOverrides = loadRuntimeOverrides().values;
+  const shortcut = (
+    process.env.AITRANS_CAPTURE_SHORTCUT
+    || runtimeOverrides.desktop?.capture_shortcut
+    || 'CommandOrControl+Shift+1'
+  ).trim();
 
   return {
     repoRoot: getRepoRoot(),

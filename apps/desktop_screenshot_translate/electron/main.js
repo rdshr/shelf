@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, clipboard, screen, shell, dialog } = require('electron');
 
@@ -20,6 +21,12 @@ const { createWindowStateStore } = require('./lib/window-state');
 
 app.setName('AiTrans');
 const stateNamespace = 'AiTrans';
+const singleInstanceLock = app.requestSingleInstanceLock();
+
+if (!singleInstanceLock) {
+  app.quit();
+  process.exit(0);
+}
 
 function resolveLogFilePath() {
   const appData = process.env.APPDATA || process.env.LOCALAPPDATA;
@@ -34,6 +41,31 @@ function appendStartupLog(message, extra) {
   const logFile = resolveLogFilePath();
   const line = `[${new Date().toISOString()}] ${message}${extra ? ` ${JSON.stringify(extra)}` : ''}\n`;
   fs.appendFileSync(logFile, line, 'utf-8');
+}
+
+function resolveEventLogFilePath() {
+  const appData = process.env.APPDATA || process.env.LOCALAPPDATA;
+  const baseDir = appData
+    ? path.join(appData, 'AiTrans', 'logs')
+    : path.join(__dirname, '.runtime-logs');
+  fs.mkdirSync(baseDir, { recursive: true });
+  return path.join(baseDir, 'pipeline-events.jsonl');
+}
+
+function appendPipelineEvent(eventName, audit, details = {}) {
+  const record = {
+    timestamp: new Date().toISOString(),
+    event_name: eventName,
+    capture_session_id: audit?.captureSessionId || null,
+    task_id: audit?.taskId || null,
+    provider: details.provider || null,
+    result_state: details.resultState || null,
+    stage_status: details.stageStatus || null,
+    source_language: details.sourceLanguage || null,
+    shortcut: currentCaptureShortcut || config?.shortcut || null,
+    details,
+  };
+  fs.appendFileSync(resolveEventLogFilePath(), `${JSON.stringify(record)}\n`, 'utf-8');
 }
 
 let config;
@@ -59,6 +91,7 @@ let setupWindow = null;
 let lastSelection = null;
 let lastPipelineState = null;
 let runtimeBootstrap = null;
+let currentCaptureShortcut = null;
 const CAPTURE_SETTLE_MS = 180;
 const RETRYABLE_OCR_ERROR_FRAGMENT = 'tesseract returned empty OCR text';
 
@@ -87,6 +120,15 @@ function createTrayImage() {
 
 function getOverlayDisplay() {
   return screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+}
+
+function createAuditContext(selection) {
+  return {
+    captureSessionId: `capture_${crypto.randomUUID()}`,
+    taskId: `task_${crypto.randomUUID()}`,
+    selection,
+    startedAt: Date.now(),
+  };
 }
 
 function createOverlayWindow() {
@@ -172,6 +214,24 @@ function createPanelWindow() {
   return panelWindow;
 }
 
+function focusBestAvailableWindow() {
+  if (setupWindow && !setupWindow.isDestroyed()) {
+    setupWindow.show();
+    setupWindow.focus();
+    return;
+  }
+  if (panelWindow && !panelWindow.isDestroyed()) {
+    panelWindow.show();
+    panelWindow.focus();
+    return;
+  }
+  if (!getSetupGuideState().configured) {
+    showSetupGuide();
+    return;
+  }
+  showPanel(buildStubResult(lastSelection || getFallbackSelection()));
+}
+
 function createSetupWindow() {
   if (setupWindow && !setupWindow.isDestroyed()) {
     return setupWindow;
@@ -230,6 +290,75 @@ function isRetryableOcrFailure(error) {
   return message.includes(RETRYABLE_OCR_ERROR_FRAGMENT);
 }
 
+function resolveConfiguredCaptureShortcut() {
+  const overrides = loadRuntimeOverrides().values;
+  const configuredShortcut = (
+    process.env.AITRANS_CAPTURE_SHORTCUT
+    || overrides.desktop?.capture_shortcut
+    || config.shortcut
+    || 'CommandOrControl+Shift+1'
+  ).trim();
+  return configuredShortcut || 'CommandOrControl+Shift+1';
+}
+
+function buildTrayMenu() {
+  return Menu.buildFromTemplate([
+    { label: '开始截图翻译', click: () => showOverlay() },
+    { label: `快捷键：${currentCaptureShortcut || config.shortcut}`, enabled: false },
+    { type: 'separator' },
+    { label: '显示结果面板', click: () => showPanel(buildStubResult(lastSelection || getFallbackSelection())) },
+    { label: '首次配置指引', click: () => showSetupGuide() },
+    { label: '打开配置目录', click: () => shell.openPath(path.dirname(getActiveRuntimeOverridePath())) },
+    { type: 'separator' },
+    { label: '退出', click: () => { app.isQuitting = true; app.quit(); } },
+  ]);
+}
+
+function refreshTrayMenu() {
+  if (!tray) {
+    return;
+  }
+  tray.setContextMenu(buildTrayMenu());
+}
+
+function applyCaptureShortcut(nextShortcut) {
+  const normalized = (nextShortcut || '').trim() || 'CommandOrControl+Shift+1';
+  const previousShortcut = currentCaptureShortcut || config.shortcut || 'CommandOrControl+Shift+1';
+
+  globalShortcut.unregisterAll();
+
+  let registered = false;
+  try {
+    registered = globalShortcut.register(normalized, () => {
+      showOverlay();
+    });
+  } catch (error) {
+    globalShortcut.register(previousShortcut, () => {
+      showOverlay();
+    });
+    currentCaptureShortcut = previousShortcut;
+    config.shortcut = previousShortcut;
+    refreshTrayMenu();
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: `invalid shortcut: ${message}` };
+  }
+
+  if (!registered) {
+    globalShortcut.register(previousShortcut, () => {
+      showOverlay();
+    });
+    currentCaptureShortcut = previousShortcut;
+    config.shortcut = previousShortcut;
+    refreshTrayMenu();
+    return { ok: false, error: 'shortcut registration was rejected by the operating system' };
+  }
+
+  currentCaptureShortcut = normalized;
+  config.shortcut = normalized;
+  refreshTrayMenu();
+  return { ok: true, shortcut: normalized };
+}
+
 async function captureAndRecognize(selection) {
   await settleBeforeCapture();
   let capture = await captureSelectionImage(selection);
@@ -274,10 +403,11 @@ function buildStubResult(selection) {
   return {
     sourceText: '等待本地主链输出结果。',
     translatedText: '纯 Electron 主链已启用，下一次截图会进入本地截图、OCR 和翻译 provider 流程。',
+    sourceLanguage: 'auto',
     stageStatus: 'idle',
     errorOrigin: null,
     selection,
-    shortcut: config.shortcut,
+    shortcut: currentCaptureShortcut || config.shortcut,
     capturePreviewDataUrl: null,
     captureMeta: null,
   };
@@ -296,6 +426,10 @@ function getSetupGuideState() {
   const translationOverrides =
     overrides.values && typeof overrides.values.translation === 'object'
       ? overrides.values.translation
+      : {};
+  const desktopOverrides =
+    overrides.values && typeof overrides.values.desktop === 'object'
+      ? overrides.values.desktop
       : {};
   let configured = true;
   let credentialMode = 'configured';
@@ -326,6 +460,12 @@ function getSetupGuideState() {
       apiKeyPresent:
         typeof translationOverrides.api_key === 'string'
         && translationOverrides.api_key.trim().length > 0,
+    },
+    desktopDraft: {
+      captureShortcut:
+        typeof desktopOverrides.capture_shortcut === 'string' && desktopOverrides.capture_shortcut.trim()
+          ? desktopOverrides.capture_shortcut.trim()
+          : currentCaptureShortcut || config.shortcut,
     },
   };
 }
@@ -380,15 +520,18 @@ function showPanel(result) {
   }
 }
 
-function rememberPipelineState(selection, capture, ocrResult, translatedText, translationDiagnostics) {
+function rememberPipelineState(selection, capture, ocrResult, translatedText, translationDiagnostics, audit) {
   lastPipelineState = {
     selection,
     sourceText: ocrResult?.text?.trim() || '',
+    sourceLanguage: ocrResult?.sourceLanguage || 'auto',
     capturePreviewDataUrl: capture?.dataUrl || null,
     captureMeta: {
       width: capture?.size?.width || null,
       height: capture?.size?.height || null,
       targetLanguage: config.productSpec.pipeline.target_language,
+      captureSessionId: audit?.captureSessionId || null,
+      taskId: audit?.taskId || null,
       ocrProvider: ocrResult?.provider || null,
       translationProvider: translationDiagnostics?.provider || null,
       ocrDiagnostics: ocrResult?.diagnostics || null,
@@ -402,17 +545,7 @@ function createTray() {
   tray = new Tray(createTrayImage());
   tray.setToolTip(config.productSpec.project.display_name);
   appendStartupLog('tray:created');
-  const menu = Menu.buildFromTemplate([
-    { label: '开始截图翻译', click: () => showOverlay() },
-    { label: `快捷键：${config.shortcut}`, enabled: false },
-    { type: 'separator' },
-    { label: '显示结果面板', click: () => showPanel(buildStubResult(lastSelection || getFallbackSelection())) },
-    { label: '首次配置指引', click: () => showSetupGuide() },
-    { label: '打开配置目录', click: () => shell.openPath(path.dirname(getActiveRuntimeOverridePath())) },
-    { type: 'separator' },
-    { label: '退出', click: () => { app.isQuitting = true; app.quit(); } },
-  ]);
-  tray.setContextMenu(menu);
+  refreshTrayMenu();
   tray.on('click', () => showOverlay());
 }
 
@@ -429,26 +562,43 @@ function getFallbackSelection() {
 }
 
 function registerShortcuts() {
-  globalShortcut.register(config.shortcut, () => {
-    showOverlay();
-  });
+  const result = applyCaptureShortcut(resolveConfiguredCaptureShortcut());
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
 }
 
 ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
   lastSelection = selection;
   lastPipelineState = null;
+  const audit = createAuditContext(selection);
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.hide();
   }
   try {
+    appendPipelineEvent('capture_started', audit, {
+      resultState: 'capturing',
+      stageStatus: 'capturing',
+    });
     showPanel(buildStageResult(selection, {
+      sourceLanguage: 'auto',
       stageStatus: 'capturing',
       sourceText: '正在抓取选区位图…',
       translatedText: '正在从 Windows 桌面获取截图区域，请稍候。',
     }));
 
     const { capture, ocrResult, retries } = await captureAndRecognize(selection);
+    appendPipelineEvent('capture_completed', audit, {
+      resultState: 'captured',
+      stageStatus: 'capturing',
+    });
+    appendPipelineEvent('ocr_requested', audit, {
+      provider: config.implementationConfig.providers.ocr_chain[0],
+      resultState: 'ocr_processing',
+      stageStatus: 'ocr_processing',
+    });
     showPanel(buildStageResult(selection, {
+      sourceLanguage: ocrResult.sourceLanguage || 'auto',
       stageStatus: 'ocr_processing',
       sourceText: retries > 0 ? '截图已稳定，正在执行本地 OCR…' : '截图完成，正在执行本地 OCR…',
       translatedText: retries > 0 ? '首次识别未返回文本，已自动重试一次并继续…' : 'OCR 完成后将进入翻译阶段…',
@@ -457,15 +607,24 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         width: capture.size.width,
         height: capture.size.height,
         targetLanguage: config.productSpec.pipeline.target_language,
+        captureSessionId: audit.captureSessionId,
+        taskId: audit.taskId,
         ocrProvider: 'pending',
         translationProvider: config.implementationConfig.providers.translation_chain[0],
         autoRetryCount: retries,
       },
     }));
     const recognizedText = ocrResult.text.trim();
-    rememberPipelineState(selection, capture, ocrResult, '', null);
+    rememberPipelineState(selection, capture, ocrResult, '', null, audit);
+    appendPipelineEvent('trans_requested', audit, {
+      provider: config.implementationConfig.providers.translation_chain[0],
+      resultState: 'translation_processing',
+      stageStatus: 'translation_processing',
+      sourceLanguage: ocrResult.sourceLanguage || 'auto',
+    });
 
     showPanel(buildStageResult(selection, {
+      sourceLanguage: ocrResult.sourceLanguage || 'auto',
       stageStatus: 'translation_processing',
       sourceText: recognizedText || 'OCR 未返回可用文本。',
       translatedText: '正在调用翻译 provider…',
@@ -474,6 +633,8 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         width: capture.size.width,
         height: capture.size.height,
         targetLanguage: config.productSpec.pipeline.target_language,
+        captureSessionId: audit.captureSessionId,
+        taskId: audit.taskId,
         ocrProvider: ocrResult.provider,
         translationProvider: 'pending',
         ocrDiagnostics: ocrResult.diagnostics || null,
@@ -486,9 +647,10 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       config.productSpec,
       config.implementationConfig,
     );
-    rememberPipelineState(selection, capture, ocrResult, translationResult.translatedText, translationResult);
+    rememberPipelineState(selection, capture, ocrResult, translationResult.translatedText, translationResult, audit);
 
     const result = buildStageResult(selection, {
+      sourceLanguage: ocrResult.sourceLanguage || 'auto',
       stageStatus: 'translation_ready',
       sourceText: recognizedText,
       translatedText: translationResult.translatedText,
@@ -497,6 +659,8 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         width: capture.size.width,
         height: capture.size.height,
         targetLanguage: config.productSpec.pipeline.target_language,
+        captureSessionId: audit.captureSessionId,
+        taskId: audit.taskId,
         ocrProvider: ocrResult.provider,
         translationProvider: translationResult.provider,
         ocrDiagnostics: ocrResult.diagnostics || null,
@@ -505,6 +669,12 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       },
     });
     showPanel(result);
+    appendPipelineEvent('result_rendered', audit, {
+      provider: translationResult.provider,
+      resultState: 'translation_ready',
+      stageStatus: 'translation_ready',
+      sourceLanguage: ocrResult.sourceLanguage || 'auto',
+    });
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -512,6 +682,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       ...(lastPipelineState
         ? buildStageResult(lastPipelineState.selection || selection, {
             sourceText: lastPipelineState.sourceText || '等待本地主链输出结果。',
+            sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
             capturePreviewDataUrl: lastPipelineState.capturePreviewDataUrl,
             captureMeta: lastPipelineState.captureMeta,
           })
@@ -521,6 +692,13 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       errorOrigin: message,
     };
     showPanel(failureResult);
+    appendPipelineEvent('failure_raised', audit, {
+      provider: lastPipelineState?.captureMeta?.translationProvider || lastPipelineState?.captureMeta?.ocrProvider || null,
+      resultState: 'failed',
+      stageStatus: 'failed',
+      sourceLanguage: lastPipelineState?.sourceLanguage || 'auto',
+      error: message,
+    });
     return { ok: false, error: message };
   }
 });
@@ -555,7 +733,17 @@ ipcMain.handle('panel:retry-translation', async () => {
   }
 
   try {
+    appendPipelineEvent('trans_requested', {
+      captureSessionId: lastPipelineState.captureMeta?.captureSessionId || null,
+      taskId: lastPipelineState.captureMeta?.taskId || null,
+    }, {
+      provider: config.implementationConfig.providers.translation_chain[0],
+      resultState: 'translation_processing',
+      stageStatus: 'translation_processing',
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
+    });
     showPanel(buildStageResult(lastPipelineState.selection || getFallbackSelection(), {
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
       stageStatus: 'translation_processing',
       sourceText: lastPipelineState.sourceText,
       translatedText: '正在重新调用翻译 provider…',
@@ -579,12 +767,18 @@ ipcMain.handle('panel:retry-translation', async () => {
         provider: lastPipelineState.captureMeta?.ocrProvider,
         diagnostics: lastPipelineState.captureMeta?.ocrDiagnostics || null,
         text: lastPipelineState.sourceText,
+        sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
       },
       translationResult.translatedText,
       translationResult,
+      {
+        captureSessionId: lastPipelineState.captureMeta?.captureSessionId || null,
+        taskId: lastPipelineState.captureMeta?.taskId || null,
+      },
     );
 
     showPanel(buildStageResult(lastPipelineState.selection || getFallbackSelection(), {
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
       stageStatus: 'translation_ready',
       sourceText: lastPipelineState.sourceText,
       translatedText: translationResult.translatedText,
@@ -595,10 +789,20 @@ ipcMain.handle('panel:retry-translation', async () => {
         translationDiagnostics: translationResult.diagnostics || null,
       },
     }));
+    appendPipelineEvent('result_rendered', {
+      captureSessionId: lastPipelineState.captureMeta?.captureSessionId || null,
+      taskId: lastPipelineState.captureMeta?.taskId || null,
+    }, {
+      provider: translationResult.provider,
+      resultState: 'translation_ready',
+      stageStatus: 'translation_ready',
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
+    });
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     showPanel(buildStageResult(lastPipelineState.selection || getFallbackSelection(), {
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
       stageStatus: 'failed',
       sourceText: lastPipelineState.sourceText,
       translatedText: config.productSpec.presentation.copy.failure_title,
@@ -606,6 +810,16 @@ ipcMain.handle('panel:retry-translation', async () => {
       captureMeta: lastPipelineState.captureMeta,
       errorOrigin: message,
     }));
+    appendPipelineEvent('failure_raised', {
+      captureSessionId: lastPipelineState.captureMeta?.captureSessionId || null,
+      taskId: lastPipelineState.captureMeta?.taskId || null,
+    }, {
+      provider: lastPipelineState.captureMeta?.translationProvider || lastPipelineState.captureMeta?.ocrProvider || null,
+      resultState: 'failed',
+      stageStatus: 'failed',
+      sourceLanguage: lastPipelineState.sourceLanguage || 'auto',
+      error: message,
+    });
     return { ok: false, error: message };
   }
 });
@@ -613,7 +827,7 @@ ipcMain.handle('panel:retry-translation', async () => {
 ipcMain.handle('panel:get-project-summary', async () => {
   return {
     displayName: config.productSpec.project.display_name,
-    shortcut: config.shortcut,
+    shortcut: currentCaptureShortcut || config.shortcut,
     pipeline: config.productSpec.pipeline,
     governance: config.productSpec.governance,
   };
@@ -650,6 +864,10 @@ ipcMain.handle('setup:save-config', async (_event, payload) => {
     payload && typeof payload.apiKey === 'string'
       ? payload.apiKey.trim()
       : '';
+  const shortcutInput =
+    payload && typeof payload.captureShortcut === 'string'
+      ? payload.captureShortcut.trim()
+      : resolveConfiguredCaptureShortcut();
 
   if (!baseUrlInput) {
     return { ok: false, error: 'missing translation.base_url' };
@@ -658,6 +876,11 @@ ipcMain.handle('setup:save-config', async (_event, payload) => {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrlInput);
   if (normalizedBaseUrl === OFFICIAL_OPENAI_BASE_URL && !apiKeyInput) {
     return { ok: false, error: 'official OpenAI endpoint requires api_key' };
+  }
+
+  const shortcutResult = applyCaptureShortcut(shortcutInput);
+  if (!shortcutResult.ok) {
+    return { ok: false, error: shortcutResult.error };
   }
 
   const currentValues = loadRuntimeOverrides().values;
@@ -670,12 +893,19 @@ ipcMain.handle('setup:save-config', async (_event, payload) => {
       base_url: normalizedBaseUrl,
       api_key: apiKeyInput,
     },
+    desktop: {
+      ...(currentValues.desktop && typeof currentValues.desktop === 'object'
+        ? currentValues.desktop
+        : {}),
+      capture_shortcut: shortcutResult.shortcut,
+    },
   });
 
   appendStartupLog('setup-guide:config-saved', {
     configPath: saved.path,
     usingOfficialEndpoint: normalizedBaseUrl === OFFICIAL_OPENAI_BASE_URL,
     apiKeyPresent: Boolean(apiKeyInput),
+    captureShortcut: shortcutResult.shortcut,
   });
 
   return {
@@ -692,13 +922,24 @@ ipcMain.handle('setup:close', async () => {
   return { ok: true };
 });
 
+app.on('second-instance', () => {
+  focusBestAvailableWindow();
+});
+
 app.whenReady().then(() => {
   appendStartupLog('app:ready');
   runtimeBootstrap = ensureRuntimeOverridesTemplate();
   appendStartupLog('runtime-overrides:bootstrap', runtimeBootstrap);
   createTray();
   createPanelWindow();
-  registerShortcuts();
+  try {
+    registerShortcuts();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    appendStartupLog('shortcut:register-failed', { message });
+    dialog.showErrorBox('AiTrans 快捷键注册失败', `${message}\n\n请在首次配置窗口中重新设置快捷键。`);
+    showSetupGuide();
+  }
   if (!getSetupGuideState().configured) {
     appendStartupLog('setup-guide:auto-open');
     showSetupGuide();

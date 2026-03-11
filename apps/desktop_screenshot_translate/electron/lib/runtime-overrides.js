@@ -138,6 +138,9 @@ function ensureRuntimeOverridesTemplate() {
       base_url: '',
       api_key: '',
     },
+    desktop: {
+      capture_shortcut: '',
+    },
     ocr: {
       tesseract_path: '',
       tessdata_dir: '',

@@ -5,6 +5,9 @@
     "api_key": "",
     "model_note": "Runtime still uses the model declared in projects/desktop_screenshot_translate/implementation_config.toml."
   },
+  "desktop": {
+    "capture_shortcut": ""
+  },
   "ocr": {
     "tesseract_path": "",
     "tessdata_dir": ""

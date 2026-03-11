@@ -227,6 +227,11 @@
             <input id="apiKey" type="password" placeholder="输入 API Key；本地兼容端点如允许无密钥可留空" />
             <small>优先通过本界面保存。除高级排障外，不要求用户手工编辑 JSON。</small>
           </div>
+          <div class="field">
+            <label for="captureShortcut">capture_shortcut</label>
+            <input id="captureShortcut" type="text" placeholder="例如 CommandOrControl+Shift+1" />
+            <small>快捷键支持重绑；保存后会立即重新注册到当前运行中的应用。</small>
+          </div>
           <button id="save" type="submit" class="primary">保存并立即生效</button>
         </form>
       </section>

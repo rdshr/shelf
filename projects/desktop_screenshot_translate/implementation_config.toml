@@ -51,6 +51,7 @@ coordinate_profile = "windows_per_monitor_dpi_compensation"
 # - 对 `tesseract returned empty OCR text` 这类首帧空识别，需要在实现层作为可恢复场景处理，而不是直接暴露给用户
 # - 翻译侧仍只保留 `openai_translation` 这一提供方面，但它指向“OpenAI 兼容端点”而不是只绑定 OpenAI 官方
 # - 当前默认本地模型选择为 `qwen3-30b-a3b-instruct-2507`，以适配局域网部署的兼容端点
+# - `source_language` 当前采用“provider 自动能力优先，OCR 后启发式兜底”的方式补齐结果契约
 # - secret 配置的用户主路径应是“首次配置窗口 / 设置界面”，而不是要求用户手工编辑 JSON
 # - 运行时覆盖文件可以继续作为内部持久化和高级排障出口，但不应作为普通用户主交互
 [providers]
@@ -62,7 +63,7 @@ translation_api = "openai_compatible"
 translation_model = "qwen3-30b-a3b-instruct-2507"
 translation_endpoint_profile = "openai_compatible"
 translation_endpoint_source = "env_or_local_gateway"
-source_language_detection = "provider_auto"
+source_language_detection = "provider_auto_or_heuristic_fallback"
 secret_source = "setup_ui_managed_runtime_store_or_env"
 
 # [presentation_runtime] 细化结果面板与系统剪贴板实现。

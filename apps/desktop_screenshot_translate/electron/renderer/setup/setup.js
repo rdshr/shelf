@@ -16,13 +16,18 @@ function setHint(message) {
 function syncForm(guide) {
   const baseUrlInput = document.getElementById('baseUrl');
   const apiKeyInput = document.getElementById('apiKey');
+  const captureShortcutInput = document.getElementById('captureShortcut');
   const runtimeDraft = guide?.runtimeDraft || {};
+  const desktopDraft = guide?.desktopDraft || {};
 
   if (document.activeElement !== baseUrlInput) {
     baseUrlInput.value = runtimeDraft.baseUrl || '';
   }
   if (document.activeElement !== apiKeyInput && !runtimeDraft.apiKeyPresent) {
     apiKeyInput.value = '';
+  }
+  if (document.activeElement !== captureShortcutInput) {
+    captureShortcutInput.value = desktopDraft.captureShortcut || 'CommandOrControl+Shift+1';
   }
 }
 
@@ -67,12 +72,13 @@ document.getElementById('setupForm').addEventListener('submit', async (event) =>
   const saveButton = document.getElementById('save');
   const baseUrl = document.getElementById('baseUrl').value.trim();
   const apiKey = document.getElementById('apiKey').value.trim();
+  const captureShortcut = document.getElementById('captureShortcut').value.trim();
 
   saveButton.disabled = true;
   setStatus('正在保存配置…', 'info');
 
   try {
-    const result = await window.aitransDesktop.saveSetupConfig({ baseUrl, apiKey });
+    const result = await window.aitransDesktop.saveSetupConfig({ baseUrl, apiKey, captureShortcut });
     if (!result?.ok) {
       setStatus(result?.error || '保存配置失败', 'error');
       return;
