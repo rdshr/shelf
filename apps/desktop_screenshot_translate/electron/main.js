@@ -1,5 +1,6 @@
+const fs = require('node:fs');
 const path = require('node:path');
-const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, clipboard, screen, shell } = require('electron');
+const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, clipboard, screen, shell, dialog } = require('electron');
 
 const { loadProjectConfig } = require('./lib/project-config');
 const { captureSelectionImage, recognizeText, translateText } = require('./lib/local-pipeline');
@@ -11,9 +12,37 @@ const {
 const { OFFICIAL_OPENAI_BASE_URL, resolveOpenAiApiKey, resolveOpenAiBaseUrl } = require('./lib/provider-runtime');
 const { createWindowStateStore } = require('./lib/window-state');
 
-const config = loadProjectConfig();
 app.setName('AiTrans');
-const stateStore = createWindowStateStore(app, 'desktop_screenshot_translate');
+const stateNamespace = 'AiTrans';
+
+function resolveLogFilePath() {
+  const appData = process.env.APPDATA || process.env.LOCALAPPDATA;
+  const baseDir = appData
+    ? path.join(appData, 'AiTrans', 'logs')
+    : path.join(__dirname, '.runtime-logs');
+  fs.mkdirSync(baseDir, { recursive: true });
+  return path.join(baseDir, 'main.log');
+}
+
+function appendStartupLog(message, extra) {
+  const logFile = resolveLogFilePath();
+  const line = `[${new Date().toISOString()}] ${message}${extra ? ` ${JSON.stringify(extra)}` : ''}\n`;
+  fs.appendFileSync(logFile, line, 'utf-8');
+}
+
+let config;
+try {
+  appendStartupLog('boot:loadProjectConfig:start');
+  config = loadProjectConfig();
+  appendStartupLog('boot:loadProjectConfig:ok', { generatedDir: config.generatedDir });
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  appendStartupLog('boot:loadProjectConfig:failed', { message });
+  dialog.showErrorBox('AiTrans startup failed', `${message}\n\n日志位置：${resolveLogFilePath()}`);
+  throw error;
+}
+
+const stateStore = createWindowStateStore(app, stateNamespace);
 
 app.setAppUserModelId('com.aitrans.desktop_screenshot_translate');
 
@@ -24,6 +53,16 @@ let setupWindow = null;
 let lastSelection = null;
 let lastPipelineState = null;
 let runtimeBootstrap = null;
+
+process.on('uncaughtException', (error) => {
+  appendStartupLog('process:uncaughtException', { message: error.message, stack: error.stack });
+});
+
+process.on('unhandledRejection', (reason) => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : null;
+  appendStartupLog('process:unhandledRejection', { message, stack });
+});
 
 function getWindowIconPath() {
   return path.join(__dirname, 'assets', 'app-icon.ico');
@@ -300,6 +339,7 @@ function rememberPipelineState(selection, capture, ocrResult, translatedText, tr
 function createTray() {
   tray = new Tray(createTrayImage());
   tray.setToolTip(config.productSpec.project.display_name);
+  appendStartupLog('tray:created');
   const menu = Menu.buildFromTemplate([
     { label: '开始截图翻译', click: () => showOverlay() },
     { label: `快捷键：${config.shortcut}`, enabled: false },
@@ -546,11 +586,14 @@ ipcMain.handle('setup:close', async () => {
 });
 
 app.whenReady().then(() => {
+  appendStartupLog('app:ready');
   runtimeBootstrap = ensureRuntimeOverridesTemplate();
+  appendStartupLog('runtime-overrides:bootstrap', runtimeBootstrap);
   createTray();
   createPanelWindow();
   registerShortcuts();
   if (!getSetupGuideState().configured) {
+    appendStartupLog('setup-guide:auto-open');
     showSetupGuide();
   }
 });
