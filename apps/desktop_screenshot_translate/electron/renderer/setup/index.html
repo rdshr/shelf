@@ -90,6 +90,21 @@
         font-weight: 600;
       }
 
+      .status[data-tone="success"] {
+        background: rgba(20, 140, 96, 0.14);
+        color: #176b4d;
+      }
+
+      .status[data-tone="warning"] {
+        background: rgba(217, 119, 6, 0.14);
+        color: #9a5b02;
+      }
+
+      .status[data-tone="error"] {
+        background: rgba(220, 38, 38, 0.12);
+        color: #991b1b;
+      }
+
       .path {
         margin-top: 10px;
         padding: 12px 14px;
@@ -145,6 +160,43 @@
       .footer button {
         min-width: 140px;
       }
+
+      .form-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .field input {
+        width: 100%;
+        border: 1px solid rgba(15, 118, 110, 0.18);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 14px;
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .field small {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.65;
+      }
     </style>
   </head>
   <body>
@@ -152,24 +204,42 @@
       <section class="hero">
         <div class="eyebrow">AiTrans · First Launch</div>
         <h1 id="displayName">AiTrans 截图翻译</h1>
-        <p class="lead">安装包已经内置 OCR。首次启动只需要把翻译端点配置补齐，之后就可以直接通过托盘或快捷键开始截图翻译。</p>
+        <p class="lead">安装包已经内置 OCR。首次启动只需要在本窗口补齐翻译端点配置，之后就可以直接通过托盘或快捷键开始截图翻译。</p>
       </section>
 
       <section class="card">
         <div class="title">当前状态</div>
         <div id="status" class="status">正在检查配置…</div>
         <div id="configPath" class="path"></div>
+        <p id="hint" class="hint">正在读取当前运行时配置。</p>
       </section>
 
       <section class="card">
-        <div class="title">你要做什么</div>
+        <div class="title">直接填写并保存</div>
+        <form id="setupForm" class="form-grid">
+          <div class="field">
+            <label for="baseUrl">translation.base_url</label>
+            <input id="baseUrl" type="url" placeholder="http://127.0.0.1:8000/v1 或 https://api.openai.com/v1" />
+            <small>支持 OpenAI 官方端点和 OpenAI-compatible 局域网端点。</small>
+          </div>
+          <div class="field">
+            <label for="apiKey">translation.api_key</label>
+            <input id="apiKey" type="password" placeholder="输入 API Key；本地兼容端点如允许无密钥可留空" />
+            <small>优先通过本界面保存。除高级排障外，不要求用户手工编辑 JSON。</small>
+          </div>
+          <button id="save" type="submit" class="primary">保存并立即生效</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="title">高级操作</div>
         <ul>
-          <li>打开配置文件，把 `translation.base_url` 指向你的 OpenAI 官方或兼容端点。</li>
-          <li>填入 `translation.api_key`。如果你的局域网端点允许无密钥，可留空。</li>
-          <li>保存后回到托盘，重新截图即可生效，不必重新安装。</li>
+          <li>如果需要排查端点问题，可手动打开配置文件或配置目录。</li>
+          <li>保存后立即生效，不需要重新安装应用。</li>
+          <li>本地兼容端点只要可达并返回兼容结果即可。</li>
         </ul>
         <div class="actions">
-          <button id="openFile" class="primary">打开配置文件</button>
+          <button id="openFile" class="secondary">打开配置文件</button>
           <button id="openDir" class="secondary">打开配置目录</button>
           <button id="copyPath" class="secondary">复制配置路径</button>
           <button id="refresh" class="secondary">重新检查</button>
@@ -179,9 +249,9 @@
       <section class="card">
         <div class="title">补充说明</div>
         <ul>
-          <li>默认会自动生成 `runtime-overrides.json` 模板。</li>
+          <li>默认会自动生成内部运行时配置文件，但用户主路径是“界面填写并保存”。</li>
           <li>如果你使用 OpenAI 官方端点，必须提供有效 API Key。</li>
-          <li>如果你使用局域网兼容端点，只要端点可达并返回兼容结果即可。</li>
+          <li>只有在需要手工排障时，才建议直接打开运行时配置文件。</li>
         </ul>
       </section>
 

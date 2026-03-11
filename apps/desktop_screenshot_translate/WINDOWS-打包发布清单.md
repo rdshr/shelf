@@ -83,11 +83,11 @@ OCR 运行时已随安装包分发，不应再要求用户手工安装 `tesserac
 
 1. 首次启动时会自动生成：
    - `%APPDATA%\\AiTrans\\runtime-overrides.json`
-2. 如需手工重建模板，可参考：
-   - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
-3. 填入：
+2. 用户主路径应是首次配置窗口，直接在界面中填写并保存：
    - `translation.base_url`
    - `translation.api_key`
+3. 如需手工重建模板或高级排障，可参考：
+   - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
 
 如果目标机器走官方 OpenAI，也可以继续使用环境变量：
 
@@ -102,9 +102,10 @@ OCR 运行时已随安装包分发，不应再要求用户手工安装 `tesserac
 1. `NSIS` 安装器能直接双击启动，不要求“以管理员身份运行”
 2. 安装完成后的首次启动会自动生成 `%APPDATA%\\AiTrans\\runtime-overrides.json`
 3. 未配置翻译端点时会自动弹出首次配置窗口
-4. 配好 `base_url / api_key` 后，第一次截图即可完成 OCR 与翻译
-5. `win-unpacked` 与安装版都能正常调用 bundled Tesseract
-6. 首次截图若命中空 OCR，不应直接报错给用户，而应由应用内部吸收短时重试
+4. 用户可在首次配置窗口中直接保存 `base_url / api_key`，不需要手工编辑 JSON
+5. 配好 `base_url / api_key` 后，第一次截图即可完成 OCR 与翻译
+6. `win-unpacked` 与安装版都能正常调用 bundled Tesseract
+7. 首次截图若命中空 OCR，不应直接报错给用户，而应由应用内部吸收短时重试
 
 ## 7. 当前边界
 

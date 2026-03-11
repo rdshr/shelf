@@ -60,12 +60,13 @@ Windows 可发布安装包路径：
 面向目标机器的运行时配置：
 
 - 不建议要求终端用户设置环境变量
-- 首次启动时会自动在配置目录生成 `runtime-overrides.json` 模板
+- 首次启动时会自动弹出配置窗口，优先通过界面填写并保存翻译端点
+- 应用内部仍会在配置目录生成并维护 `runtime-overrides.json`
 - 默认配置文件位置：
   - `%APPDATA%\\AiTrans\\runtime-overrides.json`
-- 若你想手工重建模板，可参考：
+- 若你想手工重建模板或做高级排障，可参考：
   - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
-- 其中可配置：
+- 普通用户主路径不应是手工编辑该文件；其中当前可配置：
   - `translation.base_url`
   - `translation.api_key`
   - `ocr.tesseract_path`

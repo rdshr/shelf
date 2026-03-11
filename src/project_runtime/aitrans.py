@@ -918,6 +918,13 @@ def _validate_implementation_config(
         raise ValueError(
             "providers.translation_endpoint_source must be env_or_local_gateway or env_then_official_default",
         )
+    if implementation.providers.secret_source not in {
+        "setup_ui_managed_runtime_store_or_env",
+        "windows_credential_manager_or_env",
+    }:
+        raise ValueError(
+            "providers.secret_source must be setup_ui_managed_runtime_store_or_env or windows_credential_manager_or_env",
+        )
     if not implementation.evidence.product_spec_endpoint.startswith("/api/"):
         raise ValueError("evidence.product_spec_endpoint must be an API path")
     if not implementation.evidence.runtime_bundle_endpoint.startswith("/api/"):

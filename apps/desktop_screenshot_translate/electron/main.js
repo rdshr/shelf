@@ -8,8 +8,14 @@ const {
   ensureRuntimeOverridesTemplate,
   getPrimaryRuntimeOverridePath,
   loadRuntimeOverrides,
+  writeRuntimeOverrides,
 } = require('./lib/runtime-overrides');
-const { OFFICIAL_OPENAI_BASE_URL, resolveOpenAiApiKey, resolveOpenAiBaseUrl } = require('./lib/provider-runtime');
+const {
+  OFFICIAL_OPENAI_BASE_URL,
+  normalizeBaseUrl,
+  resolveOpenAiApiKey,
+  resolveOpenAiBaseUrl,
+} = require('./lib/provider-runtime');
 const { createWindowStateStore } = require('./lib/window-state');
 
 app.setName('AiTrans');
@@ -287,6 +293,10 @@ function buildStageResult(selection, overrides = {}) {
 function getSetupGuideState() {
   const overrides = loadRuntimeOverrides();
   const baseUrl = resolveOpenAiBaseUrl();
+  const translationOverrides =
+    overrides.values && typeof overrides.values.translation === 'object'
+      ? overrides.values.translation
+      : {};
   let configured = true;
   let credentialMode = 'configured';
 
@@ -308,6 +318,15 @@ function getSetupGuideState() {
     runtimeOverridesPath: overrides.path || getPrimaryRuntimeOverridePath(),
     runtimeOverridesDetected: Boolean(overrides.path),
     bootstrapCreated: Boolean(runtimeBootstrap?.created),
+    runtimeDraft: {
+      baseUrl:
+        typeof translationOverrides.base_url === 'string'
+          ? translationOverrides.base_url
+          : '',
+      apiKeyPresent:
+        typeof translationOverrides.api_key === 'string'
+        && translationOverrides.api_key.trim().length > 0,
+    },
   };
 }
 
@@ -620,6 +639,50 @@ ipcMain.handle('setup:copy-config-path', async () => {
   const configPath = getActiveRuntimeOverridePath();
   clipboard.writeText(configPath);
   return { ok: true, configPath };
+});
+
+ipcMain.handle('setup:save-config', async (_event, payload) => {
+  const baseUrlInput =
+    payload && typeof payload.baseUrl === 'string'
+      ? payload.baseUrl.trim()
+      : '';
+  const apiKeyInput =
+    payload && typeof payload.apiKey === 'string'
+      ? payload.apiKey.trim()
+      : '';
+
+  if (!baseUrlInput) {
+    return { ok: false, error: 'missing translation.base_url' };
+  }
+
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrlInput);
+  if (normalizedBaseUrl === OFFICIAL_OPENAI_BASE_URL && !apiKeyInput) {
+    return { ok: false, error: 'official OpenAI endpoint requires api_key' };
+  }
+
+  const currentValues = loadRuntimeOverrides().values;
+  const saved = writeRuntimeOverrides({
+    ...currentValues,
+    translation: {
+      ...(currentValues.translation && typeof currentValues.translation === 'object'
+        ? currentValues.translation
+        : {}),
+      base_url: normalizedBaseUrl,
+      api_key: apiKeyInput,
+    },
+  });
+
+  appendStartupLog('setup-guide:config-saved', {
+    configPath: saved.path,
+    usingOfficialEndpoint: normalizedBaseUrl === OFFICIAL_OPENAI_BASE_URL,
+    apiKeyPresent: Boolean(apiKeyInput),
+  });
+
+  return {
+    ok: true,
+    configPath: saved.path,
+    guide: getSetupGuideState(),
+  };
 });
 
 ipcMain.handle('setup:close', async () => {

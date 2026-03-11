@@ -1,5 +1,5 @@
 {
-  "_comment": "Copy this file to %APPDATA%\\AiTrans\\runtime-overrides.json on Windows, then fill in the fields you actually use.",
+  "_comment": "AiTrans normally manages this file through the first-launch setup UI. Edit it manually only for advanced troubleshooting.",
   "translation": {
     "base_url": "",
     "api_key": "",

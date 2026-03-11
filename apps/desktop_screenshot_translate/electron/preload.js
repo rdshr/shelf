@@ -49,6 +49,9 @@ contextBridge.exposeInMainWorld('aitransDesktop', {
   copyConfigPath() {
     return ipcRenderer.invoke('setup:copy-config-path');
   },
+  saveSetupConfig(payload) {
+    return ipcRenderer.invoke('setup:save-config', payload);
+  },
   closeSetupGuide() {
     return ipcRenderer.invoke('setup:close');
   },

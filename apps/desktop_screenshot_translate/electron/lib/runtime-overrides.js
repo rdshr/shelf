@@ -65,6 +65,13 @@ function readJsonIfExists(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
+function normalizePlainObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  return value;
+}
+
 function loadRuntimeOverrides() {
   for (const candidate of getRuntimeOverrideCandidates()) {
     try {
@@ -144,6 +151,35 @@ function ensureRuntimeOverridesTemplate() {
   };
 }
 
+function writeRuntimeOverrides(nextValues) {
+  const current = loadRuntimeOverrides();
+  const configPath = current.path || getPrimaryRuntimeOverridePath();
+  const configDir = path.dirname(configPath);
+  const currentValues = normalizePlainObject(current.values);
+  const incomingValues = normalizePlainObject(nextValues);
+
+  const merged = {
+    ...currentValues,
+    ...incomingValues,
+    translation: {
+      ...normalizePlainObject(currentValues.translation),
+      ...normalizePlainObject(incomingValues.translation),
+    },
+    ocr: {
+      ...normalizePlainObject(currentValues.ocr),
+      ...normalizePlainObject(incomingValues.ocr),
+    },
+  };
+
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf-8');
+
+  return {
+    path: configPath,
+    values: merged,
+  };
+}
+
 module.exports = {
   ensureRuntimeOverridesTemplate,
   getPrimaryRuntimeOverridePath,
@@ -152,4 +188,5 @@ module.exports = {
   loadRuntimeOverrides,
   resolveRuntimeConfigBaseDir,
   resolveAppRoot,
+  writeRuntimeOverrides,
 };
