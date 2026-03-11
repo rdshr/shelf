@@ -20,6 +20,7 @@
 Windows 可发布安装包至少要求：
 
 - `electron/vendor/tesseract/tesseract.exe` 或 `electron/vendor/tesseract/bin/tesseract.exe`
+- `electron/vendor/tesseract/*.dll`
 - `electron/vendor/tesseract/tessdata/eng.traineddata`
 - `electron/vendor/tesseract/tessdata/chi_sim.traineddata`
 - `electron/vendor/tesseract/tessdata/jpn.traineddata`

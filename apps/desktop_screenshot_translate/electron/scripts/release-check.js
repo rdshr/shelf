@@ -40,6 +40,8 @@ function checkGeneratedArtifacts(config, failures) {
 }
 
 function checkBundledTesseract(config, failures) {
+  const appRoot = resolveAppRoot();
+  const vendorRoot = path.join(appRoot, 'vendor', 'tesseract');
   const executable = resolveBundledTesseractExecutable();
   if (!executable) {
     failures.push('missing bundled tesseract.exe under electron/vendor/tesseract');
@@ -60,6 +62,11 @@ function checkBundledTesseract(config, failures) {
     if (!fs.existsSync(traineddata)) {
       failures.push(`missing bundled tessdata: ${traineddata}`);
     }
+  }
+
+  const runtimeDlls = fs.readdirSync(vendorRoot).filter((item) => item.toLowerCase().endsWith('.dll'));
+  if (runtimeDlls.length === 0) {
+    failures.push('missing bundled Tesseract runtime DLLs under electron/vendor/tesseract');
   }
 }
 

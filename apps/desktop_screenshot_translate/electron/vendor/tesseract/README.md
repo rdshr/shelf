@@ -13,6 +13,7 @@
 Windows 可发布安装包至少应包含：
 
 - `vendor/tesseract/tesseract.exe` 或 `vendor/tesseract/bin/tesseract.exe`
+- `vendor/tesseract/*.dll`
 - `vendor/tesseract/tessdata/eng.traineddata`
 - `vendor/tesseract/tessdata/chi_sim.traineddata`
 - `vendor/tesseract/tessdata/jpn.traineddata`

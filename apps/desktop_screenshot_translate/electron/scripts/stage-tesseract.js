@@ -50,6 +50,19 @@ function copyFile(sourcePath, targetPath) {
   console.log(`[OK] copied ${sourcePath} -> ${targetPath}`);
 }
 
+function copyRuntimeLibraries(sourceExecutable, vendorRoot) {
+  const executableDir = path.dirname(sourceExecutable);
+  const runtimeFiles = fs.readdirSync(executableDir)
+    .filter((item) => {
+      const lower = item.toLowerCase();
+      return lower.endsWith('.dll') || lower.endsWith('.manifest');
+    });
+
+  for (const item of runtimeFiles) {
+    copyFile(path.join(executableDir, item), path.join(vendorRoot, item));
+  }
+}
+
 function main() {
   const config = loadProjectConfig();
   const source = findSourceRoot();
@@ -82,6 +95,7 @@ function main() {
   ensureDir(vendorTessdata);
 
   copyFile(source.executable, path.join(vendorRoot, 'tesseract.exe'));
+  copyRuntimeLibraries(source.executable, vendorRoot);
 
   for (const language of languages) {
     const sourceFile = path.join(source.tessdataDir, `${language}.traineddata`);
