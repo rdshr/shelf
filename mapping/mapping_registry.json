@@ -1,7 +1,11 @@
 {
   "meta": {
-    "updated_at": "2026-03-09",
+    "updated_at": "2026-03-10",
     "l3_sync_notes": [
+      {
+        "id": "SYNC-20260310-wx-framework",
+        "note": "Add framework/wx-framework as a structure-first layered standard for message-bus-driven multi-channel personal assistants, with L0 atoms, L1 orchestration modules, and one L2 framework standard registered in the tree."
+      },
       {
         "id": "SYNC-20260309-structure-definition-section",
         "note": "Promote 'structure' into a dedicated core-standard section, clarifying that structure is the primary abstract organization unit, that it can be either module-local minimal units or higher-layer composed units, and that it must be distinguished from capabilities, boundaries, modules, and implementation details."
@@ -140,6 +144,13 @@
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/shelf/L2-M0-置物架框架标准模块.md",
+                "children": []
+              },
+              {
+                "id": "NODE-L2-WX-FRAMEWORK",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
                 "children": []
               },
               {
@@ -420,6 +431,81 @@
           "file": "src/framework_core.py",
           "symbol": "class VerificationResult"
         },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "def verify("
+        }
+      ]
+    },
+    {
+      "id": "MAP-WX-CAPABILITY",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 1. 能力声明（Capability Statement）",
+      "l2_file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
+      "l2_anchor": "## 1. 能力声明（Capability Statement）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Capability"
+        }
+      ]
+    },
+    {
+      "id": "MAP-WX-B",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
+      "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class BoundaryDefinition"
+        }
+      ]
+    },
+    {
+      "id": "MAP-WX-BASE",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 3. 最小可行基（Bases）",
+      "l2_file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
+      "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Base"
+        }
+      ]
+    },
+    {
+      "id": "MAP-WX-COMBINATION",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
+      "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class CombinationRules"
+        }
+      ]
+    },
+    {
+      "id": "MAP-WX-V",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "framework/wx-framework/L2-M0-多渠道个人助手框架标准模块.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
         {
           "file": "src/framework_core.py",
           "symbol": "def verify("
