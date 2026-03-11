@@ -6,6 +6,10 @@ import re
 from typing import Any, cast
 
 from project_runtime import discover_framework_driven_projects, load_registered_project
+from project_runtime.project_governance import (
+    build_project_discovery_audit,
+    render_project_discovery_audit_markdown,
+)
 from project_runtime.governance import build_governance_tree
 from standards_tree import build_standards_tree
 
@@ -13,6 +17,8 @@ from standards_tree import build_standards_tree
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKSPACE_GOVERNANCE_JSON = REPO_ROOT / "docs/hierarchy/shelf_governance_tree.json"
 DEFAULT_WORKSPACE_GOVERNANCE_HTML = REPO_ROOT / "docs/hierarchy/shelf_governance_tree.html"
+DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON = REPO_ROOT / "docs/hierarchy/project_discovery_audit.json"
+DEFAULT_PROJECT_DISCOVERY_AUDIT_MD = REPO_ROOT / "docs/project_discovery_audit.md"
 WORKSPACE_GOVERNANCE_VERSION = "workspace-governance/v1"
 MAPPING_REGISTRY_PATH = REPO_ROOT / "mapping/mapping_registry.json"
 SECTION_HEADER_PATTERN = re.compile(r"^\s*\[([A-Za-z0-9_.-]+)\]\s*$")
@@ -84,6 +90,8 @@ def _node_description(parts: dict[str, Any]) -> str:
         "candidate_id",
         "symbol_id",
         "artifact",
+        "minimality_status",
+        "audit_classification",
     ):
         value = parts.get(key)
         if value in (None, "", [], {}):
@@ -233,6 +241,8 @@ def _project_tree_to_hierarchy_nodes(
                         "candidate_id": node.get("candidate_id"),
                         "symbol_id": node.get("symbol_id"),
                         "artifact": node.get("artifact"),
+                        "minimality_status": node.get("minimality_status"),
+                        "audit_classification": node.get("audit_classification"),
                     }
                 ),
                 "source_file": rel_file or product_spec_file,
@@ -252,6 +262,8 @@ def _project_tree_to_hierarchy_nodes(
                 "symbol_kind": node.get("symbol_kind"),
                 "risk": node.get("risk"),
                 "validator": node.get("validator"),
+                "minimality_status": node.get("minimality_status"),
+                "audit_classification": node.get("audit_classification"),
             }
         )
         parent_node_id = node.get("parent")
@@ -321,6 +333,9 @@ def build_workspace_governance_payload(
     evidence_root_id = "workspace:shelf:evidence"
     governance_json_rel = _relative(DEFAULT_WORKSPACE_GOVERNANCE_JSON)
     governance_html_rel = _relative(DEFAULT_WORKSPACE_GOVERNANCE_HTML)
+    discovery_audit_json_rel = _relative(DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON)
+    discovery_audit_md_rel = _relative(DEFAULT_PROJECT_DISCOVERY_AUDIT_MD)
+    discovery_audit = build_project_discovery_audit()
 
     nodes: list[dict[str, Any]] = [
         {
@@ -387,6 +402,38 @@ def build_workspace_governance_payload(
             "artifact": "governance_tree_html",
             "derived_from": [workspace_root_id, standards_root_id, projects_root_id],
         },
+        {
+            "id": "workspace:shelf:evidence:artifact:project_discovery_audit_json",
+            "label": "project_discovery_audit.json",
+            "level": 2,
+            "description": (
+                "kind=workspace_evidence_artifact | layer=Workspace Evidence"
+                f" | file={discovery_audit_json_rel} | artifact=project_discovery_audit_json"
+            ),
+            "source_file": discovery_audit_json_rel,
+            "source_line": 1,
+            "node_kind": "workspace_evidence_artifact",
+            "layer": "Workspace Evidence",
+            "parent_node_id": evidence_root_id,
+            "artifact": "project_discovery_audit_json",
+            "derived_from": [workspace_root_id, projects_root_id],
+        },
+        {
+            "id": "workspace:shelf:evidence:artifact:project_discovery_audit_md",
+            "label": "project_discovery_audit.md",
+            "level": 2,
+            "description": (
+                "kind=workspace_evidence_artifact | layer=Workspace Evidence"
+                f" | file={discovery_audit_md_rel} | artifact=project_discovery_audit_md"
+            ),
+            "source_file": discovery_audit_md_rel,
+            "source_line": 1,
+            "node_kind": "workspace_evidence_artifact",
+            "layer": "Workspace Evidence",
+            "parent_node_id": evidence_root_id,
+            "artifact": "project_discovery_audit_md",
+            "derived_from": [workspace_root_id, projects_root_id],
+        },
     ]
     edges: list[dict[str, Any]] = [
         {"from": workspace_root_id, "to": projects_root_id, "relation": "tree_child"},
@@ -398,6 +445,8 @@ def build_workspace_governance_payload(
         if node["id"] in {
             "workspace:shelf:evidence:artifact:governance_tree_json",
             "workspace:shelf:evidence:artifact:governance_tree_html",
+            "workspace:shelf:evidence:artifact:project_discovery_audit_json",
+            "workspace:shelf:evidence:artifact:project_discovery_audit_md",
         }:
             node["derived_from"] = [workspace_root_id, standards_root_id, projects_root_id]
     nodes.extend(standard_nodes)
@@ -427,6 +476,45 @@ def build_workspace_governance_payload(
         project_roots[project_id] = project_root_id
         nodes.extend(project_nodes)
         edges.extend(project_edges)
+
+    audited_directories = {
+        str(item.get("directory") or "").strip(): item
+        for item in discovery_audit.get("entries", [])
+        if isinstance(item, dict)
+    }
+    for directory, entry in sorted(audited_directories.items()):
+        if not directory:
+            continue
+        project_id = str(entry.get("project_id") or Path(directory).name)
+        if project_id in project_roots:
+            continue
+        node_id = f"workspace:shelf:projects:audit:{project_id}"
+        nodes.append(
+            {
+                "id": node_id,
+                "label": project_id,
+                "level": 2,
+                "description": _node_description(
+                    {
+                        "kind": "project_audit_entry",
+                        "layer": "Projects",
+                        "project_id": project_id,
+                        "file": directory,
+                        "artifact": entry.get("classification"),
+                    }
+                ),
+                "source_file": directory,
+                "source_line": 1,
+                "node_kind": "project_audit_entry",
+                "layer": "Projects",
+                "project_id": project_id,
+                "audit_classification": entry.get("classification"),
+                "framework_driven": entry.get("framework_driven"),
+                "parent_node_id": projects_root_id,
+                "derived_from": [],
+            }
+        )
+        edges.append({"from": projects_root_id, "to": node_id, "relation": "tree_child"})
 
     indexes = _build_governance_indexes(nodes, project_roots)
     level_labels = {
@@ -458,6 +546,7 @@ def build_workspace_governance_payload(
             "projects_root_id": projects_root_id,
             "project_roots": project_roots,
             "project_trees": project_trees,
+            "project_discovery_audit": discovery_audit,
             **indexes,
         },
     }

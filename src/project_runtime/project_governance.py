@@ -101,6 +101,7 @@ class StructuralObject:
     actual_fingerprint: str = ""
     comparator: str = ""
     extractor: str = ""
+    origin_categories: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
 
     def all_sources(self) -> tuple[SourceRef, ...]:
@@ -128,6 +129,7 @@ class StructuralObject:
             "actual_fingerprint": self.actual_fingerprint,
             "comparator": self.comparator,
             "extractor": self.extractor,
+            "origin_categories": list(self.origin_categories),
             "notes": list(self.notes),
         }
 
@@ -173,6 +175,8 @@ class StrictZoneEntry:
     role_ids: tuple[str, ...]
     candidate_ids: tuple[str, ...]
     reasons: tuple[str, ...]
+    why_required: tuple[str, ...] = ()
+    minimality_status: str = "uncertain"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -188,6 +192,24 @@ class FrameworkDrivenProjectRecord:
     discovery_reasons: tuple[str, ...]
     framework_refs: tuple[str, ...]
     artifact_contract: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class ProjectDiscoveryAuditEntry:
+    project_id: str
+    directory: str
+    framework_driven: bool
+    template_id: str | None
+    classification: str
+    reasons: tuple[str, ...]
+    product_spec_file: str | None = None
+    implementation_config_file: str | None = None
+    generated_dir: str | None = None
+    framework_refs: tuple[str, ...] = ()
+    artifact_contract: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -222,6 +244,50 @@ class ProjectGovernanceClosure:
             "candidates": [item.to_dict() for item in self.candidates],
             "evidence_artifacts": dict(self.evidence_artifacts),
         }
+
+
+DISCOVERY_CLASSIFICATIONS = {
+    "recognized",
+    "missing_required_files",
+    "template_not_registered",
+    "materialization_failed",
+    "not_framework_driven_project",
+    "generated_contract_missing",
+    "discovery_capability_insufficient",
+    "other",
+}
+DISCOVERY_AUDIT_VERSION = "project-discovery-audit/v1"
+
+
+def _framework_refs_from_project(project: Any) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in ("frontend", "domain", "backend"):
+        framework_path = getattr(getattr(project, "framework", None), field_name, None)
+        if isinstance(framework_path, str) and framework_path.strip():
+            refs.append(framework_path.strip())
+    return tuple(sorted(refs))
+
+
+def _artifact_contract_from_project(project: Any) -> tuple[str, ...]:
+    artifact_contract: list[str] = []
+    implementation = getattr(project, "implementation", None)
+    artifacts = getattr(implementation, "artifacts", None)
+    if artifacts is None:
+        return ()
+    for field_name in (
+        "framework_ir_json",
+        "product_spec_json",
+        "implementation_bundle_py",
+        "generation_manifest_json",
+        "governance_manifest_json",
+        "governance_tree_json",
+        "strict_zone_report_json",
+        "object_coverage_report_json",
+    ):
+        value = getattr(artifacts, field_name, None)
+        if isinstance(value, str) and value.strip():
+            artifact_contract.append(value.strip())
+    return tuple(artifact_contract)
 
 
 def _iter_python_files(paths: Iterable[Path]) -> list[Path]:
@@ -599,6 +665,223 @@ def infer_strict_zone(
     return tuple(entries)
 
 
+def annotate_strict_zone_minimality(
+    strict_zone: tuple[StrictZoneEntry, ...],
+    role_bindings: tuple[ResolvedRoleBinding, ...],
+    candidates: tuple[StructuralCandidate, ...],
+    evidence_artifacts: dict[str, str],
+) -> tuple[StrictZoneEntry, ...]:
+    role_bindings_by_file: dict[str, list[ResolvedRoleBinding]] = {}
+    for binding in role_bindings:
+        for file_name in binding.file_refs:
+            role_bindings_by_file.setdefault(file_name, []).append(binding)
+
+    candidate_index = {item.candidate_id: item for item in candidates}
+    evidence_by_file: dict[str, list[str]] = {}
+    for artifact_key, artifact_path in evidence_artifacts.items():
+        evidence_by_file.setdefault(artifact_path, []).append(artifact_key)
+
+    annotated: list[StrictZoneEntry] = []
+    for entry in strict_zone:
+        why_required: list[str] = []
+        minimality_status = "redundant"
+
+        file_bindings = role_bindings_by_file.get(entry.file, [])
+        if file_bindings:
+            minimality_status = "required"
+            for binding in sorted(file_bindings, key=lambda item: (item.object_id, item.role_id)):
+                why_required.append(
+                    f"remove file breaks role closure {binding.object_id} -> {binding.role_id}"
+                )
+
+        artifact_keys = sorted(evidence_by_file.get(entry.file, []))
+        if artifact_keys:
+            minimality_status = "required"
+            why_required.extend(
+                f"remove file breaks evidence artifact {artifact_key}" for artifact_key in artifact_keys
+            )
+
+        if not file_bindings and not artifact_keys:
+            attached_candidates = [
+                candidate_index[candidate_id]
+                for candidate_id in entry.candidate_ids
+                if candidate_id in candidate_index
+                and candidate_index[candidate_id].classification == "attached"
+            ]
+            if attached_candidates:
+                minimality_status = "uncertain"
+                why_required.extend(
+                    f"attached candidate {candidate.locator} still rides this carrier"
+                    for candidate in sorted(attached_candidates, key=lambda item: item.candidate_id)
+                )
+
+        annotated.append(
+            StrictZoneEntry(
+                file=entry.file,
+                object_ids=entry.object_ids,
+                role_ids=entry.role_ids,
+                candidate_ids=entry.candidate_ids,
+                reasons=entry.reasons,
+                why_required=tuple(sorted(set(why_required))),
+                minimality_status=minimality_status,
+            )
+        )
+    return tuple(annotated)
+
+
+def build_strict_zone_report(closure: ProjectGovernanceClosure) -> dict[str, Any]:
+    summary = {
+        "entry_count": len(closure.strict_zone),
+        "required_count": sum(1 for item in closure.strict_zone if item.minimality_status == "required"),
+        "redundant_count": sum(1 for item in closure.strict_zone if item.minimality_status == "redundant"),
+        "uncertain_count": sum(1 for item in closure.strict_zone if item.minimality_status == "uncertain"),
+    }
+    return {
+        "report_version": "strict-zone-report/v1",
+        "project_id": closure.project_id,
+        "template_id": closure.template_id,
+        "strict_zone": [item.to_dict() for item in closure.strict_zone],
+        "summary": summary,
+    }
+
+
+def build_object_coverage_report(closure: ProjectGovernanceClosure) -> dict[str, Any]:
+    binding_map: dict[tuple[str, str], ResolvedRoleBinding] = {
+        (item.object_id, item.role_id): item for item in closure.role_bindings
+    }
+    candidate_counts = {
+        "governed_candidate_count": sum(1 for item in closure.candidates if item.classification == "governed"),
+        "attached_candidate_count": sum(1 for item in closure.candidates if item.classification == "attached"),
+        "internal_candidate_count": sum(1 for item in closure.candidates if item.classification == "internal"),
+    }
+    entries: list[dict[str, Any]] = []
+    future_categories: set[str] = set()
+    fully_closed = 0
+    partially_closed = 0
+
+    attached_kinds = sorted({item.kind for item in closure.candidates if item.classification == "attached"})
+    if "python_schema_carrier" in attached_kinds:
+        future_categories.add("schema carriers that are still attached-only")
+    if "python_builder" in attached_kinds or "python_evidence_builder" in attached_kinds:
+        future_categories.add("compiler/evidence builders that are still attached-only")
+    if any(item.kind == "implementation_effect" for item in closure.structural_objects):
+        future_categories.add("implementation effect objects are field-level, not sink-level")
+
+    for structural_object in closure.structural_objects:
+        required_roles = [role.role_id for role in structural_object.required_roles]
+        bound_roles = [
+            role.role_id
+            for role in structural_object.required_roles
+            if binding_map.get((structural_object.object_id, role.role_id), None) is not None
+            and binding_map[(structural_object.object_id, role.role_id)].status == "satisfied"
+        ]
+        missing_roles = sorted(set(required_roles) - set(bound_roles))
+        overbound_roles = sorted(
+            binding.role_id
+            for binding in closure.role_bindings
+            if binding.object_id == structural_object.object_id and binding.role_id not in required_roles
+        )
+        compare_status = (
+            "match"
+            if structural_object.actual_fingerprint == structural_object.expected_fingerprint
+            else "mismatch"
+        )
+        closure_status = "fully_closed" if not missing_roles and compare_status == "match" else "partially_closed"
+        if closure_status == "fully_closed":
+            fully_closed += 1
+        else:
+            partially_closed += 1
+        entries.append(
+            {
+                "object_id": structural_object.object_id,
+                "kind": structural_object.kind,
+                "risk_level": structural_object.risk_level,
+                "status": structural_object.status,
+                "source_categories": list(structural_object.origin_categories),
+                "sources": {
+                    "framework": [item.to_dict() for item in structural_object.sources_framework],
+                    "product": [item.to_dict() for item in structural_object.sources_product],
+                    "implementation": [item.to_dict() for item in structural_object.sources_implementation],
+                },
+                "required_roles": required_roles,
+                "actual_roles": bound_roles,
+                "missing_roles": missing_roles,
+                "overbound_roles": overbound_roles,
+                "compare_status": compare_status,
+                "compare_coverage": {
+                    "extractor": structural_object.extractor,
+                    "comparator": structural_object.comparator,
+                    "expected_fingerprint": structural_object.expected_fingerprint,
+                    "actual_fingerprint": structural_object.actual_fingerprint,
+                },
+                "closure_status": closure_status,
+            }
+        )
+
+    return {
+        "report_version": "object-coverage-report/v1",
+        "project_id": closure.project_id,
+        "template_id": closure.template_id,
+        "summary": {
+            "governed_object_count": len(closure.structural_objects),
+            "fully_closed_object_count": fully_closed,
+            "partially_closed_object_count": partially_closed,
+            **candidate_counts,
+            "uncovered_future_categories": sorted(future_categories),
+        },
+        "objects": entries,
+    }
+
+
+def build_project_discovery_audit(projects_dir: Path | None = None) -> dict[str, Any]:
+    root = projects_dir or PROJECTS_DIR
+    entries = audit_project_directories(root)
+    return {
+        "audit_version": DISCOVERY_AUDIT_VERSION,
+        "projects_dir": relative_path(root),
+        "entries": [item.to_dict() for item in entries],
+        "summary": {
+            "recognized_count": sum(1 for item in entries if item.framework_driven),
+            "excluded_count": sum(1 for item in entries if not item.framework_driven),
+            "classification_counts": {
+                classification: sum(1 for item in entries if item.classification == classification)
+                for classification in sorted(DISCOVERY_CLASSIFICATIONS)
+                if any(entry.classification == classification for entry in entries)
+            },
+        },
+    }
+
+
+def render_project_discovery_audit_markdown(payload: dict[str, Any]) -> str:
+    lines = [
+        "# 项目发现审计",
+        "",
+        f"- 审计版本：`{payload['audit_version']}`",
+        f"- 扫描目录：`{payload['projects_dir']}`",
+        f"- 识别为框架驱动项目：`{payload['summary']['recognized_count']}`",
+        f"- 排除项目：`{payload['summary']['excluded_count']}`",
+        "",
+        "| 项目目录 | 结果 | 分类 | 模板 | 原因 |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for entry in payload.get("entries", []):
+        if not isinstance(entry, dict):
+            continue
+        result = "识别" if entry.get("framework_driven") else "排除"
+        reasons = "<br>".join(str(item) for item in entry.get("reasons", []))
+        lines.append(
+            "| {directory} | {result} | `{classification}` | `{template}` | {reasons} |".format(
+                directory=entry.get("directory", ""),
+                result=result,
+                classification=entry.get("classification", ""),
+                template=entry.get("template_id") or "-",
+                reasons=reasons or "-",
+            )
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def discover_framework_driven_projects(projects_dir: Path | None = None) -> tuple[FrameworkDrivenProjectRecord, ...]:
     root = projects_dir or PROJECTS_DIR
     if not root.exists():
@@ -616,26 +899,8 @@ def discover_framework_driven_projects(projects_dir: Path | None = None) -> tupl
             continue
 
         project_id = str(getattr(getattr(project, "metadata", None), "project_id", product_spec_file.parent.name))
-        framework_refs: list[str] = []
-        for field_name in ("frontend", "domain", "backend"):
-            framework_path = getattr(getattr(project, "framework", None), field_name, None)
-            if isinstance(framework_path, str) and framework_path.strip():
-                framework_refs.append(framework_path.strip())
-
-        artifact_contract: list[str] = []
-        implementation = getattr(project, "implementation", None)
-        artifacts = getattr(implementation, "artifacts", None)
-        for field_name in (
-            "framework_ir_json",
-            "product_spec_json",
-            "implementation_bundle_py",
-            "generation_manifest_json",
-            "governance_manifest_json",
-            "governance_tree_json",
-        ):
-            value = getattr(artifacts, field_name, None)
-            if isinstance(value, str) and value.strip():
-                artifact_contract.append(value.strip())
+        framework_refs = list(_framework_refs_from_project(project))
+        artifact_contract = list(_artifact_contract_from_project(project))
 
         discovered.append(
             FrameworkDrivenProjectRecord(
@@ -657,3 +922,140 @@ def discover_framework_driven_projects(projects_dir: Path | None = None) -> tupl
             )
         )
     return tuple(discovered)
+
+
+def audit_project_directories(projects_dir: Path | None = None) -> tuple[ProjectDiscoveryAuditEntry, ...]:
+    root = projects_dir or PROJECTS_DIR
+    if not root.exists():
+        return ()
+
+    entries: list[ProjectDiscoveryAuditEntry] = []
+    for project_dir in sorted(item for item in root.iterdir() if item.is_dir()):
+        product_spec_file = project_dir / "product_spec.toml"
+        implementation_config_file = project_dir / "implementation_config.toml"
+        project_id = project_dir.name
+
+        if not product_spec_file.exists() or not implementation_config_file.exists():
+            missing = []
+            if not product_spec_file.exists():
+                missing.append("missing product_spec.toml")
+            if not implementation_config_file.exists():
+                missing.append("missing implementation_config.toml")
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=None,
+                    classification="missing_required_files",
+                    reasons=tuple(missing),
+                )
+            )
+            continue
+
+        try:
+            template_id = detect_project_template_id(product_spec_file)
+        except Exception as exc:
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=None,
+                    classification="template_not_registered",
+                    reasons=(f"unable to resolve project.template: {exc}",),
+                    product_spec_file=relative_path(product_spec_file),
+                    implementation_config_file=relative_path(implementation_config_file),
+                )
+            )
+            continue
+
+        try:
+            registration = resolve_project_template_registration(product_spec_file)
+        except Exception as exc:
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=template_id,
+                    classification="template_not_registered",
+                    reasons=(f"template {template_id} is not registered: {exc}",),
+                    product_spec_file=relative_path(product_spec_file),
+                    implementation_config_file=relative_path(implementation_config_file),
+                )
+            )
+            continue
+
+        try:
+            project = registration.load_project(product_spec_file)
+        except Exception as exc:
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=template_id,
+                    classification="materialization_failed",
+                    reasons=(f"registered loader failed: {exc}",),
+                    product_spec_file=relative_path(product_spec_file),
+                    implementation_config_file=relative_path(implementation_config_file),
+                )
+            )
+            continue
+
+        framework_refs = _framework_refs_from_project(project)
+        if not framework_refs:
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=template_id,
+                    classification="not_framework_driven_project",
+                    reasons=("loaded project does not expose framework module refs",),
+                    product_spec_file=relative_path(product_spec_file),
+                    implementation_config_file=relative_path(implementation_config_file),
+                )
+            )
+            continue
+
+        artifact_contract = _artifact_contract_from_project(project)
+        if not artifact_contract:
+            entries.append(
+                ProjectDiscoveryAuditEntry(
+                    project_id=project_id,
+                    directory=relative_path(project_dir),
+                    framework_driven=False,
+                    template_id=template_id,
+                    classification="generated_contract_missing",
+                    reasons=("implementation config does not expose generated artifact contract",),
+                    product_spec_file=relative_path(product_spec_file),
+                    implementation_config_file=relative_path(implementation_config_file),
+                    framework_refs=framework_refs,
+                )
+            )
+            continue
+
+        entries.append(
+            ProjectDiscoveryAuditEntry(
+                project_id=project_id,
+                directory=relative_path(project_dir),
+                framework_driven=True,
+                template_id=template_id,
+                classification="recognized",
+                reasons=(
+                    "product_spec.toml and implementation_config.toml both exist",
+                    f"registered template resolved: {template_id}",
+                    "project loads through the registered framework-driven materialization chain",
+                    "framework selections resolve to concrete framework modules",
+                    "implementation config exposes generated artifact contract",
+                ),
+                product_spec_file=relative_path(product_spec_file),
+                implementation_config_file=relative_path(implementation_config_file),
+                generated_dir=relative_path(project_dir / "generated"),
+                framework_refs=framework_refs,
+                artifact_contract=artifact_contract,
+            )
+        )
+    return tuple(entries)

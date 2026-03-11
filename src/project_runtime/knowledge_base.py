@@ -14,6 +14,8 @@ from project_runtime.config_layout import config_layout
 from project_runtime.governance import (
     build_governance_closure,
     build_governance_manifest,
+    build_object_coverage_report,
+    build_strict_zone_report,
     build_governance_tree,
 )
 from project_runtime.template_registry import (
@@ -497,6 +499,8 @@ class ArtifactConfig:
     generation_manifest_json: str
     governance_manifest_json: str
     governance_tree_json: str
+    strict_zone_report_json: str
+    object_coverage_report_json: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -600,6 +604,8 @@ class GeneratedArtifactPaths:
     generation_manifest_json: str
     governance_manifest_json: str
     governance_tree_json: str
+    strict_zone_report_json: str
+    object_coverage_report_json: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -794,6 +800,8 @@ def _effective_generated_artifacts(project: KnowledgeBaseProject) -> GeneratedAr
         generation_manifest_json=_relative_path(artifact_directory / artifact_names.generation_manifest_json),
         governance_manifest_json=_relative_path(artifact_directory / artifact_names.governance_manifest_json),
         governance_tree_json=_relative_path(artifact_directory / artifact_names.governance_tree_json),
+        strict_zone_report_json=_relative_path(artifact_directory / artifact_names.strict_zone_report_json),
+        object_coverage_report_json=_relative_path(artifact_directory / artifact_names.object_coverage_report_json),
     )
 
 
@@ -864,6 +872,16 @@ def build_implementation_effect_manifest(project: KnowledgeBaseProject) -> dict[
             "value": project.implementation.artifacts.governance_tree_json,
             "relation": "basename",
             "targets": ["generated_artifacts.governance_tree_json"],
+        },
+        "artifacts.strict_zone_report_json": {
+            "value": project.implementation.artifacts.strict_zone_report_json,
+            "relation": "basename",
+            "targets": ["generated_artifacts.strict_zone_report_json"],
+        },
+        "artifacts.object_coverage_report_json": {
+            "value": project.implementation.artifacts.object_coverage_report_json,
+            "relation": "basename",
+            "targets": ["generated_artifacts.object_coverage_report_json"],
         },
     }
 
@@ -1198,6 +1216,8 @@ def _load_implementation_config(implementation_config_path: Path) -> KnowledgeBa
             generation_manifest_json=_require_string(artifacts_table, "generation_manifest_json"),
             governance_manifest_json=_require_string(artifacts_table, "governance_manifest_json"),
             governance_tree_json=_require_string(artifacts_table, "governance_tree_json"),
+            strict_zone_report_json=_require_string(artifacts_table, "strict_zone_report_json"),
+            object_coverage_report_json=_require_string(artifacts_table, "object_coverage_report_json"),
         ),
     )
 
@@ -1792,6 +1812,16 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
         ensure_ascii=False,
         indent=2,
     )
+    strict_zone_report_text = json.dumps(
+        build_strict_zone_report(build_governance_closure(project)),
+        ensure_ascii=False,
+        indent=2,
+    )
+    object_coverage_report_text = json.dumps(
+        build_object_coverage_report(build_governance_closure(project)),
+        ensure_ascii=False,
+        indent=2,
+    )
     generation_manifest_text = json.dumps(
         {
             "project_id": project.metadata.project_id,
@@ -1819,6 +1849,8 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
                 "generation_manifest_json": generated_artifacts.generation_manifest_json,
                 "governance_manifest_json": generated_artifacts.governance_manifest_json,
                 "governance_tree_json": generated_artifacts.governance_tree_json,
+                "strict_zone_report_json": generated_artifacts.strict_zone_report_json,
+                "object_coverage_report_json": generated_artifacts.object_coverage_report_json,
             },
             "content_sha256": {
                 "framework_ir_json": _sha256_text(framework_ir_text),
@@ -1826,6 +1858,8 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
                 "implementation_bundle_py": _sha256_text(implementation_bundle_text),
                 "governance_manifest_json": _sha256_text(governance_manifest_text),
                 "governance_tree_json": _sha256_text(governance_tree_text),
+                "strict_zone_report_json": _sha256_text(strict_zone_report_text),
+                "object_coverage_report_json": _sha256_text(object_coverage_report_text),
             },
         },
         ensure_ascii=False,
@@ -1838,6 +1872,8 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
         "generation_manifest_json": generation_manifest_text,
         "governance_manifest_json": governance_manifest_text,
         "governance_tree_json": governance_tree_text,
+        "strict_zone_report_json": strict_zone_report_text,
+        "object_coverage_report_json": object_coverage_report_text,
     }
 
 
@@ -1924,6 +1960,8 @@ def materialize_knowledge_base_project(
         artifact_names.generation_manifest_json,
         artifact_names.governance_manifest_json,
         artifact_names.governance_tree_json,
+        artifact_names.strict_zone_report_json,
+        artifact_names.object_coverage_report_json,
     }
     _cleanup_generated_output_dir(output_path, expected_file_names)
     framework_ir_path = output_path / artifact_names.framework_ir_json
@@ -1932,6 +1970,8 @@ def materialize_knowledge_base_project(
     generation_manifest_path = output_path / artifact_names.generation_manifest_json
     governance_manifest_path = output_path / artifact_names.governance_manifest_json
     governance_tree_path = output_path / artifact_names.governance_tree_json
+    strict_zone_report_path = output_path / artifact_names.strict_zone_report_json
+    object_coverage_report_path = output_path / artifact_names.object_coverage_report_json
     # Keep generated evidence stable even when callers materialize into a temp directory.
     # The output path controls where files are written, but the manifest and runtime bundle
     # should continue to point at the project's canonical generated directory.
@@ -1946,6 +1986,8 @@ def materialize_knowledge_base_project(
             generation_manifest_json=_relative_path(artifact_directory / artifact_names.generation_manifest_json),
             governance_manifest_json=_relative_path(artifact_directory / artifact_names.governance_manifest_json),
             governance_tree_json=_relative_path(artifact_directory / artifact_names.governance_tree_json),
+            strict_zone_report_json=_relative_path(artifact_directory / artifact_names.strict_zone_report_json),
+            object_coverage_report_json=_relative_path(artifact_directory / artifact_names.object_coverage_report_json),
         ),
     )
     payloads = _build_generated_artifact_payloads(project)
@@ -1955,6 +1997,8 @@ def materialize_knowledge_base_project(
     generation_manifest_path.write_text(payloads["generation_manifest_json"], encoding="utf-8")
     governance_manifest_path.write_text(payloads["governance_manifest_json"], encoding="utf-8")
     governance_tree_path.write_text(payloads["governance_tree_json"], encoding="utf-8")
+    strict_zone_report_path.write_text(payloads["strict_zone_report_json"], encoding="utf-8")
+    object_coverage_report_path.write_text(payloads["object_coverage_report_json"], encoding="utf-8")
 
     return project
 

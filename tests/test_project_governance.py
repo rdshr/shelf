@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from project_runtime import discover_framework_driven_projects
+from project_runtime import (
+    build_object_coverage_report,
+    build_project_discovery_audit,
+    build_strict_zone_report,
+    discover_framework_driven_projects,
+)
 from project_runtime.governance import build_governance_closure
 from project_runtime.knowledge_base import (
     DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
@@ -39,6 +44,31 @@ class ProjectGovernanceTest(unittest.TestCase):
         self.assertIn("governed", classifications)
         self.assertTrue(all(item.status == "satisfied" for item in closure.role_bindings))
         self.assertTrue(all(item.classification in {"governed", "attached", "internal"} for item in closure.candidates))
+        self.assertTrue(all(item.minimality_status in {"required", "uncertain", "redundant"} for item in closure.strict_zone))
+        self.assertTrue(all(item.why_required for item in closure.strict_zone if item.minimality_status == "required"))
+
+    def test_project_discovery_audit_is_explicit(self) -> None:
+        audit = build_project_discovery_audit()
+        entries = audit["entries"]
+        self.assertEqual(audit["summary"]["recognized_count"], 1)
+        self.assertEqual(entries[0]["project_id"], "knowledge_base_basic")
+        self.assertEqual(entries[0]["classification"], "recognized")
+
+    def test_strict_zone_and_object_coverage_reports_are_machine_readable(self) -> None:
+        project = load_knowledge_base_project(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
+        closure = build_governance_closure(project)
+        strict_zone_report = build_strict_zone_report(closure)
+        object_coverage_report = build_object_coverage_report(closure)
+        self.assertEqual(strict_zone_report["summary"]["redundant_count"], 0)
+        self.assertGreater(strict_zone_report["summary"]["required_count"], 0)
+        self.assertEqual(object_coverage_report["summary"]["governed_object_count"], len(closure.structural_objects))
+        self.assertGreater(object_coverage_report["summary"]["attached_candidate_count"], 0)
+        self.assertTrue(
+            any(
+                entry["object_id"] == "kb.api.chat_contract" and entry["compare_status"] == "match"
+                for entry in object_coverage_report["objects"]
+            )
+        )
 
 
 if __name__ == "__main__":

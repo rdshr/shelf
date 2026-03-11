@@ -15,6 +15,10 @@ from project_runtime.knowledge_base import (
 )
 from project_runtime.project_governance import (
     ProjectGovernanceClosure,
+    ProjectDiscoveryAuditEntry,
+    build_object_coverage_report,
+    build_project_discovery_audit,
+    build_strict_zone_report,
     discover_framework_driven_projects,
 )
 from project_runtime.template_registry import (
@@ -37,6 +41,10 @@ __all__ = [
     "KNOWLEDGE_BASE_TEMPLATE_ID",
     "KnowledgeBaseProject",
     "ProjectGovernanceClosure",
+    "ProjectDiscoveryAuditEntry",
+    "build_object_coverage_report",
+    "build_project_discovery_audit",
+    "build_strict_zone_report",
     "ProjectTemplateRegistration",
     "SeedDocumentSource",
     "assert_supported_project_template",

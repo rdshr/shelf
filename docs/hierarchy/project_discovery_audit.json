@@ -1,0 +1,45 @@
+{
+  "audit_version": "project-discovery-audit/v1",
+  "projects_dir": "projects",
+  "entries": [
+    {
+      "project_id": "knowledge_base_basic",
+      "directory": "projects/knowledge_base_basic",
+      "framework_driven": true,
+      "template_id": "knowledge_base_workbench",
+      "classification": "recognized",
+      "reasons": [
+        "product_spec.toml and implementation_config.toml both exist",
+        "registered template resolved: knowledge_base_workbench",
+        "project loads through the registered framework-driven materialization chain",
+        "framework selections resolve to concrete framework modules",
+        "implementation config exposes generated artifact contract"
+      ],
+      "product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+      "implementation_config_file": "projects/knowledge_base_basic/implementation_config.toml",
+      "generated_dir": "projects/knowledge_base_basic/generated",
+      "framework_refs": [
+        "framework/backend/L2-M0-知识库接口框架标准模块.md",
+        "framework/frontend/L2-M0-前端框架标准模块.md",
+        "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
+      ],
+      "artifact_contract": [
+        "framework_ir.json",
+        "product_spec.json",
+        "implementation_bundle.py",
+        "generation_manifest.json",
+        "governance_manifest.json",
+        "governance_tree.json",
+        "strict_zone_report.json",
+        "object_coverage_report.json"
+      ]
+    }
+  ],
+  "summary": {
+    "recognized_count": 1,
+    "excluded_count": 0,
+    "classification_counts": {
+      "recognized": 1
+    }
+  }
+}

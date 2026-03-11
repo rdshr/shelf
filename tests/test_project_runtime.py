@@ -40,6 +40,8 @@ DEFAULT_IMPLEMENTATION_CONFIG = textwrap.dedent(
     generation_manifest_json = "generation_manifest.json"
     governance_manifest_json = "governance_manifest.json"
     governance_tree_json = "governance_tree.json"
+    strict_zone_report_json = "strict_zone_report.json"
+    object_coverage_report_json = "object_coverage_report.json"
     """
 ).strip()
 

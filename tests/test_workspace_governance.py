@@ -23,6 +23,7 @@ class WorkspaceGovernanceTest(unittest.TestCase):
         self.assertIn("project:knowledge_base_basic", node_ids)
         self.assertIn("project:knowledge_base_basic:structure:object:kb.answer.behavior", node_ids)
         self.assertIn("knowledge_base_basic", governance["project_trees"])
+        self.assertIn("project_discovery_audit", governance)
 
     def test_resolve_workspace_change_context_maps_framework_change_to_project(self) -> None:
         payload = build_workspace_governance_payload()
@@ -48,11 +49,11 @@ class WorkspaceGovernanceTest(unittest.TestCase):
 
         context = resolve_workspace_change_context(
             payload,
-            {"docs/hierarchy/shelf_governance_tree.json"},
+            {"docs/hierarchy/project_discovery_audit.json"},
         )
 
         self.assertIn(
-            "workspace:shelf:evidence:artifact:governance_tree_json",
+            "workspace:shelf:evidence:artifact:project_discovery_audit_json",
             context["touched_nodes"],
         )
         self.assertTrue(context["affected_nodes"])

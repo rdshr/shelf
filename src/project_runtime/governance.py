@@ -18,6 +18,10 @@ from project_runtime.project_governance import (
     SourceRef,
     StructuralObject,
     StructuralCandidate,
+    annotate_strict_zone_minimality,
+    build_object_coverage_report,
+    build_project_discovery_audit,
+    build_strict_zone_report,
     classify_candidates,
     discover_framework_driven_projects,
     fingerprint,
@@ -124,6 +128,8 @@ def _expected_generated_artifact_paths(project: KnowledgeBaseProject) -> dict[st
             "generation_manifest_json": project.generated_artifacts.generation_manifest_json,
             "governance_manifest_json": project.generated_artifacts.governance_manifest_json,
             "governance_tree_json": project.generated_artifacts.governance_tree_json,
+            "strict_zone_report_json": project.generated_artifacts.strict_zone_report_json,
+            "object_coverage_report_json": project.generated_artifacts.object_coverage_report_json,
         }
 
     generated_dir = Path(project.product_spec_file).parent / "generated"
@@ -135,6 +141,8 @@ def _expected_generated_artifact_paths(project: KnowledgeBaseProject) -> dict[st
         "generation_manifest_json": _relative(generated_dir / artifact_names.generation_manifest_json),
         "governance_manifest_json": _relative(generated_dir / artifact_names.governance_manifest_json),
         "governance_tree_json": _relative(generated_dir / artifact_names.governance_tree_json),
+        "strict_zone_report_json": _relative(generated_dir / artifact_names.strict_zone_report_json),
+        "object_coverage_report_json": _relative(generated_dir / artifact_names.object_coverage_report_json),
     }
 
 
@@ -1335,6 +1343,13 @@ def _structural_object_from_definition(
 
     expected_evidence = definition.expected_builder(project)
     actual_evidence = definition.actual_extractor(project)
+    origin_categories: list[str] = ["legacy-migrated"]
+    if framework_sources:
+        origin_categories.append("framework-derived")
+    if product_sources:
+        origin_categories.append("product-instantiated")
+    if implementation_sources:
+        origin_categories.append("implementation-refined")
     return StructuralObject(
         object_id=definition.symbol_id,
         project_id=project.metadata.project_id,
@@ -1354,6 +1369,7 @@ def _structural_object_from_definition(
         actual_fingerprint=_fingerprint(actual_evidence),
         comparator=definition.comparator,
         extractor=definition.extractor,
+        origin_categories=tuple(sorted(set(origin_categories))),
     )
 
 
@@ -1487,6 +1503,7 @@ def _config_effect_object(
         actual_fingerprint=_fingerprint(actual_evidence),
         comparator="implementation_effect_exact.v1",
         extractor="implementation.effect.v1",
+        origin_categories=("implementation-refined", "evidence-only"),
     )
 
 
@@ -1526,6 +1543,8 @@ def _project_record_for(project: KnowledgeBaseProject) -> Any:
                 "generation_manifest_json",
                 "governance_manifest_json",
                 "governance_tree_json",
+                "strict_zone_report_json",
+                "object_coverage_report_json",
             )
         ),
     }
@@ -1585,6 +1604,12 @@ def build_governance_closure(project: KnowledgeBaseProject) -> ProjectGovernance
     candidates = classify_candidates(tuple(structural_objects), project_candidates, role_bindings)
     strict_zone = infer_strict_zone(
         tuple(structural_objects),
+        role_bindings,
+        candidates,
+        _expected_generated_artifact_paths(project),
+    )
+    strict_zone = annotate_strict_zone_minimality(
+        strict_zone,
         role_bindings,
         candidates,
         _expected_generated_artifact_paths(project),
@@ -1703,6 +1728,8 @@ def _binding_index_for_project(project: KnowledgeBaseProject) -> dict[str, list[
 
 def build_governance_manifest(project: KnowledgeBaseProject) -> dict[str, Any]:
     closure = build_governance_closure(project)
+    strict_zone_report = build_strict_zone_report(closure)
+    object_coverage_report = build_object_coverage_report(closure)
     binding_index = _binding_index_for_project(project)
     symbols = []
     for structural_object in closure.structural_objects:
@@ -1734,6 +1761,8 @@ def build_governance_manifest(project: KnowledgeBaseProject) -> dict[str, Any]:
             "manifest_version": GOVERNANCE_MANIFEST_VERSION,
             "generator_version": GOVERNANCE_GENERATOR_VERSION,
             "symbols": symbols,
+            "strict_zone_report": strict_zone_report,
+            "object_coverage_report": object_coverage_report,
         }
     )
     return payload
@@ -1741,6 +1770,8 @@ def build_governance_manifest(project: KnowledgeBaseProject) -> dict[str, Any]:
 
 def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
     closure = build_governance_closure(project)
+    strict_zone_report = build_strict_zone_report(closure)
+    object_coverage_report = build_object_coverage_report(closure)
     project_root_id = f"project:{project.metadata.project_id}"
     framework_root_id = f"{project_root_id}:framework"
     product_root_id = f"{project_root_id}:product_spec"
@@ -1898,6 +1929,7 @@ def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
             cardinality=structural_object.cardinality,
             comparator=structural_object.comparator,
             extractor=structural_object.extractor,
+            origin_categories=list(structural_object.origin_categories),
             expected_evidence=structural_object.expected_evidence,
             expected_fingerprint=structural_object.expected_fingerprint,
             actual_evidence=structural_object.actual_evidence,
@@ -1948,6 +1980,8 @@ def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
             object_ids=list(strict_entry.object_ids),
             role_ids=list(strict_entry.role_ids),
             reasons=list(strict_entry.reasons),
+            why_required=list(strict_entry.why_required),
+            minimality_status=strict_entry.minimality_status,
             derived_from=derived_from,
             project_id=project.metadata.project_id,
         )
@@ -2019,6 +2053,8 @@ def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
         "project_discovery": closure.discovery.to_dict(),
         "upstream_closure": [item.to_dict() for item in closure.upstream_closure],
         "strict_zone": [item.to_dict() for item in closure.strict_zone],
+        "strict_zone_report": strict_zone_report,
+        "object_coverage_report": object_coverage_report,
         "evidence_artifacts": dict(closure.evidence_artifacts),
         "structural_objects": [item.to_manifest_dict() for item in closure.structural_objects],
         "role_bindings": [item.to_dict() for item in closure.role_bindings],
@@ -2074,8 +2110,12 @@ def parse_governance_manifest(path: Path) -> dict[str, Any]:
         raise ValueError("governance manifest missing role_bindings list")
     if not isinstance(payload.get("strict_zone"), list):
         raise ValueError("governance manifest missing strict_zone list")
+    if not isinstance(payload.get("strict_zone_report"), dict):
+        raise ValueError("governance manifest missing strict_zone_report object")
     if not isinstance(payload.get("candidates"), list):
         raise ValueError("governance manifest missing candidates list")
+    if not isinstance(payload.get("object_coverage_report"), dict):
+        raise ValueError("governance manifest missing object_coverage_report object")
     return payload
 
 
@@ -2095,12 +2135,16 @@ def parse_governance_tree(path: Path) -> dict[str, Any]:
         raise ValueError("governance tree missing project_discovery object")
     if not isinstance(payload.get("strict_zone"), list):
         raise ValueError("governance tree missing strict_zone list")
+    if not isinstance(payload.get("strict_zone_report"), dict):
+        raise ValueError("governance tree missing strict_zone_report object")
     if not isinstance(payload.get("structural_objects"), list):
         raise ValueError("governance tree missing structural_objects list")
     if not isinstance(payload.get("role_bindings"), list):
         raise ValueError("governance tree missing role_bindings list")
     if not isinstance(payload.get("candidates"), list):
         raise ValueError("governance tree missing candidates list")
+    if not isinstance(payload.get("object_coverage_report"), dict):
+        raise ValueError("governance tree missing object_coverage_report object")
     if not isinstance(payload.get("evidence_artifacts"), dict):
         raise ValueError("governance tree missing evidence_artifacts object")
     return payload
@@ -2465,6 +2509,8 @@ def _compare_payload_to_closure(
         ]
     issues: list[dict[str, Any]] = []
     payload_code = "GOVERNANCE_TREE_INVALID" if tree_mode else "GOVERNANCE_MANIFEST_INVALID"
+    strict_zone_report = build_strict_zone_report(closure)
+    object_coverage_report = build_object_coverage_report(closure)
 
     object_index, object_issues = _manifest_object_index(payload, code=payload_code)
     issues.extend(object_issues)
@@ -2499,6 +2545,22 @@ def _compare_payload_to_closure(
                     "artifact": artifact_key,
                     "expected": rel_path,
                     "actual": payload_artifacts.get(artifact_key),
+                }
+            )
+
+    for report_key, expected_report in (
+        ("strict_zone_report", strict_zone_report),
+        ("object_coverage_report", object_coverage_report),
+    ):
+        payload_report = payload.get(report_key)
+        if _canonical_json(payload_report) != _canonical_json(expected_report):
+            issues.append(
+                {
+                    "code": payload_code,
+                    "message": f"{report_key} drifted from current governance closure",
+                    "file": "",
+                    "line": 1,
+                    "report": report_key,
                 }
             )
 
@@ -2539,9 +2601,14 @@ def _compare_payload_to_closure(
                 }
             )
         if structural_object.actual_fingerprint != structural_object.expected_fingerprint:
+            mismatch_code = (
+                "DEAD_CONFIG_EFFECT"
+                if structural_object.kind == "implementation_effect"
+                else "EXPECTATION_MISMATCH"
+            )
             issues.append(
                 {
-                    "code": "EXPECTATION_MISMATCH",
+                    "code": mismatch_code,
                     "message": f"structural object no longer matches derived expectation: {structural_object.object_id}",
                     "file": next(
                         (role.file_hints[0] for role in structural_object.required_roles if role.file_hints),
@@ -2602,6 +2669,24 @@ def _compare_payload_to_closure(
                     "line": 1,
                 }
             )
+        if payload_entry.get("minimality_status") != strict_entry.minimality_status:
+            issues.append(
+                {
+                    "code": payload_code,
+                    "message": f"strict zone minimality drifted for {strict_entry.file}",
+                    "file": strict_entry.file,
+                    "line": 1,
+                }
+            )
+        if strict_entry.minimality_status == "redundant":
+            issues.append(
+                {
+                    "code": "STRICT_ZONE_REDUNDANT",
+                    "message": f"strict zone contains redundant carrier: {strict_entry.file}",
+                    "file": strict_entry.file,
+                    "line": 1,
+                }
+            )
 
     for candidate in closure.candidates:
         payload_candidate = candidate_index.get(candidate.candidate_id)
@@ -2637,6 +2722,19 @@ def _compare_payload_to_closure(
                     "candidate_id": candidate.candidate_id,
                     "expected": candidate.classification,
                     "actual": payload_candidate.get("classification"),
+                }
+            )
+        if (
+            candidate.classification == "internal"
+            and candidate.kind in {"python_route_handler", "python_route_builder", "python_behavior_orchestrator"}
+        ):
+            issues.append(
+                {
+                    "code": "MISSING_BINDING",
+                    "message": f"high-risk structural candidate is not governed or attached: {candidate.candidate_id}",
+                    "file": candidate.file,
+                    "line": 1,
+                    "candidate_id": candidate.candidate_id,
                 }
             )
 

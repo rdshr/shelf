@@ -33,6 +33,10 @@ from project_runtime import (
     materialize_registered_project,
     resolve_project_template_registration,
 )
+from project_runtime.project_governance import (
+    build_project_discovery_audit,
+    render_project_discovery_audit_markdown,
+)
 from project_runtime.governance import (
     compare_project_to_tree,
     parse_governance_tree,
@@ -40,6 +44,8 @@ from project_runtime.governance import (
 )
 from standards_tree import build_standards_tree, level_files_from_tree
 from workspace_governance import (
+    DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON,
+    DEFAULT_PROJECT_DISCOVERY_AUDIT_MD,
     DEFAULT_WORKSPACE_GOVERNANCE_HTML,
     DEFAULT_WORKSPACE_GOVERNANCE_JSON,
     build_workspace_governance_payload,
@@ -278,6 +284,8 @@ def expected_generated_files_for(product_spec_file: Path) -> tuple[str, ...]:
         "generation_manifest_json",
         "governance_manifest_json",
         "governance_tree_json",
+        "strict_zone_report_json",
+        "object_coverage_report_json",
     ):
         value = artifacts.get(key)
         if not isinstance(value, str) or not value.strip():
@@ -290,6 +298,13 @@ def expected_generated_files_for(product_spec_file: Path) -> tuple[str, ...]:
 
 def _read_file_bytes(path: Path) -> bytes:
     return path.read_bytes()
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path.name} must decode into an object")
+    return payload
 
 
 def _load_toml_text_and_data(path: Path) -> tuple[str, dict[str, Any]]:
@@ -347,6 +362,8 @@ def _derived_generated_artifacts_payload(
         "generation_manifest_json": rel_path("generation_manifest_json"),
         "governance_manifest_json": rel_path("governance_manifest_json"),
         "governance_tree_json": rel_path("governance_tree_json"),
+        "strict_zone_report_json": rel_path("strict_zone_report_json"),
+        "object_coverage_report_json": rel_path("object_coverage_report_json"),
     }
 
 
@@ -985,6 +1002,8 @@ def validate_workspace_governance_artifacts() -> list[Issue]:
     issues: list[Issue] = []
     rel_json = DEFAULT_WORKSPACE_GOVERNANCE_JSON.relative_to(REPO_ROOT).as_posix()
     rel_html = DEFAULT_WORKSPACE_GOVERNANCE_HTML.relative_to(REPO_ROOT).as_posix()
+    rel_audit_json = DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON.relative_to(REPO_ROOT).as_posix()
+    rel_audit_md = DEFAULT_PROJECT_DISCOVERY_AUDIT_MD.relative_to(REPO_ROOT).as_posix()
 
     if not DEFAULT_WORKSPACE_GOVERNANCE_JSON.exists():
         issues.append(
@@ -1008,6 +1027,28 @@ def validate_workspace_governance_artifacts() -> list[Issue]:
         )
         return issues
 
+    if not DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON.exists():
+        issues.append(
+            make_issue(
+                "missing project discovery audit JSON; run `uv run python scripts/materialize_project.py`",
+                rel_audit_json,
+                1,
+                code="PROJECT_DISCOVERY_AUDIT_MISSING",
+            )
+        )
+        return issues
+
+    if not DEFAULT_PROJECT_DISCOVERY_AUDIT_MD.exists():
+        issues.append(
+            make_issue(
+                "missing project discovery audit Markdown; run `uv run python scripts/materialize_project.py`",
+                rel_audit_md,
+                1,
+                code="PROJECT_DISCOVERY_AUDIT_MISSING",
+            )
+        )
+        return issues
+
     try:
         parse_workspace_governance_payload(DEFAULT_WORKSPACE_GOVERNANCE_JSON)
     except Exception as exc:
@@ -1022,11 +1063,39 @@ def validate_workspace_governance_artifacts() -> list[Issue]:
         return issues
 
     try:
+        audit_payload = _read_json(DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON)
+        if audit_payload.get("audit_version") != "project-discovery-audit/v1":
+            raise ValueError(f"unsupported audit version: {audit_payload.get('audit_version')}")
+        if not isinstance(audit_payload.get("entries"), list):
+            raise ValueError("project discovery audit missing entries list")
+    except Exception as exc:
+        issues.append(
+            make_issue(
+                f"invalid project discovery audit JSON: {exc}",
+                rel_audit_json,
+                1,
+                code="PROJECT_DISCOVERY_AUDIT_INVALID",
+            )
+        )
+        return issues
+
+    try:
         fresh_payload = build_workspace_governance_payload()
+        fresh_audit_payload = build_project_discovery_audit()
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
             temp_json = Path(temp_dir) / "shelf_governance_tree.json"
             temp_html = Path(temp_dir) / "shelf_governance_tree.html"
+            temp_audit_json = Path(temp_dir) / "project_discovery_audit.json"
+            temp_audit_md = Path(temp_dir) / "project_discovery_audit.md"
             temp_json.write_text(json.dumps(fresh_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            temp_audit_json.write_text(
+                json.dumps(fresh_audit_payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            temp_audit_md.write_text(
+                render_project_discovery_audit_markdown(fresh_audit_payload),
+                encoding="utf-8",
+            )
             graph = load_hierarchy_graph(temp_json)
             render_hierarchy_html(graph, temp_html, width=1680, height=1080)
             if _read_file_bytes(DEFAULT_WORKSPACE_GOVERNANCE_JSON) != _read_file_bytes(temp_json):
@@ -1045,6 +1114,24 @@ def validate_workspace_governance_artifacts() -> list[Issue]:
                         rel_html,
                         1,
                         code="WORKSPACE_GOVERNANCE_OUT_OF_SYNC",
+                    )
+                )
+            if _read_file_bytes(DEFAULT_PROJECT_DISCOVERY_AUDIT_JSON) != _read_file_bytes(temp_audit_json):
+                issues.append(
+                    make_issue(
+                        "project discovery audit JSON is stale or manually edited; re-materialize the workspace tree",
+                        rel_audit_json,
+                        1,
+                        code="PROJECT_DISCOVERY_AUDIT_OUT_OF_SYNC",
+                    )
+                )
+            if _read_file_bytes(DEFAULT_PROJECT_DISCOVERY_AUDIT_MD) != _read_file_bytes(temp_audit_md):
+                issues.append(
+                    make_issue(
+                        "project discovery audit Markdown is stale or manually edited; re-materialize the workspace tree",
+                        rel_audit_md,
+                        1,
+                        code="PROJECT_DISCOVERY_AUDIT_OUT_OF_SYNC",
                     )
                 )
     except Exception as exc:
