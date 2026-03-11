@@ -1,20 +1,33 @@
 const path = require('node:path');
-const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, clipboard, screen } = require('electron');
+const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, clipboard, screen, shell } = require('electron');
 
 const { loadProjectConfig } = require('./lib/project-config');
 const { captureSelectionImage, recognizeText, translateText } = require('./lib/local-pipeline');
+const {
+  ensureRuntimeOverridesTemplate,
+  getPrimaryRuntimeOverridePath,
+  loadRuntimeOverrides,
+} = require('./lib/runtime-overrides');
+const { OFFICIAL_OPENAI_BASE_URL, resolveOpenAiApiKey, resolveOpenAiBaseUrl } = require('./lib/provider-runtime');
 const { createWindowStateStore } = require('./lib/window-state');
 
 const config = loadProjectConfig();
+app.setName('AiTrans');
 const stateStore = createWindowStateStore(app, 'desktop_screenshot_translate');
 
-app.setAppUserModelId('com.archsync.desktop_screenshot_translate');
+app.setAppUserModelId('com.aitrans.desktop_screenshot_translate');
 
 let tray = null;
 let overlayWindow = null;
 let panelWindow = null;
+let setupWindow = null;
 let lastSelection = null;
 let lastPipelineState = null;
+let runtimeBootstrap = null;
+
+function getWindowIconPath() {
+  return path.join(__dirname, 'assets', 'app-icon.ico');
+}
 
 function createTrayImage() {
   const iconPath = path.join(__dirname, 'assets', 'tray-icon@2x.png');
@@ -49,6 +62,7 @@ function createOverlayWindow() {
     resizable: false,
     fullscreenable: false,
     backgroundColor: '#00000000',
+    icon: getWindowIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -83,6 +97,7 @@ function createPanelWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     backgroundColor: '#f4f8f6',
+    icon: getWindowIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -108,6 +123,35 @@ function createPanelWindow() {
     panelWindow = null;
   });
   return panelWindow;
+}
+
+function createSetupWindow() {
+  if (setupWindow && !setupWindow.isDestroyed()) {
+    return setupWindow;
+  }
+
+  setupWindow = new BrowserWindow({
+    width: 560,
+    height: 620,
+    show: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    autoHideMenuBar: true,
+    title: `${config.productSpec.project.display_name} 首次配置`,
+    backgroundColor: '#ecf8f4',
+    icon: getWindowIconPath(),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  setupWindow.loadFile(path.join(__dirname, 'renderer', 'setup', 'index.html'));
+  setupWindow.on('closed', () => {
+    setupWindow = null;
+  });
+  return setupWindow;
 }
 
 function savePanelBounds() {
@@ -156,6 +200,59 @@ function buildStageResult(selection, overrides = {}) {
     ...buildStubResult(selection),
     ...overrides,
   };
+}
+
+function getSetupGuideState() {
+  const overrides = loadRuntimeOverrides();
+  const baseUrl = resolveOpenAiBaseUrl();
+  let configured = true;
+  let credentialMode = 'configured';
+
+  try {
+    const apiKey = resolveOpenAiApiKey(baseUrl);
+    if (!apiKey && baseUrl !== OFFICIAL_OPENAI_BASE_URL) {
+      credentialMode = 'local_endpoint_without_key';
+    }
+  } catch {
+    configured = false;
+    credentialMode = 'missing_translation_credential';
+  }
+
+  return {
+    configured,
+    credentialMode,
+    baseUrl,
+    usingOfficialEndpoint: baseUrl === OFFICIAL_OPENAI_BASE_URL,
+    runtimeOverridesPath: overrides.path || getPrimaryRuntimeOverridePath(),
+    runtimeOverridesDetected: Boolean(overrides.path),
+    bootstrapCreated: Boolean(runtimeBootstrap?.created),
+  };
+}
+
+function getActiveRuntimeOverridePath() {
+  return loadRuntimeOverrides().path || getPrimaryRuntimeOverridePath();
+}
+
+function showSetupGuide() {
+  const window = createSetupWindow();
+  const payload = {
+    product: {
+      displayName: config.productSpec.project.display_name,
+    },
+    guide: getSetupGuideState(),
+  };
+
+  const sendPayload = () => {
+    window.webContents.send('setup:set-data', payload);
+    window.show();
+    window.focus();
+  };
+
+  if (window.webContents.isLoadingMainFrame()) {
+    window.webContents.once('did-finish-load', sendPayload);
+  } else {
+    sendPayload();
+  }
 }
 
 function showPanel(result) {
@@ -208,6 +305,8 @@ function createTray() {
     { label: `快捷键：${config.shortcut}`, enabled: false },
     { type: 'separator' },
     { label: '显示结果面板', click: () => showPanel(buildStubResult(lastSelection || getFallbackSelection())) },
+    { label: '首次配置指引', click: () => showSetupGuide() },
+    { label: '打开配置目录', click: () => shell.openPath(path.dirname(getActiveRuntimeOverridePath())) },
     { type: 'separator' },
     { label: '退出', click: () => { app.isQuitting = true; app.quit(); } },
   ]);
@@ -417,10 +516,43 @@ ipcMain.handle('panel:get-project-summary', async () => {
   };
 });
 
+ipcMain.handle('setup:get-guide-state', async () => {
+  return getSetupGuideState();
+});
+
+ipcMain.handle('setup:open-config-directory', async () => {
+  const configDir = path.dirname(getActiveRuntimeOverridePath());
+  await shell.openPath(configDir);
+  return { ok: true, configDir };
+});
+
+ipcMain.handle('setup:open-config-file', async () => {
+  const configPath = getActiveRuntimeOverridePath();
+  await shell.openPath(configPath);
+  return { ok: true, configPath };
+});
+
+ipcMain.handle('setup:copy-config-path', async () => {
+  const configPath = getActiveRuntimeOverridePath();
+  clipboard.writeText(configPath);
+  return { ok: true, configPath };
+});
+
+ipcMain.handle('setup:close', async () => {
+  if (setupWindow && !setupWindow.isDestroyed()) {
+    setupWindow.close();
+  }
+  return { ok: true };
+});
+
 app.whenReady().then(() => {
+  runtimeBootstrap = ensureRuntimeOverridesTemplate();
   createTray();
   createPanelWindow();
   registerShortcuts();
+  if (!getSetupGuideState().configured) {
+    showSetupGuide();
+  }
 });
 
 app.on('activate', () => {

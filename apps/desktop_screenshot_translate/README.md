@@ -60,8 +60,11 @@ Windows 可发布安装包路径：
 面向目标机器的运行时配置：
 
 - 不建议要求终端用户设置环境变量
-- 推荐把 [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json) 复制为：
-  - `%APPDATA%\\desktop_screenshot_translate\\runtime-overrides.json`
+- 首次启动时会自动在配置目录生成 `runtime-overrides.json` 模板
+- 默认配置文件位置：
+  - `%APPDATA%\\AiTrans\\runtime-overrides.json`
+- 若你想手工重建模板，可参考：
+  - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
 - 其中可配置：
   - `translation.base_url`
   - `translation.api_key`

@@ -332,7 +332,7 @@
       },
       {
         "id": "project:desktop_screenshot_translate",
-        "label": "ArchSync 截图翻译",
+        "label": "AiTrans 截图翻译",
         "level": 2,
         "description": "kind=project_root | layer=Project | project_id=desktop_screenshot_translate | file=projects/desktop_screenshot_translate/product_spec.toml",
         "source_file": "projects/desktop_screenshot_translate/product_spec.toml",
@@ -2210,7 +2210,7 @@
             "parent": null,
             "kind": "project_root",
             "layer": "Project",
-            "title": "ArchSync 截图翻译",
+            "title": "AiTrans 截图翻译",
             "file": "projects/desktop_screenshot_translate/product_spec.toml"
           },
           {

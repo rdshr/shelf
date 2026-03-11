@@ -34,4 +34,22 @@ contextBridge.exposeInMainWorld('aitransDesktop', {
   getProjectSummary() {
     return ipcRenderer.invoke('panel:get-project-summary');
   },
+  onSetupData(callback) {
+    return subscribe('setup:set-data', callback);
+  },
+  getSetupGuideState() {
+    return ipcRenderer.invoke('setup:get-guide-state');
+  },
+  openConfigDirectory() {
+    return ipcRenderer.invoke('setup:open-config-directory');
+  },
+  openConfigFile() {
+    return ipcRenderer.invoke('setup:open-config-file');
+  },
+  copyConfigPath() {
+    return ipcRenderer.invoke('setup:copy-config-path');
+  },
+  closeSetupGuide() {
+    return ipcRenderer.invoke('setup:close');
+  },
 });

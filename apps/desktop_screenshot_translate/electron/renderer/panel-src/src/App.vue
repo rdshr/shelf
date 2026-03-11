@@ -4,7 +4,7 @@ import { computed, reactive } from 'vue';
 function createEmptyPayload() {
   return {
     product: {
-      displayName: 'ArchSync 截图翻译',
+      displayName: 'AiTrans 截图翻译',
       copy: {
         copy_success: '译文已复制',
         empty_translation: '完成截图后将在此显示译文。',
@@ -136,7 +136,7 @@ window.aitransDesktop.getProjectSummary().then((summary) => {
           <span class="brand-line brand-line--bottom"></span>
         </div>
         <div>
-          <div class="eyebrow">ArchSync · Screenshot Translate</div>
+          <div class="eyebrow">AiTrans · Screenshot Translate</div>
           <h1>{{ appState.payload.product.displayName }}</h1>
           <p class="hero-copy">截一块，立刻看到译文。当前主链已经接入本地 OCR 和兼容 OpenAI 的翻译端点。</p>
         </div>

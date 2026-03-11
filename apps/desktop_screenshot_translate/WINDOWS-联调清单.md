@@ -81,9 +81,9 @@ $env:AITRANS_TESSERACT_PATH="C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 如果你不想长期依赖环境变量，也可以后续改用：
 
-- `%APPDATA%\desktop_screenshot_translate\runtime-overrides.json`
+- `%APPDATA%\AiTrans\runtime-overrides.json`
 
-模板见：
+首次启动时会自动生成这个文件；如果你想手工重建模板，见：
 
 - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
 

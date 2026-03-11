@@ -2,7 +2,8 @@
   "name": "desktop-screenshot-translate-electron",
   "version": "0.1.0",
   "private": true,
-  "description": "Windows MVP Electron shell for ArchSync screenshot translation.",
+  "author": "AiTrans",
+  "description": "Windows MVP Electron shell for AiTrans screenshot translation.",
   "main": "main.js",
   "dependencies": {
     "vue": "^3.5.13"
@@ -17,7 +18,7 @@
     "dev:doctor": "npm run doctor && npm run dev",
     "pack:win": "npm run panel:build && npm run release:check && electron-builder --win portable",
     "dist:win": "npm run panel:build && npm run release:check && electron-builder --win nsis",
-    "check": "node --check main.js && node --check preload.js && node --check lib/project-config.js && node --check lib/window-state.js && node --check lib/local-pipeline.js && node --check lib/provider-runtime.js && node --check lib/runtime-overrides.js && node --check lib/ocr-adapters.js && node --check lib/translation-adapters.js && node --check renderer/overlay/overlay.js && node --check scripts/doctor.js && node --check scripts/release-check.js && node --check scripts/stage-tesseract.js && vite build --config vite.panel.config.mjs"
+    "check": "node --check main.js && node --check preload.js && node --check lib/project-config.js && node --check lib/window-state.js && node --check lib/local-pipeline.js && node --check lib/provider-runtime.js && node --check lib/runtime-overrides.js && node --check lib/ocr-adapters.js && node --check lib/translation-adapters.js && node --check renderer/overlay/overlay.js && node --check renderer/setup/setup.js && node --check scripts/doctor.js && node --check scripts/release-check.js && node --check scripts/stage-tesseract.js && vite build --config vite.panel.config.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
@@ -26,8 +27,8 @@
     "vite": "^7.1.3"
   },
   "build": {
-    "appId": "com.archsync.desktop_screenshot_translate",
-    "productName": "ArchSync Screenshot Translate",
+    "appId": "com.aitrans.desktop_screenshot_translate",
+    "productName": "AiTrans Screenshot Translate",
     "artifactName": "desktop-screenshot-translate-${version}-${arch}.${ext}",
     "asar": true,
     "directories": {
@@ -39,6 +40,7 @@
       "assets/**/*",
       "lib/**/*",
       "renderer/overlay/**/*",
+      "renderer/setup/**/*",
       "renderer/panel-dist/**/*",
       "package.json"
     ],
@@ -68,6 +70,7 @@
       }
     ],
     "win": {
+      "icon": "assets/app-icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -89,7 +92,10 @@
       "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "ArchSync Screenshot Translate",
+      "shortcutName": "AiTrans Screenshot Translate",
+      "installerIcon": "assets/app-icon.ico",
+      "uninstallerIcon": "assets/app-icon.ico",
+      "installerHeaderIcon": "assets/app-icon.ico",
       "runAfterFinish": true
     }
   }

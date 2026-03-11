@@ -1,7 +1,7 @@
 {
-  "_comment": "Copy this file to %APPDATA%\\desktop_screenshot_translate\\runtime-overrides.json on Windows, then fill in the fields you actually use.",
+  "_comment": "Copy this file to %APPDATA%\\AiTrans\\runtime-overrides.json on Windows, then fill in the fields you actually use.",
   "translation": {
-    "base_url": "http://127.0.0.1:9090/v1",
+    "base_url": "",
     "api_key": "",
     "model_note": "Runtime still uses the model declared in projects/desktop_screenshot_translate/implementation_config.toml."
   },

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AiTrans 首次配置</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #e9f7f2;
+        --card: rgba(255, 255, 255, 0.9);
+        --ink: #15332c;
+        --muted: #5f7f75;
+        --line: rgba(17, 79, 65, 0.14);
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.18), transparent 30%),
+          linear-gradient(180deg, #f4fbf8 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      .shell {
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .hero,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--card);
+        box-shadow: 0 24px 80px rgba(17, 79, 65, 0.12);
+      }
+
+      .hero {
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .card {
+        padding: 18px 20px;
+        margin-bottom: 14px;
+      }
+
+      .title {
+        margin: 0 0 10px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.12);
+        color: var(--accent-strong);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .path {
+        margin-top: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(15, 118, 110, 0.08);
+        border: 1px solid rgba(15, 118, 110, 0.12);
+        font-family: Consolas, "SFMono-Regular", monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        word-break: break-all;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 16px;
+        padding: 13px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%);
+        color: white;
+      }
+
+      .secondary {
+        background: rgba(15, 118, 110, 0.08);
+        color: var(--accent-strong);
+      }
+
+      .footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
+
+      .footer button {
+        min-width: 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="eyebrow">AiTrans · First Launch</div>
+        <h1 id="displayName">AiTrans 截图翻译</h1>
+        <p class="lead">安装包已经内置 OCR。首次启动只需要把翻译端点配置补齐，之后就可以直接通过托盘或快捷键开始截图翻译。</p>
+      </section>
+
+      <section class="card">
+        <div class="title">当前状态</div>
+        <div id="status" class="status">正在检查配置…</div>
+        <div id="configPath" class="path"></div>
+      </section>
+
+      <section class="card">
+        <div class="title">你要做什么</div>
+        <ul>
+          <li>打开配置文件，把 `translation.base_url` 指向你的 OpenAI 官方或兼容端点。</li>
+          <li>填入 `translation.api_key`。如果你的局域网端点允许无密钥，可留空。</li>
+          <li>保存后回到托盘，重新截图即可生效，不必重新安装。</li>
+        </ul>
+        <div class="actions">
+          <button id="openFile" class="primary">打开配置文件</button>
+          <button id="openDir" class="secondary">打开配置目录</button>
+          <button id="copyPath" class="secondary">复制配置路径</button>
+          <button id="refresh" class="secondary">重新检查</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="title">补充说明</div>
+        <ul>
+          <li>默认会自动生成 `runtime-overrides.json` 模板。</li>
+          <li>如果你使用 OpenAI 官方端点，必须提供有效 API Key。</li>
+          <li>如果你使用局域网兼容端点，只要端点可达并返回兼容结果即可。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <button id="close" class="primary">完成，返回托盘</button>
+      </div>
+    </main>
+    <script src="./setup.js"></script>
+  </body>
+</html>

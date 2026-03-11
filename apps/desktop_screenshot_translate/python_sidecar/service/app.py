@@ -37,7 +37,7 @@ def get_bundle() -> dict[str, Any]:
     }
 
 
-app = FastAPI(title="ArchSync Screenshot Translate Sidecar", version="0.1.0")
+app = FastAPI(title="AiTrans Screenshot Translate Sidecar", version="0.1.0")
 
 
 @app.get("/health")

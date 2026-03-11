@@ -79,9 +79,11 @@ OCR 运行时已随安装包分发，不应再要求用户手工安装 `tesserac
 
 翻译运行时默认不应把密钥硬编码进安装包。推荐方式：
 
-1. 把 [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json) 复制为：
-   - `%APPDATA%\\desktop_screenshot_translate\\runtime-overrides.json`
-2. 填入：
+1. 首次启动时会自动生成：
+   - `%APPDATA%\\AiTrans\\runtime-overrides.json`
+2. 如需手工重建模板，可参考：
+   - [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
+3. 填入：
    - `translation.base_url`
    - `translation.api_key`
 
