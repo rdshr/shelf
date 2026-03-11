@@ -63,6 +63,10 @@ clipboard_bridge = "native_clipboard"
 
 # [release] 细化打包与更新路径。
 # 它决定发布产物和自动更新策略，但不能更改产品层兼容矩阵与更新通道的语义。
+# 当前 Windows 路径补充：
+# - 安装产物使用 `NSIS`
+# - OCR 运行时与项目生成产物会在打包时一并进入安装包资源目录
+# - 翻译端点凭据不应硬编码进安装包，优先通过运行时覆盖文件或环境变量提供
 [release]
 targets = ["win-x64", "darwin-universal"]
 package_formats = ["nsis", "dmg"]

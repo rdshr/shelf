@@ -4,6 +4,7 @@ const { execFileSync } = require('node:child_process');
 
 const {
   getBundledTesseractCandidates,
+  loadRuntimeOverrides,
   resolveAppRoot,
   resolveOpenAiApiKey,
   resolveOpenAiBaseUrl,
@@ -30,7 +31,11 @@ function checkFile(label, filePath, failures) {
 
 function checkTranslationEndpoint(config, failures) {
   const baseUrl = resolveOpenAiBaseUrl();
+  const runtimeOverrides = loadRuntimeOverrides();
   console.log(`[INFO] openai_translation base URL: ${baseUrl}`);
+  if (runtimeOverrides.path) {
+    console.log(`[INFO] runtime overrides: ${runtimeOverrides.path}`);
+  }
   try {
     const apiKey = resolveOpenAiApiKey(baseUrl);
     if (apiKey) {
@@ -53,7 +58,7 @@ function checkTesseract(config, failures) {
     }
   }
 
-  const { executable, source } = resolveTesseractExecutable(config.implementationConfig);
+  const { executable, source, tessdataDir } = resolveTesseractExecutable(config.implementationConfig);
   try {
     const output = execFileSync(executable, ['--version'], {
       encoding: 'utf-8',
@@ -62,6 +67,9 @@ function checkTesseract(config, failures) {
     });
     const versionLine = output.split(/\r?\n/).find(Boolean) || 'unknown version';
     console.log(`[OK] tesseract available (${source}): ${executable} -> ${versionLine}`);
+    if (tessdataDir) {
+      console.log(`[OK] tessdata directory: ${tessdataDir}`);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.log(`[FAIL] tesseract unavailable (${source}): ${executable}`);

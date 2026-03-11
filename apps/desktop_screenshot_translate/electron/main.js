@@ -8,6 +8,8 @@ const { createWindowStateStore } = require('./lib/window-state');
 const config = loadProjectConfig();
 const stateStore = createWindowStateStore(app, 'desktop_screenshot_translate');
 
+app.setAppUserModelId('com.archsync.desktop_screenshot_translate');
+
 let tray = null;
 let overlayWindow = null;
 let panelWindow = null;

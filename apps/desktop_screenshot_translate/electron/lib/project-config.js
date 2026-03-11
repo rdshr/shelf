@@ -1,6 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { resolveAppRoot } = require('./runtime-overrides');
+
 function getRepoRoot() {
   return path.resolve(__dirname, '../../../../');
 }
@@ -13,6 +15,19 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
+function getGeneratedDirCandidates() {
+  const resourcesPath =
+    typeof process.resourcesPath === 'string' && process.resourcesPath.trim()
+      ? process.resourcesPath
+      : '';
+
+  return [
+    resourcesPath ? path.join(resourcesPath, 'project-generated') : null,
+    path.join(resolveAppRoot(), 'project-generated'),
+    path.join(getProjectRoot(), 'generated'),
+  ].filter(Boolean);
+}
+
 function extractEmbeddedJson(bundleText, variableName) {
   const pattern = new RegExp(`${variableName} = json\\.loads\\(r'''([\\s\\S]*?)'''\\)`);
   const match = bundleText.match(pattern);
@@ -23,20 +38,30 @@ function extractEmbeddedJson(bundleText, variableName) {
 }
 
 function loadProjectConfig() {
-  const projectRoot = getProjectRoot();
-  const generatedDir = path.join(projectRoot, 'generated');
-  const productSpecPath = path.join(generatedDir, 'product_spec.json');
-  const manifestPath = path.join(generatedDir, 'generation_manifest.json');
-  const implementationBundlePath = path.join(generatedDir, 'implementation_bundle.py');
+  let generatedDir = null;
+  let productSpecPath = null;
+  let manifestPath = null;
+  let implementationBundlePath = null;
 
-  if (!fs.existsSync(productSpecPath)) {
-    throw new Error(`missing generated product spec: ${productSpecPath}`);
+  for (const candidate of getGeneratedDirCandidates()) {
+    const nextProductSpec = path.join(candidate, 'product_spec.json');
+    const nextManifest = path.join(candidate, 'generation_manifest.json');
+    const nextImplementationBundle = path.join(candidate, 'implementation_bundle.py');
+    if (
+      fs.existsSync(nextProductSpec)
+      && fs.existsSync(nextManifest)
+      && fs.existsSync(nextImplementationBundle)
+    ) {
+      generatedDir = candidate;
+      productSpecPath = nextProductSpec;
+      manifestPath = nextManifest;
+      implementationBundlePath = nextImplementationBundle;
+      break;
+    }
   }
-  if (!fs.existsSync(manifestPath)) {
-    throw new Error(`missing generation manifest: ${manifestPath}`);
-  }
-  if (!fs.existsSync(implementationBundlePath)) {
-    throw new Error(`missing generated implementation bundle: ${implementationBundlePath}`);
+
+  if (!generatedDir || !productSpecPath || !manifestPath || !implementationBundlePath) {
+    throw new Error(`missing generated project artifacts; searched: ${getGeneratedDirCandidates().join(', ')}`);
   }
 
   const productSpec = readJson(productSpecPath);
@@ -48,7 +73,7 @@ function loadProjectConfig() {
 
   return {
     repoRoot: getRepoRoot(),
-    projectRoot,
+    projectRoot: getProjectRoot(),
     generatedDir,
     productSpecPath,
     manifestPath,

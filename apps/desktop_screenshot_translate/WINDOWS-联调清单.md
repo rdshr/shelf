@@ -6,6 +6,7 @@
 
 - `projects/desktop_screenshot_translate/product_spec.toml`
 - `projects/desktop_screenshot_translate/implementation_config.toml`
+- [WINDOWS-打包发布清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-打包发布清单.md)
 
 ## 1. 你当前需要知道的边界
 
@@ -77,6 +78,14 @@ $env:AITRANS_OPENAI_BASE_URL="http://<lan-host>:<port>/v1"
 ```powershell
 $env:AITRANS_TESSERACT_PATH="C:\Program Files\Tesseract-OCR\tesseract.exe"
 ```
+
+如果你不想长期依赖环境变量，也可以后续改用：
+
+- `%APPDATA%\desktop_screenshot_translate\runtime-overrides.json`
+
+模板见：
+
+- [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json)
 
 先跑预检：
 

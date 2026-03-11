@@ -42,9 +42,12 @@ async function withTemporaryImage(pngBuffer, callback) {
 }
 
 async function recognizeWithTesseract(imagePath, productSpec, implementationConfig) {
-  const { executable, source } = resolveTesseractExecutable(implementationConfig);
+  const { executable, source, tessdataDir } = resolveTesseractExecutable(implementationConfig);
   const languages = buildTesseractLanguages(productSpec);
   const args = [imagePath, 'stdout', '-l', languages, '--psm', '6'];
+  if (tessdataDir) {
+    args.push('--tessdata-dir', tessdataDir);
+  }
   const result = await execFileAsync(executable, args, {
     windowsHide: true,
     maxBuffer: 16 * 1024 * 1024,
@@ -61,6 +64,7 @@ async function recognizeWithTesseract(imagePath, productSpec, implementationConf
       languages,
       executable,
       executableSource: source,
+      tessdataDir,
       stderr: (result.stderr || '').trim(),
     },
   };
@@ -94,5 +98,6 @@ async function recognizeText(capture, productSpec, implementationConfig) {
 }
 
 module.exports = {
+  buildTesseractLanguages,
   recognizeText,
 };

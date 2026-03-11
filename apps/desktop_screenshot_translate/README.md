@@ -44,3 +44,26 @@
 更完整的 Windows 端到端联调步骤见：
 
 - [WINDOWS-联调清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-联调清单.md)
+
+Windows 可发布安装包路径：
+
+1. 先把 `tesseract.exe` 与所需 `tessdata/*.traineddata` 放入：
+   - `apps/desktop_screenshot_translate/electron/vendor/tesseract/`
+   - 如果本机已经安装过 Tesseract，也可以直接运行：
+     - `npm run stage:tesseract`
+2. 再执行：
+   - `npm run release:check`
+   - `npm run dist:win`
+3. 生成的安装产物位于：
+   - `apps/desktop_screenshot_translate/electron/dist/`
+
+面向目标机器的运行时配置：
+
+- 不建议要求终端用户设置环境变量
+- 推荐把 [runtime-overrides.example.json](/home/zx/shelf/apps/desktop_screenshot_translate/electron/config/runtime-overrides.example.json) 复制为：
+  - `%APPDATA%\\desktop_screenshot_translate\\runtime-overrides.json`
+- 其中可配置：
+  - `translation.base_url`
+  - `translation.api_key`
+  - `ocr.tesseract_path`
+  - `ocr.tessdata_dir`

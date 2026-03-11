@@ -1,0 +1,87 @@
+const fs = require('node:fs');
+const path = require('node:path');
+
+const { buildTesseractLanguages } = require('../lib/ocr-adapters');
+const { loadProjectConfig } = require('../lib/project-config');
+
+function resolveAppRoot() {
+  return path.resolve(__dirname, '..');
+}
+
+function findSourceRoot() {
+  const explicitExecutable = (process.env.AITRANS_TESSERACT_PATH || '').trim();
+  const explicitRoot = (process.env.AITRANS_TESSERACT_STAGE_FROM || '').trim();
+
+  const candidates = [
+    explicitRoot,
+    explicitExecutable ? path.dirname(explicitExecutable) : '',
+    'C:\\Program Files\\Tesseract-OCR',
+    'C:\\Program Files (x86)\\Tesseract-OCR',
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const executableCandidates = [
+      path.join(candidate, 'tesseract.exe'),
+      path.join(candidate, 'bin', 'tesseract.exe'),
+    ];
+    const executable = executableCandidates.find((item) => fs.existsSync(item));
+    if (executable) {
+      return {
+        root: candidate,
+        executable,
+        tessdataDir: [
+          path.join(candidate, 'tessdata'),
+          path.join(candidate, 'bin', 'tessdata'),
+        ].find((item) => fs.existsSync(item)) || null,
+      };
+    }
+  }
+
+  return null;
+}
+
+function ensureDir(dirPath) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function copyFile(sourcePath, targetPath) {
+  ensureDir(path.dirname(targetPath));
+  fs.copyFileSync(sourcePath, targetPath);
+  console.log(`[OK] copied ${sourcePath} -> ${targetPath}`);
+}
+
+function main() {
+  const config = loadProjectConfig();
+  const source = findSourceRoot();
+  if (!source) {
+    throw new Error('unable to locate installed Tesseract; set AITRANS_TESSERACT_PATH or AITRANS_TESSERACT_STAGE_FROM');
+  }
+  if (!source.tessdataDir) {
+    throw new Error(`missing tessdata directory under ${source.root}`);
+  }
+
+  const vendorRoot = path.join(resolveAppRoot(), 'vendor', 'tesseract');
+  const vendorTessdata = path.join(vendorRoot, 'tessdata');
+  ensureDir(vendorTessdata);
+
+  copyFile(source.executable, path.join(vendorRoot, 'tesseract.exe'));
+
+  const requiredLanguages = buildTesseractLanguages(config.productSpec)
+    .split('+')
+    .filter(Boolean);
+  const extraLanguages = ['osd'];
+  const languages = [...new Set([...requiredLanguages, ...extraLanguages])];
+
+  for (const language of languages) {
+    const sourceFile = path.join(source.tessdataDir, `${language}.traineddata`);
+    if (!fs.existsSync(sourceFile)) {
+      throw new Error(`missing traineddata in installed Tesseract: ${sourceFile}`);
+    }
+    copyFile(sourceFile, path.join(vendorTessdata, `${language}.traineddata`));
+  }
+
+  console.log('');
+  console.log('[SUMMARY] bundled Tesseract runtime staged under electron/vendor/tesseract');
+}
+
+main();
