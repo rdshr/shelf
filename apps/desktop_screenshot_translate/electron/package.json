@@ -44,7 +44,7 @@
     ],
     "extraResources": [
       {
-        "from": "../../projects/desktop_screenshot_translate/generated",
+        "from": "../../../projects/desktop_screenshot_translate/generated",
         "to": "project-generated",
         "filter": [
           "product_spec.json",

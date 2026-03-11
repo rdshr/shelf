@@ -40,3 +40,4 @@ tools/vscode/shelf-ai/releases/
 docs/presentations/*.pptx
 
 apps/desktop_screenshot_translate/electron/renderer/panel-dist/
+apps/desktop_screenshot_translate/electron/dist/
