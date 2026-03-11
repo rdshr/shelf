@@ -39,6 +39,8 @@ class Base:
 
 @dataclass(frozen=True)
 class BoundaryItem:
+    """A measurable boundary clause, including runtime dependency and endpoint constraints."""
+
     boundary_id: str
     statement: str
     measurable: bool = True
@@ -51,6 +53,8 @@ class BoundaryItem:
 
 @dataclass(frozen=True)
 class BoundaryDefinition:
+    """A boundary set that stays valid whether execution relies on binaries, packaged capabilities, or endpoints."""
+
     items: tuple[BoundaryItem, ...]
 
     def validate(self) -> tuple[bool, list[str]]:

@@ -27,8 +27,8 @@
 ## 3. 你在 Windows 侧需要准备什么
 
 1. Node.js 20+
-2. `tesseract`
-3. `OPENAI_API_KEY`
+2. 开发联调可用的 `tesseract`，或已接入内置 OCR 运行时的应用包
+3. `openai_translation` 所需凭据，或可访问的局域网兼容端点
 4. 能从 Windows 访问当前仓库目录
 
 建议不要直接在 `\\\\wsl$\\...` 路径里跑 Electron 联调。
@@ -60,13 +60,19 @@ cd <repo>\apps\desktop_screenshot_translate\electron
 npm install
 ```
 
-设置环境变量：
+设置翻译端点所需环境变量：
 
 ```powershell
 $env:OPENAI_API_KEY="你的key"
 ```
 
-如果 `tesseract` 不在 PATH，再补：
+如果你要切到局域网里的 OpenAI 兼容端点，再补：
+
+```powershell
+$env:AITRANS_OPENAI_BASE_URL="http://<lan-host>:<port>/v1"
+```
+
+如果当前开发联调仍走外部 `tesseract`，再补：
 
 ```powershell
 $env:AITRANS_TESSERACT_PATH="C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -121,8 +127,8 @@ npm run dev:doctor
 - 快捷键正常
 - 截图遮罩正常
 - 选区不偏移
-- Tesseract 能识别出原文
-- OpenAI 能返回译文
+- OCR 运行时能识别出原文
+- `openai_translation` 目标端点能返回译文
 - 面板能复制 / 关闭 / 重截图
 
 ## 8. 如果失败，先看哪一类
@@ -132,8 +138,8 @@ npm run dev:doctor
 优先把这三个问题先修掉：
 
 - generated 文件缺失
-- `tesseract` 不可执行
-- `OPENAI_API_KEY` 未设置
+- 开发联调所需 OCR 运行时不可执行
+- `openai_translation` 所需凭据未设置，且局域网兼容端点不可用
 
 ### 8.2 应用能启动，但截图后失败
 
@@ -150,8 +156,8 @@ npm run dev:doctor
 大概率是：
 
 - `OPENAI_API_KEY` 无效
-- 网络不可达
-- OpenAI API 返回错误
+- 局域网兼容端点不可达
+- 目标翻译端点返回错误
 
 这时把面板里的 `错误来源` 和终端输出发给我。
 

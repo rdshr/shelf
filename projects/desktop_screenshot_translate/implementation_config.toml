@@ -33,15 +33,20 @@ coordinate_profile = "windows_per_monitor_dpi_compensation"
 # 这里负责“怎么实现 provider 切换与 secrets 接入”，
 # 不负责决定用户最终看到哪些字段和交互动作。
 # 当前说明：
-# - `windows_ocr_api` 对应 Windows 内建 OCR 路线，但按微软桌面应用文档，这类 WinRT OCR API 需要 package identity
-# - 因此当前未打包的 Electron Windows MVP 会优先尝试它并快速回退到 `tesseract`
-# - 等后续接入 MSIX / external location package identity 后，再把 Windows 内建 OCR 变成真正稳定主链
-# - 翻译当前接入 `OpenAI Responses API`，模型固定在实现层；密钥通过环境变量或凭据管理提供，不写入产品层
+# - 正式发布路径默认把 OCR 运行时依赖随应用一起分发，不把“用户手工安装 tesseract”作为标准交付方式
+# - 当前开发联调阶段仍允许通过环境变量覆盖 OCR 可执行路径，避免在 bundling 尚未落地前阻塞主链
+# - `windows_ocr_api` 仍保留为后续 packaged / package-identity 形态下的升级入口
+# - 翻译侧仍只保留 `openai_translation` 这一提供方面，但它指向“OpenAI 兼容端点”而不是只绑定 OpenAI 官方
+# - 当前默认本地模型选择为 `qwen3-30b-a3b-instruct-2507`，以适配局域网部署的兼容端点
 [providers]
-ocr_chain = ["windows_ocr_api", "tesseract"]
+ocr_chain = ["tesseract", "windows_ocr_api"]
+ocr_distribution = "bundle_with_app"
+ocr_dev_fallback = "allow_env_binary_path"
 translation_chain = ["openai_translation", "fallback_stub"]
-translation_api = "openai_responses_v1"
-translation_model = "gpt-4.1-mini"
+translation_api = "openai_compatible"
+translation_model = "qwen3-30b-a3b-instruct-2507"
+translation_endpoint_profile = "openai_compatible"
+translation_endpoint_source = "env_or_local_gateway"
 source_language_detection = "provider_auto"
 secret_source = "windows_credential_manager_or_env"
 

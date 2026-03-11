@@ -356,9 +356,13 @@ class CaptureRuntimeConfig:
 @dataclass(frozen=True)
 class ProvidersConfig:
     ocr_chain: tuple[str, ...]
+    ocr_distribution: str
+    ocr_dev_fallback: str
     translation_chain: tuple[str, ...]
     translation_api: str
     translation_model: str
+    translation_endpoint_profile: str
+    translation_endpoint_source: str
     source_language_detection: str
     secret_source: str
 
@@ -656,9 +660,13 @@ def _load_implementation_config(implementation_config_path: Path) -> AitransImpl
         ),
         providers=ProvidersConfig(
             ocr_chain=_require_string_tuple(providers, "ocr_chain"),
+            ocr_distribution=_require_string(providers, "ocr_distribution"),
+            ocr_dev_fallback=_require_string(providers, "ocr_dev_fallback"),
             translation_chain=_require_string_tuple(providers, "translation_chain"),
             translation_api=_require_string(providers, "translation_api"),
             translation_model=_require_string(providers, "translation_model"),
+            translation_endpoint_profile=_require_string(providers, "translation_endpoint_profile"),
+            translation_endpoint_source=_require_string(providers, "translation_endpoint_source"),
             source_language_detection=_require_string(providers, "source_language_detection"),
             secret_source=_require_string(providers, "secret_source"),
         ),
@@ -898,8 +906,18 @@ def _validate_implementation_config(
         raise ValueError("desktop_runtime.host must be electron or tauri")
     if not implementation.providers.ocr_chain or not implementation.providers.translation_chain:
         raise ValueError("providers.ocr_chain and providers.translation_chain must be non-empty")
-    if implementation.providers.translation_api not in {"openai_responses_v1", "stub_only"}:
-        raise ValueError("providers.translation_api must be openai_responses_v1 or stub_only")
+    if implementation.providers.ocr_distribution not in {"bundle_with_app", "packaged_system_capability"}:
+        raise ValueError("providers.ocr_distribution must be bundle_with_app or packaged_system_capability")
+    if implementation.providers.ocr_dev_fallback not in {"allow_env_binary_path", "none"}:
+        raise ValueError("providers.ocr_dev_fallback must be allow_env_binary_path or none")
+    if implementation.providers.translation_api not in {"openai_compatible", "openai_responses_v1", "stub_only"}:
+        raise ValueError("providers.translation_api must be openai_compatible, openai_responses_v1 or stub_only")
+    if implementation.providers.translation_endpoint_profile not in {"openai_compatible"}:
+        raise ValueError("providers.translation_endpoint_profile must be openai_compatible")
+    if implementation.providers.translation_endpoint_source not in {"env_or_local_gateway", "env_then_official_default"}:
+        raise ValueError(
+            "providers.translation_endpoint_source must be env_or_local_gateway or env_then_official_default",
+        )
     if not implementation.evidence.product_spec_endpoint.startswith("/api/"):
         raise ValueError("evidence.product_spec_endpoint must be an API path")
     if not implementation.evidence.runtime_bundle_endpoint.startswith("/api/"):

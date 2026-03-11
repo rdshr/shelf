@@ -280,7 +280,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
     showPanel({
       ...buildStubResult(selection),
       stageStatus: 'failed',
-      translatedText: 'OCR 或翻译主链执行失败，请检查 desktopCapturer、tesseract、OPENAI_API_KEY 或当前 Windows 权限状态。',
+      translatedText: 'OCR 或翻译主链执行失败，请检查 desktopCapturer、内置或外部 tesseract、OPENAI_API_KEY、AITRANS_OPENAI_BASE_URL 或当前 Windows 权限状态。',
       errorOrigin: message,
     });
     return { ok: false, error: message };

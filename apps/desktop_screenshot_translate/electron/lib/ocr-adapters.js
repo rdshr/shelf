@@ -4,6 +4,8 @@ const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 
+const { resolveTesseractExecutable } = require('./provider-runtime');
+
 const execFileAsync = promisify(execFile);
 
 const TESSERACT_LANGUAGE_MAP = {
@@ -39,8 +41,8 @@ async function withTemporaryImage(pngBuffer, callback) {
   }
 }
 
-async function recognizeWithTesseract(imagePath, productSpec) {
-  const executable = process.env.AITRANS_TESSERACT_PATH || 'tesseract';
+async function recognizeWithTesseract(imagePath, productSpec, implementationConfig) {
+  const { executable, source } = resolveTesseractExecutable(implementationConfig);
   const languages = buildTesseractLanguages(productSpec);
   const args = [imagePath, 'stdout', '-l', languages, '--psm', '6'];
   const result = await execFileAsync(executable, args, {
@@ -57,6 +59,8 @@ async function recognizeWithTesseract(imagePath, productSpec) {
     text,
     diagnostics: {
       languages,
+      executable,
+      executableSource: source,
       stderr: (result.stderr || '').trim(),
     },
   };
@@ -77,7 +81,7 @@ async function recognizeText(capture, productSpec, implementationConfig) {
           return await recognizeWithWindowsOcr(imagePath, productSpec);
         }
         if (provider === 'tesseract') {
-          return await recognizeWithTesseract(imagePath, productSpec);
+          return await recognizeWithTesseract(imagePath, productSpec, implementationConfig);
         }
         failures.push(`${provider}: unsupported provider`);
       } catch (error) {
