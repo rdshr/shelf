@@ -53,6 +53,8 @@ let setupWindow = null;
 let lastSelection = null;
 let lastPipelineState = null;
 let runtimeBootstrap = null;
+const CAPTURE_SETTLE_MS = 180;
+const RETRYABLE_OCR_ERROR_FRAGMENT = 'tesseract returned empty OCR text';
 
 process.on('uncaughtException', (error) => {
   appendStartupLog('process:uncaughtException', { message: error.message, stack: error.stack });
@@ -200,9 +202,50 @@ function savePanelBounds() {
   stateStore.save('panel', panelWindow.getBounds());
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function hideAuxiliaryWindowsForCapture() {
+  if (setupWindow && !setupWindow.isDestroyed() && setupWindow.isVisible()) {
+    setupWindow.hide();
+  }
+  if (panelWindow && !panelWindow.isDestroyed() && panelWindow.isVisible()) {
+    panelWindow.hide();
+  }
+}
+
+async function settleBeforeCapture() {
+  await sleep(CAPTURE_SETTLE_MS);
+}
+
+function isRetryableOcrFailure(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes(RETRYABLE_OCR_ERROR_FRAGMENT);
+}
+
+async function captureAndRecognize(selection) {
+  await settleBeforeCapture();
+  let capture = await captureSelectionImage(selection);
+  try {
+    const ocrResult = await recognizeText(capture, config.productSpec, config.implementationConfig);
+    return { capture, ocrResult, retries: 0 };
+  } catch (error) {
+    if (!isRetryableOcrFailure(error)) {
+      throw error;
+    }
+
+    await settleBeforeCapture();
+    capture = await captureSelectionImage(selection);
+    const ocrResult = await recognizeText(capture, config.productSpec, config.implementationConfig);
+    return { capture, ocrResult, retries: 1 };
+  }
+}
+
 function showOverlay() {
   const display = getOverlayDisplay();
   const window = createOverlayWindow();
+  hideAuxiliaryWindowsForCapture();
   window.setBounds(display.bounds);
   window.show();
   window.focus();
@@ -385,11 +428,11 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       translatedText: '正在从 Windows 桌面获取截图区域，请稍候。',
     }));
 
-    const capture = await captureSelectionImage(selection);
+    const { capture, ocrResult, retries } = await captureAndRecognize(selection);
     showPanel(buildStageResult(selection, {
       stageStatus: 'ocr_processing',
-      sourceText: '截图完成，正在执行本地 OCR…',
-      translatedText: 'OCR 完成后将进入翻译阶段…',
+      sourceText: retries > 0 ? '截图已稳定，正在执行本地 OCR…' : '截图完成，正在执行本地 OCR…',
+      translatedText: retries > 0 ? '首次识别未返回文本，已自动重试一次并继续…' : 'OCR 完成后将进入翻译阶段…',
       capturePreviewDataUrl: capture.dataUrl,
       captureMeta: {
         width: capture.size.width,
@@ -397,10 +440,9 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         targetLanguage: config.productSpec.pipeline.target_language,
         ocrProvider: 'pending',
         translationProvider: config.implementationConfig.providers.translation_chain[0],
+        autoRetryCount: retries,
       },
     }));
-
-    const ocrResult = await recognizeText(capture, config.productSpec, config.implementationConfig);
     const recognizedText = ocrResult.text.trim();
     rememberPipelineState(selection, capture, ocrResult, '', null);
 
@@ -416,6 +458,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         ocrProvider: ocrResult.provider,
         translationProvider: 'pending',
         ocrDiagnostics: ocrResult.diagnostics || null,
+        autoRetryCount: retries,
       },
     }));
 
@@ -439,6 +482,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
         translationProvider: translationResult.provider,
         ocrDiagnostics: ocrResult.diagnostics || null,
         translationDiagnostics: translationResult.diagnostics || null,
+        autoRetryCount: retries,
       },
     });
     showPanel(result);
