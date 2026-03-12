@@ -24,6 +24,14 @@ def build_frontend_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
         interaction_actions.append({"action_id": "create_document", "boundary": "INTERACT"})
     if project.library.allow_delete:
         interaction_actions.append({"action_id": "delete_document", "boundary": "INTERACT"})
+    if project.auth.enabled:
+        interaction_actions.extend(
+            [
+                {"action_id": "open_login", "boundary": "ROUTE"},
+                {"action_id": "complete_login", "boundary": "INTERACT"},
+                {"action_id": "sign_out", "boundary": "INTERACT"},
+            ]
+        )
 
     return {
         "module_id": project.frontend_ir.module_id,
@@ -54,6 +62,7 @@ def build_frontend_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
         ],
         "interaction_actions": interaction_actions,
         "state_channels": [
+            {"state_id": "session_state", "sticky": True},
             {"state_id": "current_conversation", "sticky": True},
             {"state_id": "current_knowledge_base", "sticky": True},
             {"state_id": "current_document", "sticky": project.context.sticky_document},

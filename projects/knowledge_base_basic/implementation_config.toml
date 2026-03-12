@@ -1,39 +1,185 @@
-# Implementation Config 只回答一件事：在不改写产品真相的前提下，
-# 这个仓库准备如何把 product_spec.toml 中已经确定的产品落到一条具体实现路径上。
-# 它可以选择技术栈、运行时、生成目标和证据出口，
-# 但不能反过来改变产品页面、产品交互、视觉语义或内容语义。
+# Implementation Config 只回答一件事：
+# 在不改写产品真相的前提下，这个项目准备如何把 product_spec.toml
+# 中已经确定的产品，落到一条具体实现路径上。
 #
-# 这个文件同样默认面向人与 AI 协作阅读，因此注释优先说明：
-# 1. 当前 section 细化的是哪一类实现决策；
-# 2. 这些实现决策如何服务既定的 Product Spec；
-# 3. 哪些东西明确不应由这一层擅自改写。
+# 这里可以细化：
+# 1. 采用哪类前端/后端实现族；
+# 2. 运行时如何组织；
+# 3. 物化阶段会产出哪些代码与证据文件。
+#
+# 这里不能改写：
+# 1. 用户最终会看到哪些页面；
+# 2. 页面之间的产品级交互语义；
+# 3. 视觉语义、内容语义和领域对象真相。
+#
+# 这个文件默认面向“人 + AI”协作阅读，因此注释优先解释：
+# 1. 当前 section 在细化哪类实现决策；
+# 2. 这些决策如何服务既定 Product Spec；
+# 3. 哪些内容不应由这一层擅自改写。
 
-# [frontend] 细化前端实现路径。
-# 它只决定“用哪种前端渲染器、样式配置和浏览器侧脚本方案去实现产品”，
-# 不重新定义产品外观语义，也不改写用户应看到哪些页面和承载面。
+# [frontend]
+# 细化前端实现路径。
+# 这一段只决定“用什么前端技术路线去承接既定产品”，
+# 不重新定义产品页面、产品路由真相或用户可观察的产品语义。
 [frontend]
+# 保留当前仓库既有的 renderer/style/script profile 入口，
+# 避免影响现有 Python 运行时装配与兼容逻辑。
 renderer = "knowledge_chat_client_v1"
 style_profile = "knowledge_chat_web_v1"
 script_profile = "knowledge_chat_browser_v1"
 
-# [backend] 细化后端承载方式。
-# 它决定接口由哪类后端 renderer 暴露、采用什么传输协议、检索走哪种实现策略，
-# 但不能更改 Product Spec 已承诺的接口语义、来源回路或知识对象能力。
+# 以下字段用于把当前前端落地方案收敛为一条明确实现路径。
+# 它们属于 Implementation Config 的合法细化，不属于 Product Spec 真相。
+
+# UI 技术族：当前采用 React 作为前端实现族。
+stack_family = "react"
+
+# 是否依赖更高层 Web 元框架。当前方案是纯 React CSR，不绑定 Next.js/Nuxt。
+meta_framework = "none"
+
+# 前端主语言。
+language = "typescript"
+
+# 构建与开发服务器工具链。
+builder = "vite"
+
+# 渲染模式：当前采用浏览器端 CSR。
+render_mode = "csr"
+
+# 路由承接方式：当前采用 React Router。
+router_family = "react_router"
+
+# 本地与交互状态组织方案：当前采用轻量客户端状态管理。
+state_runtime = "zustand"
+
+# 远程数据访问与缓存方案：当前采用查询/提交回路友好的 TanStack Query。
+data_runtime = "tanstack_query"
+
+# 样式运行时：当前采用 Tailwind。
+style_runtime = "tailwind"
+
+# 宿主运行时：当前默认浏览器单独挂载，不要求 Node SSR。
+host_runtime = "browser_only"
+
+# 当前实现路径期望产出的前端构建与调试产物族。
+artifact_profile = "react_csr_vite_v1"
+
+# 浏览器端入口组织方式。
+entry_strategy = "single_spa_entry"
+
+# 默认挂载点语义名。
+mount_target = "knowledge-chat-root"
+
+# CSR 方案下默认不启用 hydration。
+hydration_strategy = "none"
+
+# 页面与 API 的基础路径真相仍来自 product_spec.toml 的 [route]。
+route_manifest_source = "product_spec.route"
+
+# 前端 API 合约来源：由产品路由真相与证据出口共同提供。
+api_contract_source = "product_spec.route + evidence.product_spec_endpoint"
+
+# 环境变量读取族。
+env_profile = "vite_import_meta_env"
+
+# 开发调试增强族。
+devtools_profile = "react_query_devtools_optional"
+
+# 建议配套的前端测试族。
+test_profile = "vitest_plus_testing_library"
+
+# 浏览器构建目标环境。
+bundle_target = "modern_browser_es2022"
+
+# [frontend.auth]
+# 细化前端如何承接产品层已经声明的登录前置条件。
+# 这里只讨论守卫方式、会话存放形态与登录承接面的实现路径，
+# 不能把“是否需要登录”这件事从产品层改掉。
+# 它主要服务于 `AUTHENTRYFLOW`、`GUARDFLOW`、`RETURNFLOW` 的前端运行时落地，
+# 不直接改写这些 flow 在 product_spec.toml 中已经固定的产品真相。
+# 这里承接的是工作台访问前的 auth runtime，而不是知识引用后的 citation return runtime；
+# 不应在这里偷偷改写 [return] 已声明的来源回路语义。
+[frontend.auth]
+auth_runtime = "browser_session_stub"
+guard_strategy = "router_guard"
+login_surface_runtime = "react_form_page"
+session_storage = "local_storage"
+return_strategy = "query_redirect"
+
+# [frontend.auth_style]
+# 细化登录页样式实现 profile，但不改写 Product Spec 已声明的登录页结构与交互真相。
+# 这里讨论的是：前端用哪套样式实现去承接 centered_form / single_card / primary_strong 这些上游语义。
+# 它主要服务于 `AUTHENTRYFLOW` 和 `FEEDBACKFLOW` 的视觉落地。
+# 如果团队讨论的是“登录页是否展示品牌、区块顺序是什么、成功后回哪里”，应回到 product_spec.toml；
+# 如果讨论的是“这套结构落到什么样式 profile、是否启用轻量动效、绑定哪套主题 token”，再改这里。
+[frontend.auth_style]
+style_profile = "auth_centered_card_v1"
+action_emphasis_profile = "primary_strong_secondary_soft"
+motion_profile = "minimal"
+# 登录页主标题的强调层级；用于拉开标题与副标题的视觉主次。
+title_hierarchy_profile = "title_strong"
+# 登录页副标题的语气强弱；用于让副标题弱于主标题。
+subtitle_tone_profile = "subtitle_muted"
+theme_binding = "frontend_visual_tokens"
+
+# [frontend.layout]
+# 定义前端如何分别实现工作台壳与独立任务壳。
+# 产品层只声明哪些页面属于 workspace_shell / standalone_shell；
+# 这里才决定这两类页面分别落到哪套前端 layout runtime。
+[frontend.layout]
+workspace_layout_runtime = "app_shell_with_sidebar"
+standalone_layout_runtime = "centered_single_task_layout"
+
+# [backend]
+# 细化后端承接方式。
+# 这里只决定接口由哪类后端 renderer 暴露、采用什么传输协议、
+# 检索策略走哪条实现路径；不能改写 Product Spec 已承诺的 API 语义、
+# 来源回路或知识对象能力。
 [backend]
 renderer = "knowledge_chat_backend_v1"
 transport = "http_json"
 retrieval_strategy = "retrieval_stub"
 
-# [evidence] 约定实现层如何暴露验证与审查入口。
-# 这些字段服务于调试、验证和自动化消费，不属于产品真相本身。
+# [backend.auth]
+# 细化后端如何理解登录会话。
+# 当前先采用最小 stub 方案，给前端生成与路由守卫提供一致实现语义，
+# 不在这里引入真实身份提供商和复杂鉴权链。
+# 它主要服务于 `SESSIONFLOW`，并在更底层承接 `AUTHREQUEST / SESSIONSTATE / AUTHERROR`。
+# 这里回答的是“工作台访问放行如何被后端理解与校验”，
+# 不回答“引用打开后如何返回来源锚点”；后者不属于 auth runtime。
+[backend.auth]
+provider = "local_stub"
+session_transport = "frontend_bearer_stub"
+verification_mode = "accept_frontend_session"
+
+# [backend.auth_api]
+# 细化登录接口如何以 HTTP 形态暴露给前端。
+# 这里定义的是接口路径、方法与最小 transport 约定，服务于前后端 contract 对齐。
+# 它对应的是 `AUTHREQUEST` 在当前实现路径下如何挂接成接口，而不是产品层 flow 本身。
+# 它不改写产品层的登录动作语义，只回答“这些动作在当前实现里如何挂到接口上”，
+# 且这些接口只服务于 access auth，不承接 citation/document 的返回回路。
+[backend.auth_api]
+login_endpoint = "/auth/login"
+logout_endpoint = "/auth/logout"
+session_endpoint = "/auth/session"
+login_method = "POST"
+logout_method = "POST"
+session_method = "GET"
+session_header = "X-Knowledge-Session"
+
+# [evidence]
+# 约定实现层如何暴露调试、验证和审查入口。
+# 这些字段服务于验证与自动化消费，不属于产品真相本身。
 [evidence]
 product_spec_endpoint = "/api/knowledge/product-spec"
 
-# [artifacts] 约定本实现路径会产出哪些生成文件。
-# 这里记录的是生成物命名与落点，方便代码、脚本和工具协作，
-# 不应被误当作产品层字段。
+# [artifacts]
+# 约定当前实现路径会物化出哪些生成产物。
+# 这里记录的是产物命名与落点，方便代码、脚本与校验工具协作；
+# 它不是产品字段，也不应被误当作人工主编辑源。
 [artifacts]
 framework_ir_json = "framework_ir.json"
 product_spec_json = "product_spec.json"
 implementation_bundle_py = "implementation_bundle.py"
 generation_manifest_json = "generation_manifest.json"
+frontend_app_dir = "frontend-app"

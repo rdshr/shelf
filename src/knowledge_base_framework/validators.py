@@ -68,14 +68,17 @@ def validate_workbench_rules(project: "KnowledgeBaseProject") -> tuple[dict[str,
         r2_reasons.append("citation return contract must include document_detail")
 
     r3_reasons: list[str] = []
-    if [item["stage_id"] for item in flow] != [
+    expected_flow = [
         "knowledge_base_select",
         "conversation",
         "citation_review",
         "document_detail",
-    ]:
+    ]
+    if project.auth.enabled:
+        expected_flow = ["login_gate", *expected_flow]
+    if [item["stage_id"] for item in flow] != expected_flow:
         r3_reasons.append(
-            "workbench flow must stay knowledge_base_select -> conversation -> citation_review -> document_detail"
+            "workbench flow must match the configured knowledge-base scene chain"
         )
     if not citation_return["anchor_restore"]:
         r3_reasons.append("citation return contract must restore anchors")

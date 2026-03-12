@@ -449,7 +449,7 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
           section_id: sectionId,
           section_title: sectionId,
           snippet: documentItem.summary,
-          return_path: `${window.location.pathname}?document=${documentId}&section=${sectionId}`,
+          citation_return_path: `${window.location.pathname}?document=${documentId}&section=${sectionId}`,
           document_path: uiSpec.pages.document_detail.path.replace("{document_id}", documentId) + `?section=${sectionId}`
         };
         await openCitationDrawer([citation], 0);

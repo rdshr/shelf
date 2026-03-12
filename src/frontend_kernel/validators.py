@@ -62,15 +62,21 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
         r2_reasons.append("missing interaction action: create_document")
     if project.library.allow_delete and "delete_document" not in interaction_actions:
         r2_reasons.append("missing interaction action: delete_document")
-    if a11y["reading_order"] != [
+    expected_reading_order = [
         "conversation_sidebar",
         "chat_header",
         "message_stream",
         "chat_composer",
         "citation_drawer",
-    ]:
+    ]
+    if project.auth.enabled:
+        expected_reading_order = ["login_header", "login_form", *expected_reading_order]
+        for action_id in ("open_login", "complete_login", "sign_out"):
+            if action_id not in interaction_actions:
+                r2_reasons.append(f"missing interaction action: {action_id}")
+    if a11y["reading_order"] != expected_reading_order:
         r2_reasons.append(
-            "reading order must stay conversation_sidebar -> chat_header -> message_stream -> chat_composer -> citation_drawer"
+            "reading order must match the configured protected-workbench sequence"
         )
     if not project.preview.show_toc:
         r2_reasons.append("preview TOC must stay enabled")

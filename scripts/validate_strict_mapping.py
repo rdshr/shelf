@@ -91,6 +91,8 @@ PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS = {
     "surface",
     "visual",
     "route",
+    "page_shells",
+    "auth",
     "a11y",
     "library",
     "preview",
@@ -102,6 +104,7 @@ PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS = {
 PRODUCT_SPEC_ALLOWED_TOP_LEVEL_KEYS = set(PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS)
 PRODUCT_SPEC_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {
     "surface": {"copy"},
+    "auth": {"copy", "surface", "flow", "contract"},
     "library": {"copy"},
     "chat": {"copy"},
 }
@@ -110,8 +113,15 @@ PRODUCT_SPEC_ALLOWED_NESTED_TABLES: dict[str, set[str]] = {
 }
 IMPLEMENTATION_CONFIG_REQUIRED_TOP_LEVEL_KEYS = {"frontend", "backend", "evidence", "artifacts"}
 IMPLEMENTATION_CONFIG_ALLOWED_TOP_LEVEL_KEYS = set(IMPLEMENTATION_CONFIG_REQUIRED_TOP_LEVEL_KEYS)
-IMPLEMENTATION_CONFIG_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {}
-IMPLEMENTATION_CONFIG_ALLOWED_NESTED_TABLES: dict[str, set[str]] = {}
+IMPLEMENTATION_CONFIG_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {
+    "frontend": {"auth", "auth_style", "layout"},
+    "backend": {"auth", "auth_api"},
+}
+IMPLEMENTATION_CONFIG_ALLOWED_NESTED_TABLES: dict[str, set[str]] = {
+    key: set(value) for key, value in IMPLEMENTATION_CONFIG_REQUIRED_NESTED_TABLES.items()
+}
+
+IGNORED_DIRECTORY_ARTIFACT_NAMES = {"node_modules", ".env"}
 
 Issue = dict[str, Any]
 
@@ -271,6 +281,7 @@ def expected_generated_files_for(product_spec_file: Path) -> tuple[str, ...]:
         "product_spec_json",
         "implementation_bundle_py",
         "generation_manifest_json",
+        "frontend_app_dir",
     ):
         value = artifacts.get(key)
         if not isinstance(value, str) or not value.strip():
@@ -283,6 +294,17 @@ def expected_generated_files_for(product_spec_file: Path) -> tuple[str, ...]:
 
 def _read_file_bytes(path: Path) -> bytes:
     return path.read_bytes()
+
+
+def _read_directory_state(path: Path) -> dict[str, bytes]:
+    return {
+        file.relative_to(path).as_posix(): file.read_bytes()
+        for file in sorted(
+            item
+            for item in path.rglob("*")
+            if item.is_file() and not any(part in IGNORED_DIRECTORY_ARTIFACT_NAMES for part in item.relative_to(path).parts)
+        )
+    }
 
 
 def _load_toml_text_and_data(path: Path) -> tuple[str, dict[str, Any]]:
@@ -552,6 +574,61 @@ def validate_project_generation_discipline(
                                 ],
                             )
                         )
+                        continue
+                    if actual_file.is_dir() != expected_file.is_dir():
+                        issues.append(
+                            make_issue(
+                                (
+                                    f"generated artifact type mismatch: {required_name}; "
+                                    "re-materialize from framework markdown, product spec, and implementation config"
+                                ),
+                                actual_file.relative_to(REPO_ROOT).as_posix(),
+                                1,
+                                code="PROJECT_GENERATED_OUT_OF_SYNC",
+                                related=[
+                                    {
+                                        "message": "Project product spec",
+                                        "file": rel_product_spec_file,
+                                        "line": 1,
+                                        "column": 1,
+                                    },
+                                    {
+                                        "message": "Project implementation config",
+                                        "file": rel_implementation_config_file,
+                                        "line": 1,
+                                        "column": 1,
+                                    }
+                                ],
+                            )
+                        )
+                        continue
+                    if actual_file.is_dir():
+                        if _read_directory_state(actual_file) != _read_directory_state(expected_file):
+                            issues.append(
+                                make_issue(
+                                    (
+                                        f"generated artifact directory is stale or manually edited: {required_name}; "
+                                        "re-materialize from framework markdown, product spec, and implementation config"
+                                    ),
+                                    actual_file.relative_to(REPO_ROOT).as_posix(),
+                                    1,
+                                    code="PROJECT_GENERATED_OUT_OF_SYNC",
+                                    related=[
+                                        {
+                                            "message": "Project product spec",
+                                            "file": rel_product_spec_file,
+                                            "line": 1,
+                                            "column": 1,
+                                        },
+                                        {
+                                            "message": "Project implementation config",
+                                            "file": rel_implementation_config_file,
+                                            "line": 1,
+                                            "column": 1,
+                                        }
+                                    ],
+                                )
+                            )
                         continue
                     if _read_file_bytes(actual_file) != _read_file_bytes(expected_file):
                         issues.append(

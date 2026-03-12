@@ -55,7 +55,7 @@ class WorkspaceScenario:
     title: str
     steps: tuple[str, ...]
     entry_path: str
-    return_path: str
+    citation_return_path: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -80,21 +80,21 @@ def compose_workspace_flow(project: KnowledgeBaseProject | None = None) -> tuple
             title=ui_spec["pages"]["chat_home"]["title"],
             steps=("open chat shell", "review current knowledge base", "start a new conversation"),
             entry_path=resolved.route.workbench,
-            return_path=resolved.route.workbench,
+            citation_return_path=resolved.route.workbench,
         ),
         WorkspaceScenario(
             scene_id="citation_review",
             title=ui_spec["components"]["citation_drawer"]["title"],
             steps=("ask question", "inspect inline references", "open citation drawer"),
             entry_path=f"{resolved.route.workbench}?document={lead_document.document_id}&section={lead_section.section_id}",
-            return_path=resolved.route.workbench,
+            citation_return_path=resolved.route.workbench,
         ),
         WorkspaceScenario(
             scene_id="document_trace",
             title=ui_spec["pages"]["document_detail"]["title"],
             steps=("open knowledge base detail", "open document detail", "return to chat"),
             entry_path=knowledge_base_detail,
-            return_path=document_detail,
+            citation_return_path=document_detail,
         ),
     )
 

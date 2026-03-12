@@ -40,6 +40,11 @@
 - `evidence`：对外暴露的产品规格证据路径
 - `artifacts`：编译产物命名
 
+其中前端实现层建议参考：
+- [framework/frontend/L3-M1-前端技术栈与运行时模块.md](../framework/frontend/L3-M1-前端技术栈与运行时模块.md)
+- 该模块服务于 `implementation_config.toml`，用于约束 React / Vue / 构建器 / 路由器 / 状态运行时 / 数据运行时等技术细化
+- 它不回写 `product_spec.toml`，也不改写前端 `L2` 已固定的产品承载边界
+
 当前样板：
 - `knowledge_base_basic`
   - Product Spec：[product_spec.toml](./knowledge_base_basic/product_spec.toml)

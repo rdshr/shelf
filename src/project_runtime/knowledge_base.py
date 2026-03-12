@@ -10,6 +10,7 @@ import tomllib
 from typing import Any
 
 from framework_ir import FrameworkModuleIR, load_framework_registry, parse_framework_module
+from project_runtime.frontend_app_generator import build_frontend_app_files
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE = REPO_ROOT / "projects/knowledge_base_basic/product_spec.toml"
@@ -88,6 +89,9 @@ def _slugify(value: str) -> str:
 
 def _sha256_text(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+FRONTEND_APP_PRESERVE_NAMES = {"node_modules", ".env"}
 
 
 def _tokenize(text: str) -> tuple[str, ...]:
@@ -261,6 +265,7 @@ class FeatureConfig:
 @dataclass(frozen=True)
 class RouteConfig:
     home: str
+    login: str
     workbench: str
     knowledge_list: str
     knowledge_detail: str
@@ -269,6 +274,18 @@ class RouteConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class PageShellsConfig:
+    workspace_shell: tuple[str, ...]
+    standalone_shell: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "workspace_shell": list(self.workspace_shell),
+            "standalone_shell": list(self.standalone_shell),
+        }
 
 
 @dataclass(frozen=True)
@@ -282,6 +299,207 @@ class A11yConfig:
             "reading_order": list(self.reading_order),
             "keyboard_nav": list(self.keyboard_nav),
             "announcements": list(self.announcements),
+        }
+
+
+@dataclass(frozen=True)
+class AuthCopyConfig:
+    login_title: str
+    login_subtitle: str
+    primary_action: str
+    secondary_action: str
+    guard_message: str
+    failure_message: str
+    expired_message: str
+    cancel_message: str
+    reauth_message: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_feedback_shell_dict(self) -> dict[str, Any]:
+        return {
+            "guard_message": self.guard_message,
+            "failure_message": self.failure_message,
+            "expired_message": self.expired_message,
+            "cancel_message": self.cancel_message,
+            "reauth_message": self.reauth_message,
+        }
+
+
+@dataclass(frozen=True)
+class AuthSurfaceConfig:
+    page_variant: str
+    shell_variant: str
+    entry_variant: str
+    sections: tuple[str, ...]
+    show_brand: bool
+    show_guard_message: bool
+    show_return_hint: bool
+    show_secondary_action: bool
+    container_variant: str
+    density: str
+    action_emphasis: str
+    header_alignment: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "page_variant": self.page_variant,
+            "shell_variant": self.shell_variant,
+            "entry_variant": self.entry_variant,
+            "sections": list(self.sections),
+            "show_brand": self.show_brand,
+            "show_guard_message": self.show_guard_message,
+            "show_return_hint": self.show_return_hint,
+            "show_secondary_action": self.show_secondary_action,
+            "container_variant": self.container_variant,
+            "density": self.density,
+            "action_emphasis": self.action_emphasis,
+            "header_alignment": self.header_alignment,
+        }
+
+    def to_entry_shell_dict(self) -> dict[str, Any]:
+        return self.to_dict()
+
+
+@dataclass(frozen=True)
+class AuthFlowConfig:
+    guard_behavior: str
+    submit_behavior: str
+    success_behavior: str
+    failure_feedback: str
+    cancel_behavior: str
+    expired_behavior: str
+    reauth_behavior: str
+    restore_target: bool
+    preserve_query: bool
+    preserve_anchor: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_flow_dict(self) -> dict[str, Any]:
+        return self.to_dict()
+
+
+@dataclass(frozen=True)
+class AuthContractConfig:
+    login_action: str
+    logout_action: str
+    session_probe: str
+    failure_modes: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "login_action": self.login_action,
+            "logout_action": self.logout_action,
+            "session_probe": self.session_probe,
+            "failure_modes": list(self.failure_modes),
+        }
+
+    def to_auth_request_contract_dict(self) -> dict[str, Any]:
+        return {
+            "login_action": self.login_action,
+            "logout_action": self.logout_action,
+        }
+
+    def to_session_flow_requirements_dict(self) -> dict[str, Any]:
+        return {
+            "session_probe": self.session_probe,
+            "failure_modes": list(self.failure_modes),
+        }
+
+
+@dataclass(frozen=True)
+class AuthConfig:
+    enabled: bool
+    mode: str
+    entry: str
+    session_scope: str
+    return_after_login: bool
+    protected_routes: tuple[str, ...]
+    public_routes: tuple[str, ...]
+    default_return_target: str
+    copy: AuthCopyConfig
+    surface: AuthSurfaceConfig
+    flow: AuthFlowConfig
+    contract: AuthContractConfig
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "mode": self.mode,
+            "entry": self.entry,
+            "session_scope": self.session_scope,
+            "return_after_login": self.return_after_login,
+            "protected_routes": list(self.protected_routes),
+            "public_routes": list(self.public_routes),
+            "default_return_target": self.default_return_target,
+            "copy": self.copy.to_dict(),
+            "surface": self.surface.to_dict(),
+            "flow": self.flow.to_dict(),
+            "contract": self.contract.to_dict(),
+        }
+
+    def to_shell_dict(self) -> dict[str, Any]:
+        return {
+            "AUTHENTRYSHELL": self.surface.to_entry_shell_dict(),
+            "RETURNSHELL": {
+                "return_after_login": self.return_after_login,
+                "default_return_target": self.default_return_target,
+            },
+            "FEEDBACKSHELL": self.copy.to_feedback_shell_dict(),
+            "PROTECTEDSHELL": {
+                "protected_routes": list(self.protected_routes),
+                "public_routes": list(self.public_routes),
+            },
+        }
+
+    def to_flow_dict(self) -> dict[str, Any]:
+        return {
+            "AUTHENTRYFLOW": {
+                "entry": self.entry,
+                "surface": self.surface.to_entry_shell_dict(),
+                "submit_behavior": self.flow.submit_behavior,
+            },
+            "SESSIONFLOW": {
+                **self.contract.to_session_flow_requirements_dict(),
+                "session_scope": self.session_scope,
+                "expired_behavior": self.flow.expired_behavior,
+                "reauth_behavior": self.flow.reauth_behavior,
+            },
+            "RETURNFLOW": {
+                "guard_behavior": self.flow.guard_behavior,
+                "success_behavior": self.flow.success_behavior,
+                "cancel_behavior": self.flow.cancel_behavior,
+                "restore_target": self.flow.restore_target,
+                "preserve_query": self.flow.preserve_query,
+                "preserve_anchor": self.flow.preserve_anchor,
+                "default_return_target": self.default_return_target,
+            },
+            "FEEDBACKFLOW": {
+                "failure_feedback": self.flow.failure_feedback,
+                **self.copy.to_feedback_shell_dict(),
+            },
+            "GUARDFLOW": {
+                "mode": self.mode,
+                "protected_routes": list(self.protected_routes),
+                "public_routes": list(self.public_routes),
+                "guard_behavior": self.flow.guard_behavior,
+            },
+        }
+
+    def to_contract_alignment_dict(self) -> dict[str, Any]:
+        return {
+            "AUTHREQUEST": self.contract.to_auth_request_contract_dict(),
+            "SESSIONSTATE": {
+                "session_scope": self.session_scope,
+                "failure_modes": list(self.contract.failure_modes),
+            },
+            "AUTHERROR": {
+                "failure_modes": list(self.contract.failure_modes),
+                "failure_feedback": self.flow.failure_feedback,
+            },
         }
 
 
@@ -384,6 +602,33 @@ class FrontendImplementationConfig:
     renderer: str
     style_profile: str
     script_profile: str
+    auth_runtime: str
+    guard_strategy: str
+    login_surface_runtime: str
+    session_storage: str
+    return_strategy: str
+    auth_style_profile: str
+    auth_action_emphasis_profile: str
+    auth_motion_profile: str
+    auth_title_hierarchy_profile: str
+    auth_subtitle_tone_profile: str
+    auth_theme_binding: str
+    workspace_layout_runtime: str
+    standalone_layout_runtime: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class BackendAuthApiConfig:
+    login_endpoint: str
+    logout_endpoint: str
+    session_endpoint: str
+    login_method: str
+    logout_method: str
+    session_method: str
+    session_header: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -394,9 +639,21 @@ class BackendImplementationConfig:
     renderer: str
     transport: str
     retrieval_strategy: str
+    auth_provider: str
+    auth_session_transport: str
+    auth_verification_mode: str
+    auth_api: BackendAuthApiConfig
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "renderer": self.renderer,
+            "transport": self.transport,
+            "retrieval_strategy": self.retrieval_strategy,
+            "auth_provider": self.auth_provider,
+            "auth_session_transport": self.auth_session_transport,
+            "auth_verification_mode": self.auth_verification_mode,
+            "auth_api": self.auth_api.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -413,6 +670,7 @@ class ArtifactConfig:
     product_spec_json: str
     implementation_bundle_py: str
     generation_manifest_json: str
+    frontend_app_dir: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -456,6 +714,8 @@ class KnowledgeBaseProductSpec:
     visual: VisualConfig
     features: FeatureConfig
     route: RouteConfig
+    page_shells: PageShellsConfig
+    auth: AuthConfig
     a11y: A11yConfig
     library: LibraryConfig
     preview: PreviewConfig
@@ -513,6 +773,7 @@ class GeneratedArtifactPaths:
     product_spec_json: str
     implementation_bundle_py: str
     generation_manifest_json: str
+    frontend_app_dir: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -530,6 +791,8 @@ class KnowledgeBaseProject:
     visual_tokens: dict[str, str]
     features: FeatureConfig
     route: RouteConfig
+    page_shells: PageShellsConfig
+    auth: AuthConfig
     a11y: A11yConfig
     library: LibraryConfig
     preview: PreviewConfig
@@ -564,6 +827,7 @@ class KnowledgeBaseProject:
     def _resolved_page_routes(self) -> dict[str, str]:
         return {
             "home": self.route.home,
+            "login": self.route.login,
             "chat_home": self.route.workbench,
             "knowledge_list": self.route.knowledge_list,
             "knowledge_detail": f"{self.route.knowledge_detail}/{{knowledge_base_id}}",
@@ -595,6 +859,8 @@ class KnowledgeBaseProject:
             },
             "features": self.features.to_dict(),
             "route": self.route.to_dict(),
+            "page_shells": self.page_shells.to_dict(),
+            "auth": self.auth.to_dict(),
             "a11y": self.a11y.to_dict(),
             "library": self.library.to_dict(),
             "preview": self.preview.to_dict(),
@@ -657,6 +923,8 @@ class KnowledgeBaseProject:
             "surface": self.surface.to_dict(),
             "visual": self.visual.to_dict(),
             "route": self.route.to_dict(),
+            "page_shells": self.page_shells.to_dict(),
+            "auth": self.auth.to_dict(),
             "a11y": self.a11y.to_dict(),
             "routes": {
                 **self.route.to_dict(),
@@ -855,6 +1123,12 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     surface_copy_table = _require_table(surface_table, "copy")
     visual_table = _require_table(raw, "visual")
     route_table = _require_table(raw, "route")
+    page_shells_table = _require_table(raw, "page_shells")
+    auth_table = _require_table(raw, "auth")
+    auth_copy_table = _require_table(auth_table, "copy")
+    auth_surface_table = _require_table(auth_table, "surface")
+    auth_flow_table = _require_table(auth_table, "flow")
+    auth_contract_table = _require_table(auth_table, "contract")
     a11y_table = _require_table(raw, "a11y")
     library_table = _require_table(raw, "library")
     library_copy_table = _require_table(library_table, "copy")
@@ -869,6 +1143,7 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     chat_enabled = _require_bool(chat_table, "enabled")
     citations_enabled = _require_bool(chat_table, "citations_enabled")
     return_enabled = _require_bool(return_table, "enabled")
+    auth_enabled = _require_bool(auth_table, "enabled")
     allow_create = _require_bool(library_table, "allow_create")
     allow_delete = _require_bool(library_table, "allow_delete")
 
@@ -923,11 +1198,69 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
         ),
         route=RouteConfig(
             home=_require_string(route_table, "home"),
+            login=_require_string(route_table, "login"),
             workbench=_require_string(route_table, "workbench"),
             knowledge_list=_require_string(route_table, "knowledge_list"),
             knowledge_detail=_require_string(route_table, "knowledge_detail"),
             document_detail_prefix=_require_string(route_table, "document_detail_prefix"),
             api_prefix=_require_string(route_table, "api_prefix"),
+        ),
+        page_shells=PageShellsConfig(
+            workspace_shell=_require_string_tuple(page_shells_table, "workspace_shell"),
+            standalone_shell=_require_string_tuple(page_shells_table, "standalone_shell"),
+        ),
+        auth=AuthConfig(
+            enabled=auth_enabled,
+            mode=_require_string(auth_table, "mode"),
+            entry=_require_string(auth_table, "entry"),
+            session_scope=_require_string(auth_table, "session_scope"),
+            return_after_login=_require_bool(auth_table, "return_after_login"),
+            protected_routes=_require_string_tuple(auth_table, "protected_routes"),
+            public_routes=_require_string_tuple(auth_table, "public_routes"),
+            default_return_target=_require_string(auth_table, "default_return_target"),
+            copy=AuthCopyConfig(
+                login_title=_require_string(auth_copy_table, "login_title"),
+                login_subtitle=_require_string(auth_copy_table, "login_subtitle"),
+                primary_action=_require_string(auth_copy_table, "primary_action"),
+                secondary_action=_require_string(auth_copy_table, "secondary_action"),
+                guard_message=_require_string(auth_copy_table, "guard_message"),
+                failure_message=_require_string(auth_copy_table, "failure_message"),
+                expired_message=_require_string(auth_copy_table, "expired_message"),
+                cancel_message=_require_string(auth_copy_table, "cancel_message"),
+                reauth_message=_require_string(auth_copy_table, "reauth_message"),
+            ),
+            surface=AuthSurfaceConfig(
+                page_variant=_require_string(auth_surface_table, "page_variant"),
+                shell_variant=_require_string(auth_surface_table, "shell_variant"),
+                entry_variant=_require_string(auth_surface_table, "entry_variant"),
+                sections=_require_string_tuple(auth_surface_table, "sections"),
+                show_brand=_require_bool(auth_surface_table, "show_brand"),
+                show_guard_message=_require_bool(auth_surface_table, "show_guard_message"),
+                show_return_hint=_require_bool(auth_surface_table, "show_return_hint"),
+                show_secondary_action=_require_bool(auth_surface_table, "show_secondary_action"),
+                container_variant=_require_string(auth_surface_table, "container_variant"),
+                density=_require_string(auth_surface_table, "density"),
+                action_emphasis=_require_string(auth_surface_table, "action_emphasis"),
+                header_alignment=_require_string(auth_surface_table, "header_alignment"),
+            ),
+            flow=AuthFlowConfig(
+                guard_behavior=_require_string(auth_flow_table, "guard_behavior"),
+                submit_behavior=_require_string(auth_flow_table, "submit_behavior"),
+                success_behavior=_require_string(auth_flow_table, "success_behavior"),
+                failure_feedback=_require_string(auth_flow_table, "failure_feedback"),
+                cancel_behavior=_require_string(auth_flow_table, "cancel_behavior"),
+                expired_behavior=_require_string(auth_flow_table, "expired_behavior"),
+                reauth_behavior=_require_string(auth_flow_table, "reauth_behavior"),
+                restore_target=_require_bool(auth_flow_table, "restore_target"),
+                preserve_query=_require_bool(auth_flow_table, "preserve_query"),
+                preserve_anchor=_require_bool(auth_flow_table, "preserve_anchor"),
+            ),
+            contract=AuthContractConfig(
+                login_action=_require_string(auth_contract_table, "login_action"),
+                logout_action=_require_string(auth_contract_table, "logout_action"),
+                session_probe=_require_string(auth_contract_table, "session_probe"),
+                failure_modes=_require_string_tuple(auth_contract_table, "failure_modes"),
+            ),
         ),
         a11y=A11yConfig(
             reading_order=_require_string_tuple(a11y_table, "reading_order"),
@@ -985,7 +1318,12 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
 def _load_implementation_config(implementation_config_path: Path) -> KnowledgeBaseImplementationConfig:
     raw = _read_toml_file(implementation_config_path)
     frontend_table = _require_table(raw, "frontend")
+    frontend_auth_table = _require_table(frontend_table, "auth")
+    frontend_auth_style_table = _require_table(frontend_table, "auth_style")
+    frontend_layout_table = _require_table(frontend_table, "layout")
     backend_table = _require_table(raw, "backend")
+    backend_auth_table = _require_table(backend_table, "auth")
+    backend_auth_api_table = _require_table(backend_table, "auth_api")
     evidence_table = _require_table(raw, "evidence")
     artifacts_table = _require_table(raw, "artifacts")
     return KnowledgeBaseImplementationConfig(
@@ -993,11 +1331,36 @@ def _load_implementation_config(implementation_config_path: Path) -> KnowledgeBa
             renderer=_require_string(frontend_table, "renderer"),
             style_profile=_require_string(frontend_table, "style_profile"),
             script_profile=_require_string(frontend_table, "script_profile"),
+            auth_runtime=_require_string(frontend_auth_table, "auth_runtime"),
+            guard_strategy=_require_string(frontend_auth_table, "guard_strategy"),
+            login_surface_runtime=_require_string(frontend_auth_table, "login_surface_runtime"),
+            session_storage=_require_string(frontend_auth_table, "session_storage"),
+            return_strategy=_require_string(frontend_auth_table, "return_strategy"),
+            auth_style_profile=_require_string(frontend_auth_style_table, "style_profile"),
+            auth_action_emphasis_profile=_require_string(frontend_auth_style_table, "action_emphasis_profile"),
+            auth_motion_profile=_require_string(frontend_auth_style_table, "motion_profile"),
+            auth_title_hierarchy_profile=_require_string(frontend_auth_style_table, "title_hierarchy_profile"),
+            auth_subtitle_tone_profile=_require_string(frontend_auth_style_table, "subtitle_tone_profile"),
+            auth_theme_binding=_require_string(frontend_auth_style_table, "theme_binding"),
+            workspace_layout_runtime=_require_string(frontend_layout_table, "workspace_layout_runtime"),
+            standalone_layout_runtime=_require_string(frontend_layout_table, "standalone_layout_runtime"),
         ),
         backend=BackendImplementationConfig(
             renderer=_require_string(backend_table, "renderer"),
             transport=_require_string(backend_table, "transport"),
             retrieval_strategy=_require_string(backend_table, "retrieval_strategy"),
+            auth_provider=_require_string(backend_auth_table, "provider"),
+            auth_session_transport=_require_string(backend_auth_table, "session_transport"),
+            auth_verification_mode=_require_string(backend_auth_table, "verification_mode"),
+            auth_api=BackendAuthApiConfig(
+                login_endpoint=_require_string(backend_auth_api_table, "login_endpoint"),
+                logout_endpoint=_require_string(backend_auth_api_table, "logout_endpoint"),
+                session_endpoint=_require_string(backend_auth_api_table, "session_endpoint"),
+                login_method=_require_string(backend_auth_api_table, "login_method"),
+                logout_method=_require_string(backend_auth_api_table, "logout_method"),
+                session_method=_require_string(backend_auth_api_table, "session_method"),
+                session_header=_require_string(backend_auth_api_table, "session_header"),
+            ),
         ),
         evidence=EvidenceConfig(
             product_spec_endpoint=_require_string(evidence_table, "product_spec_endpoint"),
@@ -1007,6 +1370,7 @@ def _load_implementation_config(implementation_config_path: Path) -> KnowledgeBa
             product_spec_json=_require_string(artifacts_table, "product_spec_json"),
             implementation_bundle_py=_require_string(artifacts_table, "implementation_bundle_py"),
             generation_manifest_json=_require_string(artifacts_table, "generation_manifest_json"),
+            frontend_app_dir=_require_string(artifacts_table, "frontend_app_dir"),
         ),
     )
 
@@ -1139,6 +1503,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
                 "SURFACE": "surface",
                 "VISUAL": "visual",
                 "ROUTE": "route",
+                "AUTH": "auth",
                 "A11Y": "a11y",
                 "LIBRARY": "library",
                 "PREVIEW": "preview",
@@ -1155,19 +1520,46 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "id": project.surface.shell,
             "layout_variant": project.surface.layout_variant,
             "regions": ["conversation_sidebar", "chat_main", "citation_drawer"],
-            "secondary_pages": ["knowledge_list", "knowledge_detail", "document_detail"],
-            "default_page": "chat_home",
+            "secondary_pages": ["login", "knowledge_list", "knowledge_detail", "document_detail"],
+            "default_page": "login" if project.auth.enabled else "chat_home",
             "preview_mode": project.surface.preview_mode,
             "density": project.surface.density,
+        },
+        "page_shells": {
+            "workspace_shell": list(project.page_shells.workspace_shell),
+            "standalone_shell": list(project.page_shells.standalone_shell),
+            "layout_runtime": {
+                "workspace_shell": project.implementation.frontend.workspace_layout_runtime,
+                "standalone_shell": project.implementation.frontend.standalone_layout_runtime,
+            },
         },
         "visual": {
             "theme": project.visual.to_dict(),
             "tokens": project.visual_tokens,
         },
         "pages": {
+            "login": {
+                "path": project.route.login,
+                "title": project.auth.copy.login_title,
+                "subtitle": project.auth.copy.login_subtitle,
+                "page_variant": project.auth.surface.page_variant,
+                "shell_variant": project.auth.surface.shell_variant,
+                "entry_variant": project.auth.surface.entry_variant,
+                "slots": list(project.auth.surface.sections),
+                "show_brand": project.auth.surface.show_brand,
+                "show_guard_message": project.auth.surface.show_guard_message,
+                "show_return_hint": project.auth.surface.show_return_hint,
+                "show_secondary_action": project.auth.surface.show_secondary_action,
+                "container_variant": project.auth.surface.container_variant,
+                "density": project.auth.surface.density,
+                "action_emphasis": project.auth.surface.action_emphasis,
+                "header_alignment": project.auth.surface.header_alignment,
+                "entry_state": "login_required",
+            },
             "chat_home": {
                 "path": project.route.workbench,
                 "title": project.metadata.display_name,
+                "shell_variant": "workspace_shell",
                 "slots": [
                     "conversation_sidebar",
                     "chat_header",
@@ -1181,6 +1573,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "knowledge_list": {
                 "path": project.route.knowledge_list,
                 "title": project.surface.copy.library_title,
+                "shell_variant": "workspace_shell",
                 "subtitle": "聊天是主入口，知识库页用于切换上下文和确认可用来源。",
                 "primary_action_label": "返回聊天",
                 "rationale_title": "为什么这页是二级入口",
@@ -1194,6 +1587,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             },
             "knowledge_detail": {
                 "path": knowledge_base_detail_path,
+                "shell_variant": "workspace_shell",
                 "chat_action_label": "用此知识库开始聊天",
                 "overview_title": "知识库概况",
                 "return_chat_with_document_label": "回到聊天并聚焦此文档",
@@ -1202,6 +1596,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             },
             "document_detail": {
                 "path": document_detail_path,
+                "shell_variant": "workspace_shell",
                 "title": "文档详情",
                 "subtitle": "从引用抽屉进入完整文档上下文，再返回聊天继续提问。",
                 "return_chat_label": "返回聊天",
@@ -1216,6 +1611,16 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
                 "new_chat_label": "新建聊天",
                 "browse_knowledge_label": "浏览知识库与文档",
                 "knowledge_entry_label": f"知识库 · {project.library.knowledge_base_name}",
+            },
+            "login_header": {
+                "title": project.auth.copy.login_title,
+                "subtitle": project.auth.copy.login_subtitle,
+                "guard_message": project.auth.copy.guard_message,
+            },
+            "login_form": {
+                "primary_action": project.auth.copy.primary_action,
+                "secondary_action": project.auth.copy.secondary_action,
+                "return_after_login": project.auth.return_after_login,
             },
             "aux_sidebar": {
                 "nav": {
@@ -1286,6 +1691,26 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "welcome_prompts": list(project.chat.welcome_prompts),
             "current_knowledge_base_template": "当前知识库：{knowledge_base_name}",
         },
+        "auth": {
+            "enabled": project.auth.enabled,
+            "mode": project.auth.mode,
+            "entry": project.auth.entry,
+            "protected_routes": list(project.auth.protected_routes),
+            "public_routes": list(project.auth.public_routes),
+            "default_return_target": project.auth.default_return_target,
+            "surface": project.auth.surface.to_dict(),
+            "flow": project.auth.flow.to_dict(),
+            "contract": project.auth.contract.to_dict(),
+            "shell_alignment": project.auth.to_shell_dict(),
+            "flow_alignment": project.auth.to_flow_dict(),
+            "contract_alignment": project.auth.to_contract_alignment_dict(),
+            "style": {
+                "profile": project.implementation.frontend.auth_style_profile,
+                "action_emphasis_profile": project.implementation.frontend.auth_action_emphasis_profile,
+                "motion_profile": project.implementation.frontend.auth_motion_profile,
+                "theme_binding": project.implementation.frontend.auth_theme_binding,
+            },
+        },
         "citation": {
             "style": project.chat.citation_style,
             "summary_variant": project.return_config.citation_card_variant,
@@ -1308,6 +1733,7 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
                 "CHAT": "chat",
                 "CONTEXT": "context",
                 "RETURN": "return",
+                "AUTH": "auth",
             },
             "rule_drivers": {
                 "domain": [item.rule_id for item in project.domain_ir.rules],
@@ -1331,8 +1757,13 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         },
         "interaction_flow": [
             {
-                "stage_id": "knowledge_base_select",
+                "stage_id": "login_gate",
                 "depends_on": [],
+                "produces": ["session_state", "auth_return_target"],
+            },
+            {
+                "stage_id": "knowledge_base_select",
+                "depends_on": ["session_state"],
                 "produces": ["knowledge_base_id"],
             },
             {
@@ -1348,9 +1779,20 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             {
                 "stage_id": "document_detail",
                 "depends_on": ["document_id", "section_id"],
-                "produces": ["document_page", "return_path"],
+                "produces": ["document_page", "citation_return_path"],
             },
         ],
+        "auth": {
+            "enabled": project.auth.enabled,
+            "provider": project.implementation.backend.auth_provider,
+            "session_transport": project.implementation.backend.auth_session_transport,
+            "verification_mode": project.implementation.backend.auth_verification_mode,
+            "contract": project.auth.contract.to_dict(),
+            "flow_alignment": project.auth.to_flow_dict(),
+            "contract_alignment": project.auth.to_contract_alignment_dict(),
+            "api": project.implementation.backend.auth_api.to_dict(),
+            "protected_routes": list(project.auth.protected_routes),
+        },
         "answer_policy": {
             "citation_style": project.chat.citation_style,
             "no_match_text": (
@@ -1403,12 +1845,18 @@ def _validate_product_spec(
         )
     ):
         raise ValueError("knowledge_base_workbench requires library, preview, chat, citations, and return")
-    if not product_spec.route.home.startswith("/") or not product_spec.route.workbench.startswith("/"):
-        raise ValueError("route.home and route.workbench must start with '/'")
+    if (
+        not product_spec.route.home.startswith("/")
+        or not product_spec.route.login.startswith("/")
+        or not product_spec.route.workbench.startswith("/")
+    ):
+        raise ValueError("route.home, route.login, and route.workbench must start with '/'")
     if not product_spec.route.knowledge_list.startswith("/") or not product_spec.route.knowledge_detail.startswith("/"):
         raise ValueError("route.knowledge_list and route.knowledge_detail must start with '/'")
     if not product_spec.route.document_detail_prefix.startswith("/"):
         raise ValueError("route.document_detail_prefix must start with '/'")
+    if product_spec.route.login == product_spec.route.workbench:
+        raise ValueError("route.login must differ from route.workbench")
     if not product_spec.route.api_prefix.startswith("/api"):
         raise ValueError("route.api_prefix must start with '/api'")
     if not product_spec.route.knowledge_detail.startswith(product_spec.route.knowledge_list):
@@ -1437,6 +1885,61 @@ def _validate_product_spec(
         raise ValueError("chat.citation_style must be inline_refs")
     if not product_spec.chat.welcome_prompts:
         raise ValueError("chat.welcome_prompts must not be empty")
+    if product_spec.auth.mode != "required_before_workbench":
+        raise ValueError("auth.mode must be required_before_workbench")
+    if product_spec.auth.entry != "dedicated_login_page":
+        raise ValueError("auth.entry must be dedicated_login_page")
+    if not product_spec.auth.enabled:
+        raise ValueError("auth.enabled must stay enabled for the protected workbench variant")
+    if "workbench" not in product_spec.auth.protected_routes:
+        raise ValueError("auth.protected_routes must include workbench")
+    if "login" not in product_spec.auth.public_routes:
+        raise ValueError("auth.public_routes must include login")
+    if product_spec.auth.default_return_target != "workbench":
+        raise ValueError("auth.default_return_target must be workbench")
+    if product_spec.auth.surface.shell_variant != "standalone_shell":
+        raise ValueError("auth.surface.shell_variant must be standalone_shell")
+    if product_spec.auth.surface.entry_variant not in {
+        "username_password",
+        "email_password",
+        "phone_code",
+        "passwordless_code",
+        "sso_redirect",
+        "oauth_button",
+        "magic_link",
+    }:
+        raise ValueError("auth.surface.entry_variant must stay within AUTHENTRYFLOW legal variants")
+    expected_workspace_shell = ("workbench", "knowledge_list", "knowledge_detail", "document_detail")
+    if tuple(product_spec.page_shells.workspace_shell) != expected_workspace_shell:
+        raise ValueError("page_shells.workspace_shell must stay workbench -> knowledge_list -> knowledge_detail -> document_detail")
+    if tuple(product_spec.page_shells.standalone_shell) != ("login",):
+        raise ValueError("page_shells.standalone_shell must stay login for the current protected-workbench variant")
+    if product_spec.auth.surface.page_variant != "centered_form":
+        raise ValueError("auth.surface.page_variant must be centered_form")
+    if tuple(product_spec.auth.surface.sections) != ("login_header", "login_form", "secondary_actions"):
+        raise ValueError("auth.surface.sections must stay login_header -> login_form -> secondary_actions")
+    if product_spec.auth.surface.container_variant != "single_card":
+        raise ValueError("auth.surface.container_variant must be single_card")
+    if product_spec.auth.surface.density not in {"compact", "comfortable"}:
+        raise ValueError("auth.surface.density must be compact or comfortable")
+    if product_spec.auth.surface.action_emphasis not in {"primary_strong", "balanced"}:
+        raise ValueError("auth.surface.action_emphasis must be primary_strong or balanced")
+    if product_spec.auth.surface.header_alignment not in {"left", "center"}:
+        raise ValueError("auth.surface.header_alignment must be left or center")
+    if product_spec.auth.flow.guard_behavior != "redirect_to_login":
+        raise ValueError("auth.flow.guard_behavior must be redirect_to_login")
+    if product_spec.auth.flow.success_behavior != "redirect_to_return_target":
+        raise ValueError("auth.flow.success_behavior must be redirect_to_return_target")
+    if not product_spec.auth.flow.restore_target:
+        raise ValueError("auth.flow.restore_target must stay enabled")
+    if product_spec.auth.contract.login_action != "session_start":
+        raise ValueError("auth.contract.login_action must be session_start")
+    if product_spec.auth.contract.logout_action != "session_terminate":
+        raise ValueError("auth.contract.logout_action must be session_terminate")
+    if product_spec.auth.contract.session_probe != "required_on_protected_entry":
+        raise ValueError("auth.contract.session_probe must be required_on_protected_entry")
+    if tuple(product_spec.auth.contract.failure_modes) != ("invalid_session", "expired_session"):
+        raise ValueError("auth.contract.failure_modes must stay invalid_session -> expired_session")
     if product_spec.context.max_citations <= 0 or product_spec.context.max_preview_sections <= 0:
         raise ValueError("context max values must be positive")
     if not product_spec.return_config.anchor_restore:
@@ -1446,6 +1949,8 @@ def _validate_product_spec(
     if "document_detail" not in product_spec.return_config.targets:
         raise ValueError("return.targets must include document_detail")
     if tuple(product_spec.a11y.reading_order) != (
+        "login_header",
+        "login_form",
         "conversation_sidebar",
         "chat_header",
         "message_stream",
@@ -1453,7 +1958,7 @@ def _validate_product_spec(
         "citation_drawer",
     ):
         raise ValueError(
-            "a11y.reading_order must stay conversation_sidebar -> chat_header -> message_stream -> chat_composer -> citation_drawer"
+            "a11y.reading_order must stay login_header -> login_form -> conversation_sidebar -> chat_header -> message_stream -> chat_composer -> citation_drawer"
         )
     if len(product_spec.documents) < 1:
         raise ValueError("at least one document is required")
@@ -1476,6 +1981,53 @@ def _validate_implementation_config(
         raise ValueError("backend.retrieval_strategy must match chat.mode")
     if implementation.backend.transport != "http_json":
         raise ValueError("backend.transport must be http_json")
+    if implementation.frontend.guard_strategy != "router_guard":
+        raise ValueError("frontend.auth.guard_strategy must be router_guard")
+    if implementation.frontend.login_surface_runtime != "react_form_page":
+        raise ValueError("frontend.auth.login_surface_runtime must be react_form_page")
+    if implementation.frontend.auth_style_profile != "auth_centered_card_v1":
+        raise ValueError("frontend.auth_style.style_profile must be auth_centered_card_v1")
+    if implementation.frontend.auth_action_emphasis_profile not in {
+        "primary_strong_secondary_soft",
+        "balanced_actions",
+    }:
+        raise ValueError(
+            "frontend.auth_style.action_emphasis_profile must be primary_strong_secondary_soft or balanced_actions"
+        )
+    if implementation.frontend.auth_motion_profile not in {"minimal", "none"}:
+        raise ValueError("frontend.auth_style.motion_profile must be minimal or none")
+    if implementation.frontend.auth_title_hierarchy_profile not in {"title_strong", "title_balanced"}:
+        raise ValueError("frontend.auth_style.title_hierarchy_profile must be title_strong or title_balanced")
+    if implementation.frontend.auth_subtitle_tone_profile not in {"subtitle_muted", "subtitle_balanced"}:
+        raise ValueError(
+            "frontend.auth_style.subtitle_tone_profile must be subtitle_muted or subtitle_balanced"
+        )
+    if implementation.frontend.auth_theme_binding != "frontend_visual_tokens":
+        raise ValueError("frontend.auth_style.theme_binding must be frontend_visual_tokens")
+    if implementation.frontend.workspace_layout_runtime != "app_shell_with_sidebar":
+        raise ValueError("frontend.layout.workspace_layout_runtime must be app_shell_with_sidebar")
+    if implementation.frontend.standalone_layout_runtime != "centered_single_task_layout":
+        raise ValueError("frontend.layout.standalone_layout_runtime must be centered_single_task_layout")
+    if implementation.backend.auth_provider != "local_stub":
+        raise ValueError("backend.auth.provider must be local_stub")
+    if implementation.backend.auth_session_transport != "frontend_bearer_stub":
+        raise ValueError("backend.auth.session_transport must be frontend_bearer_stub")
+    if implementation.backend.auth_verification_mode != "accept_frontend_session":
+        raise ValueError("backend.auth.verification_mode must be accept_frontend_session")
+    if implementation.backend.auth_api.login_endpoint != "/auth/login":
+        raise ValueError("backend.auth_api.login_endpoint must be /auth/login")
+    if implementation.backend.auth_api.logout_endpoint != "/auth/logout":
+        raise ValueError("backend.auth_api.logout_endpoint must be /auth/logout")
+    if implementation.backend.auth_api.session_endpoint != "/auth/session":
+        raise ValueError("backend.auth_api.session_endpoint must be /auth/session")
+    if implementation.backend.auth_api.login_method != "POST":
+        raise ValueError("backend.auth_api.login_method must be POST")
+    if implementation.backend.auth_api.logout_method != "POST":
+        raise ValueError("backend.auth_api.logout_method must be POST")
+    if implementation.backend.auth_api.session_method != "GET":
+        raise ValueError("backend.auth_api.session_method must be GET")
+    if implementation.backend.auth_api.session_header != "X-Knowledge-Session":
+        raise ValueError("backend.auth_api.session_header must be X-Knowledge-Session")
 
 
 def _collect_validation_reports(project: KnowledgeBaseProject) -> dict[str, Any]:
@@ -1569,6 +2121,7 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
                 "product_spec_json": generated_artifacts.product_spec_json,
                 "implementation_bundle_py": generated_artifacts.implementation_bundle_py,
                 "generation_manifest_json": generated_artifacts.generation_manifest_json,
+                "frontend_app_dir": generated_artifacts.frontend_app_dir,
             },
             "content_sha256": {
                 "framework_ir_json": _sha256_text(framework_ir_text),
@@ -1585,6 +2138,28 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
         "implementation_bundle_py": implementation_bundle_text,
         "generation_manifest_json": generation_manifest_text,
     }
+
+
+def _materialize_frontend_app_dir(frontend_app_path: Path, payloads: dict[str, str]) -> None:
+    frontend_app_path.mkdir(parents=True, exist_ok=True)
+    expected_paths = {Path(relative_path) for relative_path in payloads}
+
+    for existing in sorted(frontend_app_path.rglob("*"), reverse=True):
+        relative = existing.relative_to(frontend_app_path)
+        if relative.parts and relative.parts[0] in FRONTEND_APP_PRESERVE_NAMES:
+            continue
+        if existing.is_file() and relative not in expected_paths:
+            existing.unlink()
+            continue
+        if existing.is_dir() and existing != frontend_app_path:
+            if any(child for child in existing.iterdir()):
+                continue
+            existing.rmdir()
+
+    for relative_path, text in payloads.items():
+        file_path = frontend_app_path / relative_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(text, encoding="utf-8")
 
 
 def _compile_project(
@@ -1611,6 +2186,8 @@ def _compile_project(
         visual_tokens=_build_visual_tokens(product_spec.visual, product_spec.surface, product_spec.preview),
         features=product_spec.features,
         route=product_spec.route,
+        page_shells=product_spec.page_shells,
+        auth=product_spec.auth,
         a11y=product_spec.a11y,
         library=product_spec.library,
         preview=product_spec.preview,
@@ -1664,6 +2241,7 @@ def materialize_knowledge_base_project(
     product_spec_path_json = output_path / artifact_names.product_spec_json
     implementation_bundle_path = output_path / artifact_names.implementation_bundle_py
     generation_manifest_path = output_path / artifact_names.generation_manifest_json
+    frontend_app_path = output_path / artifact_names.frontend_app_dir
     project = replace(
         project,
         generated_artifacts=GeneratedArtifactPaths(
@@ -1672,6 +2250,7 @@ def materialize_knowledge_base_project(
             product_spec_json=_relative_path(generated_dir / artifact_names.product_spec_json),
             implementation_bundle_py=_relative_path(generated_dir / artifact_names.implementation_bundle_py),
             generation_manifest_json=_relative_path(generated_dir / artifact_names.generation_manifest_json),
+            frontend_app_dir=_relative_path(generated_dir / artifact_names.frontend_app_dir),
         ),
     )
     payloads = _build_generated_artifact_payloads(project)
@@ -1679,5 +2258,7 @@ def materialize_knowledge_base_project(
     product_spec_path_json.write_text(payloads["product_spec_json"], encoding="utf-8")
     implementation_bundle_path.write_text(payloads["implementation_bundle_py"], encoding="utf-8")
     generation_manifest_path.write_text(payloads["generation_manifest_json"], encoding="utf-8")
+    frontend_app_payloads = build_frontend_app_files(project)
+    _materialize_frontend_app_dir(frontend_app_path, frontend_app_payloads)
 
     return project

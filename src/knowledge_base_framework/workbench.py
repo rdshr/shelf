@@ -33,7 +33,7 @@ def build_workbench_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
             {
                 "stage_id": "document_detail",
                 "depends_on": ["document_id", "section_id"],
-                "produces": ["document_page", "return_path"],
+                "produces": ["document_page", "citation_return_path"],
             },
         ],
     )

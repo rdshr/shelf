@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 import re
+from typing import Protocol
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Header, HTTPException, Query, status
 from framework_core import Base, BoundaryDefinition, BoundaryItem, Capability, VerificationInput, VerificationResult, verify
 from project_runtime.knowledge_base import (
     KnowledgeBaseProject,
@@ -119,7 +121,7 @@ class KnowledgeCitationResponse(BaseModel):
     section_id: str
     section_title: str
     snippet: str
-    return_path: str
+    citation_return_path: str
     document_path: str
 
 
@@ -139,6 +141,94 @@ class KnowledgeChatTurnResponse(BaseModel):
 class KnowledgeDocumentDeleteResponse(BaseModel):
     document_id: str
     deleted: bool
+
+
+class KnowledgeAuthLoginRequest(BaseModel):
+    login_action: str = Field(min_length=3)
+
+
+class KnowledgeAuthSessionResponse(BaseModel):
+    signed_in: bool
+    session_token: str | None
+    user_id: str | None
+    display_name: str | None
+    failure_mode: str | None = None
+
+
+class KnowledgeAuthLogoutResponse(BaseModel):
+    logged_out: bool
+
+
+class AuthService(Protocol):
+    # Contract-facing auth service: AUTHREQUEST -> SESSIONSTATE / AUTHERROR.
+    def start_session(self, login_action: str) -> KnowledgeAuthSessionResponse: ...
+
+    def read_session(self, session_token: str | None) -> KnowledgeAuthSessionResponse: ...
+
+    def terminate_session(self, session_token: str | None) -> KnowledgeAuthLogoutResponse: ...
+
+
+class LocalStubAuthService:
+    def __init__(self, backend_spec: dict[str, object]) -> None:
+        self._backend_spec = backend_spec
+        self._active_sessions: set[str] = set()
+
+    def start_session(self, login_action: str) -> KnowledgeAuthSessionResponse:
+        # session_start is the current AUTHREQUEST action expected by the product contract.
+        auth_spec = self._backend_spec["auth"]
+        assert isinstance(auth_spec, dict)
+        contract = auth_spec["contract"]
+        assert isinstance(contract, dict)
+        expected_action = contract["login_action"]
+        assert isinstance(expected_action, str)
+        if login_action != expected_action:
+            return KnowledgeAuthSessionResponse(
+                signed_in=False,
+                session_token=None,
+                user_id=None,
+                display_name=None,
+                failure_mode="invalid_session",
+            )
+        session_token = f"kb-session-{uuid4().hex}"
+        self._active_sessions.add(session_token)
+        return KnowledgeAuthSessionResponse(
+            signed_in=True,
+            session_token=session_token,
+            user_id="knowledge-demo-user",
+            display_name="Knowledge Demo User",
+            failure_mode=None,
+        )
+
+    def read_session(self, session_token: str | None) -> KnowledgeAuthSessionResponse:
+        # Protected routes probe the current SESSIONSTATE through this endpoint.
+        if session_token and session_token in self._active_sessions:
+            return KnowledgeAuthSessionResponse(
+                signed_in=True,
+                session_token=session_token,
+                user_id="knowledge-demo-user",
+                display_name="Knowledge Demo User",
+                failure_mode=None,
+            )
+        return KnowledgeAuthSessionResponse(
+            signed_in=False,
+            session_token=None,
+            user_id=None,
+            display_name=None,
+            failure_mode="expired_session" if session_token else None,
+        )
+
+    def terminate_session(self, session_token: str | None) -> KnowledgeAuthLogoutResponse:
+        if session_token:
+            self._active_sessions.discard(session_token)
+        return KnowledgeAuthLogoutResponse(logged_out=True)
+
+
+def build_auth_service(project: KnowledgeBaseProject | None = None) -> AuthService:
+    resolved = _resolve_project(project)
+    provider = resolved.implementation.backend.auth_provider
+    if provider == "local_stub":
+        return LocalStubAuthService(resolved.backend_spec)
+    raise ValueError(f"unsupported auth provider for current backend demo: {provider}")
 
 
 @dataclass(frozen=True)
@@ -161,11 +251,16 @@ def _document_detail_path(project: KnowledgeBaseProject, document_id: str, secti
 
 
 class KnowledgeRepository:
-    def __init__(self, project: KnowledgeBaseProject | None = None) -> None:
+    def __init__(
+        self,
+        project: KnowledgeBaseProject | None = None,
+        auth_service: AuthService | None = None,
+    ) -> None:
         self.project = _resolve_project(project)
         self.backend_spec = self.project.backend_spec
         self._documents = {item.document_id: item for item in self.project.documents}
         self._document_order = [item.document_id for item in self.project.documents]
+        self._auth_service = auth_service or build_auth_service(self.project)
 
     def list_knowledge_bases(self) -> list[KnowledgeBaseSummaryResponse]:
         latest = max((item.updated_at for item in self._documents.values()), default=date.today().isoformat())
@@ -270,7 +365,7 @@ class KnowledgeRepository:
                 section_id=item.section.section_id,
                 section_title=item.section.title,
                 snippet=item.section.plain_text[:220],
-                return_path=(
+                citation_return_path=(
                     f"{return_policy['chat_path']}?document={item.document.document_id}"
                     f"&section={item.section.section_id}&citation={index}"
                 ),
@@ -311,6 +406,15 @@ class KnowledgeRepository:
             context_document_id=context_document_id,
             context_section_id=context_section_id,
         )
+
+    def start_session(self, login_action: str) -> KnowledgeAuthSessionResponse:
+        return self._auth_service.start_session(login_action)
+
+    def read_session(self, session_token: str | None) -> KnowledgeAuthSessionResponse:
+        return self._auth_service.read_session(session_token)
+
+    def terminate_session(self, session_token: str | None) -> KnowledgeAuthLogoutResponse:
+        return self._auth_service.terminate_session(session_token)
 
     def _rank_sections(
         self,
@@ -412,8 +516,10 @@ def build_knowledge_base_router(
     repository: KnowledgeRepository | None = None,
 ) -> APIRouter:
     resolved = _resolve_project(project)
-    repo = repository or KnowledgeRepository(resolved)
+    repo = repository or KnowledgeRepository(resolved, auth_service=build_auth_service(resolved))
     router = APIRouter(prefix=resolved.route.api_prefix, tags=[resolved.metadata.project_id])
+    auth_api = resolved.backend_spec["auth"]["api"]
+    session_header = auth_api["session_header"]
 
     @router.get("/knowledge-bases", response_model=list[KnowledgeBaseSummaryResponse])
     def list_knowledge_bases() -> list[KnowledgeBaseSummaryResponse]:
@@ -482,5 +588,21 @@ def build_knowledge_base_router(
             document_id=payload.document_id,
             section_id=payload.section_id,
         )
+
+    @router.post(auth_api["login_endpoint"], response_model=KnowledgeAuthSessionResponse)
+    def login(payload: KnowledgeAuthLoginRequest) -> KnowledgeAuthSessionResponse:
+        return repo.start_session(payload.login_action)
+
+    @router.get(auth_api["session_endpoint"], response_model=KnowledgeAuthSessionResponse)
+    def get_session(
+        session_token: str | None = Header(default=None, alias=session_header),
+    ) -> KnowledgeAuthSessionResponse:
+        return repo.read_session(session_token)
+
+    @router.post(auth_api["logout_endpoint"], response_model=KnowledgeAuthLogoutResponse)
+    def logout(
+        session_token: str | None = Header(default=None, alias=session_header),
+    ) -> KnowledgeAuthLogoutResponse:
+        return repo.terminate_session(session_token)
 
     return router
