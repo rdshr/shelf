@@ -7,6 +7,7 @@
 - [product_spec.toml](/home/zx/shelf/projects/desktop_screenshot_translate/product_spec.toml)
 - [implementation_config.toml](/home/zx/shelf/projects/desktop_screenshot_translate/implementation_config.toml)
 - [WINDOWS-联调清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-联调清单.md)
+- [WINDOWS-安装后回归清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-%E5%AE%89%E8%A3%85%E5%90%8E%E5%9B%9E%E5%BD%92%E6%B8%85%E5%8D%95.md)
 
 ## 1. 发布前提
 
@@ -64,6 +65,16 @@ npm run dist:win
 npm run pack:win
 ```
 
+如果你要一次性产出正式分发所需的两类 Windows 产物：
+
+```powershell
+npm run release:win
+```
+
+这个命令会额外生成：
+
+- `release-manifest-<version>.json`
+
 ## 4. 产物位置
 
 构建输出目录：
@@ -73,7 +84,9 @@ npm run pack:win
 预期会看到：
 
 - `desktop-screenshot-translate-<version>-x64.exe`
-- 对应的 `latest*.yml` 或便携产物
+- `desktop-screenshot-translate-<version>-x64-portable.exe`
+- 对应的 `.blockmap`
+- `release-manifest-<version>.json`
 
 ## 5. 给其他人的运行方式
 
@@ -113,4 +126,18 @@ OCR 运行时已随安装包分发，不应再要求用户手工安装 `tesserac
 - `NSIS` 目标默认走当前用户安装路径，不应要求管理员权限
 - 当前未完成代码签名
 - 当前未完成自动更新服务接入
+- 当前不应宣称“应用已支持 auto-update”；版本升级仍通过重新分发安装包或便携版完成
 - 若不提供可达的翻译端点与凭据，应用会退回本地 stub 翻译
+
+## 8. 发布说明要求
+
+每次对外发布前，必须同时准备：
+
+- `projects/desktop_screenshot_translate/release-notes/<version>.md`
+- 双语版本说明
+- 正式安装产物
+
+当前 `release:check` 已会校验版本说明文件是否存在，并检查：
+
+- `## 中文说明`
+- `## English Notes`

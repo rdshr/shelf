@@ -92,15 +92,18 @@ clipboard_bridge = "native_clipboard"
 # 它决定发布产物和自动更新策略，但不能更改产品层兼容矩阵与更新通道的语义。
 # 当前 Windows 路径补充：
 # - 安装产物使用 `NSIS`
+# - 调试与内测同时保留 `portable` 便携产物
 # - Windows 安装器默认走 `per-user` 路径，不应要求管理员权限
 # - 安装器必须关闭默认提权依赖，不能把“必须管理员运行安装器”当成正常用户路径
 # - OCR 运行时与项目生成产物会在打包时一并进入安装包资源目录
 # - 翻译端点凭据不应硬编码进安装包，优先通过运行时覆盖文件或环境变量提供
 # - 首次启动应自动生成运行时覆盖文件模板，并在翻译端点缺失时自动打开配置引导
+# - 当前阶段仅承诺“稳定手动发布”，不把 `auto_update` 当成已交付能力
+# - 只有在更新源、发布元数据、下载校验与应用内更新状态机都真实落地后，才应重新打开 `auto_update`
 [release]
-targets = ["win-x64", "darwin-universal"]
-package_formats = ["nsis", "dmg"]
-auto_update = true
+targets = ["win-x64"]
+package_formats = ["nsis", "portable"]
+auto_update = false
 channel = "stable"
 
 # [evidence] 细化实现层证据出口。

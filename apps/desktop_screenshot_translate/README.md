@@ -54,8 +54,20 @@ Windows 可发布安装包路径：
 2. 再执行：
    - `npm run release:check`
    - `npm run dist:win`
+   - 如果要同时生成安装包与便携版，可直接执行 `npm run release:win`
 3. 生成的安装产物位于：
    - `apps/desktop_screenshot_translate/electron/dist/`
+
+发布时还应同步准备：
+
+- [0.1.0.md](/home/zx/shelf/projects/desktop_screenshot_translate/release-notes/0.1.0.md)
+- [WINDOWS-安装后回归清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-%E5%AE%89%E8%A3%85%E5%90%8E%E5%9B%9E%E5%BD%92%E6%B8%85%E5%8D%95.md)
+
+当前发布边界：
+
+- 已支持 Windows `NSIS` 安装包与 `portable` 便携版
+- 当前尚未接入应用内自动更新
+- 版本升级仍通过重新分发新的安装包或便携版完成
 
 面向目标机器的运行时配置：
 

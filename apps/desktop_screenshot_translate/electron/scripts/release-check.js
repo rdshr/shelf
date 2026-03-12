@@ -77,6 +77,26 @@ function checkRuntimeOverrideExample(failures) {
   }
 }
 
+function resolveReleaseNotesPath(config) {
+  return path.join(config.projectRoot, 'release-notes', `${config.productSpec.project.version}.md`);
+}
+
+function checkReleaseNotes(config, failures) {
+  const releaseNotesPath = resolveReleaseNotesPath(config);
+  if (!fs.existsSync(releaseNotesPath)) {
+    failures.push(`missing release notes: ${releaseNotesPath}`);
+    return;
+  }
+
+  const text = fs.readFileSync(releaseNotesPath, 'utf-8');
+  const requiredSections = ['## 中文说明', '## English Notes'];
+  for (const section of requiredSections) {
+    if (!text.includes(section)) {
+      failures.push(`release notes missing section "${section}": ${releaseNotesPath}`);
+    }
+  }
+}
+
 function main() {
   const failures = [];
   const warnings = [];
@@ -89,6 +109,7 @@ function main() {
   checkGeneratedArtifacts(config, failures);
   checkBundledTesseract(config, failures);
   checkRuntimeOverrideExample(failures);
+  checkReleaseNotes(config, failures);
 
   warnings.push(
     'translation endpoint credentials are not embedded into the installer; use runtime-overrides.json or environment variables on target machines',
