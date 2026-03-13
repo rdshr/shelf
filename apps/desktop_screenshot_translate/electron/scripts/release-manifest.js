@@ -55,10 +55,13 @@ function main() {
   const files = getDistFiles(distRoot);
   const version = config.productSpec.project.version;
   const arch = 'x64';
+  const channel = config.implementationConfig.release.channel;
   const installerName = `desktop-screenshot-translate-${version}-${arch}.exe`;
   const portableName = `desktop-screenshot-translate-${version}-${arch}-portable.exe`;
   const installerBlockmapName = `${installerName}.blockmap`;
-  const latestYamlName = config.implementationConfig.release.auto_update ? 'latest.yml' : null;
+  const latestYamlName = config.implementationConfig.release.auto_update
+    ? `${channel === 'latest' ? 'latest' : channel}.yml`
+    : null;
 
   const installer = pickArtifact(files, installerName);
   const portable = pickArtifact(files, portableName);
@@ -94,7 +97,7 @@ function main() {
     display_name: config.productSpec.project.display_name,
     version,
     generated_at: new Date().toISOString(),
-    channel: config.implementationConfig.release.channel,
+    channel,
     release_notes: path.relative(config.repoRoot, releaseNotesPath),
     artifacts: [
       describeArtifact(installer),

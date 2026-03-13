@@ -74,7 +74,9 @@ npm run release:win
 这个命令会额外生成：
 
 - `release-manifest-<version>.json`
-- 若自动更新已启用，还应生成 `latest.yml`
+- 若自动更新已启用，还应生成与更新通道对应的元数据文件：
+  - `latest.yml` 或
+  - `<channel>.yml`，例如 `stable.yml`
 
 ## 4. 产物位置
 
@@ -88,7 +90,7 @@ npm run release:win
 - `desktop-screenshot-translate-<version>-x64-portable.exe`
 - 对应的 `.blockmap`
 - `release-manifest-<version>.json`
-- 若自动更新已启用，还应看到 `latest.yml`
+- 若自动更新已启用，还应看到与更新通道对应的元数据文件，例如 `stable.yml`
 
 ## 5. 给其他人的运行方式
 
@@ -134,7 +136,7 @@ OCR 运行时已随安装包分发，不应再要求用户手工安装 `tesserac
 
 若要让安装版自动更新真正可用，更新源目录至少需要提供：
 
-- `latest.yml`
+- 与更新通道对应的元数据文件，例如 `stable.yml`
 - `desktop-screenshot-translate-<version>-x64.exe`
 - `desktop-screenshot-translate-<version>-x64.exe.blockmap`
 
