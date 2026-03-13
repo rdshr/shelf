@@ -12,6 +12,7 @@ const BACKTICK_SEGMENT_PATTERN = /`([^`]+)`/g;
 const SYMBOL_TOKEN_PATTERN = /[A-Za-z][A-Za-z0-9_]*/g;
 const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
 const DEFAULT_PRODUCT_SPEC_FILE = path.join("projects", "knowledge_base_basic", "product_spec.toml");
+const GOVERNANCE_MANIFEST_RELATIVE_PATH = path.join("generated", "governance_manifest.json");
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],
@@ -753,6 +754,21 @@ function inferBoundaryConfigMapping(frameworkName, token) {
   return null;
 }
 
+function discoverGovernanceManifestFiles(repoRoot) {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
+    return [];
+  }
+  const files = [];
+  for (const entry of fs.readdirSync(projectsDir)) {
+    const manifestPath = path.join(projectsDir, entry, GOVERNANCE_MANIFEST_RELATIVE_PATH);
+    if (fs.existsSync(manifestPath) && fs.statSync(manifestPath).isFile()) {
+      files.push(manifestPath);
+    }
+  }
+  return files.sort();
+}
+
 function discoverProductSpecFiles(repoRoot) {
   const projectsDir = path.join(repoRoot, "projects");
   if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
@@ -770,23 +786,32 @@ function discoverProductSpecFiles(repoRoot) {
 
 function inferConfiguredFrameworks(productSpecText) {
   const frameworks = new Set();
-  for (const match of productSpecText.matchAll(/^\s*(frontend|domain|backend)\s*=\s*"framework\/([^/]+)\//gm)) {
-    frameworks.add(match[2]);
+  const lines = String(productSpecText).split(/\r?\n/);
+  let inFrameworkSection = false;
+  for (const lineText of lines) {
+    const sectionMatch = TOML_SECTION_PATTERN.exec(lineText);
+    if (sectionMatch) {
+      inFrameworkSection = sectionMatch[1] === "framework";
+      continue;
+    }
+    if (!inFrameworkSection) {
+      continue;
+    }
+    const valueMatch = /^\s*[A-Za-z0-9_-]+\s*=\s*"framework\/([^/]+)\//.exec(lineText);
+    if (valueMatch) {
+      frameworks.add(valueMatch[1]);
+    }
   }
   return frameworks;
 }
 
 function resolvePreferredProductSpecFile(repoRoot, frameworkName) {
-  const preferredDefault = path.join(repoRoot, DEFAULT_PRODUCT_SPEC_FILE);
-  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
-    return preferredDefault;
-  }
-
   const candidates = discoverProductSpecFiles(repoRoot);
+  const preferredDefault = path.join(repoRoot, DEFAULT_PRODUCT_SPEC_FILE);
   let bestFile = null;
   let bestScore = -1;
   for (const filePath of candidates) {
-    let score = 0;
+    let score = filePath === preferredDefault ? 1 : 0;
     try {
       const frameworks = inferConfiguredFrameworks(fs.readFileSync(filePath, "utf8"));
       if (frameworks.has(frameworkName)) {
@@ -800,10 +825,129 @@ function resolvePreferredProductSpecFile(repoRoot, frameworkName) {
       bestFile = filePath;
     }
   }
-  return bestFile;
+  if (bestFile) {
+    return bestFile;
+  }
+  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
+    return preferredDefault;
+  }
+  return null;
+}
+
+function collectDerivedFromEntries(node, results = []) {
+  if (Array.isArray(node)) {
+    for (const value of node) {
+      collectDerivedFromEntries(value, results);
+    }
+    return results;
+  }
+  if (!node || typeof node !== "object") {
+    return results;
+  }
+  if (node.derived_from && typeof node.derived_from === "object") {
+    results.push(node.derived_from);
+  }
+  for (const value of Object.values(node)) {
+    collectDerivedFromEntries(value, results);
+  }
+  return results;
+}
+
+function resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token) {
+  const manifests = discoverGovernanceManifestFiles(repoRoot);
+  if (!manifests.length) {
+    return [];
+  }
+
+  const preferredProductSpec = resolvePreferredProductSpecFile(repoRoot, frameworkName);
+  const candidates = [];
+  const seen = new Set();
+
+  for (const manifestPath of manifests) {
+    let manifest = null;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    } catch {
+      continue;
+    }
+    if (!manifest || typeof manifest !== "object") {
+      continue;
+    }
+
+    const relProductSpec = normalizePathSlashes(String(manifest.product_spec_file || ""));
+    if (!relProductSpec) {
+      continue;
+    }
+    const productSpecFilePath = path.resolve(repoRoot, relProductSpec);
+    if (!fs.existsSync(productSpecFilePath)) {
+      continue;
+    }
+
+    const productSpecText = fs.readFileSync(productSpecFilePath, "utf8");
+    const sectionIndex = buildTomlSectionIndex(productSpecText);
+    for (const derivedFrom of collectDerivedFromEntries(manifest)) {
+      const frameworkModules = derivedFrom && typeof derivedFrom.framework_modules === "object"
+        ? derivedFrom.framework_modules
+        : null;
+      const boundarySections = derivedFrom && typeof derivedFrom.boundary_sections === "object"
+        ? derivedFrom.boundary_sections
+        : null;
+      if (!frameworkModules || !boundarySections) {
+        continue;
+      }
+      const mappedSection = boundarySections[token];
+      if (typeof mappedSection !== "string" || !mappedSection.trim()) {
+        continue;
+      }
+      const sectionTarget = sectionIndex.get(mappedSection);
+      if (!sectionTarget) {
+        continue;
+      }
+
+      const frameworkNames = new Set();
+      for (const moduleId of Object.values(frameworkModules)) {
+        if (typeof moduleId !== "string" || !moduleId.includes(".")) {
+          continue;
+        }
+        frameworkNames.add(moduleId.split(".", 1)[0]);
+      }
+      if (!frameworkNames.has(frameworkName)) {
+        continue;
+      }
+
+      const dedupeKey = `${productSpecFilePath}:${mappedSection}:${frameworkName}:${token}`;
+      if (seen.has(dedupeKey)) {
+        continue;
+      }
+      seen.add(dedupeKey);
+      candidates.push({
+        filePath: productSpecFilePath,
+        line: sectionTarget.line,
+        character: sectionTarget.character,
+        length: sectionTarget.length,
+        primarySection: mappedSection,
+        targetSection: mappedSection,
+        relatedSections: [mappedSection],
+        mappingMode: "governance",
+        note: "该映射来自已物化项目的治理清单。",
+        preferred: preferredProductSpec === productSpecFilePath,
+      });
+    }
+  }
+
+  return candidates.sort((left, right) => {
+    if (left.preferred !== right.preferred) {
+      return left.preferred ? -1 : 1;
+    }
+    return left.filePath.localeCompare(right.filePath);
+  });
 }
 
 function resolveBoundaryConfigTarget(repoRoot, frameworkName, token) {
+  const governanceTargets = resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token);
+  if (governanceTargets.length) {
+    return governanceTargets[0];
+  }
   const mapping = getBoundaryConfigMapping(frameworkName, token);
   if (!mapping) {
     return null;

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.0.46 - 2026-03-13
+- Fixed the long-lived validation deadlock path in Shelf AI. Validation commands now run with timeout protection, and a manual `Shelf: Validate Mapping Now` request can restart a stale in-flight validation instead of leaving the extension apparently unresponsive until `Reload Window`.
+- Changed boundary-to-product-spec navigation to prefer materialized governance manifests when available. This removes the hardcoded knowledge-base bias and lets custom frameworks such as `document_chunking` resolve to the correct `projects/*/product_spec.toml` section after project materialization.
+- Added regression coverage for both fixes: plugin-side runtime tests now guard command-timeout / stale-restart behavior, and framework-navigation tests now cover a custom framework that resolves boundary navigation through generated governance metadata.
+
 ## 0.0.45 - 2026-03-13
 - Formalized the `B / R / C+` relation model in the repository standards and strict validation chain. Positive capabilities now map to exactly one base-level source expression, while combination principles still legitimately span multiple bases and produce multiple capabilities.
 - Rewrote the affected framework modules to follow the tightened base-source rule, then synced the lint / validation behavior so capability-to-base ownership is no longer inferred loosely from mixed dependency context.

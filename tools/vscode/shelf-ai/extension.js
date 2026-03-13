@@ -1,4 +1,3 @@
-const cp = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const vscode = require("vscode");
@@ -6,6 +5,7 @@ const frameworkNavigation = require("./framework_navigation");
 const frameworkCompletion = require("./framework_completion");
 const governanceTree = require("./governance_tree");
 const workspaceGuard = require("./guarding");
+const validationRuntime = require("./validation_runtime");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
 const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
@@ -22,6 +22,7 @@ const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.p
 const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
 const DEFAULT_INSTALL_GIT_HOOKS_COMMAND = "bash scripts/install_git_hooks.sh";
 const GENERATED_EVENT_SUPPRESSION_MS = 2500;
+const MANUAL_STALE_VALIDATION_RESTART_MS = 15 * 1000;
 const FRAMEWORK_RULE_HINTS = {
   FW002: "@framework 必须无参数",
   FW003: "标题必须为 中文名:EnglishName",
@@ -79,6 +80,7 @@ function activate(context) {
   const suppressedGeneratedDirectories = new Map();
   const suppressedArtifactPaths = new Map();
   const dirtyWatchedFiles = new Set();
+  const activeValidationCommand = validationRuntime.createActiveCommandTracker();
   const VALIDATION_SOURCE_PRIORITY = {
     auto: 1,
     save: 2,
@@ -233,10 +235,34 @@ function activate(context) {
 
   const runParsedCommand = async (label, command, repoRoot, parseFn) => {
     output.appendLine(`[${label}] ${command}`);
-    const execResult = await execCommand(command, repoRoot);
+    const execResult = await validationRuntime.execCommand(command, repoRoot, {
+      onSpawn: (child) => activeValidationCommand.trackChild(label, child),
+      onExit: (child) => activeValidationCommand.clearChild(child),
+    });
     output.appendLine(execResult.stdout || "");
     output.appendLine(execResult.stderr || "");
+    if (execResult.timedOut) {
+      return parseStageFailure(
+        `SHELF_${String(label).replace(/[^A-Za-z0-9]+/g, "_").toUpperCase()}_TIMEOUT`,
+        `Shelf ${label} command timed out after ${Math.round(execResult.timeoutMs / 1000)}s.`,
+        execResult.stdout,
+        execResult.stderr,
+        execResult.code
+      );
+    }
     return parseFn(execResult.stdout, execResult.stderr, execResult.code);
+  };
+
+  const requestManualValidation = () => {
+    if (running) {
+      const restarted = activeValidationCommand.restartIfStale(MANUAL_STALE_VALIDATION_RESTART_MS);
+      if (restarted.restarted) {
+        output.appendLine(
+          `[validate] restarted stale ${restarted.label} command after ${Math.round(restarted.elapsedMs / 1000)}s`
+        );
+      }
+    }
+    scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
   };
 
   const refreshGitHookStatus = async ({ promptIfMissing = false } = {}) => {
@@ -1118,7 +1144,7 @@ function activate(context) {
           return;
         }
         if (message.type === "shelf.sidebar.validate") {
-          scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
+          requestManualValidation();
           return;
         }
         if (message.type === "shelf.sidebar.showIssues") {
@@ -1304,7 +1330,7 @@ function activate(context) {
   );
 
   const validateNowDisposable = vscode.commands.registerCommand("shelf.validateNow", async () => {
-    scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
+    requestManualValidation();
   });
 
   const installGitHooksDisposable = vscode.commands.registerCommand("shelf.installGitHooks", async () => {
@@ -1641,17 +1667,7 @@ function activate(context) {
 
 function deactivate() {}
 
-function execCommand(command, cwd) {
-  return new Promise((resolve) => {
-    cp.exec(command, { cwd, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
-      resolve({
-        code: error ? error.code ?? 1 : 0,
-        stdout: stdout || "",
-        stderr: stderr || ""
-      });
-    });
-  });
-}
+const execCommand = validationRuntime.execCommand;
 
 async function generateTreeArtifacts(repoRoot, command, output, label) {
   output.appendLine(`[${label}] ${command}`);

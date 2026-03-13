@@ -1,6 +1,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 
 const {
   resolveDefinitionTarget,
@@ -33,6 +34,13 @@ function locate(text, needle) {
 function targetLineText(result) {
   const text = fs.readFileSync(result.filePath, "utf8");
   return text.split(/\r?\n/)[result.line] || "";
+}
+
+function writeFile(root, relativePath, content) {
+  const filePath = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content, "utf8");
+  return filePath;
 }
 
 function main() {
@@ -185,7 +193,7 @@ function main() {
   assert(localRuleHoverResult, "local rule hover should resolve");
   assert(localRuleHoverResult.markdown.includes("**knowledge_base.L0.M2 · `R1`**"));
   assert(localRuleHoverResult.markdown.includes("参与基：`B1 + B2`"));
-  assert(localRuleHoverResult.markdown.includes("边界绑定：`TURN/INPUT/STATUS/A11Y`"));
+  assert(localRuleHoverResult.markdown.includes("边界绑定：`TURN + INPUT + STATUS + A11Y`"));
 
   const localVerificationHoverRef = locate(knowledgeBaseL2.text, "`V1` 回合完整性");
   const localVerificationHoverResult = resolveHoverTarget({
@@ -321,6 +329,104 @@ function main() {
   assert(backendResult, "backend RESULT boundary ref should resolve");
   assert(backendResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
   assert.strictEqual(targetLineText(backendResult).trim(), "[return]");
+
+  const tempRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-nav-"));
+  const chunkingFrameworkPath = writeFile(
+    tempRepoRoot,
+    "framework/document_chunking/L0-M0-切块模块.md",
+    [
+      "# 切块模块:DocumentChunking",
+      "",
+      "@framework",
+      "",
+      "## 1. 能力声明",
+      "- `C1` 切块能力：把输入文档切成可索引的稳定块。",
+      "",
+      "## 2. 边界定义",
+      "- `CHUNK` 切块边界：切块大小与重叠窗口必须受控。",
+      "",
+      "## 3. 最小可行基",
+      "- `B1` 切块基：执行切块。来源：`C1 + CHUNK`。",
+      "",
+      "## 4. 基组合原则",
+      "- `R1` 切块落位",
+      "  - `R1.1` 参与基：`B1`",
+      "  - `R1.2` 组合方式：先按边界读取文档，再输出切块结果。",
+      "  - `R1.3` 输出能力：`C1`",
+      "  - `R1.4` 边界绑定：`CHUNK`",
+      "",
+      "## 5. 验证",
+      "- `V1` 切块结果：切块窗口必须可重复。",
+      "",
+    ].join("\n")
+  );
+  writeFile(
+    tempRepoRoot,
+    "projects/knowledge_base_basic/product_spec.toml",
+    [
+      "[project]",
+      'template = "knowledge_base_workbench"',
+      "",
+      "[framework]",
+      'domain = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"',
+      "",
+      "[chat]",
+      'mode = "retrieval_stub"',
+      "",
+    ].join("\n")
+  );
+  writeFile(
+    tempRepoRoot,
+    "projects/doc_chunk/product_spec.toml",
+    [
+      "[project]",
+      'template = "doc_chunk_demo"',
+      "",
+      "[framework]",
+      'domain = "framework/document_chunking/L0-M0-切块模块.md"',
+      "",
+      "[chunking]",
+      'strategy = "sentence_window"',
+      "",
+    ].join("\n")
+  );
+  writeFile(
+    tempRepoRoot,
+    "projects/doc_chunk/generated/governance_manifest.json",
+    JSON.stringify(
+      {
+        product_spec_file: "projects/doc_chunk/product_spec.toml",
+        structural_objects: [
+          {
+            semantic: {
+              derived_from: {
+                framework_modules: {
+                  domain: "document_chunking.L0.M0",
+                },
+                boundary_sections: {
+                  CHUNK: "chunking",
+                },
+              },
+            },
+          },
+        ],
+      },
+      null,
+      2
+    )
+  );
+  const chunkingText = fs.readFileSync(chunkingFrameworkPath, "utf8");
+  const chunkingRef = locate(chunkingText, "C1 + CHUNK");
+  const chunkingResult = resolveDefinitionTarget({
+    repoRoot: tempRepoRoot,
+    filePath: chunkingFrameworkPath,
+    text: chunkingText,
+    line: chunkingRef.line,
+    character: chunkingRef.character + "C1 + ".length,
+  });
+  assert(chunkingResult, "custom framework boundary ref should resolve to generated project spec");
+  assert(chunkingResult.filePath.endsWith("projects/doc_chunk/product_spec.toml"));
+  assert.strictEqual(targetLineText(chunkingResult).trim(), "[chunking]");
 }
 
 main();

@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: framework-tree-first workspace navigation with governance-tree guard.",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -25,6 +25,7 @@
     "governance_tree.js",
     "framework_completion.js",
     "framework_navigation.js",
+    "validation_runtime.js",
     "media/**",
     "snippets/**"
   ],

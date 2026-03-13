@@ -11,12 +11,14 @@
 - Supports node-to-source jump: click a node, then use `打开源文件` in detail panel to jump to the mapped markdown line.
 - Supports `Go to Definition` / `Ctrl/Cmd+Click` inside framework markdown for `B/C/R/V`, boundary ids, `Lx.My`, `framework.Lx.My`, and bracketed module-rule refs like `frontend.L1.M2[R1,R2]`.
 - Boundary navigation is not limited to explicitly exposed top-level sections. Direct boundaries such as `CHAT` / `SURFACE` and derived boundaries such as `CITATION` / `TURN` / `SCOPE` can jump to the owning or related `projects/*/product_spec.toml` section, so every effective boundary stays traceable into project product specs.
+- When a project has already been materialized, boundary navigation now prefers the generated governance manifest for project-specific section ownership instead of relying on extension-side hardcoded framework guesses.
 - Module refs such as `frontend.L1.M2` are treated as one hover/click target, jump straight to the target module's first `B*`, and show capability/base/rule summaries on hover.
 - Hover also works for bracketed module rules such as `frontend.L1.M2[R1,R2]` and local `B/C/R/V` plus boundary symbols, showing the resolved definition content directly in place; boundary hovers also show the mapped config file, primary owning section, related sections, and inferred ownership note when applicable.
 - `Find All References` / `Shift+F12` is implemented for navigable framework symbols, so boundary tokens can return the current usage, framework definition, and mapped config target in one place.
 - Runs strict mapping validation automatically on startup.
 - Runs strict mapping validation on save/create/rename/delete for relevant files.
 - Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
+- Manual validation can recover from a stale in-flight guard task; if a previous validation command has been hanging for too long, `Shelf: Validate Mapping Now` restarts it instead of waiting forever.
 - Auto-materializes affected `projects/*` when `framework/*.md`, `product_spec.toml`, or `implementation_config.toml` changes.
 - The validation chain includes `配置即功能` checks: effective `implementation_config.toml` fields must drive downstream compiled behavior instead of becoming dead selectors.
 - Optionally runs `mypy` after relevant Python changes under `src/`, `scripts/`, or `tests/`.
