@@ -53,6 +53,11 @@ npm run stage:tesseract
 npm run release:check
 ```
 
+说明：
+
+- 正式的 `dist:win / pack:win / release:win` 现在都会先自动执行项目物化
+- 如果你单独执行 `release:check`，它只校验当前状态，不会自动重写 `generated/*`
+
 产出可安装 exe：
 
 ```powershell

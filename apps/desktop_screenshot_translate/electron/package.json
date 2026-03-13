@@ -10,6 +10,7 @@
     "vue": "^3.5.13"
   },
   "scripts": {
+    "materialize:project": "uv run python ../../../scripts/materialize_project.py --project projects/desktop_screenshot_translate/product_spec.toml",
     "doctor": "node scripts/doctor.js",
     "release:check": "node scripts/release-check.js",
     "release:manifest": "node scripts/release-manifest.js",
@@ -18,8 +19,8 @@
     "start": "electron .",
     "dev": "npm run panel:build && electron .",
     "dev:doctor": "npm run doctor && npm run dev",
-    "pack:win": "npm run panel:build && npm run release:check && electron-builder --win portable -c.artifactName=desktop-screenshot-translate-${version}-${arch}-portable.${ext}",
-    "dist:win": "npm run panel:build && npm run release:check && electron-builder --win nsis",
+    "pack:win": "npm run materialize:project && npm run panel:build && npm run release:check && electron-builder --win portable -c.artifactName=desktop-screenshot-translate-${version}-${arch}-portable.${ext}",
+    "dist:win": "npm run materialize:project && npm run panel:build && npm run release:check && electron-builder --win nsis",
     "release:win": "npm run dist:win && npm run pack:win && npm run release:manifest",
     "check": "node --check main.js && node --check preload.js && node --check lib/project-config.js && node --check lib/window-state.js && node --check lib/local-pipeline.js && node --check lib/provider-runtime.js && node --check lib/runtime-overrides.js && node --check lib/ocr-adapters.js && node --check lib/translation-adapters.js && node --check lib/windows-focus.js && node --check lib/update-runtime.js && node --check renderer/overlay/overlay.js && node --check renderer/setup/setup.js && node --check scripts/doctor.js && node --check scripts/release-check.js && node --check scripts/release-manifest.js && node --check scripts/stage-tesseract.js && vite build --config vite.panel.config.mjs"
   },

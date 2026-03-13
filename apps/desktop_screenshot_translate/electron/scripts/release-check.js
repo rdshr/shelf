@@ -77,6 +77,23 @@ function checkRuntimeOverrideExample(failures) {
   }
 }
 
+function checkVersionAlignment(config, failures) {
+  const packageJsonPath = path.join(resolveAppRoot(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+  const appVersion = typeof packageJson.version === 'string' ? packageJson.version.trim() : '';
+  const generatedVersion = config.productSpec.project.version;
+
+  if (!appVersion || !generatedVersion) {
+    return;
+  }
+
+  if (appVersion !== generatedVersion) {
+    failures.push(
+      `version mismatch: electron package.json=${appVersion}, generated product spec=${generatedVersion}; rerun materialize_project before release`,
+    );
+  }
+}
+
 function resolveReleaseNotesPath(config) {
   return path.join(config.projectRoot, 'release-notes', `${config.productSpec.project.version}.md`);
 }
@@ -107,6 +124,7 @@ function main() {
   console.log(`generated dir: ${config.generatedDir}`);
 
   checkGeneratedArtifacts(config, failures);
+  checkVersionAlignment(config, failures);
   checkBundledTesseract(config, failures);
   checkRuntimeOverrideExample(failures);
   checkReleaseNotes(config, failures);
