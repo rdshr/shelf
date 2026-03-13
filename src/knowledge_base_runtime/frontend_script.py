@@ -10,7 +10,7 @@ def _require_script_profile(project: KnowledgeBaseProject) -> str:
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend script selection")
     value = implementation.get("script_profile")
-    if value != "knowledge_chat_browser_v1":
+    if value not in project.template_contract.supported_frontend_script_profiles:
         raise ValueError(f"unsupported frontend script_profile: {value}")
     return value
 

@@ -8,7 +8,7 @@ def _require_style_profile(project: KnowledgeBaseProject) -> str:
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend style selection")
     value = implementation.get("style_profile")
-    if value != "knowledge_chat_web_v1":
+    if value not in project.template_contract.supported_frontend_style_profiles:
         raise ValueError(f"unsupported frontend style_profile: {value}")
     return value
 

@@ -437,24 +437,7 @@ def _actual_runtime_page_routes(project: KnowledgeBaseProject) -> dict[str, Any]
 
 
 def _expected_frontend_surface_contract(project: KnowledgeBaseProject) -> dict[str, Any]:
-    interaction_actions = [
-        "start_new_chat",
-        "select_session",
-        "open_knowledge_switch",
-        "search_documents",
-        "select_document",
-        "submit_chat",
-        "open_citation_drawer",
-        "browse_knowledge_bases",
-        "open_basketball_showcase",
-        "open_knowledge_base_detail",
-        "open_document_detail",
-        "return_from_citation",
-    ]
-    if project.library.allow_create:
-        interaction_actions.append("create_document")
-    if project.library.allow_delete:
-        interaction_actions.append("delete_document")
+    contract = project.template_contract
     return {
         "module_id": project.frontend_ir.module_id,
         "shell": project.surface.shell,
@@ -464,21 +447,14 @@ def _expected_frontend_surface_contract(project: KnowledgeBaseProject) -> dict[s
             "preview_mode": project.surface.preview_mode,
             "density": project.surface.density,
         },
-        "surface_regions": [
-            "conversation_sidebar",
-            "chat_main",
-            "citation_drawer",
-            "knowledge_pages",
-        ],
-        "interaction_actions": interaction_actions,
-        "state_channels": [
-            {"state_id": "current_conversation", "sticky": True},
-            {"state_id": "current_knowledge_base", "sticky": True},
-            {"state_id": "current_document", "sticky": project.context.sticky_document},
-            {"state_id": "current_section", "sticky": True},
-            {"state_id": "citation_drawer_state", "sticky": True},
-            {"state_id": "streaming_reply", "sticky": False},
-        ],
+        "surface_regions": list(contract.required_surface_region_ids),
+        "interaction_actions": list(
+            contract.frontend_interaction_action_ids(
+                allow_create=project.library.allow_create,
+                allow_delete=project.library.allow_delete,
+            )
+        ),
+        "state_channels": list(contract.resolve_state_channels(sticky_document=project.context.sticky_document)),
         "route_contract": project.route.to_dict(),
         "a11y": project.a11y.to_dict(),
         "component_variants": {
@@ -514,29 +490,22 @@ def _actual_frontend_surface_contract(project: KnowledgeBaseProject) -> dict[str
 
 
 def _expected_workbench_surface_contract(project: KnowledgeBaseProject) -> dict[str, Any]:
-    library_actions = ["switch_knowledge_base", "browse_documents", "open_document_detail"]
-    if project.library.allow_create:
-        library_actions.append("create_document")
-    if project.library.allow_delete:
-        library_actions.append("delete_document")
+    contract = project.template_contract
     return {
         "module_id": project.domain_ir.module_id,
         "layout_variant": project.surface.layout_variant,
-        "regions": [
-            "conversation_sidebar",
-            "chat_main",
-            "citation_drawer",
-            "basketball_showcase_page",
-            "knowledge_list_page",
-            "knowledge_detail_page",
-            "document_detail_page",
-        ],
+        "regions": list(contract.workbench_region_ids),
         "surface": {
             "sidebar_width": project.surface.sidebar_width,
             "preview_mode": project.surface.preview_mode,
             "density": project.surface.density,
         },
-        "library_actions": library_actions,
+        "library_actions": list(
+            contract.workbench_library_actions(
+                allow_create=project.library.allow_create,
+                allow_delete=project.library.allow_delete,
+            )
+        ),
         "preview": {
             "anchor_mode": project.preview.anchor_mode,
             "show_toc": project.preview.show_toc,
@@ -556,30 +525,9 @@ def _expected_workbench_surface_contract(project: KnowledgeBaseProject) -> dict[
             "anchor_restore": project.return_config.anchor_restore,
             "citation_card_variant": project.return_config.citation_card_variant,
         },
-        "flow": [
-            {
-                "stage_id": "knowledge_base_select",
-                "depends_on": [],
-                "produces": ["knowledge_base_id"],
-            },
-            {
-                "stage_id": "conversation",
-                "depends_on": ["knowledge_base_id"],
-                "produces": ["conversation_id", "answer", "citations"],
-            },
-            {
-                "stage_id": "citation_review",
-                "depends_on": ["conversation_id", "citations"],
-                "produces": ["document_id", "section_id", "drawer_state"],
-            },
-            {
-                "stage_id": "document_detail",
-                "depends_on": ["document_id", "section_id"],
-                "produces": ["document_page", "return_path"],
-            },
-        ],
+        "flow": list(contract.workbench_flow_dicts()),
         "citation_return_contract": {
-            "query_keys": ["document", "section", "citation"],
+            "query_keys": list(contract.workbench_citation_query_keys),
             "targets": list(project.return_config.targets),
             "anchor_restore": project.return_config.anchor_restore,
         },
@@ -622,6 +570,7 @@ def _actual_workbench_surface_contract(project: KnowledgeBaseProject) -> dict[st
 
 
 def _expected_ui_surface_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
+    contract = project.template_contract
     return {
         "derived_from": {
             "framework_modules": {
@@ -647,22 +596,15 @@ def _expected_ui_surface_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         "shell": {
             "id": project.surface.shell,
             "layout_variant": project.surface.layout_variant,
-            "regions": ["conversation_sidebar", "chat_main", "citation_drawer"],
-            "secondary_pages": ["basketball_showcase", "knowledge_list", "knowledge_detail", "document_detail"],
+            "regions": list(contract.shell_regions),
+            "secondary_pages": list(contract.secondary_pages),
             "preview_mode": project.surface.preview_mode,
             "density": project.surface.density,
         },
         "pages": {
             "chat_home": {
                 "path": project.route.workbench,
-                "slots": [
-                    "conversation_sidebar",
-                    "chat_header",
-                    "message_stream",
-                    "chat_composer",
-                    "citation_drawer",
-                    "knowledge_switch_dialog",
-                ],
+                "slots": list(contract.chat_home_slots),
             },
             "basketball_showcase": {
                 "path": project.route.basketball_showcase,
@@ -686,7 +628,7 @@ def _expected_ui_surface_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         "citation": {
             "style": project.chat.citation_style,
             "summary_variant": project.return_config.citation_card_variant,
-            "drawer_sections": ["snippet", "source_context"],
+            "drawer_sections": list(contract.drawer_sections),
             "document_detail_path": _document_detail_path(project),
         },
     }
@@ -1017,7 +959,11 @@ def _actual_answer_behavior(project: KnowledgeBaseProject) -> dict[str, Any]:
         section_id="generated-runtime",
     )
     citations = list(response.citations)
-    citation_style = "inline_refs" if citations and "[1]" in response.answer else "missing_inline_refs"
+    citation_style = (
+        project.template_contract.required_chat_citation_style
+        if citations and "[1]" in response.answer
+        else f"missing_{project.template_contract.required_chat_citation_style}"
+    )
     return_path_prefix = project.route.workbench
     document_path_prefix = project.route.document_detail_prefix
     if citations and not all(item.return_path.startswith(f"{return_path_prefix}?") for item in citations):

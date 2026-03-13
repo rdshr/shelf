@@ -26,7 +26,7 @@ def _require_backend_renderer(project: KnowledgeBaseProject) -> str:
     if not isinstance(implementation, dict):
         raise ValueError("backend_spec.implementation is required for backend renderer selection")
     value = implementation.get("backend_renderer")
-    if value != "knowledge_chat_backend_v1":
+    if value not in project.template_contract.supported_backend_renderers:
         raise ValueError(f"unsupported backend renderer: {value}")
     return value
 
@@ -332,7 +332,7 @@ class KnowledgeRepository:
     ) -> list[RankedSection]:
         retrieval = self.backend_spec["retrieval"]
         strategy = retrieval["strategy"]
-        if strategy == "retrieval_stub":
+        if strategy == self.project.template_contract.required_chat_mode:
             return self._rank_sections_stub(message, document_id=document_id, section_id=section_id)
         raise ValueError(f"unsupported backend retrieval strategy: {strategy}")
 

@@ -23,6 +23,7 @@ def _outcome(
 
 
 def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, Any], ...]:
+    contract_spec = project.template_contract
     contract = project.frontend_contract
     ui_spec = project.ui_spec
     surface_regions = {item["region_id"] for item in contract["surface_regions"]}
@@ -33,7 +34,7 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
     component_spec = ui_spec.get("components", {})
     pages_spec = ui_spec.get("pages", {})
 
-    r1_required_regions = tuple(shell_spec.get("regions", ())) + ("knowledge_pages",)
+    r1_required_regions = contract_spec.required_surface_region_ids
     r1_missing = [item for item in r1_required_regions if item not in surface_regions]
     r1_reasons = [f"missing surface region: {item}" for item in r1_missing]
     if contract["shell"] != shell_spec.get("id"):
@@ -43,36 +44,17 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
     if contract["surface_config"]["preview_mode"] != shell_spec.get("preview_mode"):
         r1_reasons.append("surface.preview_mode must match ui_spec.shell.preview_mode")
 
-    r2_required = (
-        "start_new_chat",
-        "select_session",
-        "open_knowledge_switch",
-        "search_documents",
-        "select_document",
-        "submit_chat",
-        "open_citation_drawer",
-        "browse_knowledge_bases",
-        "open_knowledge_base_detail",
-        "open_document_detail",
-        "return_from_citation",
+    r2_required = contract_spec.frontend_interaction_action_ids(
+        allow_create=project.library.allow_create,
+        allow_delete=project.library.allow_delete,
     )
     r2_missing = [item for item in r2_required if item not in interaction_actions]
     r2_reasons = [f"missing interaction action: {item}" for item in r2_missing]
-    if project.library.allow_create and "create_document" not in interaction_actions:
-        r2_reasons.append("missing interaction action: create_document")
-    if project.library.allow_delete and "delete_document" not in interaction_actions:
-        r2_reasons.append("missing interaction action: delete_document")
-    if a11y["reading_order"] != [
-        "conversation_sidebar",
-        "chat_header",
-        "message_stream",
-        "chat_composer",
-        "citation_drawer",
-    ]:
+    if a11y["reading_order"] != list(contract_spec.required_reading_order):
         r2_reasons.append(
-            "reading order must stay conversation_sidebar -> chat_header -> message_stream -> chat_composer -> citation_drawer"
+            "reading order must stay " + " -> ".join(contract_spec.required_reading_order)
         )
-    if not project.preview.show_toc:
+    if contract_spec.preview_show_toc_required and not project.preview.show_toc:
         r2_reasons.append("preview TOC must stay enabled")
     if not route_contract["knowledge_list"].startswith("/"):
         r2_reasons.append("route.knowledge_list must stay routable")
@@ -80,13 +62,13 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
         r2_reasons.append("route.knowledge_detail must stay under route.knowledge_list")
     if not route_contract["document_detail_prefix"].startswith(route_contract["knowledge_detail"]):
         r2_reasons.append("route.document_detail_prefix must stay under route.knowledge_detail")
-    for page_id in ("chat_home", "knowledge_list", "knowledge_detail", "document_detail"):
+    for page_id in contract_spec.required_frontend_page_ids:
         if page_id not in pages_spec:
             r2_reasons.append(f"missing ui_spec page: {page_id}")
 
     r3_reasons: list[str] = []
-    if project.metadata.template != "knowledge_base_workbench":
-        r3_reasons.append("frontend extend slot must target knowledge_base_workbench")
+    if project.metadata.template != contract_spec.template_id:
+        r3_reasons.append(f"frontend extend slot must target {contract_spec.template_id}")
     if contract["extend_slots"][0]["module_id"] != project.domain_ir.module_id:
         r3_reasons.append("domain workbench slot must point to the selected domain framework module")
     if contract["extend_slots"][1]["module_id"] != project.backend_ir.module_id:
@@ -99,13 +81,12 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
         r4_reasons.append("chat cannot be disabled")
     if project.chat.citations_enabled and not project.return_config.enabled:
         r4_reasons.append("citation cannot be enabled without return_to_anchor")
-    if "citation_drawer" not in project.return_config.targets:
-        r4_reasons.append("return targets must include citation_drawer")
-    if "document_detail" not in project.return_config.targets:
-        r4_reasons.append("return targets must include document_detail")
-    if contract["component_variants"]["chat_bubble"] not in {"assistant_soft", "assistant_minimal"}:
+    missing_return_targets = contract_spec.required_return_target_set() - set(project.return_config.targets)
+    for target in sorted(missing_return_targets):
+        r4_reasons.append(f"return targets must include {target}")
+    if contract["component_variants"]["chat_bubble"] not in contract_spec.supported_chat_bubble_variants:
         r4_reasons.append("chat bubble variant must stay within supported framework set")
-    if contract["component_variants"]["chat_composer"] not in {"chatgpt_compact", "expanded"}:
+    if contract["component_variants"]["chat_composer"] not in contract_spec.supported_chat_composer_variants:
         r4_reasons.append("chat composer variant must stay within supported framework set")
     if component_spec.get("citation_drawer", {}).get("return_targets") != list(project.return_config.targets):
         r4_reasons.append("ui_spec citation drawer return_targets must match return.targets")

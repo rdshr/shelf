@@ -21,7 +21,7 @@ def _require_frontend_renderer(project: KnowledgeBaseProject) -> str:
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend renderer selection")
     value = implementation.get("frontend_renderer")
-    if value != "knowledge_chat_client_v1":
+    if value not in project.template_contract.supported_frontend_renderers:
         raise ValueError(f"unsupported frontend renderer: {value}")
     return value
 

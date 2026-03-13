@@ -11,6 +11,10 @@ from typing import Any
 
 from framework_ir import FrameworkModuleIR, load_framework_registry, parse_framework_module
 from project_runtime.config_layout import config_layout
+from project_runtime.knowledge_base_contract import (
+    KnowledgeBaseTemplateContract,
+    load_knowledge_base_template_contract,
+)
 from project_runtime.governance import (
     build_governance_closure,
     build_governance_manifest,
@@ -57,12 +61,6 @@ KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT = config_layout(
     {},
 )
 LEGACY_GENERATED_ARTIFACT_NAMES = frozenset({"project_bundle.py", "workbench_spec.json"})
-SUPPORTED_FRONTEND_RENDERERS = frozenset({"knowledge_chat_client_v1"})
-SUPPORTED_FRONTEND_STYLE_PROFILES = frozenset({"knowledge_chat_web_v1"})
-SUPPORTED_FRONTEND_SCRIPT_PROFILES = frozenset({"knowledge_chat_browser_v1"})
-SUPPORTED_BACKEND_RENDERERS = frozenset({"knowledge_chat_backend_v1"})
-SUPPORTED_BACKEND_TRANSPORTS = frozenset({"http_json"})
-SUPPORTED_BACKEND_RETRIEVAL_STRATEGIES = frozenset({"retrieval_stub"})
 
 
 def detect_project_template_id(product_spec_file: str | Path) -> str:
@@ -616,6 +614,7 @@ class KnowledgeBaseProject:
     product_spec_file: str
     implementation_config_file: str
     metadata: ProjectMetadata
+    template_contract: KnowledgeBaseTemplateContract
     framework: FrameworkSelection
     implementation: KnowledgeBaseImplementationConfig
     surface: SurfaceConfig
@@ -1339,6 +1338,7 @@ def _derive_copy(
 
 # @governed_symbol id=kb.ui.surface_spec owner=framework kind=ui_surface risk=high
 def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
+    contract = project.template_contract
     knowledge_base_detail_path = f"{project.route.knowledge_detail}/{{knowledge_base_id}}"
     document_detail_path = f"{project.route.document_detail_prefix}/{{document_id}}"
     basketball_showcase_path = project.route.basketball_showcase
@@ -1372,8 +1372,8 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         "shell": {
             "id": project.surface.shell,
             "layout_variant": project.surface.layout_variant,
-            "regions": ["conversation_sidebar", "chat_main", "citation_drawer"],
-            "secondary_pages": ["basketball_showcase", "knowledge_list", "knowledge_detail", "document_detail"],
+            "regions": list(contract.shell_regions),
+            "secondary_pages": list(contract.secondary_pages),
             "default_page": "chat_home",
             "preview_mode": project.surface.preview_mode,
             "density": project.surface.density,
@@ -1386,14 +1386,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "chat_home": {
                 "path": project.route.workbench,
                 "title": project.metadata.display_name,
-                "slots": [
-                    "conversation_sidebar",
-                    "chat_header",
-                    "message_stream",
-                    "chat_composer",
-                    "citation_drawer",
-                    "knowledge_switch_dialog",
-                ],
+                "slots": list(contract.chat_home_slots),
                 "entry_state": "welcome_prompts",
             },
             "basketball_showcase": {
@@ -1486,7 +1479,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
                 "title": project.copy["preview_title"],
                 "close_aria_label": "Close citation drawer",
                 "tab_variant": "numbered",
-                "sections": ["snippet", "source_context"],
+                "sections": list(contract.drawer_sections),
                 "section_label": "章节",
                 "snippet_title": "命中片段",
                 "source_context_title": "来源上下文",
@@ -1521,7 +1514,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         "citation": {
             "style": project.chat.citation_style,
             "summary_variant": project.return_config.citation_card_variant,
-            "drawer_sections": ["snippet", "source_context"],
+            "drawer_sections": list(contract.drawer_sections),
             "document_detail_path": document_detail_path,
         },
     }
@@ -1529,6 +1522,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
 
 # @governed_symbol id=kb.backend.surface_spec owner=implementation_config kind=backend_surface risk=high
 def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
+    contract = project.template_contract
     return {
         "derived_from": {
             "framework_modules": {
@@ -1571,28 +1565,7 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "max_citations": project.context.max_citations,
             "selection_mode": project.context.selection_mode,
         },
-        "interaction_flow": [
-            {
-                "stage_id": "knowledge_base_select",
-                "depends_on": [],
-                "produces": ["knowledge_base_id"],
-            },
-            {
-                "stage_id": "conversation",
-                "depends_on": ["knowledge_base_id"],
-                "produces": ["conversation_id", "answer", "citations"],
-            },
-            {
-                "stage_id": "citation_review",
-                "depends_on": ["conversation_id", "citations"],
-                "produces": ["document_id", "section_id", "drawer_state"],
-            },
-            {
-                "stage_id": "document_detail",
-                "depends_on": ["document_id", "section_id"],
-                "produces": ["document_page", "return_path"],
-            },
-        ],
+        "interaction_flow": list(contract.workbench_flow_dicts()),
         "answer_policy": {
             "citation_style": project.chat.citation_style,
             "no_match_text": (
@@ -1626,15 +1599,16 @@ def _validate_product_spec(
     frontend_ir: FrameworkModuleIR,
     domain_ir: FrameworkModuleIR,
     backend_ir: FrameworkModuleIR,
+    template_contract: KnowledgeBaseTemplateContract,
 ) -> None:
     if product_spec.metadata.template != KNOWLEDGE_BASE_TEMPLATE_ID:
         raise ValueError(f"unsupported project template: {product_spec.metadata.template}")
-    if product_spec.surface.shell != "conversation_sidebar_shell":
-        raise ValueError("surface.shell must be conversation_sidebar_shell")
-    if product_spec.surface.layout_variant != "chatgpt_knowledge_client":
-        raise ValueError("surface.layout_variant must be chatgpt_knowledge_client")
-    if product_spec.surface.preview_mode != "drawer":
-        raise ValueError("surface.preview_mode must be drawer")
+    if product_spec.surface.shell != template_contract.required_surface_shell:
+        raise ValueError(f"surface.shell must be {template_contract.required_surface_shell}")
+    if product_spec.surface.layout_variant != template_contract.required_layout_variant:
+        raise ValueError(f"surface.layout_variant must be {template_contract.required_layout_variant}")
+    if product_spec.surface.preview_mode != template_contract.required_preview_mode:
+        raise ValueError(f"surface.preview_mode must be {template_contract.required_preview_mode}")
     if not all(
         (
             product_spec.library.enabled,
@@ -1663,43 +1637,41 @@ def _validate_product_spec(
         raise ValueError("route.basketball_showcase must stay under route.workbench")
     if not product_spec.library.knowledge_base_id.strip():
         raise ValueError("library.knowledge_base_id must be non-empty")
-    if "markdown" not in product_spec.library.source_types:
-        raise ValueError("library.source_types must include markdown")
-    if "title" not in product_spec.library.metadata_fields:
-        raise ValueError("library.metadata_fields must include title")
+    if not template_contract.required_library_source_types.issubset(set(product_spec.library.source_types)):
+        missing_source_types = sorted(template_contract.required_library_source_types - set(product_spec.library.source_types))
+        raise ValueError(f"library.source_types missing required values: {', '.join(missing_source_types)}")
+    if not template_contract.required_library_metadata_fields.issubset(set(product_spec.library.metadata_fields)):
+        missing_metadata_fields = sorted(
+            template_contract.required_library_metadata_fields - set(product_spec.library.metadata_fields)
+        )
+        raise ValueError(f"library.metadata_fields missing required values: {', '.join(missing_metadata_fields)}")
     if not product_spec.library.allow_create and product_spec.library.allow_delete:
         raise ValueError("library.allow_delete cannot be true when library.allow_create is false")
-    if product_spec.library.default_focus != "current_knowledge_base":
-        raise ValueError("library.default_focus must be current_knowledge_base")
-    if product_spec.preview.anchor_mode != "heading":
-        raise ValueError("preview.anchor_mode must be heading")
-    if not product_spec.preview.show_toc:
+    if product_spec.library.default_focus != template_contract.required_library_default_focus:
+        raise ValueError(f"library.default_focus must be {template_contract.required_library_default_focus}")
+    if product_spec.preview.anchor_mode != template_contract.required_preview_anchor_mode:
+        raise ValueError(f"preview.anchor_mode must be {template_contract.required_preview_anchor_mode}")
+    if template_contract.preview_show_toc_required and not product_spec.preview.show_toc:
         raise ValueError("preview.show_toc must stay enabled for the knowledge-base workbench")
-    if product_spec.preview.preview_variant != "citation_drawer":
-        raise ValueError("preview.preview_variant must be citation_drawer")
-    if product_spec.chat.mode != "retrieval_stub":
-        raise ValueError("chat.mode must be retrieval_stub")
-    if product_spec.chat.citation_style != "inline_refs":
-        raise ValueError("chat.citation_style must be inline_refs")
+    if product_spec.preview.preview_variant != template_contract.required_preview_variant:
+        raise ValueError(f"preview.preview_variant must be {template_contract.required_preview_variant}")
+    if product_spec.chat.mode != template_contract.required_chat_mode:
+        raise ValueError(f"chat.mode must be {template_contract.required_chat_mode}")
+    if product_spec.chat.citation_style != template_contract.required_chat_citation_style:
+        raise ValueError(f"chat.citation_style must be {template_contract.required_chat_citation_style}")
     if not product_spec.chat.welcome_prompts:
         raise ValueError("chat.welcome_prompts must not be empty")
     if product_spec.context.max_citations <= 0 or product_spec.context.max_preview_sections <= 0:
         raise ValueError("context max values must be positive")
-    if not product_spec.return_config.anchor_restore:
+    if template_contract.return_anchor_restore_required and not product_spec.return_config.anchor_restore:
         raise ValueError("return.anchor_restore must stay enabled")
-    if "citation_drawer" not in product_spec.return_config.targets:
-        raise ValueError("return.targets must include citation_drawer")
-    if "document_detail" not in product_spec.return_config.targets:
-        raise ValueError("return.targets must include document_detail")
-    if tuple(product_spec.a11y.reading_order) != (
-        "conversation_sidebar",
-        "chat_header",
-        "message_stream",
-        "chat_composer",
-        "citation_drawer",
-    ):
+    missing_return_targets = template_contract.required_return_target_set() - set(product_spec.return_config.targets)
+    if missing_return_targets:
+        raise ValueError(f"return.targets missing required values: {', '.join(sorted(missing_return_targets))}")
+    if tuple(product_spec.a11y.reading_order) != template_contract.required_reading_order:
         raise ValueError(
-            "a11y.reading_order must stay conversation_sidebar -> chat_header -> message_stream -> chat_composer -> citation_drawer"
+            "a11y.reading_order must stay "
+            + " -> ".join(template_contract.required_reading_order)
         )
     if len(product_spec.documents) < 1:
         raise ValueError("at least one document is required")
@@ -1715,18 +1687,19 @@ def _validate_product_spec(
 def _validate_implementation_config(
     implementation: KnowledgeBaseImplementationConfig,
     product_spec: KnowledgeBaseProductSpec,
+    template_contract: KnowledgeBaseTemplateContract,
 ) -> None:
-    if implementation.frontend.renderer not in SUPPORTED_FRONTEND_RENDERERS:
+    if implementation.frontend.renderer not in template_contract.supported_frontend_renderers:
         raise ValueError(f"unsupported frontend.renderer: {implementation.frontend.renderer}")
-    if implementation.frontend.style_profile not in SUPPORTED_FRONTEND_STYLE_PROFILES:
+    if implementation.frontend.style_profile not in template_contract.supported_frontend_style_profiles:
         raise ValueError(f"unsupported frontend.style_profile: {implementation.frontend.style_profile}")
-    if implementation.frontend.script_profile not in SUPPORTED_FRONTEND_SCRIPT_PROFILES:
+    if implementation.frontend.script_profile not in template_contract.supported_frontend_script_profiles:
         raise ValueError(f"unsupported frontend.script_profile: {implementation.frontend.script_profile}")
-    if implementation.backend.renderer not in SUPPORTED_BACKEND_RENDERERS:
+    if implementation.backend.renderer not in template_contract.supported_backend_renderers:
         raise ValueError(f"unsupported backend.renderer: {implementation.backend.renderer}")
-    if implementation.backend.transport not in SUPPORTED_BACKEND_TRANSPORTS:
+    if implementation.backend.transport not in template_contract.supported_backend_transports:
         raise ValueError(f"unsupported backend.transport: {implementation.backend.transport}")
-    if implementation.backend.retrieval_strategy not in SUPPORTED_BACKEND_RETRIEVAL_STRATEGIES:
+    if implementation.backend.retrieval_strategy not in template_contract.supported_backend_retrieval_strategies:
         raise ValueError(f"unsupported backend.retrieval_strategy: {implementation.backend.retrieval_strategy}")
     if not implementation.evidence.product_spec_endpoint.startswith(product_spec.route.api_prefix):
         raise ValueError("evidence.product_spec_endpoint must stay under route.api_prefix")
@@ -1884,16 +1857,18 @@ def _compile_project(
     from frontend_kernel import build_frontend_contract
     from knowledge_base_framework import build_workbench_contract
 
+    template_contract = load_knowledge_base_template_contract()
     frontend_ir = _resolve_framework_module(product_spec.framework.frontend)
     domain_ir = _resolve_framework_module(product_spec.framework.domain)
     backend_ir = _resolve_framework_module(product_spec.framework.backend)
-    _validate_product_spec(product_spec, frontend_ir, domain_ir, backend_ir)
-    _validate_implementation_config(implementation, product_spec)
+    _validate_product_spec(product_spec, frontend_ir, domain_ir, backend_ir, template_contract)
+    _validate_implementation_config(implementation, product_spec, template_contract)
     documents = tuple(_compile_document(item) for item in product_spec.documents)
     project = KnowledgeBaseProject(
         product_spec_file=product_spec.product_spec_file,
         implementation_config_file=_relative_path(_implementation_config_path_for(_normalize_project_path(product_spec.product_spec_file))),
         metadata=product_spec.metadata,
+        template_contract=template_contract,
         framework=product_spec.framework,
         implementation=implementation,
         surface=product_spec.surface,

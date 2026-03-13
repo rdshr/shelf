@@ -1,0 +1,178 @@
+# 知识库模板契约。
+# 这里承载 knowledge_base_workbench 的稳定框架契约，
+# 避免把同一批模板约束散落到编译器、前端 validator、治理闭包里反复硬编码。
+
+[template]
+id = "knowledge_base_workbench"
+
+[product.surface]
+shell = "conversation_sidebar_shell"
+layout_variant = "chatgpt_knowledge_client"
+preview_mode = "drawer"
+
+[product.library]
+required_source_types = ["markdown"]
+required_metadata_fields = ["title"]
+default_focus = "current_knowledge_base"
+
+[product.preview]
+anchor_mode = "heading"
+preview_variant = "citation_drawer"
+show_toc_required = true
+
+[product.chat]
+mode = "retrieval_stub"
+citation_style = "inline_refs"
+
+[product.return]
+required_targets = ["citation_drawer", "document_detail"]
+anchor_restore_required = true
+supported_citation_card_variants = ["chips", "stacked", "compact"]
+
+[product.a11y]
+reading_order = [
+  "conversation_sidebar",
+  "chat_header",
+  "message_stream",
+  "chat_composer",
+  "citation_drawer",
+]
+
+[implementation]
+supported_frontend_renderers = ["knowledge_chat_client_v1"]
+supported_frontend_style_profiles = ["knowledge_chat_web_v1"]
+supported_frontend_script_profiles = ["knowledge_chat_browser_v1"]
+supported_backend_renderers = ["knowledge_chat_backend_v1"]
+supported_backend_transports = ["http_json"]
+supported_backend_retrieval_strategies = ["retrieval_stub"]
+
+[frontend]
+shell_regions = ["conversation_sidebar", "chat_main", "citation_drawer"]
+secondary_pages = ["basketball_showcase", "knowledge_list", "knowledge_detail", "document_detail"]
+chat_home_slots = [
+  "conversation_sidebar",
+  "chat_header",
+  "message_stream",
+  "chat_composer",
+  "citation_drawer",
+  "knowledge_switch_dialog",
+]
+required_page_ids = ["chat_home", "knowledge_list", "knowledge_detail", "document_detail"]
+drawer_sections = ["snippet", "source_context"]
+surface_composition_sidebar = ["conversation_sidebar"]
+surface_composition_main = ["chat_header", "message_stream", "chat_composer"]
+surface_composition_overlay = ["citation_drawer", "knowledge_switch_dialog"]
+required_surface_region_ids = ["conversation_sidebar", "chat_main", "citation_drawer", "knowledge_pages"]
+supported_chat_bubble_variants = ["assistant_soft", "assistant_minimal"]
+supported_chat_composer_variants = ["chatgpt_compact", "expanded"]
+optional_create_action_id = "create_document"
+optional_create_action_boundary = "INTERACT"
+optional_delete_action_id = "delete_document"
+optional_delete_action_boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "start_new_chat"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "select_session"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "open_knowledge_switch"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "search_documents"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "select_document"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "submit_chat"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "open_citation_drawer"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "browse_knowledge_bases"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_basketball_showcase"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_knowledge_base_detail"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_document_detail"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "return_from_citation"
+boundary = "ROUTE"
+
+[[frontend.state_channels]]
+state_id = "current_conversation"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "current_knowledge_base"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "current_document"
+sticky_from_context = "sticky_document"
+
+[[frontend.state_channels]]
+state_id = "current_section"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "citation_drawer_state"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "streaming_reply"
+sticky = false
+
+[workbench]
+required_region_ids = [
+  "conversation_sidebar",
+  "chat_main",
+  "citation_drawer",
+  "basketball_showcase_page",
+  "knowledge_list_page",
+  "knowledge_detail_page",
+  "document_detail_page",
+]
+required_library_actions = ["switch_knowledge_base", "browse_documents", "open_document_detail"]
+citation_query_keys = ["document", "section", "citation"]
+optional_create_action_id = "create_document"
+optional_delete_action_id = "delete_document"
+
+[[workbench.flow]]
+stage_id = "knowledge_base_select"
+depends_on = []
+produces = ["knowledge_base_id"]
+
+[[workbench.flow]]
+stage_id = "conversation"
+depends_on = ["knowledge_base_id"]
+produces = ["conversation_id", "answer", "citations"]
+
+[[workbench.flow]]
+stage_id = "citation_review"
+depends_on = ["conversation_id", "citations"]
+produces = ["document_id", "section_id", "drawer_state"]
+
+[[workbench.flow]]
+stage_id = "document_detail"
+depends_on = ["document_id", "section_id"]
+produces = ["document_page", "return_path"]

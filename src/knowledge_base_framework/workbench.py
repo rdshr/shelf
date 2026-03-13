@@ -8,49 +8,19 @@ if TYPE_CHECKING:
 
 # @governed_symbol id=kb.workbench.surface_contract owner=framework kind=surface_contract risk=high
 def build_workbench_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
-    library_actions = ["switch_knowledge_base", "browse_documents", "open_document_detail"]
-    if project.library.allow_create:
-        library_actions.append("create_document")
-    if project.library.allow_delete:
-        library_actions.append("delete_document")
-    flow = project.backend_spec.get(
-        "interaction_flow",
-        [
-            {
-                "stage_id": "knowledge_base_select",
-                "depends_on": [],
-                "produces": ["knowledge_base_id"],
-            },
-            {
-                "stage_id": "conversation",
-                "depends_on": ["knowledge_base_id"],
-                "produces": ["conversation_id", "answer", "citations"],
-            },
-            {
-                "stage_id": "citation_review",
-                "depends_on": ["conversation_id", "citations"],
-                "produces": ["document_id", "section_id", "drawer_state"],
-            },
-            {
-                "stage_id": "document_detail",
-                "depends_on": ["document_id", "section_id"],
-                "produces": ["document_page", "return_path"],
-            },
-        ],
+    contract = project.template_contract
+    library_actions = list(
+        contract.workbench_library_actions(
+            allow_create=project.library.allow_create,
+            allow_delete=project.library.allow_delete,
+        )
     )
+    flow = project.backend_spec.get("interaction_flow", list(contract.workbench_flow_dicts()))
 
     return {
         "module_id": project.domain_ir.module_id,
         "layout_variant": project.surface.layout_variant,
-        "regions": [
-            "conversation_sidebar",
-            "chat_main",
-            "citation_drawer",
-            "basketball_showcase_page",
-            "knowledge_list_page",
-            "knowledge_detail_page",
-            "document_detail_page",
-        ],
+        "regions": list(contract.workbench_region_ids),
         "surface": {
             "sidebar_width": project.surface.sidebar_width,
             "preview_mode": project.surface.preview_mode,
@@ -66,7 +36,7 @@ def build_workbench_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
         "return": project.return_config.to_dict(),
         "flow": flow,
         "citation_return_contract": {
-            "query_keys": ["document", "section", "citation"],
+            "query_keys": list(contract.workbench_citation_query_keys),
             "targets": list(project.return_config.targets),
             "anchor_restore": project.return_config.anchor_restore,
         },

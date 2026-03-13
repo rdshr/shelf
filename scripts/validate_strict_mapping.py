@@ -42,6 +42,7 @@ from project_runtime import (
     materialize_registered_project,
     resolve_project_template_registration,
 )
+from project_runtime.repository_policy import load_repository_validation_policy
 from project_runtime.project_governance import (
     build_project_discovery_audit,
     render_project_discovery_audit_markdown,
@@ -69,21 +70,11 @@ CORE_L1_STANDARD_FILE = "specs/框架设计核心标准.md"
 COMPATIBILITY_FACADE_FILE = "src/shelf_framework.py"
 SHELF_DOMAIN_FILE = "src/shelf_domain.py"
 
-DEFAULT_LEVEL_ORDER = ("L0", "L1", "L2", "L3")
-VALID_NODE_KINDS = {"layer", "file"}
-LEVEL_ALLOWED_PREFIXES: dict[str, tuple[str, ...]] = {
-    "L0": ("specs/",),
-    "L1": ("specs/",),
-    "L2": ("framework/",),
-    "L3": ("mapping/",),
-}
-REQUIRED_L1_ANCHORS_PER_L2 = (
-    "## 1. 能力声明（Capability Statement）",
-    "## 2. 边界定义（Boundary）",
-    "## 3. 最小可行基（Bases）",
-    "## 4. 组合原则（Combination Principles）",
-    "## 5. 验证（Verification）",
-)
+VALIDATION_POLICY = load_repository_validation_policy()
+DEFAULT_LEVEL_ORDER = VALIDATION_POLICY.default_level_order
+VALID_NODE_KINDS = VALIDATION_POLICY.valid_node_kinds
+LEVEL_ALLOWED_PREFIXES: dict[str, tuple[str, ...]] = VALIDATION_POLICY.level_allowed_prefixes
+REQUIRED_L1_ANCHORS_PER_L2 = VALIDATION_POLICY.required_l1_anchors_per_l2
 ASSIGN_CALL_PATTERN = re.compile(
     r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\(\s*$"
 )
@@ -121,16 +112,10 @@ FRAMEWORK_RULE_TOP_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+)`\s*(.*)$")
 FRAMEWORK_RULE_CHILD_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+\.\d+)`\s*(.*)$")
 FRAMEWORK_BACKTICK_CONTENT_PATTERN = re.compile(r"`([^`]+)`")
 FRAMEWORK_SYMBOL_TOKEN_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
-REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = (
-    "## 1. 能力声明",
-    "## 2. 边界定义",
-    "## 3. 最小可行基",
-    "## 4. 基组合原则",
-    "## 5. 验证",
-)
-PROJECT_ALLOWED_TOP_LEVEL_DIRS = {"assets", "generated"}
-PROJECT_ALLOWED_ROOT_FILES = {"product_spec.toml", "implementation_config.toml"}
-PROJECT_ALLOWED_DOC_SUFFIXES = {".md"}
+REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = VALIDATION_POLICY.required_framework_directive_sections
+PROJECT_ALLOWED_TOP_LEVEL_DIRS = VALIDATION_POLICY.allowed_project_top_level_dirs
+PROJECT_ALLOWED_ROOT_FILES = VALIDATION_POLICY.allowed_project_root_files
+PROJECT_ALLOWED_DOC_SUFFIXES = VALIDATION_POLICY.allowed_project_doc_suffixes
 
 Issue = dict[str, Any]
 
@@ -716,6 +701,79 @@ def validate_project_generation_discipline(
                 )
             )
 
+    return issues
+
+
+def _iter_repository_portability_scan_files(repo_root: Path = REPO_ROOT) -> tuple[Path, ...]:
+    policy = VALIDATION_POLICY.portability
+    files: list[Path] = []
+    excluded_roots = tuple((repo_root / item).resolve() for item in policy.excluded_roots)
+    for root_entry in policy.text_scan_roots:
+        target = (repo_root / root_entry).resolve()
+        if not target.exists():
+            continue
+        if target.is_file():
+            if target.suffix.lower() in policy.text_scan_extensions:
+                files.append(target)
+            continue
+        for path in sorted(target.rglob("*")):
+            if not path.is_file():
+                continue
+            if path.suffix.lower() not in policy.text_scan_extensions:
+                continue
+            resolved = path.resolve()
+            if any(resolved.is_relative_to(excluded) for excluded in excluded_roots):
+                continue
+            files.append(resolved)
+    return tuple(dict.fromkeys(files))
+
+
+def validate_repository_portability(repo_root: Path = REPO_ROOT) -> list[Issue]:
+    issues: list[Issue] = []
+    repo_root = repo_root.resolve()
+    policy = VALIDATION_POLICY
+    absolute_prefixes = {repo_root.as_posix()}
+    raw_repo_root = str(repo_root)
+    if raw_repo_root != repo_root.as_posix():
+        absolute_prefixes.add(raw_repo_root)
+
+    for file_path in _iter_repository_portability_scan_files(repo_root):
+        rel_file = file_path.relative_to(repo_root).as_posix()
+        text = read_text(file_path)
+        for prefix in sorted(absolute_prefixes):
+            if prefix in text:
+                issues.append(
+                    make_issue(
+                        "repository documents and templates must not embed machine-local absolute repository paths",
+                        rel_file,
+                        find_line(text, prefix),
+                        code="REPOSITORY_PORTABILITY_ABSOLUTE_PATH",
+                    )
+                )
+                break
+
+    expected_repo_fragment = f"github.com/{policy.public_repo_slug}/"
+    for issue_template_file in policy.portability.issue_template_files:
+        file_path = (repo_root / issue_template_file).resolve()
+        if not file_path.exists():
+            continue
+        text = read_text(file_path)
+        for idx, line in enumerate(text.splitlines(), start=1):
+            stripped = line.strip()
+            if not stripped.startswith("url:"):
+                continue
+            url = stripped.split(":", 1)[1].strip()
+            if "github.com/" not in url:
+                continue
+            if expected_repo_fragment not in url:
+                issues.append(
+                    make_issue(
+                        f"issue template links must point at the canonical public repo {policy.public_repo_slug}",
+                        issue_template_file,
+                        idx,
+                        code="ISSUE_TEMPLATE_REPO_URL_STALE",
+                    )
+                )
     return issues
 
 
@@ -3061,6 +3119,9 @@ def main() -> int:
                     code="MAPPING_CONTENT_VALIDATION_FAILED",
                 )
             )
+
+    if not issues:
+        issues.extend(validate_repository_portability())
 
     if not issues:
         issues.extend(validate_project_generation_discipline(scoped_project_spec_files))

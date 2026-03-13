@@ -66,11 +66,13 @@ class ProjectRuntimeTest(unittest.TestCase):
 
         self.assertEqual(project.metadata.project_id, "knowledge_base_basic")
         self.assertEqual(project.metadata.template, "knowledge_base_workbench")
+        self.assertEqual(project.template_contract.template_id, project.metadata.template)
         self.assertEqual(project.route.workbench, "/knowledge-base")
         self.assertEqual(project.route.basketball_showcase, "/knowledge-base/cxk-basketball")
         self.assertEqual(project.route.knowledge_list, "/knowledge-bases")
         self.assertEqual(project.route.api_prefix, "/api/knowledge")
         self.assertEqual(project.surface.layout_variant, "chatgpt_knowledge_client")
+        self.assertIn(project.implementation.frontend.renderer, project.template_contract.supported_frontend_renderers)
         self.assertEqual(project.visual.brand, "Shelf")
         self.assertEqual(len(project.documents), 3)
         self.assertTrue(project.features.upload)

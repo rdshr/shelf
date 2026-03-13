@@ -23,6 +23,7 @@ def _outcome(
 
 
 def validate_workbench_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, Any], ...]:
+    contract_spec = project.template_contract
     contract = project.workbench_contract
     ui_spec = project.ui_spec
     backend_spec = project.backend_spec
@@ -33,47 +34,41 @@ def validate_workbench_rules(project: "KnowledgeBaseProject") -> tuple[dict[str,
     knowledge_bases = contract["knowledge_bases"]
 
     r1_reasons: list[str] = []
-    for region in ("conversation_sidebar", "chat_main", "citation_drawer"):
+    for region in contract_spec.workbench_region_ids:
         if region not in region_ids:
             r1_reasons.append(f"missing workbench region: {region}")
     if contract["layout_variant"] != ui_spec.get("shell", {}).get("layout_variant"):
         r1_reasons.append("workbench layout_variant must match ui_spec.shell.layout_variant")
     if contract["surface"]["preview_mode"] != ui_spec.get("shell", {}).get("preview_mode"):
         r1_reasons.append("surface.preview_mode must match ui_spec.shell.preview_mode")
-    if project.library.default_focus != "current_knowledge_base":
-        r1_reasons.append("library.default_focus must stay current_knowledge_base")
-    if project.preview.anchor_mode != "heading":
-        r1_reasons.append("preview.anchor_mode must stay heading")
+    if project.library.default_focus != contract_spec.required_library_default_focus:
+        r1_reasons.append(f"library.default_focus must stay {contract_spec.required_library_default_focus}")
+    if project.preview.anchor_mode != contract_spec.required_preview_anchor_mode:
+        r1_reasons.append(f"preview.anchor_mode must stay {contract_spec.required_preview_anchor_mode}")
     library_actions = contract["library"].get("actions", [])
-    for action_id in ("switch_knowledge_base", "browse_documents", "open_document_detail"):
+    for action_id in contract_spec.workbench_base_library_actions:
         if action_id not in library_actions:
             r1_reasons.append(f"missing library action: {action_id}")
-    if project.library.allow_create and "create_document" not in library_actions:
-        r1_reasons.append("missing library action: create_document")
-    if project.library.allow_delete and "delete_document" not in library_actions:
-        r1_reasons.append("missing library action: delete_document")
+    if project.library.allow_create and contract_spec.workbench_optional_create_action_id not in library_actions:
+        r1_reasons.append(f"missing library action: {contract_spec.workbench_optional_create_action_id}")
+    if project.library.allow_delete and contract_spec.workbench_optional_delete_action_id not in library_actions:
+        r1_reasons.append(f"missing library action: {contract_spec.workbench_optional_delete_action_id}")
 
     r2_reasons: list[str] = []
     if not project.chat.enabled:
         r2_reasons.append("chat must stay enabled")
-    if project.chat.mode != "retrieval_stub":
-        r2_reasons.append("chat.mode must stay retrieval_stub")
+    if project.chat.mode != contract_spec.required_chat_mode:
+        r2_reasons.append(f"chat.mode must stay {contract_spec.required_chat_mode}")
     if project.chat.citation_style != backend_spec.get("answer_policy", {}).get("citation_style"):
         r2_reasons.append("chat.citation_style must match backend_spec.answer_policy.citation_style")
     if project.context.max_citations <= 0:
         r2_reasons.append("context.max_citations must be positive")
-    if "citation_drawer" not in citation_return["targets"]:
-        r2_reasons.append("citation return contract must include citation_drawer")
-    if "document_detail" not in citation_return["targets"]:
-        r2_reasons.append("citation return contract must include document_detail")
+    missing_return_targets = contract_spec.required_return_target_set() - set(citation_return["targets"])
+    for target in sorted(missing_return_targets):
+        r2_reasons.append(f"citation return contract must include {target}")
 
     r3_reasons: list[str] = []
-    if [item["stage_id"] for item in flow] != [
-        "knowledge_base_select",
-        "conversation",
-        "citation_review",
-        "document_detail",
-    ]:
+    if [item["stage_id"] for item in flow] != [item["stage_id"] for item in contract_spec.workbench_flow_dicts()]:
         r3_reasons.append(
             "workbench flow must stay knowledge_base_select -> conversation -> citation_review -> document_detail"
         )
@@ -93,7 +88,7 @@ def validate_workbench_rules(project: "KnowledgeBaseProject") -> tuple[dict[str,
         r4_reasons.append("citation cannot be removed from the workbench chain")
     if not project.return_config.enabled:
         r4_reasons.append("return_to_anchor cannot be removed from the workbench chain")
-    if project.return_config.citation_card_variant not in {"chips", "stacked", "compact"}:
+    if project.return_config.citation_card_variant not in contract_spec.supported_citation_card_variants:
         r4_reasons.append("return.citation_card_variant must stay within supported framework set")
 
     return (

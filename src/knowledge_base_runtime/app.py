@@ -19,7 +19,7 @@ def _require_backend_transport(project: KnowledgeBaseProject) -> dict[str, str]:
     if not isinstance(transport, dict):
         raise ValueError("backend_spec.transport is required for runtime app construction")
     mode = transport.get("mode")
-    if mode != "http_json":
+    if mode not in project.template_contract.supported_backend_transports:
         raise ValueError(f"unsupported backend transport: {mode}")
     product_spec_endpoint = transport.get("product_spec_endpoint")
     if not isinstance(product_spec_endpoint, str) or not product_spec_endpoint.startswith(project.route.api_prefix):
