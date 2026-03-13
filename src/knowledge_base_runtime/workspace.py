@@ -120,7 +120,11 @@ def verify_workspace_flow(project: KnowledgeBaseProject | None = None) -> Verifi
                 "ui_spec": resolved.ui_spec,
                 "backend_spec": resolved.backend_spec,
                 "workspace_flow": [item.to_dict() for item in compose_workspace_flow(resolved)],
-                "rule_validation": resolved.validation_reports.get("knowledge_base", {}),
+                "rule_validation": (
+                    resolved.validation_reports.knowledge_base.to_dict()
+                    if resolved.validation_reports.knowledge_base is not None
+                    else {}
+                ),
             },
         )
     )

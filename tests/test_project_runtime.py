@@ -97,7 +97,9 @@ class ProjectRuntimeTest(unittest.TestCase):
         self.assertEqual(project.ui_spec["components"]["chat_composer"]["submit_label"], "发送")
         self.assertEqual(project.backend_spec["return_policy"]["chat_path"], "/knowledge-base")
         self.assertEqual(project.backend_spec["interaction_copy"]["loading_text"], "正在检索知识库并整理回答…")
-        self.assertTrue(project.validation_reports["overall"]["passed"])
+        self.assertEqual(project.visual_tokens["bg"], project.template_contract.style_profiles.surface_presets["light"].bg)
+        self.assertEqual(project.visual_tokens["message_width"], project.template_contract.style_profiles.message_width)
+        self.assertTrue(project.validation_reports.passed)
 
         product_spec = project.to_product_spec_dict()
         self.assertEqual(product_spec["product"]["project_id"], "knowledge_base_basic")
@@ -276,7 +278,7 @@ class ProjectRuntimeTest(unittest.TestCase):
                 project.backend_spec["return_policy"]["document_detail_path"],
                 "/public-knowledge/bases/details/documents/{document_id}",
             )
-            self.assertTrue(project.validation_reports["overall"]["passed"])
+            self.assertTrue(project.validation_reports.passed)
 
             client = TestClient(build_project_app(product_spec_file))
 

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from project_runtime.knowledge_base import KnowledgeBaseProject
+
+from rule_validation_models import RuleValidationOutcome, RuleValidationSummary
 
 
 def _outcome(
@@ -11,18 +13,18 @@ def _outcome(
     name: str,
     passed: bool,
     reasons: list[str],
-    evidence: dict[str, Any],
-) -> dict[str, Any]:
-    return {
-        "rule_id": rule_id,
-        "name": name,
-        "passed": passed,
-        "reasons": reasons,
-        "evidence": evidence,
-    }
+    evidence: dict[str, object],
+) -> RuleValidationOutcome:
+    return RuleValidationOutcome(
+        rule_id=rule_id,
+        name=name,
+        passed=passed,
+        reasons=tuple(reasons),
+        evidence=evidence,
+    )
 
 
-def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, Any], ...]:
+def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[RuleValidationOutcome, ...]:
     contract_spec = project.template_contract
     contract = project.frontend_contract
     ui_spec = project.ui_spec
@@ -138,12 +140,5 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[dict[str, 
     )
 
 
-def summarize_frontend_rules(results: tuple[dict[str, Any], ...]) -> dict[str, Any]:
-    passed = sum(1 for item in results if item["passed"])
-    return {
-        "module_id": "frontend.L2.M0",
-        "passed": passed == len(results),
-        "passed_count": passed,
-        "rule_count": len(results),
-        "rules": list(results),
-    }
+def summarize_frontend_rules(results: tuple[RuleValidationOutcome, ...]) -> RuleValidationSummary:
+    return RuleValidationSummary(module_id="frontend.L2.M0", rules=results)

@@ -48,6 +48,102 @@ class ContractFlowStage:
 
 
 @dataclass(frozen=True)
+class SurfacePreset:
+    bg: str
+    panel: str
+    panel_soft: str
+    ink: str
+    muted: str
+    line: str
+
+
+@dataclass(frozen=True)
+class FontScalePreset:
+    body: str
+    title: str
+    hero: str
+
+
+@dataclass(frozen=True)
+class DensityPreset:
+    shell_gap: str
+    shell_padding: str
+    panel_gap: str
+
+
+@dataclass(frozen=True)
+class StyleProfileContract:
+    message_width: str
+    surface_presets: dict[str, SurfacePreset]
+    radius_scales: dict[str, str]
+    shadow_levels: dict[str, str]
+    font_scales: dict[str, FontScalePreset]
+    sidebar_widths: dict[str, str]
+    drawer_widths: dict[str, str]
+    density_presets: dict[str, DensityPreset]
+
+    def resolve_visual_tokens(
+        self,
+        *,
+        surface_preset: str,
+        radius_scale: str,
+        shadow_level: str,
+        font_scale: str,
+        sidebar_width: str,
+        density: str,
+        accent: str,
+        brand: str,
+        preview_mode: str,
+        preview_variant: str,
+    ) -> dict[str, str]:
+        palette = self.surface_presets.get(surface_preset)
+        if palette is None:
+            raise ValueError(f"unsupported visual.surface_preset: {surface_preset}")
+        radius = self.radius_scales.get(radius_scale)
+        if radius is None:
+            raise ValueError(f"unsupported visual.radius_scale: {radius_scale}")
+        shadow = self.shadow_levels.get(shadow_level)
+        if shadow is None:
+            raise ValueError(f"unsupported visual.shadow_level: {shadow_level}")
+        font = self.font_scales.get(font_scale)
+        if font is None:
+            raise ValueError(f"unsupported visual.font_scale: {font_scale}")
+        sidebar = self.sidebar_widths.get(sidebar_width)
+        if sidebar is None:
+            raise ValueError(f"unsupported surface.sidebar_width: {sidebar_width}")
+        drawer = self.drawer_widths.get(sidebar_width)
+        if drawer is None:
+            raise ValueError(f"unsupported drawer width preset for surface.sidebar_width: {sidebar_width}")
+        density_profile = self.density_presets.get(density)
+        if density_profile is None:
+            raise ValueError(f"unsupported surface.density: {density}")
+        return {
+            "bg": palette.bg,
+            "panel": palette.panel,
+            "panel_soft": palette.panel_soft,
+            "ink": palette.ink,
+            "muted": palette.muted,
+            "line": palette.line,
+            "accent": accent,
+            "accent_soft": f"{accent}22",
+            "radius": radius,
+            "brand": brand,
+            "shadow": shadow,
+            "font_body": font.body,
+            "font_title": font.title,
+            "font_hero": font.hero,
+            "message_width": self.message_width,
+            "sidebar_width": sidebar,
+            "drawer_width": drawer,
+            "shell_gap": density_profile.shell_gap,
+            "shell_padding": density_profile.shell_padding,
+            "panel_gap": density_profile.panel_gap,
+            "preview_mode": preview_mode,
+            "preview_variant": preview_variant,
+        }
+
+
+@dataclass(frozen=True)
 class KnowledgeBaseTemplateContract:
     template_id: str
     required_surface_shell: str
@@ -71,6 +167,7 @@ class KnowledgeBaseTemplateContract:
     supported_backend_renderers: frozenset[str]
     supported_backend_transports: frozenset[str]
     supported_backend_retrieval_strategies: frozenset[str]
+    style_profiles: StyleProfileContract
     shell_regions: tuple[str, ...]
     secondary_pages: tuple[str, ...]
     chat_home_slots: tuple[str, ...]
@@ -223,6 +320,69 @@ def _require_flow_stage_list(parent: dict[str, Any], key: str) -> tuple[Contract
     return tuple(stages)
 
 
+def _require_string_mapping(parent: dict[str, Any], key: str) -> dict[str, str]:
+    table = _require_table(parent, key)
+    mapping: dict[str, str] = {}
+    for item_key, item_value in table.items():
+        if not isinstance(item_key, str) or not item_key.strip():
+            raise ValueError(f"knowledge-base contract {key} must use non-empty string keys")
+        if not isinstance(item_value, str) or not item_value.strip():
+            raise ValueError(f"knowledge-base contract {key}.{item_key} must be a non-empty string")
+        mapping[item_key.strip()] = item_value.strip()
+    return mapping
+
+
+def _require_surface_presets(parent: dict[str, Any], key: str) -> dict[str, SurfacePreset]:
+    table = _require_table(parent, key)
+    presets: dict[str, SurfacePreset] = {}
+    for preset_name, preset_payload in table.items():
+        if not isinstance(preset_name, str) or not preset_name.strip():
+            raise ValueError(f"knowledge-base contract {key} must use non-empty string keys")
+        if not isinstance(preset_payload, dict):
+            raise ValueError(f"knowledge-base contract {key}.{preset_name} must be an object")
+        presets[preset_name.strip()] = SurfacePreset(
+            bg=_require_string(preset_payload, "bg"),
+            panel=_require_string(preset_payload, "panel"),
+            panel_soft=_require_string(preset_payload, "panel_soft"),
+            ink=_require_string(preset_payload, "ink"),
+            muted=_require_string(preset_payload, "muted"),
+            line=_require_string(preset_payload, "line"),
+        )
+    return presets
+
+
+def _require_font_scales(parent: dict[str, Any], key: str) -> dict[str, FontScalePreset]:
+    table = _require_table(parent, key)
+    scales: dict[str, FontScalePreset] = {}
+    for scale_name, scale_payload in table.items():
+        if not isinstance(scale_name, str) or not scale_name.strip():
+            raise ValueError(f"knowledge-base contract {key} must use non-empty string keys")
+        if not isinstance(scale_payload, dict):
+            raise ValueError(f"knowledge-base contract {key}.{scale_name} must be an object")
+        scales[scale_name.strip()] = FontScalePreset(
+            body=_require_string(scale_payload, "body"),
+            title=_require_string(scale_payload, "title"),
+            hero=_require_string(scale_payload, "hero"),
+        )
+    return scales
+
+
+def _require_density_presets(parent: dict[str, Any], key: str) -> dict[str, DensityPreset]:
+    table = _require_table(parent, key)
+    presets: dict[str, DensityPreset] = {}
+    for density_name, density_payload in table.items():
+        if not isinstance(density_name, str) or not density_name.strip():
+            raise ValueError(f"knowledge-base contract {key} must use non-empty string keys")
+        if not isinstance(density_payload, dict):
+            raise ValueError(f"knowledge-base contract {key}.{density_name} must be an object")
+        presets[density_name.strip()] = DensityPreset(
+            shell_gap=_require_string(density_payload, "shell_gap"),
+            shell_padding=_require_string(density_payload, "shell_padding"),
+            panel_gap=_require_string(density_payload, "panel_gap"),
+        )
+    return presets
+
+
 @lru_cache(maxsize=1)
 def load_knowledge_base_template_contract() -> KnowledgeBaseTemplateContract:
     with CONTRACT_FILE.open("rb") as fh:
@@ -239,6 +399,7 @@ def load_knowledge_base_template_contract() -> KnowledgeBaseTemplateContract:
     product_return = _require_table(product_table, "return")
     product_a11y = _require_table(product_table, "a11y")
     implementation_table = _require_table(data, "implementation")
+    style_profiles_table = _require_table(implementation_table, "style_profiles")
     frontend_table = _require_table(data, "frontend")
     workbench_table = _require_table(data, "workbench")
 
@@ -270,6 +431,16 @@ def load_knowledge_base_template_contract() -> KnowledgeBaseTemplateContract:
         supported_backend_transports=frozenset(_require_string_tuple(implementation_table, "supported_backend_transports")),
         supported_backend_retrieval_strategies=frozenset(
             _require_string_tuple(implementation_table, "supported_backend_retrieval_strategies")
+        ),
+        style_profiles=StyleProfileContract(
+            message_width=_require_string(style_profiles_table, "message_width"),
+            surface_presets=_require_surface_presets(style_profiles_table, "surface_presets"),
+            radius_scales=_require_string_mapping(style_profiles_table, "radius_scales"),
+            shadow_levels=_require_string_mapping(style_profiles_table, "shadow_levels"),
+            font_scales=_require_font_scales(style_profiles_table, "font_scales"),
+            sidebar_widths=_require_string_mapping(style_profiles_table, "sidebar_widths"),
+            drawer_widths=_require_string_mapping(style_profiles_table, "drawer_widths"),
+            density_presets=_require_density_presets(style_profiles_table, "density_presets"),
         ),
         shell_regions=_require_string_tuple(frontend_table, "shell_regions"),
         secondary_pages=_require_string_tuple(frontend_table, "secondary_pages"),

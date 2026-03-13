@@ -29,6 +29,7 @@ from project_runtime.template_registry import (
     detect_project_template_id as detect_registered_project_template_id,
     register_project_template,
 )
+from rule_validation_models import ValidationReports
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE = REPO_ROOT / "projects/knowledge_base_basic/product_spec.toml"
@@ -74,61 +75,6 @@ def assert_supported_project_template(product_spec_file: str | Path) -> str:
     if template_id != KNOWLEDGE_BASE_TEMPLATE_ID:
         raise ValueError(f"unsupported project template: {template_id}")
     return template_id
-
-SURFACE_PRESETS: dict[str, dict[str, str]] = {
-    "sand": {
-        "bg": "#f4efe5",
-        "panel": "#fffaf2",
-        "panel_soft": "#f7f1e7",
-        "ink": "#1b1f24",
-        "muted": "#6d6a65",
-        "line": "rgba(27, 31, 36, 0.12)",
-    },
-    "light": {
-        "bg": "#f6f7fb",
-        "panel": "#ffffff",
-        "panel_soft": "#f4f6fb",
-        "ink": "#111827",
-        "muted": "#667085",
-        "line": "rgba(17, 24, 39, 0.10)",
-    },
-}
-
-RADIUS_PRESETS = {
-    "sm": "12px",
-    "md": "18px",
-    "lg": "24px",
-    "xl": "30px",
-}
-
-SHADOW_PRESETS = {
-    "sm": "0 10px 28px rgba(15, 23, 42, 0.08)",
-    "md": "0 18px 48px rgba(15, 23, 42, 0.10)",
-    "lg": "0 24px 60px rgba(12, 17, 22, 0.30)",
-}
-
-FONT_PRESETS = {
-    "sm": {"body": "0.94rem", "title": "1.45rem", "hero": "1.55rem"},
-    "md": {"body": "1rem", "title": "1.6rem", "hero": "1.7rem"},
-    "lg": {"body": "1.05rem", "title": "1.72rem", "hero": "1.84rem"},
-}
-
-SIDEBAR_WIDTH_PRESETS = {
-    "compact": "280px",
-    "md": "300px",
-    "wide": "320px",
-}
-
-RAIL_WIDTH_PRESETS = {
-    "compact": "340px",
-    "md": "370px",
-    "wide": "390px",
-}
-
-DENSITY_PRESETS = {
-    "compact": {"shell_gap": "14px", "shell_padding": "14px", "panel_gap": "12px"},
-    "comfortable": {"shell_gap": "18px", "shell_padding": "18px", "panel_gap": "16px"},
-}
 
 
 def _relative_path(path: Path) -> str:
@@ -846,7 +792,7 @@ class KnowledgeBaseProject:
     workbench_contract: dict[str, Any] = field(default_factory=dict)
     ui_spec: dict[str, Any] = field(default_factory=dict)
     backend_spec: dict[str, Any] = field(default_factory=dict)
-    validation_reports: dict[str, Any] = field(default_factory=dict)
+    validation_reports: ValidationReports = field(default_factory=ValidationReports.empty)
     generated_artifacts: GeneratedArtifactPaths | None = None
 
     @property
@@ -942,7 +888,7 @@ class KnowledgeBaseProject:
             "ui_spec": self.ui_spec,
             "backend_spec": self.backend_spec,
             "documents": [item.to_dict() for item in self.documents],
-            "validation_reports": self.validation_reports,
+            "validation_reports": self.validation_reports.to_dict(),
             "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
         }
 
@@ -977,16 +923,8 @@ class KnowledgeBaseProject:
                     "citation_style": self.backend_spec.get("answer_policy", {}).get("citation_style"),
                 },
             },
-            "validation_reports": self.validation_reports,
-            "validation_summary": {
-                key: {
-                    "passed": value["passed"],
-                    "passed_count": value["passed_count"],
-                    "rule_count": value["rule_count"],
-                }
-                for key, value in self.validation_reports.items()
-                if isinstance(value, dict) and {"passed", "passed_count", "rule_count"} <= set(value)
-            },
+            "validation_reports": self.validation_reports.to_dict(),
+            "validation_summary": self.validation_reports.summary_by_scope(),
             "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
         }
 
@@ -1464,46 +1402,19 @@ def _collect_framework_closure(*roots: FrameworkModuleIR) -> tuple[FrameworkModu
 
 
 def _build_visual_tokens(visual: VisualConfig, surface: SurfaceConfig, preview: PreviewConfig) -> dict[str, str]:
-    surface_tokens = SURFACE_PRESETS.get(visual.surface_preset)
-    if surface_tokens is None:
-        raise ValueError(f"unsupported visual.surface_preset: {visual.surface_preset}")
-    radius_value = RADIUS_PRESETS.get(visual.radius_scale)
-    if radius_value is None:
-        raise ValueError(f"unsupported visual.radius_scale: {visual.radius_scale}")
-    shadow_value = SHADOW_PRESETS.get(visual.shadow_level)
-    if shadow_value is None:
-        raise ValueError(f"unsupported visual.shadow_level: {visual.shadow_level}")
-    font_values = FONT_PRESETS.get(visual.font_scale)
-    if font_values is None:
-        raise ValueError(f"unsupported visual.font_scale: {visual.font_scale}")
-    sidebar_width = SIDEBAR_WIDTH_PRESETS.get(surface.sidebar_width)
-    if sidebar_width is None:
-        raise ValueError(f"unsupported surface.sidebar_width: {surface.sidebar_width}")
-    rail_width = RAIL_WIDTH_PRESETS.get(surface.sidebar_width)
-    if rail_width is None:
-        raise ValueError(f"unsupported drawer width preset for surface.sidebar_width: {surface.sidebar_width}")
-    density_values = DENSITY_PRESETS.get(surface.density)
-    if density_values is None:
-        raise ValueError(f"unsupported surface.density: {surface.density}")
-    return {
-        **surface_tokens,
-        "accent": visual.accent,
-        "accent_soft": f"{visual.accent}22",
-        "radius": radius_value,
-        "brand": visual.brand,
-        "shadow": shadow_value,
-        "font_body": font_values["body"],
-        "font_title": font_values["title"],
-        "font_hero": font_values["hero"],
-        "message_width": "820px",
-        "sidebar_width": sidebar_width,
-        "drawer_width": rail_width,
-        "shell_gap": density_values["shell_gap"],
-        "shell_padding": density_values["shell_padding"],
-        "panel_gap": density_values["panel_gap"],
-        "preview_mode": surface.preview_mode,
-        "preview_variant": preview.preview_variant,
-    }
+    template_contract = load_knowledge_base_template_contract()
+    return template_contract.style_profiles.resolve_visual_tokens(
+        surface_preset=visual.surface_preset,
+        radius_scale=visual.radius_scale,
+        shadow_level=visual.shadow_level,
+        font_scale=visual.font_scale,
+        sidebar_width=surface.sidebar_width,
+        density=surface.density,
+        accent=visual.accent,
+        brand=visual.brand,
+        preview_mode=surface.preview_mode,
+        preview_variant=preview.preview_variant,
+    )
 
 
 def _pick_boundary_name(module: FrameworkModuleIR, boundary_id: str, fallback: str) -> str:
@@ -1963,7 +1874,7 @@ def _validate_implementation_config(
         raise ValueError("backend.retrieval_strategy must match chat.mode")
 
 
-def _collect_validation_reports(project: KnowledgeBaseProject) -> dict[str, Any]:
+def _collect_validation_reports(project: KnowledgeBaseProject) -> ValidationReports:
     from frontend_kernel import summarize_frontend_rules, validate_frontend_rules
     from knowledge_base_framework import summarize_workbench_rules, validate_workbench_rules
 
@@ -1971,28 +1882,22 @@ def _collect_validation_reports(project: KnowledgeBaseProject) -> dict[str, Any]
     workbench_results = validate_workbench_rules(project)
     frontend_summary = summarize_frontend_rules(frontend_results)
     workbench_summary = summarize_workbench_rules(workbench_results)
-    return {
-        "frontend": frontend_summary,
-        "knowledge_base": workbench_summary,
-        "overall": {
-            "passed": frontend_summary["passed"] and workbench_summary["passed"],
-            "passed_count": frontend_summary["passed_count"] + workbench_summary["passed_count"],
-            "rule_count": frontend_summary["rule_count"] + workbench_summary["rule_count"],
-        },
-    }
+    return ValidationReports(frontend=frontend_summary, knowledge_base=workbench_summary)
 
 
-def _raise_on_validation_failures(reports: dict[str, Any]) -> None:
+def _raise_on_validation_failures(reports: ValidationReports) -> None:
     errors: list[str] = []
-    for scope in ("frontend", "knowledge_base"):
-        report = reports.get(scope)
-        if not isinstance(report, dict):
+    for scope, report in (
+        ("frontend", reports.frontend),
+        ("knowledge_base", reports.knowledge_base),
+    ):
+        if report is None:
             continue
-        for item in report.get("rules", []):
-            if item.get("passed"):
+        for item in report.rules:
+            if item.passed:
                 continue
-            reasons = ", ".join(item.get("reasons", [])) or "unknown rule failure"
-            errors.append(f"{scope}.{item.get('rule_id')}: {reasons}")
+            reasons = ", ".join(item.reasons) or "unknown rule failure"
+            errors.append(f"{scope}.{item.rule_id}: {reasons}")
     if errors:
         raise ValueError("framework rule validation failed: " + " | ".join(errors))
 

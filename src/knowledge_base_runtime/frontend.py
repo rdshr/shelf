@@ -100,7 +100,9 @@ def verify_knowledge_base_frontend(project: KnowledgeBaseProject | None = None) 
                 "bases": [item.to_dict() for item in _module_bases(resolved)],
                 "frontend_contract": resolved.frontend_contract,
                 "ui_spec": resolved.ui_spec,
-                "rule_validation": resolved.validation_reports.get("frontend", {}),
+                "rule_validation": (
+                    resolved.validation_reports.frontend.to_dict() if resolved.validation_reports.frontend is not None else {}
+                ),
             },
         )
     )
