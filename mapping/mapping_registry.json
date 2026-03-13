@@ -3,6 +3,10 @@
     "updated_at": "2026-03-10",
     "l3_sync_notes": [
       {
+        "id": "SYNC-20260311-wx-framework-bases-refined",
+        "note": "Refine framework/wx-framework wording so each module uses 3-5 more concrete bases, with clearer L1/L2 upstream references and lower reading cost."
+      },
+      {
         "id": "SYNC-20260310-wx-framework",
         "note": "Add framework/wx-framework as a structure-first layered standard for message-bus-driven multi-channel personal assistants, with L0 atoms, L1 orchestration modules, and one L2 framework standard registered in the tree."
       },
