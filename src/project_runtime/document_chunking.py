@@ -46,7 +46,6 @@ DOCUMENT_CHUNKING_PRODUCT_SPEC_LAYOUT = config_layout(
         "segmentation",
         "role_judgment",
         "composition",
-        "ownership",
         "output",
         "validation",
     },
@@ -264,30 +263,26 @@ class CompositionConfig:
 
 
 @dataclass(frozen=True)
-class OwnershipConfig:
-    header: tuple[str, ...]
-    required_columns: tuple[str, ...]
-    unique_block_to_chunk: bool
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "header": list(self.header),
-            "required_columns": list(self.required_columns),
-            "unique_block_to_chunk": self.unique_block_to_chunk,
-        }
-
-
-@dataclass(frozen=True)
 class OutputConfig:
     format_name: str
     render_medium: str
+    document_format_field: str
+    document_format_value: str
+    document_format_scope: str
+    expose_paragraph_block_projection: bool
+    paragraph_block_projection_name: str
+    paragraph_block_projection_fence_scope: str
+    expose_chunk_membership_projection: bool
+    chunk_membership_projection_name: str
+    chunk_membership_include_ordered_block_ids: bool
     chunk_item_layout: str
     text_id_field: str
     chunk_id_field: str
     chunk_text_field: str
+    title_block_id_field: str
+    body_block_id_set_field: str
     chunk_collection_field: str
     include_paragraph_blocks: bool
-    include_ownership_records: bool
     include_trace_meta: bool
 
     def to_dict(self) -> dict[str, Any]:
@@ -311,7 +306,6 @@ class DocumentChunkingProduct:
     segmentation: SegmentationConfig
     role_judgment: RoleJudgmentConfig
     composition: CompositionConfig
-    ownership: OwnershipConfig
     output: OutputConfig
     validation: ValidationConfig
 
@@ -321,7 +315,6 @@ class DocumentChunkingProduct:
             "segmentation": self.segmentation.to_dict(),
             "role_judgment": self.role_judgment.to_dict(),
             "composition": self.composition.to_dict(),
-            "ownership": self.ownership.to_dict(),
             "output": self.output.to_dict(),
             "validation": self.validation.to_dict(),
         }
@@ -334,6 +327,9 @@ class RuntimeConfig:
     api_prefix: str
     write_markdown_output: bool
     default_markdown_output: str
+    write_auxiliary_output_files: bool
+    paragraph_block_output_suffix: str
+    chunk_membership_output_suffix: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -450,6 +446,9 @@ class DocumentChunkingProject:
                 "cli_command": self.implementation.runtime.cli_command,
                 "write_markdown_output": self.implementation.runtime.write_markdown_output,
                 "default_markdown_output": self.implementation.runtime.default_markdown_output,
+                "write_auxiliary_output_files": self.implementation.runtime.write_auxiliary_output_files,
+                "paragraph_block_output_suffix": self.implementation.runtime.paragraph_block_output_suffix,
+                "chunk_membership_output_suffix": self.implementation.runtime.chunk_membership_output_suffix,
             },
             "pipeline_contract": {
                 "normalization_mode": self.implementation.pipeline.normalization_mode,
@@ -513,7 +512,6 @@ def _load_product_spec(product_spec_path: Path) -> tuple[ProjectMetadata, Framew
     segmentation_table = _require_table(raw, "segmentation")
     role_judgment_table = _require_table(raw, "role_judgment")
     composition_table = _require_table(raw, "composition")
-    ownership_table = _require_table(raw, "ownership")
     output_table = _require_table(raw, "output")
     validation_table = _require_table(raw, "validation")
 
@@ -556,21 +554,26 @@ def _load_product_spec(product_spec_path: Path) -> tuple[ProjectMetadata, Framew
             closure=_require_string(composition_table, "closure"),
             preserve_order=_require_bool(composition_table, "preserve_order"),
         ),
-        ownership=OwnershipConfig(
-            header=_require_string_tuple(ownership_table, "header"),
-            required_columns=_require_string_tuple(ownership_table, "required_columns"),
-            unique_block_to_chunk=_require_bool(ownership_table, "unique_block_to_chunk"),
-        ),
         output=OutputConfig(
             format_name=_require_string(output_table, "format_name"),
             render_medium=_require_string(output_table, "render_medium"),
+            document_format_field=_require_string(output_table, "document_format_field"),
+            document_format_value=_require_string(output_table, "document_format_value"),
+            document_format_scope=_require_string(output_table, "document_format_scope"),
+            expose_paragraph_block_projection=_require_bool(output_table, "expose_paragraph_block_projection"),
+            paragraph_block_projection_name=_require_string(output_table, "paragraph_block_projection_name"),
+            paragraph_block_projection_fence_scope=_require_string(output_table, "paragraph_block_projection_fence_scope"),
+            expose_chunk_membership_projection=_require_bool(output_table, "expose_chunk_membership_projection"),
+            chunk_membership_projection_name=_require_string(output_table, "chunk_membership_projection_name"),
+            chunk_membership_include_ordered_block_ids=_require_bool(output_table, "chunk_membership_include_ordered_block_ids"),
             chunk_item_layout=_require_string(output_table, "chunk_item_layout"),
             text_id_field=_require_string(output_table, "text_id_field"),
             chunk_id_field=_require_string(output_table, "chunk_id_field"),
             chunk_text_field=_require_string(output_table, "chunk_text_field"),
+            title_block_id_field=_require_string(output_table, "title_block_id_field"),
+            body_block_id_set_field=_require_string(output_table, "body_block_id_set_field"),
             chunk_collection_field=_require_string(output_table, "chunk_collection_field"),
             include_paragraph_blocks=_require_bool(output_table, "include_paragraph_blocks"),
-            include_ownership_records=_require_bool(output_table, "include_ownership_records"),
             include_trace_meta=_require_bool(output_table, "include_trace_meta"),
         ),
         validation=ValidationConfig(
@@ -596,6 +599,9 @@ def _load_implementation_config(implementation_config_path: Path) -> DocumentChu
             api_prefix=_require_string(runtime_table, "api_prefix"),
             write_markdown_output=_require_bool(runtime_table, "write_markdown_output"),
             default_markdown_output=_require_string(runtime_table, "default_markdown_output"),
+            write_auxiliary_output_files=_require_bool(runtime_table, "write_auxiliary_output_files"),
+            paragraph_block_output_suffix=_require_string(runtime_table, "paragraph_block_output_suffix"),
+            chunk_membership_output_suffix=_require_string(runtime_table, "chunk_membership_output_suffix"),
         ),
         pipeline=PipelineConfig(
             normalization_mode=_require_string(pipeline_table, "normalization_mode"),
@@ -641,16 +647,40 @@ def _validate_product_spec(
         raise ValueError("composition.group_shape must be 1_title_plus_zero_or_more_body")
     if product.composition.anchor_role != "title" or product.composition.member_role != "body":
         raise ValueError("composition anchor/member roles must be title/body")
-    if tuple(product.ownership.required_columns) != ("block_id", "text_chunk_id", "block_role", "position_in_chunk"):
-        raise ValueError("ownership.required_columns must match the ownership table contract")
     if product.output.render_medium != "markdown_document":
         raise ValueError("output.render_medium must be markdown_document")
-    if product.output.chunk_item_layout != "chunk_id_then_chunk_text":
-        raise ValueError("output.chunk_item_layout must be chunk_id_then_chunk_text")
+    if product.output.document_format_field != "document_format":
+        raise ValueError("output.document_format_field must be document_format")
+    if product.output.document_format_value != "markdown":
+        raise ValueError("output.document_format_value must be markdown")
+    if product.output.document_format_scope != "document_level":
+        raise ValueError("output.document_format_scope must be document_level")
+    if not product.output.expose_paragraph_block_projection:
+        raise ValueError("output.expose_paragraph_block_projection must be true")
+    if product.output.paragraph_block_projection_name != "paragraph_block_set":
+        raise ValueError("output.paragraph_block_projection_name must be paragraph_block_set")
+    if product.output.paragraph_block_projection_fence_scope != "document_level":
+        raise ValueError("output.paragraph_block_projection_fence_scope must be document_level")
+    if not product.output.expose_chunk_membership_projection:
+        raise ValueError("output.expose_chunk_membership_projection must be true")
+    if product.output.chunk_membership_projection_name != "chunk_membership_set":
+        raise ValueError("output.chunk_membership_projection_name must be chunk_membership_set")
+    if product.output.chunk_membership_include_ordered_block_ids:
+        raise ValueError("output.chunk_membership_include_ordered_block_ids must be false")
+    if product.output.chunk_item_layout != "chunk_id_then_chunk_text_with_block_refs":
+        raise ValueError("output.chunk_item_layout must be chunk_id_then_chunk_text_with_block_refs")
     if product.output.text_id_field != "text_id":
         raise ValueError("output.text_id_field must be text_id")
+    if product.output.title_block_id_field != "title_block_id":
+        raise ValueError("output.title_block_id_field must be title_block_id")
+    if product.output.body_block_id_set_field != "body_block_id_set":
+        raise ValueError("output.body_block_id_set_field must be body_block_id_set")
     if product.output.chunk_collection_field != "ordered_chunk_item_set":
         raise ValueError("output.chunk_collection_field must be ordered_chunk_item_set")
+    if not product.output.include_paragraph_blocks:
+        raise ValueError("output.include_paragraph_blocks must be true")
+    if not product.output.include_trace_meta:
+        raise ValueError("output.include_trace_meta must be true")
     if product.validation.max_chunk_items < 1:
         raise ValueError("validation.max_chunk_items must be positive")
     if not framework.preset:
@@ -677,6 +707,10 @@ def _validate_implementation_config(
         raise ValueError("runtime.api_prefix must start with '/'")
     if not implementation.runtime.default_markdown_output.endswith(".md"):
         raise ValueError("runtime.default_markdown_output must end with .md")
+    if not implementation.runtime.paragraph_block_output_suffix.endswith(".md"):
+        raise ValueError("runtime.paragraph_block_output_suffix must end with .md")
+    if not implementation.runtime.chunk_membership_output_suffix.endswith(".md"):
+        raise ValueError("runtime.chunk_membership_output_suffix must end with .md")
     for endpoint in (
         implementation.evidence.product_spec_endpoint,
         implementation.evidence.process_text_endpoint,
@@ -727,6 +761,21 @@ def build_implementation_effect_manifest(project: DocumentChunkingProject) -> di
             "value": project.implementation.runtime.default_markdown_output,
             "relation": "equals",
             "targets": ["runtime_contract.default_markdown_output"],
+        },
+        "runtime.write_auxiliary_output_files": {
+            "value": project.implementation.runtime.write_auxiliary_output_files,
+            "relation": "equals",
+            "targets": ["runtime_contract.write_auxiliary_output_files"],
+        },
+        "runtime.paragraph_block_output_suffix": {
+            "value": project.implementation.runtime.paragraph_block_output_suffix,
+            "relation": "equals",
+            "targets": ["runtime_contract.paragraph_block_output_suffix"],
+        },
+        "runtime.chunk_membership_output_suffix": {
+            "value": project.implementation.runtime.chunk_membership_output_suffix,
+            "relation": "equals",
+            "targets": ["runtime_contract.chunk_membership_output_suffix"],
         },
         "runtime.api_prefix": {
             "value": project.implementation.runtime.api_prefix,
@@ -858,10 +907,18 @@ def build_governance_closure(project: DocumentChunkingProject) -> ProjectGoverna
             semantic={
                 "group_shape": project.product.composition.group_shape,
                 "allowed_roles": list(project.product.role_judgment.allowed_roles),
+                "document_format_scope": project.product.output.document_format_scope,
+                "paragraph_block_projection_name": project.product.output.paragraph_block_projection_name,
+                "paragraph_block_projection_fence_scope": project.product.output.paragraph_block_projection_fence_scope,
+                "chunk_membership_projection_name": project.product.output.chunk_membership_projection_name,
+                "chunk_membership_include_ordered_block_ids": project.product.output.chunk_membership_include_ordered_block_ids,
                 "output_fields": {
+                    "document_format": project.product.output.document_format_field,
                     "text_id": project.product.output.text_id_field,
                     "chunk_id": project.product.output.chunk_id_field,
                     "chunk_text": project.product.output.chunk_text_field,
+                    "title_block_id": project.product.output.title_block_id_field,
+                    "body_block_id_set": project.product.output.body_block_id_set_field,
                 },
             },
             required_roles=(
@@ -885,11 +942,12 @@ def build_governance_closure(project: DocumentChunkingProject) -> ProjectGoverna
             sources_framework=(
                 SourceRef("framework", project.framework.domain, "module", project.domain_ir.module_id),
                 SourceRef("framework", project.framework.domain, "rule", "R1"),
-                SourceRef("framework", project.framework.domain, "rule", "R5"),
+                SourceRef("framework", project.framework.domain, "rule", "R4"),
             ),
             sources_product=(
-                SourceRef("product", project.product_spec_file, "table", "segmentation"),
+                SourceRef("product", project.product_spec_file, "table", "composition"),
                 SourceRef("product", project.product_spec_file, "table", "output"),
+                SourceRef("product", project.product_spec_file, "table", "validation"),
             ),
             sources_implementation=(
                 SourceRef("implementation", project.implementation_config_file, "table", "pipeline"),
@@ -987,7 +1045,7 @@ def build_governance_closure(project: DocumentChunkingProject) -> ProjectGoverna
                 ),
             ),
             sources_framework=(
-                SourceRef("framework", project.framework.domain, "rule", "R5"),
+                SourceRef("framework", project.framework.domain, "rule", "R4"),
             ),
             sources_product=(
                 SourceRef("product", project.product_spec_file, "table", "output"),
@@ -1035,7 +1093,6 @@ def build_governance_closure(project: DocumentChunkingProject) -> ProjectGoverna
                 "segmentation",
                 "role_judgment",
                 "composition",
-                "ownership",
                 "output",
                 "validation",
             )
@@ -1195,7 +1252,6 @@ def _build_document_chunking_governance_nodes(
         "segmentation",
         "role_judgment",
         "composition",
-        "ownership",
         "output",
         "validation",
     ):
@@ -1526,6 +1582,158 @@ def build_document_chunking_runtime_app_from_spec(
     return build_document_chunking_app(project)
 
 
+def _resolve_runtime_output_anchor(
+    project: DocumentChunkingProject,
+    output_file: str | Path | None,
+) -> Path:
+    resolved_output_file = Path(output_file or project.implementation.runtime.default_markdown_output)
+    if not resolved_output_file.is_absolute():
+        resolved_output_file = (REPO_ROOT / resolved_output_file).resolve()
+    resolved_output_file.parent.mkdir(parents=True, exist_ok=True)
+    return resolved_output_file
+
+
+def _derive_auxiliary_output_path(anchor_file: Path, suffix: str) -> Path:
+    resolved_path = anchor_file.with_name(f"{anchor_file.stem}{suffix}")
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    return resolved_path
+
+
+def _render_paragraph_block_projection_markdown(
+    *,
+    document_name: str,
+    text_id: str,
+    projection_name: str,
+    projection_fence_scope: str,
+    paragraph_blocks: list[dict[str, Any]],
+) -> str:
+    if projection_fence_scope != "document_level":
+        raise ValueError(f"unsupported paragraph_block_projection_fence_scope: {projection_fence_scope}")
+
+    lines = [
+        "```markdown",
+        f"document_name: {document_name}",
+        f"text_id: {text_id}",
+        f"projection_name: {projection_name}",
+        "",
+    ]
+    for block in paragraph_blocks:
+        lines.append(f"block_id: {block['block_id']}")
+        lines.append(f"order_index: {block['order_index']}")
+        lines.append(f"start_offset: {block['start_offset']}")
+        lines.append(f"end_offset: {block['end_offset']}")
+        lines.append(f"document_id: {block['document_id']}")
+        lines.append(f"is_document_end: {str(block['is_document_end']).lower()}")
+        lines.append("text:")
+        lines.extend(str(block["text"]).splitlines())
+        lines.append("")
+    lines.append("```")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_chunk_membership_projection_markdown(
+    *,
+    document_name: str,
+    text_id: str,
+    projection_name: str,
+    include_ordered_block_ids: bool,
+    chunk_matches: list[dict[str, Any]],
+) -> str:
+    lines = [
+        f"document_name: {document_name}",
+        f"text_id: {text_id}",
+        f"projection_name: {projection_name}",
+        "",
+    ]
+    for chunk_match in chunk_matches:
+        lines.append(f"chunk_id: {chunk_match['chunk_id']}")
+        lines.append(f"text_chunk_id: {chunk_match['text_chunk_id']}")
+        lines.append(f"title_block_id: {chunk_match['title_block_id']}")
+        lines.append("body_block_id_set:")
+        for item in chunk_match["body_block_id_set"]:
+            lines.append(f"- {item}")
+        if include_ordered_block_ids:
+            lines.append("ordered_block_id_set:")
+            for item in chunk_match["ordered_block_id_set"]:
+                lines.append(f"- {item}")
+        lines.append(f"start_order: {chunk_match['start_order']}")
+        lines.append(f"end_order: {chunk_match['end_order']}")
+        lines.append(f"closure_reason: {chunk_match['closure_reason']}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_document_chunking_auxiliary_outputs(
+    *,
+    product_spec_file: str | Path = DEFAULT_DOCUMENT_CHUNKING_PRODUCT_SPEC_FILE,
+    result: dict[str, Any],
+    output_file: str | Path | None = None,
+) -> dict[str, str]:
+    project = load_document_chunking_project(product_spec_file)
+    anchor_file = _resolve_runtime_output_anchor(project, output_file)
+    written_files: dict[str, str] = {}
+
+    if project.product.output.expose_paragraph_block_projection:
+        paragraph_block_output_path = _derive_auxiliary_output_path(
+            anchor_file,
+            project.implementation.runtime.paragraph_block_output_suffix,
+        )
+        paragraph_blocks = [dict(item) for item in result["paragraph_block_set"]]
+        paragraph_block_payload = {
+            "document_name": str(result["document_name"]),
+            "text_id": str(result["output"]["text_id"]),
+            project.product.output.paragraph_block_projection_name: paragraph_blocks,
+        }
+        paragraph_block_output_path.write_text(
+            _render_paragraph_block_projection_markdown(
+                document_name=str(paragraph_block_payload["document_name"]),
+                text_id=str(paragraph_block_payload["text_id"]),
+                projection_name=project.product.output.paragraph_block_projection_name,
+                projection_fence_scope=project.product.output.paragraph_block_projection_fence_scope,
+                paragraph_blocks=paragraph_blocks,
+            ),
+            encoding="utf-8",
+        )
+        written_files["paragraph_block_output_file"] = _relative_path(paragraph_block_output_path)
+
+    if project.product.output.expose_chunk_membership_projection:
+        chunk_membership_output_path = _derive_auxiliary_output_path(
+            anchor_file,
+            project.implementation.runtime.chunk_membership_output_suffix,
+        )
+        chunk_matches: list[dict[str, Any]] = [
+            {
+                "chunk_id": int(item["chunk_id"]),
+                "text_chunk_id": str(item["text_chunk_id"]),
+                "title_block_id": str(item["title_block_id"]),
+                "body_block_id_set": [str(value) for value in item["body_block_id_set"]],
+                "ordered_block_id_set": [str(value) for value in item["ordered_block_id_set"]],
+                "start_order": int(item["start_order"]),
+                "end_order": int(item["end_order"]),
+                "closure_reason": str(item["closure_reason"]),
+            }
+            for item in result["chunk_match_set"]
+        ]
+        chunk_membership_payload = {
+            "document_name": str(result["document_name"]),
+            "text_id": str(result["output"]["text_id"]),
+            project.product.output.chunk_membership_projection_name: chunk_matches,
+        }
+        chunk_membership_output_path.write_text(
+            _render_chunk_membership_projection_markdown(
+                document_name=str(chunk_membership_payload["document_name"]),
+                text_id=str(chunk_membership_payload["text_id"]),
+                projection_name=project.product.output.chunk_membership_projection_name,
+                include_ordered_block_ids=project.product.output.chunk_membership_include_ordered_block_ids,
+                chunk_matches=chunk_matches,
+            ),
+            encoding="utf-8",
+        )
+        written_files["chunk_membership_output_file"] = _relative_path(chunk_membership_output_path)
+
+    return written_files
+
+
 def write_document_chunking_markdown_output(
     *,
     product_spec_file: str | Path = DEFAULT_DOCUMENT_CHUNKING_PRODUCT_SPEC_FILE,
@@ -1541,22 +1749,21 @@ def write_document_chunking_markdown_output(
     )
 
     project = load_document_chunking_project(product_spec_file)
-    resolved_output_file = Path(output_file or project.implementation.runtime.default_markdown_output)
-    if not resolved_output_file.is_absolute():
-        resolved_output_file = (REPO_ROOT / resolved_output_file).resolve()
-    resolved_output_file.parent.mkdir(parents=True, exist_ok=True)
+    resolved_output_file = _resolve_runtime_output_anchor(project, output_file)
 
     ordered_chunk_items = tuple(
         ChunkItem(
             chunk_id=int(item["chunk_id"]),
             chunk_text=str(item["chunk_text"]),
+            title_block_id=str(item["title_block_id"]),
+            body_block_id_set=tuple(str(value) for value in item["body_block_id_set"]),
         )
         for item in result["output"]["ordered_chunk_item_set"]
     )
     output = DocumentChunkingOutput(
+        document_format=str(result["output"]["document_format"]),
         text_id=str(result["output"]["text_id"]),
         ordered_chunk_item_set=ordered_chunk_items,
-        ownership_record_set=(),
         paragraph_block_set=(),
         trace_meta={},
     )
@@ -1568,11 +1775,13 @@ def write_document_chunking_markdown_output(
             paragraph_block_set=(),
             labeled_paragraph_block_set=(),
             chunk_match_set=(),
-            ownership_record_set=(),
             invalid_combination_set=(),
             output=output,
             validation=ValidationReport(passed=bool(result["validation"]["passed"]), checks=()),
         ),
+        document_format_field=project.product.output.document_format_field,
+        document_format_value=project.product.output.document_format_value,
+        document_format_scope=project.product.output.document_format_scope,
         text_id_field=project.product.output.text_id_field,
         chunk_id_field=project.product.output.chunk_id_field,
         chunk_text_field=project.product.output.chunk_text_field,
@@ -1595,6 +1804,7 @@ def run_document_chunking_file(
         resolved_input_file = (REPO_ROOT / resolved_input_file).resolve()
     result = run_document_chunking_pipeline_on_file(
         resolved_input_file,
+        document_format=project.product.output.document_format_value,
         heading_pattern=project.implementation.pipeline.heading_pattern,
         max_block_chars=project.implementation.pipeline.max_block_chars,
         max_chunk_items=project.product.validation.max_chunk_items,
@@ -1602,6 +1812,12 @@ def run_document_chunking_file(
     payload = result.to_dict()
     if output_file is not None or project.implementation.runtime.write_markdown_output:
         write_document_chunking_markdown_output(
+            product_spec_file=product_spec_file,
+            result=payload,
+            output_file=output_file,
+        )
+    if project.implementation.runtime.write_auxiliary_output_files:
+        write_document_chunking_auxiliary_outputs(
             product_spec_file=product_spec_file,
             result=payload,
             output_file=output_file,

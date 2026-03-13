@@ -21,11 +21,17 @@ class ProjectGovernanceTest(unittest.TestCase):
         project_ids = {item.project_id for item in discovered}
 
         self.assertIn("knowledge_base_basic", project_ids)
+        self.assertIn("document_chunking_basic", project_ids)
         knowledge_base = next(item for item in discovered if item.project_id == "knowledge_base_basic")
+        document_chunking = next(item for item in discovered if item.project_id == "document_chunking_basic")
         self.assertEqual(knowledge_base.template_id, "knowledge_base_workbench")
+        self.assertEqual(document_chunking.template_id, "document_chunking_pipeline")
         self.assertTrue(knowledge_base.discovery_reasons)
+        self.assertTrue(document_chunking.discovery_reasons)
         self.assertIn("framework/knowledge_base/L2-M0-知识库工作台场景模块.md", knowledge_base.framework_refs)
+        self.assertIn("framework/document_chunking/L1-M0-文档分块.md", document_chunking.framework_refs)
         self.assertIn("governance_tree.json", knowledge_base.artifact_contract)
+        self.assertIn("governance_tree.json", document_chunking.artifact_contract)
 
     def test_build_governance_closure_derives_object_first_strict_zone(self) -> None:
         project = load_knowledge_base_project(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
@@ -49,10 +55,10 @@ class ProjectGovernanceTest(unittest.TestCase):
 
     def test_project_discovery_audit_is_explicit(self) -> None:
         audit = build_project_discovery_audit()
-        entries = audit["entries"]
-        self.assertEqual(audit["summary"]["recognized_count"], 1)
-        self.assertEqual(entries[0]["project_id"], "knowledge_base_basic")
-        self.assertEqual(entries[0]["classification"], "recognized")
+        entries = {entry["project_id"]: entry for entry in audit["entries"]}
+        self.assertGreaterEqual(audit["summary"]["recognized_count"], 2)
+        self.assertEqual(entries["knowledge_base_basic"]["classification"], "recognized")
+        self.assertEqual(entries["document_chunking_basic"]["classification"], "recognized")
 
     def test_strict_zone_and_object_coverage_reports_are_machine_readable(self) -> None:
         project = load_knowledge_base_project(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)

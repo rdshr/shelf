@@ -1,0 +1,54 @@
+# Implementation Config 只回答“在不改写 product_spec.toml 产品真相的前提下，
+# 这个仓库准备用哪条实现路径把文档分块产品落到代码和证据层”。
+# 它可以细化运行时、管线参数、调试出口和生成文件命名，
+# 但不能反向改写输入语义、1 标题 + n 正文的组合真相或结果对象契约。
+#
+# 注释同样优先服务人与 AI 协作：
+# 1. 当前 section 细化的是哪类实现决策；
+# 2. 它如何服务既定 Product Spec；
+# 3. 哪些产品真相不允许被这一层篡改。
+
+# [runtime] 细化这条产品链最终以什么运行时形态暴露给仓库。
+# 这里约定 app builder、CLI 入口、API 前缀和默认 markdown 输出落点，
+# 但不重新定义产品输出字段、标题/正文闭合规则或验证不变量。
+# 这里还细化辅助输出文件如何命名：以主 markdown 输出文件为锚点，
+# 再派生出段落块投影文件与文本块归属关系投影文件。
+[runtime]
+app_builder = "document_chunking_api_v1"
+cli_command = "uv run python src/main.py document-chunking-run --product-spec-file projects/document_chunking_basic/product_spec.toml"
+api_prefix = "/api/document-chunking"
+write_markdown_output = true
+default_markdown_output = "projects/document_chunking_basic/runtime_output/document_chunking_output.md"
+write_auxiliary_output_files = true
+paragraph_block_output_suffix = ".paragraph_blocks.md"
+chunk_membership_output_suffix = ".chunk_membership.md"
+
+# [pipeline] 细化管线执行时的技术性选择。
+# 这里决定实际采用哪种归一化 profile、标题判型模式、切块器和输出排序方式，
+# 但这些选择必须仍然满足 Product Spec 已确定的输入/组合/输出真相。
+[pipeline]
+normalization_mode = "normalize_markdown_text_v1"
+heading_pattern = "^(#{1,6})\\s+.+$"
+splitter = "blank_line_blocks_v1"
+output_order = "chunk_id_ascending"
+max_block_chars = 8000
+
+# [evidence] 定义实现层如何暴露验证与审查入口。
+# 它服务于自动化验证、人工检查和演示调用，不属于产品真相本身。
+[evidence]
+product_spec_endpoint = "/api/document-chunking/product-spec"
+process_text_endpoint = "/api/document-chunking/process-text"
+process_file_endpoint = "/api/document-chunking/process-file"
+default_validation_input = "projects/document_chunking_basic/validation_input/default_input.md"
+
+# [artifacts] 约定这条实现路径会生成哪些证据层文件。
+# 这些命名只影响仓库协作、生成脚本和工具消费，不应被误当成产品字段。
+[artifacts]
+framework_ir_json = "framework_ir.json"
+product_spec_json = "product_spec.json"
+implementation_bundle_py = "implementation_bundle.py"
+generation_manifest_json = "generation_manifest.json"
+governance_manifest_json = "governance_manifest.json"
+governance_tree_json = "governance_tree.json"
+strict_zone_report_json = "strict_zone_report.json"
+object_coverage_report_json = "object_coverage_report.json"

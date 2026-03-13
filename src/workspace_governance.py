@@ -77,6 +77,25 @@ def _toml_section_line(file_path: Path, section_path: str) -> int:
     return 1
 
 
+def _toml_section_headers(file_path: Path, *, exclude: set[str] | None = None) -> list[str]:
+    if not file_path.exists():
+        return []
+
+    excluded = exclude or set()
+    seen: set[str] = set()
+    headers: list[str] = []
+    for line in file_path.read_text(encoding="utf-8").splitlines():
+        match = SECTION_HEADER_PATTERN.match(line)
+        if match is None:
+            continue
+        section_name = match.group(1).strip()
+        if not section_name or section_name in excluded or section_name in seen:
+            continue
+        seen.add(section_name)
+        headers.append(section_name)
+    return headers
+
+
 def _node_label(title: str | None, fallback: str) -> str:
     if isinstance(title, str) and title.strip():
         return title.strip()
@@ -397,16 +416,11 @@ def _build_generic_project_governance_tree(
             },
         )
 
-    for section_name in (
-        "framework",
-        "input",
-        "segmentation",
-        "role_judgment",
-        "composition",
-        "ownership",
-        "output",
-        "validation",
-    ):
+    product_sections = _toml_section_headers(
+        REPO_ROOT / closure.product_spec_file,
+        exclude={"project"},
+    )
+    for section_name in product_sections:
         append_child(
             product_root_id,
             {
@@ -421,7 +435,8 @@ def _build_generic_project_governance_tree(
             },
         )
 
-    for section_name in ("runtime", "pipeline", "evidence", "artifacts"):
+    implementation_sections = _toml_section_headers(REPO_ROOT / closure.implementation_config_file)
+    for section_name in implementation_sections:
         append_child(
             implementation_root_id,
             {

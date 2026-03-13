@@ -186,11 +186,13 @@ const FRAMEWORK_BOUNDARY_SECTION_MAP = {
   document_chunking: {
     __moduleScopes: {
       "L0.M0": {
+        INPUT: directConfigMapping("input"),
         STRLEN: derivedConfigMapping(
           "segmentation",
           ["segmentation", "input"],
           "该边界由分段长度约束与输入文本对象共同承接。"
         ),
+        ELEMENT: directConfigMapping("segmentation"),
         MATCHRULE: directConfigMapping("segmentation"),
         MATCHRESULT: derivedConfigMapping(
           "output",
@@ -210,42 +212,68 @@ const FRAMEWORK_BOUNDARY_SECTION_MAP = {
           ["output", "input"],
           "该边界由结果回溯字段与输入文档标识共同承接。"
         ),
-        BELONG: derivedConfigMapping(
-          "ownership",
-          ["ownership", "input"],
-          "该边界由归属表结构与原文本标识策略共同承接。"
+        BELONG: directConfigMapping("input"),
+        ENDING: derivedConfigMapping(
+          "validation",
+          ["validation", "output"],
+          "该边界由终止段落标记与输出回溯信息共同承接。"
         ),
       },
       "L0.M2": {
-        SUBJECT: derivedConfigMapping(
-          "composition",
-          ["composition", "role_judgment"],
-          "该边界由组合对象与角色判定条件共同承接。"
+        INPUT: directConfigMapping("role_judgment"),
+        STRLEN: derivedConfigMapping(
+          "segmentation",
+          ["segmentation", "role_judgment"],
+          "该边界由段落长度约束与角色判型输入条件共同承接。"
         ),
-        CLOSURE: directConfigMapping("composition"),
-        TRIGGER: derivedConfigMapping(
+        ROLE: directConfigMapping("role_judgment"),
+        OUTPUT: derivedConfigMapping(
           "role_judgment",
-          ["role_judgment", "composition"],
-          "该边界由角色判定与拼接触发条件共同承接。"
+          ["role_judgment", "validation"],
+          "该边界由角色集合与判型结果约束共同承接。"
         ),
-        ACTION: directConfigMapping("composition"),
       },
       "L0.M3": {
-        HEADER: directConfigMapping("ownership"),
-        COUNT: derivedConfigMapping(
-          "ownership",
-          ["ownership", "validation"],
-          "该边界由归属表规模与结果校验共同承接。"
+        PARAMETER: derivedConfigMapping(
+          "output",
+          ["output", "input"],
+          "该边界由打包输入对象字段与结果回溯字段共同承接。"
         ),
-        ROW: directConfigMapping("ownership"),
+        STRLEN: derivedConfigMapping(
+          "segmentation",
+          ["segmentation", "output"],
+          "该边界由段落长度约束与文本块内容承接共同约束。"
+        ),
+        CONTENT: directConfigMapping("output"),
+        ORDER: derivedConfigMapping(
+          "validation",
+          ["validation", "output"],
+          "该边界由输出顺序约束与结果结构共同承接。"
+        ),
+        PACKAGING: directConfigMapping("composition"),
+        CONDITION: derivedConfigMapping(
+          "validation",
+          ["composition", "validation", "output"],
+          "该边界由打包闭合条件、结果结构与校验条件共同承接。"
+        ),
       },
       "L0.M4": {
         FORMAT: directConfigMapping("output"),
-        FIELD: directConfigMapping("output"),
-        COUNT: derivedConfigMapping(
+        TRACE: derivedConfigMapping(
+          "input",
+          ["input", "output"],
+          "该边界由原文标识策略与输出追溯字段共同承接。"
+        ),
+        CONTENT: directConfigMapping("output"),
+        STANDARD: derivedConfigMapping(
           "validation",
           ["validation", "output"],
-          "该边界由输出项数量限制与输出格式共同承接。"
+          "该边界由输出顺序稳定性与结果字段结构共同承接。"
+        ),
+        LENGTH: derivedConfigMapping(
+          "validation",
+          ["segmentation", "validation", "output"],
+          "该边界由段落长度约束、结果长度校验与输出字段结构共同承接。"
         ),
       },
       "L1.M0": {
@@ -261,8 +289,8 @@ const FRAMEWORK_BOUNDARY_SECTION_MAP = {
         BLOCKCOMBINE: directConfigMapping("composition"),
         OUTPUT: derivedConfigMapping(
           "output",
-          ["output", "ownership", "validation"],
-          "该边界由输出格式、归属结果与结果校验共同承接。"
+          ["output", "validation"],
+          "该边界由输出结果结构与结果校验共同承接。"
         ),
       },
     },

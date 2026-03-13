@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 from pathlib import Path
 import re
@@ -19,14 +19,6 @@ def _default_text_id(document_name: str, text: str) -> str:
     stem = Path(document_name).stem.strip()
     return stem or f"doc-{_sha256_text(text)[:12]}"
 
-
-def _markdown_fence(text: str) -> str:
-    max_backticks = 3
-    for match in re.finditer(r"`+", text):
-        max_backticks = max(max_backticks, len(match.group(0)) + 1)
-    return "`" * max_backticks
-
-
 def normalize_document_text(text: str) -> str:
     normalized = text.replace("\ufeff", "").replace("\r\n", "\n").replace("\r", "\n")
     normalized_lines = [line.rstrip() for line in normalized.split("\n")]
@@ -41,6 +33,7 @@ class ParagraphBlock:
     start_offset: int
     end_offset: int
     document_id: str
+    is_document_end: bool
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -54,6 +47,7 @@ class LabeledParagraphBlock:
     start_offset: int
     end_offset: int
     document_id: str
+    is_document_end: bool
     block_role: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -87,23 +81,19 @@ class ChunkMatch:
 
 
 @dataclass(frozen=True)
-class OwnershipRecord:
-    block_id: str
-    text_chunk_id: str
-    block_role: str
-    position_in_chunk: int
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-@dataclass(frozen=True)
 class ChunkItem:
     chunk_id: int
     chunk_text: str
+    title_block_id: str
+    body_block_id_set: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "chunk_id": self.chunk_id,
+            "chunk_text": self.chunk_text,
+            "title_block_id": self.title_block_id,
+            "body_block_id_set": list(self.body_block_id_set),
+        }
 
 
 @dataclass(frozen=True)
@@ -142,17 +132,17 @@ class ValidationReport:
 
 @dataclass(frozen=True)
 class DocumentChunkingOutput:
+    document_format: str
     text_id: str
     ordered_chunk_item_set: tuple[ChunkItem, ...]
-    ownership_record_set: tuple[OwnershipRecord, ...]
     paragraph_block_set: tuple[ParagraphBlock, ...]
     trace_meta: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "document_format": self.document_format,
             "text_id": self.text_id,
             "ordered_chunk_item_set": [item.to_dict() for item in self.ordered_chunk_item_set],
-            "ownership_record_set": [item.to_dict() for item in self.ownership_record_set],
             "paragraph_block_set": [item.to_dict() for item in self.paragraph_block_set],
             "trace_meta": self.trace_meta,
         }
@@ -166,7 +156,6 @@ class DocumentChunkingRunResult:
     paragraph_block_set: tuple[ParagraphBlock, ...]
     labeled_paragraph_block_set: tuple[LabeledParagraphBlock, ...]
     chunk_match_set: tuple[ChunkMatch, ...]
-    ownership_record_set: tuple[OwnershipRecord, ...]
     invalid_combination_set: tuple[InvalidCombination, ...]
     output: DocumentChunkingOutput
     validation: ValidationReport
@@ -179,7 +168,6 @@ class DocumentChunkingRunResult:
             "paragraph_block_set": [item.to_dict() for item in self.paragraph_block_set],
             "labeled_paragraph_block_set": [item.to_dict() for item in self.labeled_paragraph_block_set],
             "chunk_match_set": [item.to_dict() for item in self.chunk_match_set],
-            "ownership_record_set": [item.to_dict() for item in self.ownership_record_set],
             "invalid_combination_set": [item.to_dict() for item in self.invalid_combination_set],
             "output": self.output.to_dict(),
             "validation": self.validation.to_dict(),
@@ -189,18 +177,26 @@ class DocumentChunkingRunResult:
 def render_document_chunking_output_markdown(
     result: DocumentChunkingRunResult,
     *,
+    document_format_field: str = "document_format",
+    document_format_value: str | None = None,
+    document_format_scope: str = "document_level",
     text_id_field: str = "text_id",
     chunk_id_field: str = "chunk_id",
     chunk_text_field: str = "chunk_text",
 ) -> str:
-    lines = [f"{text_id_field}: {result.output.text_id}", ""]
+    if document_format_scope != "document_level":
+        raise ValueError(f"unsupported document_format_scope: {document_format_scope}")
+
+    resolved_document_format = document_format_value or result.output.document_format
+    lines = [
+        f"{document_format_field}: {resolved_document_format}",
+        f"{text_id_field}: {result.output.text_id}",
+        "",
+    ]
     for chunk_item in result.output.ordered_chunk_item_set:
-        fence = _markdown_fence(chunk_item.chunk_text)
         lines.append(f"{chunk_id_field}: {chunk_item.chunk_id}")
         lines.append(f"{chunk_text_field}:")
-        lines.append(f"{fence}markdown")
         lines.extend(chunk_item.chunk_text.splitlines())
-        lines.append(fence)
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
@@ -249,6 +245,7 @@ def build_paragraph_blocks(
                 start_offset=block_start,
                 end_offset=end_offset,
                 document_id=document_id,
+                is_document_end=False,
             )
         )
         order_index += 1
@@ -273,9 +270,12 @@ def build_paragraph_blocks(
                     start_offset=block_start,
                     end_offset=end_offset,
                     document_id=document_id,
+                    is_document_end=False,
                 )
             )
 
+    if blocks:
+        blocks[-1] = replace(blocks[-1], is_document_end=True)
     return tuple(blocks)
 
 
@@ -297,6 +297,7 @@ def label_paragraph_blocks(
                 start_offset=block.start_offset,
                 end_offset=block.end_offset,
                 document_id=block.document_id,
+                is_document_end=block.is_document_end,
                 block_role=block_role,
             )
         )
@@ -361,34 +362,14 @@ def compose_text_chunks(
     return tuple(chunk_matches), tuple(invalids)
 
 
-def build_ownership_records(
-    labeled_blocks: tuple[LabeledParagraphBlock, ...],
-    chunk_matches: tuple[ChunkMatch, ...],
-) -> tuple[OwnershipRecord, ...]:
-    labeled_by_id = {item.block_id: item for item in labeled_blocks}
-    ownership_records: list[OwnershipRecord] = []
-    for chunk_match in chunk_matches:
-        for position_in_chunk, block_id in enumerate(chunk_match.ordered_block_id_set, start=1):
-            labeled_block = labeled_by_id[block_id]
-            ownership_records.append(
-                OwnershipRecord(
-                    block_id=block_id,
-                    text_chunk_id=chunk_match.text_chunk_id,
-                    block_role=labeled_block.block_role,
-                    position_in_chunk=position_in_chunk,
-                )
-            )
-    return tuple(ownership_records)
-
-
 def build_output(
     *,
     document_name: str,
+    document_format: str,
     text_id: str,
     paragraph_blocks: tuple[ParagraphBlock, ...],
     labeled_blocks: tuple[LabeledParagraphBlock, ...],
     chunk_matches: tuple[ChunkMatch, ...],
-    ownership_records: tuple[OwnershipRecord, ...],
     invalids: tuple[InvalidCombination, ...],
 ) -> DocumentChunkingOutput:
     trace_meta = {
@@ -398,12 +379,17 @@ def build_output(
         "invalid_combination_set": [item.to_dict() for item in invalids],
     }
     return DocumentChunkingOutput(
+        document_format=document_format,
         text_id=text_id,
         ordered_chunk_item_set=tuple(
-            ChunkItem(chunk_id=item.chunk_id, chunk_text=item.chunk_text)
+            ChunkItem(
+                chunk_id=item.chunk_id,
+                chunk_text=item.chunk_text,
+                title_block_id=item.title_block_id,
+                body_block_id_set=item.body_block_id_set,
+            )
             for item in chunk_matches
         ),
-        ownership_record_set=ownership_records,
         paragraph_block_set=paragraph_blocks,
         trace_meta=trace_meta,
     )
@@ -412,37 +398,47 @@ def build_output(
 def validate_document_chunking_result(
     result: DocumentChunkingRunResult,
     *,
+    expected_document_format: str = "markdown",
     max_chunk_items: int,
 ) -> ValidationReport:
     paragraph_blocks = result.paragraph_block_set
     labeled_blocks = result.labeled_paragraph_block_set
     chunk_matches = result.chunk_match_set
-    ownership_records = result.ownership_record_set
     ordered_chunk_items = result.output.ordered_chunk_item_set
 
     checks: list[ValidationCheck] = []
 
     unique_order_indexes = {item.order_index for item in paragraph_blocks}
+    terminal_flags = [item.is_document_end for item in paragraph_blocks]
     paragraph_blocks_are_valid = (
         bool(paragraph_blocks)
         and len(unique_order_indexes) == len(paragraph_blocks)
         and all(item.start_offset >= 0 and item.end_offset > item.start_offset for item in paragraph_blocks)
         and all(bool(item.text.strip()) for item in paragraph_blocks)
+        and terminal_flags.count(True) == 1
+        and terminal_flags[-1]
     )
     checks.append(
         ValidationCheck(
             check_id="V1",
             passed=paragraph_blocks_are_valid,
-            detail="paragraph blocks keep unique order indexes, valid offsets, and non-empty text",
+            detail="paragraph blocks keep unique order indexes, valid offsets, non-empty text, and one terminal block marker",
         )
     )
 
-    roles_are_valid = all(item.block_role in {TITLE_ROLE, BODY_ROLE} for item in labeled_blocks)
+    roles_are_valid = (
+        len(labeled_blocks) == len(paragraph_blocks)
+        and all(item.block_role in {TITLE_ROLE, BODY_ROLE} for item in labeled_blocks)
+        and all(
+            labeled_blocks[index].is_document_end == paragraph_blocks[index].is_document_end
+            for index in range(len(paragraph_blocks))
+        )
+    )
     checks.append(
         ValidationCheck(
             check_id="V2",
             passed=roles_are_valid,
-            detail="labeled paragraph blocks only use title/body role values",
+            detail="labeled paragraph blocks only use title/body role values and preserve terminal-block identity",
         )
     )
 
@@ -461,49 +457,41 @@ def validate_document_chunking_result(
         )
     )
 
-    ownership_by_block = {item.block_id: item.text_chunk_id for item in ownership_records}
-    grouped_block_ids = {
-        block_id
-        for match in chunk_matches
-        for block_id in match.ordered_block_id_set
-    }
-    ownership_is_consistent = (
-        len(ownership_by_block) == len(ownership_records)
-        and grouped_block_ids == set(ownership_by_block)
-        and all(item.position_in_chunk >= 1 for item in ownership_records)
+    output_is_valid = (
+        bool(result.output.document_format.strip())
+        and result.output.document_format == expected_document_format
+        and bool(result.output.text_id)
+        and len(ordered_chunk_items) <= max_chunk_items
+        and len(ordered_chunk_items) == len(chunk_matches)
+        and all(item.chunk_id >= 1 and bool(item.chunk_text.strip()) for item in ordered_chunk_items)
+        and [item.chunk_id for item in ordered_chunk_items] == list(range(1, len(ordered_chunk_items) + 1))
+        and all(
+            chunk_item.chunk_id == chunk_match.chunk_id
+            and chunk_item.chunk_text == chunk_match.chunk_text
+            and chunk_item.title_block_id == chunk_match.title_block_id
+            and chunk_item.body_block_id_set == chunk_match.body_block_id_set
+            for chunk_item, chunk_match in zip(ordered_chunk_items, chunk_matches)
+        )
     )
     checks.append(
         ValidationCheck(
             check_id="V4",
-            passed=ownership_is_consistent,
-            detail="ownership table covers every grouped paragraph block exactly once",
-        )
-    )
-
-    output_is_valid = (
-        bool(result.output.text_id)
-        and len(ordered_chunk_items) <= max_chunk_items
-        and all(item.chunk_id >= 1 and bool(item.chunk_text.strip()) for item in ordered_chunk_items)
-        and [item.chunk_id for item in ordered_chunk_items] == list(range(1, len(ordered_chunk_items) + 1))
-    )
-    checks.append(
-        ValidationCheck(
-            check_id="V5",
             passed=output_is_valid,
-            detail="output keeps text_id and ordered (chunk_id, chunk_text) pairs within count limits",
+            detail="output keeps one document-level format declaration and preserves ordered chunk items with title/body block references",
         )
     )
 
     trace_is_valid = (
         result.output.trace_meta.get("document_name") == result.document_name
         and len(result.output.paragraph_block_set) == len(paragraph_blocks)
-        and len(result.output.ownership_record_set) == len(ownership_records)
+        and len(result.output.trace_meta.get("chunk_match_set", [])) == len(chunk_matches)
+        and len(result.output.trace_meta.get("invalid_combination_set", [])) == len(result.invalid_combination_set)
     )
     checks.append(
         ValidationCheck(
-            check_id="V6",
+            check_id="V5",
             passed=trace_is_valid,
-            detail="output remains traceable back to paragraph blocks and ownership records",
+            detail="output remains traceable back to paragraph blocks, chunk matches, and invalid combinations",
         )
     )
 
@@ -516,6 +504,7 @@ def run_document_chunking_pipeline(
     document_name: str,
     text: str,
     text_id: str | None = None,
+    document_format: str = "markdown",
     heading_pattern: str = r"^(#{1,6})\s+.+$",
     max_block_chars: int = 8000,
     max_chunk_items: int = 2000,
@@ -535,14 +524,13 @@ def run_document_chunking_pipeline(
         labeled_blocks,
         text_id=resolved_text_id,
     )
-    ownership_records = build_ownership_records(labeled_blocks, chunk_matches)
     output = build_output(
         document_name=document_name,
+        document_format=document_format,
         text_id=resolved_text_id,
         paragraph_blocks=paragraph_blocks,
         labeled_blocks=labeled_blocks,
         chunk_matches=chunk_matches,
-        ownership_records=ownership_records,
         invalids=invalids,
     )
     provisional_result = DocumentChunkingRunResult(
@@ -552,13 +540,13 @@ def run_document_chunking_pipeline(
         paragraph_block_set=paragraph_blocks,
         labeled_paragraph_block_set=labeled_blocks,
         chunk_match_set=chunk_matches,
-        ownership_record_set=ownership_records,
         invalid_combination_set=invalids,
         output=output,
         validation=ValidationReport(passed=False, checks=()),
     )
     validation = validate_document_chunking_result(
         provisional_result,
+        expected_document_format=document_format,
         max_chunk_items=max_chunk_items,
     )
     return DocumentChunkingRunResult(
@@ -568,7 +556,6 @@ def run_document_chunking_pipeline(
         paragraph_block_set=paragraph_blocks,
         labeled_paragraph_block_set=labeled_blocks,
         chunk_match_set=chunk_matches,
-        ownership_record_set=ownership_records,
         invalid_combination_set=invalids,
         output=output,
         validation=validation,
@@ -579,6 +566,7 @@ def run_document_chunking_pipeline_on_file(
     input_file: str | Path,
     *,
     text_id: str | None = None,
+    document_format: str = "markdown",
     heading_pattern: str = r"^(#{1,6})\s+.+$",
     max_block_chars: int = 8000,
     max_chunk_items: int = 2000,
@@ -589,6 +577,7 @@ def run_document_chunking_pipeline_on_file(
         document_name=resolved_file.name,
         text=text,
         text_id=text_id or resolved_file.stem,
+        document_format=document_format,
         heading_pattern=heading_pattern,
         max_block_chars=max_block_chars,
         max_chunk_items=max_chunk_items,

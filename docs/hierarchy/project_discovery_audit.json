@@ -3,6 +3,38 @@
   "projects_dir": "projects",
   "entries": [
     {
+      "project_id": "document_chunking_basic",
+      "directory": "projects/document_chunking_basic",
+      "framework_driven": true,
+      "template_id": "document_chunking_pipeline",
+      "classification": "recognized",
+      "reasons": [
+        "product_spec.toml and implementation_config.toml both exist",
+        "registered template resolved: document_chunking_pipeline",
+        "project loads through the registered framework-driven materialization chain",
+        "framework selections resolve to concrete framework modules",
+        "implementation config exposes generated artifact contract"
+      ],
+      "product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+      "implementation_config_file": "projects/document_chunking_basic/implementation_config.toml",
+      "generated_dir": "projects/document_chunking_basic/generated",
+      "framework_refs": [
+        "framework/document_chunking/L0-M0-段落分界模板.md",
+        "framework/document_chunking/L0-M4-结果文档.md",
+        "framework/document_chunking/L1-M0-文档分块.md"
+      ],
+      "artifact_contract": [
+        "framework_ir.json",
+        "product_spec.json",
+        "implementation_bundle.py",
+        "generation_manifest.json",
+        "governance_manifest.json",
+        "governance_tree.json",
+        "strict_zone_report.json",
+        "object_coverage_report.json"
+      ]
+    },
+    {
       "project_id": "knowledge_base_basic",
       "directory": "projects/knowledge_base_basic",
       "framework_driven": true,
@@ -36,10 +68,10 @@
     }
   ],
   "summary": {
-    "recognized_count": 1,
+    "recognized_count": 2,
     "excluded_count": 0,
     "classification_counts": {
-      "recognized": 1
+      "recognized": 2
     }
   }
 }

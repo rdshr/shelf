@@ -21,8 +21,11 @@ class WorkspaceGovernanceTest(unittest.TestCase):
         self.assertIn("workspace:shelf:standards", node_ids)
         self.assertIn("workspace:shelf:projects", node_ids)
         self.assertIn("project:knowledge_base_basic", node_ids)
+        self.assertIn("project:document_chunking_basic", node_ids)
         self.assertIn("project:knowledge_base_basic:structure:object:kb.answer.behavior", node_ids)
+        self.assertNotIn("project:document_chunking_basic:product_spec:section:ownership", node_ids)
         self.assertIn("knowledge_base_basic", governance["project_trees"])
+        self.assertIn("document_chunking_basic", governance["project_trees"])
         self.assertIn("project_discovery_audit", governance)
 
     def test_resolve_workspace_change_context_maps_framework_change_to_project(self) -> None:
@@ -35,6 +38,19 @@ class WorkspaceGovernanceTest(unittest.TestCase):
 
         self.assertIn("projects/knowledge_base_basic/product_spec.toml", context["affected_project_spec_files"])
         self.assertIn("projects/knowledge_base_basic/product_spec.toml", context["materialize_project_spec_files"])
+        self.assertTrue(context["run_standard_checks"])
+        self.assertTrue(context["run_project_checks"])
+
+    def test_resolve_workspace_change_context_maps_document_chunking_framework_change_to_project(self) -> None:
+        payload = build_workspace_governance_payload()
+
+        context = resolve_workspace_change_context(
+            payload,
+            {"framework/document_chunking/L1-M0-文档分块.md"},
+        )
+
+        self.assertIn("projects/document_chunking_basic/product_spec.toml", context["affected_project_spec_files"])
+        self.assertIn("projects/document_chunking_basic/product_spec.toml", context["materialize_project_spec_files"])
         self.assertTrue(context["run_standard_checks"])
         self.assertTrue(context["run_project_checks"])
 

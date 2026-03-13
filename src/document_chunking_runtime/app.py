@@ -36,6 +36,7 @@ def build_document_chunking_app(project: Any) -> FastAPI:
         result = run_document_chunking_pipeline(
             document_name=request.document_name,
             text=request.text,
+            document_format=project.product.output.document_format_value,
             heading_pattern=project.implementation.pipeline.heading_pattern,
             max_block_chars=project.implementation.pipeline.max_block_chars,
             max_chunk_items=project.product.validation.max_chunk_items,
@@ -51,6 +52,7 @@ def build_document_chunking_app(project: Any) -> FastAPI:
             raise HTTPException(status_code=404, detail=f"input file not found: {resolved_path}")
         result = run_document_chunking_pipeline_on_file(
             resolved_path,
+            document_format=project.product.output.document_format_value,
             heading_pattern=project.implementation.pipeline.heading_pattern,
             max_block_chars=project.implementation.pipeline.max_block_chars,
             max_chunk_items=project.product.validation.max_chunk_items,

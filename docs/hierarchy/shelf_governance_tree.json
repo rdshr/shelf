@@ -305,6 +305,1181 @@
         "raw_node_id": "NODE-L3-REGISTRY"
       },
       {
+        "id": "project:document_chunking_basic",
+        "label": "Shelf AI Document Chunking",
+        "level": 2,
+        "description": "kind=project_root | layer=Project | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "project_root",
+        "layer": "Project",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": null,
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code",
+        "label": "Code",
+        "level": 3,
+        "description": "kind=code_root | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 1,
+        "node_kind": "code_root",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+        "label": "framework_ir.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/framework_ir.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/framework_ir.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+        "label": "generation_manifest.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/generation_manifest.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/generation_manifest.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+        "label": "governance_manifest.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/governance_manifest.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/governance_manifest.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+        "label": "governance_tree.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/governance_tree.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/governance_tree.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+        "label": "implementation_bundle.py",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/implementation_bundle.py | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/implementation_bundle.py",
+        "source_line": 3,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+        "label": "object_coverage_report.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/object_coverage_report.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/object_coverage_report.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+        "label": "product_spec.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/product_spec.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/product_spec.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+        "label": "strict_zone_report.json",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/strict_zone_report.json | minimality_status=required",
+        "source_file": "projects/document_chunking_basic/generated/strict_zone_report.json",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+        "label": "app.py",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=src/document_chunking_runtime/app.py | minimality_status=required",
+        "source_file": "src/document_chunking_runtime/app.py",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py",
+        "label": "document_chunking.py",
+        "level": 4,
+        "description": "kind=strict_zone_file | layer=Code | project_id=document_chunking_basic | file=src/project_runtime/document_chunking.py | minimality_status=required",
+        "source_file": "src/project_runtime/document_chunking.py",
+        "source_line": 1,
+        "node_kind": "strict_zone_file",
+        "layer": "Code",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:code",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": "required",
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence",
+        "label": "Evidence",
+        "level": 3,
+        "description": "kind=evidence_root | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 1,
+        "node_kind": "evidence_root",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+        "label": "framework_ir_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/framework_ir.json | artifact=framework_ir_json",
+        "source_file": "projects/document_chunking_basic/generated/framework_ir.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "framework_ir_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+        "label": "generation_manifest_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/generation_manifest.json | artifact=generation_manifest_json",
+        "source_file": "projects/document_chunking_basic/generated/generation_manifest.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "generation_manifest_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+        "label": "governance_manifest_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/governance_manifest.json | artifact=governance_manifest_json",
+        "source_file": "projects/document_chunking_basic/generated/governance_manifest.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "governance_manifest_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+        "label": "governance_tree_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/governance_tree.json | artifact=governance_tree_json",
+        "source_file": "projects/document_chunking_basic/generated/governance_tree.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "governance_tree_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+        "label": "implementation_bundle_py",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/implementation_bundle.py | artifact=implementation_bundle_py",
+        "source_file": "projects/document_chunking_basic/generated/implementation_bundle.py",
+        "source_line": 3,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "implementation_bundle_py",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+        "label": "object_coverage_report_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/object_coverage_report.json | artifact=object_coverage_report_json",
+        "source_file": "projects/document_chunking_basic/generated/object_coverage_report.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "object_coverage_report_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:product_spec_json",
+        "label": "product_spec_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/product_spec.json | artifact=product_spec_json",
+        "source_file": "projects/document_chunking_basic/generated/product_spec.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "product_spec_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:evidence:artifact:strict_zone_report_json",
+        "label": "strict_zone_report_json",
+        "level": 4,
+        "description": "kind=evidence_artifact | layer=Evidence | project_id=document_chunking_basic | file=projects/document_chunking_basic/generated/strict_zone_report.json | artifact=strict_zone_report_json",
+        "source_file": "projects/document_chunking_basic/generated/strict_zone_report.json",
+        "source_line": 1,
+        "node_kind": "evidence_artifact",
+        "layer": "Evidence",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:evidence",
+        "derived_from": [],
+        "owner": null,
+        "artifact": "strict_zone_report_json",
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework",
+        "label": "Framework",
+        "level": 3,
+        "description": "kind=framework_root | layer=Framework | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "framework_root",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+        "label": "L0-M0-段落分界模板.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L0-M0-段落分界模板.md",
+        "source_file": "framework/document_chunking/L0-M0-段落分界模板.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+        "label": "L0-M1-段落块.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L0-M1-段落块.md",
+        "source_file": "framework/document_chunking/L0-M1-段落块.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+        "label": "L0-M2-文本角色识别模块.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L0-M2-文本角色识别模块.md",
+        "source_file": "framework/document_chunking/L0-M2-文本角色识别模块.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+        "label": "L0-M3-段落块打包器.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L0-M3-段落块打包器.md",
+        "source_file": "framework/document_chunking/L0-M3-段落块打包器.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+        "label": "L0-M4-结果文档.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L0-M4-结果文档.md",
+        "source_file": "framework/document_chunking/L0-M4-结果文档.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+        "label": "L1-M0-文档分块.md",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=framework/document_chunking/L1-M0-文档分块.md",
+        "source_file": "framework/document_chunking/L1-M0-文档分块.md",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+        "label": "implementation_config.toml",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+        "label": "product_spec.toml",
+        "level": 4,
+        "description": "kind=framework_source | layer=Framework | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "framework_source",
+        "layer": "Framework",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:framework",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:implementation_config",
+        "label": "Implementation Config",
+        "level": 3,
+        "description": "kind=implementation_root | layer=Implementation Config | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 1,
+        "node_kind": "implementation_root",
+        "layer": "Implementation Config",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:implementation_config:section:artifacts",
+        "label": "artifacts",
+        "level": 4,
+        "description": "kind=implementation_section | layer=Implementation Config | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 46,
+        "node_kind": "implementation_section",
+        "layer": "Implementation Config",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:implementation_config",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:implementation_config:section:evidence",
+        "label": "evidence",
+        "level": 4,
+        "description": "kind=implementation_section | layer=Implementation Config | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 38,
+        "node_kind": "implementation_section",
+        "layer": "Implementation Config",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:implementation_config",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:implementation_config:section:pipeline",
+        "label": "pipeline",
+        "level": 4,
+        "description": "kind=implementation_section | layer=Implementation Config | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 29,
+        "node_kind": "implementation_section",
+        "layer": "Implementation Config",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:implementation_config",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:implementation_config:section:runtime",
+        "label": "runtime",
+        "level": 4,
+        "description": "kind=implementation_section | layer=Implementation Config | project_id=document_chunking_basic | file=projects/document_chunking_basic/implementation_config.toml",
+        "source_file": "projects/document_chunking_basic/implementation_config.toml",
+        "source_line": 16,
+        "node_kind": "implementation_section",
+        "layer": "Implementation Config",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:implementation_config",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec",
+        "label": "Product Spec",
+        "level": 3,
+        "description": "kind=product_spec_root | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "product_spec_root",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:composition",
+        "label": "composition",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 63,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:framework",
+        "label": "framework",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 27,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:input",
+        "label": "input",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 36,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:output",
+        "label": "output",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 78,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:role_judgment",
+        "label": "role_judgment",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 55,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:segmentation",
+        "label": "segmentation",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 45,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:product_spec:section:validation",
+        "label": "validation",
+        "level": 4,
+        "description": "kind=product_section | layer=Product Spec | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 104,
+        "node_kind": "product_section",
+        "layer": "Product Spec",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:product_spec",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:structure",
+        "label": "Structure",
+        "level": 3,
+        "description": "kind=structure_root | layer=Structure | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "structure_root",
+        "layer": "Structure",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": null,
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:structure:object:document_chunking.api",
+        "label": "Document Chunking API",
+        "level": 4,
+        "description": "kind=structural_object | layer=Structure | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml | object_id=document_chunking.api",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "structural_object",
+        "layer": "Structure",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:structure",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "document_chunking.api",
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:structure:object:document_chunking.evidence",
+        "label": "Document Chunking Generated Evidence",
+        "level": 4,
+        "description": "kind=structural_object | layer=Structure | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml | object_id=document_chunking.evidence",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "structural_object",
+        "layer": "Structure",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:structure",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "document_chunking.evidence",
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:document_chunking_basic:structure:object:document_chunking.pipeline",
+        "label": "Document Chunking Pipeline",
+        "level": 4,
+        "description": "kind=structural_object | layer=Structure | project_id=document_chunking_basic | file=projects/document_chunking_basic/product_spec.toml | object_id=document_chunking.pipeline",
+        "source_file": "projects/document_chunking_basic/product_spec.toml",
+        "source_line": 1,
+        "node_kind": "structural_object",
+        "layer": "Structure",
+        "project_id": "document_chunking_basic",
+        "project_product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "parent_node_id": "project:document_chunking_basic:structure",
+        "derived_from": [],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "document_chunking.pipeline",
+        "role_id": null,
+        "candidate_id": null,
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic",
         "label": "Shelf AI Knowledge Chat",
         "level": 2,
@@ -7393,6 +8568,241 @@
       },
       {
         "from": "workspace:shelf:projects",
+        "to": "project:document_chunking_basic",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:code",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:code",
+        "to": "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:evidence",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:product_spec_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:evidence",
+        "to": "project:document_chunking_basic:evidence:artifact:strict_zone_report_json",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:framework",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:framework",
+        "to": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:implementation_config",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:implementation_config",
+        "to": "project:document_chunking_basic:implementation_config:section:artifacts",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:implementation_config",
+        "to": "project:document_chunking_basic:implementation_config:section:evidence",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:implementation_config",
+        "to": "project:document_chunking_basic:implementation_config:section:pipeline",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:implementation_config",
+        "to": "project:document_chunking_basic:implementation_config:section:runtime",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:product_spec",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:composition",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:framework",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:input",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:output",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:role_judgment",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:segmentation",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:product_spec",
+        "to": "project:document_chunking_basic:product_spec:section:validation",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic",
+        "to": "project:document_chunking_basic:structure",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:structure",
+        "to": "project:document_chunking_basic:structure:object:document_chunking.api",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:structure",
+        "to": "project:document_chunking_basic:structure:object:document_chunking.evidence",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:document_chunking_basic:structure",
+        "to": "project:document_chunking_basic:structure:object:document_chunking.pipeline",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:projects",
         "to": "project:knowledge_base_basic",
         "relation": "tree_child"
       },
@@ -8654,9 +10064,1067 @@
     "standards_root_id": "workspace:shelf:standards",
     "projects_root_id": "workspace:shelf:projects",
     "project_roots": {
+      "document_chunking_basic": "project:document_chunking_basic",
       "knowledge_base_basic": "project:knowledge_base_basic"
     },
     "project_trees": {
+      "document_chunking_basic": {
+        "tree_version": "generic-governance-tree/v1",
+        "project_id": "document_chunking_basic",
+        "template_id": "document_chunking_pipeline",
+        "root_node_id": "project:document_chunking_basic",
+        "project_discovery": {
+          "project_id": "document_chunking_basic",
+          "template_id": "document_chunking_pipeline",
+          "product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+          "implementation_config_file": "projects/document_chunking_basic/implementation_config.toml",
+          "generated_dir": "projects/document_chunking_basic/generated",
+          "discovery_reasons": [
+            "project spec exists under projects/<project_id>/product_spec.toml",
+            "implementation_config.toml exists beside product_spec.toml",
+            "registered template resolved: document_chunking_pipeline",
+            "project loads through the registered framework-driven materialization chain",
+            "framework selections resolve to concrete framework modules",
+            "implementation_config defines generated artifact evidence contract"
+          ],
+          "framework_refs": [
+            "framework/document_chunking/L1-M0-文档分块.md",
+            "framework/document_chunking/L0-M0-段落分界模板.md",
+            "framework/document_chunking/L0-M1-段落块.md",
+            "framework/document_chunking/L0-M2-文本角色识别模块.md",
+            "framework/document_chunking/L0-M3-段落块打包器.md",
+            "framework/document_chunking/L0-M4-结果文档.md"
+          ],
+          "artifact_contract": [
+            "framework_ir.json",
+            "product_spec.json",
+            "implementation_bundle.py",
+            "generation_manifest.json",
+            "governance_manifest.json",
+            "governance_tree.json",
+            "strict_zone_report.json",
+            "object_coverage_report.json"
+          ]
+        },
+        "strict_zone": [
+          {
+            "file": "projects/document_chunking_basic/generated/framework_ir.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:framework_ir_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact framework_ir_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/generation_manifest.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:generation_manifest_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact generation_manifest_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/governance_manifest.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:governance_manifest_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact governance_manifest_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/governance_tree.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:governance_tree_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact governance_tree_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/implementation_bundle.py",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:implementation_bundle_py"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact implementation_bundle_py"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/object_coverage_report.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:object_coverage_report_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact object_coverage_report_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/product_spec.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:product_spec_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact product_spec_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "projects/document_chunking_basic/generated/strict_zone_report.json",
+            "object_ids": [],
+            "role_ids": [],
+            "candidate_ids": [],
+            "reasons": [
+              "evidence:strict_zone_report_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact strict_zone_report_json"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "src/document_chunking_runtime/app.py",
+            "object_ids": [
+              "document_chunking.api"
+            ],
+            "role_ids": [
+              "api_builder"
+            ],
+            "candidate_ids": [
+              "document_chunking_basic:src/document_chunking_runtime/app.py:class:ProcessFileRequest",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:class:ProcessTextRequest",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:function:build_document_chunking_app",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:function:get_product_spec",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:function:health",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:function:process_file",
+              "document_chunking_basic:src/document_chunking_runtime/app.py:function:process_text"
+            ],
+            "reasons": [
+              "candidate:attached",
+              "candidate:governed",
+              "object:document_chunking.api",
+              "role:api_builder"
+            ],
+            "why_required": [
+              "remove file breaks role closure document_chunking.api -> api_builder"
+            ],
+            "minimality_status": "required"
+          },
+          {
+            "file": "src/project_runtime/document_chunking.py",
+            "object_ids": [
+              "document_chunking.evidence"
+            ],
+            "role_ids": [
+              "materializer"
+            ],
+            "candidate_ids": [
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:ArtifactConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:CompositionConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:DocumentChunkingImplementationConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:DocumentChunkingProduct",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:DocumentChunkingProject",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:EvidenceConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:FrameworkSelection",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:GeneratedArtifactPaths",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:InputConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:OutputConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:PipelineConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:ProjectMetadata",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:RoleJudgmentConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:RuntimeConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:SegmentationConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:class:ValidationConfig",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:_build_document_chunking_governance_nodes",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:_build_expected_artifacts",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:_build_generated_artifact_payloads",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:_load_implementation_config",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:build_document_chunking_governance_manifest",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:build_document_chunking_governance_tree",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:build_document_chunking_runtime_app_from_spec",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:build_governance_closure",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:build_implementation_effect_manifest",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:materialize_document_chunking_project",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:write_document_chunking_auxiliary_outputs",
+              "document_chunking_basic:src/project_runtime/document_chunking.py:function:write_document_chunking_markdown_output"
+            ],
+            "reasons": [
+              "candidate:attached",
+              "candidate:governed",
+              "object:document_chunking.evidence",
+              "role:materializer"
+            ],
+            "why_required": [
+              "remove file breaks role closure document_chunking.evidence -> materializer"
+            ],
+            "minimality_status": "required"
+          }
+        ],
+        "object_coverage": {
+          "report_version": "object-coverage-report/v1",
+          "project_id": "document_chunking_basic",
+          "template_id": "document_chunking_pipeline",
+          "summary": {
+            "governed_object_count": 3,
+            "fully_closed_object_count": 1,
+            "partially_closed_object_count": 2,
+            "governed_candidate_count": 2,
+            "attached_candidate_count": 33,
+            "internal_candidate_count": 13,
+            "uncovered_future_categories": [
+              "compiler/evidence builders that are still attached-only",
+              "schema carriers that are still attached-only"
+            ]
+          },
+          "objects": [
+            {
+              "object_id": "document_chunking.pipeline",
+              "kind": "runtime_pipeline",
+              "risk_level": "high",
+              "status": "implemented",
+              "source_categories": [
+                "framework",
+                "product",
+                "implementation"
+              ],
+              "sources": {
+                "framework": [
+                  {
+                    "layer": "framework",
+                    "file": "framework/document_chunking/L1-M0-文档分块.md",
+                    "ref_kind": "module",
+                    "ref_id": "document_chunking.L1.M0"
+                  },
+                  {
+                    "layer": "framework",
+                    "file": "framework/document_chunking/L1-M0-文档分块.md",
+                    "ref_kind": "rule",
+                    "ref_id": "R1"
+                  },
+                  {
+                    "layer": "framework",
+                    "file": "framework/document_chunking/L1-M0-文档分块.md",
+                    "ref_kind": "rule",
+                    "ref_id": "R4"
+                  }
+                ],
+                "product": [
+                  {
+                    "layer": "product",
+                    "file": "projects/document_chunking_basic/product_spec.toml",
+                    "ref_kind": "table",
+                    "ref_id": "composition"
+                  },
+                  {
+                    "layer": "product",
+                    "file": "projects/document_chunking_basic/product_spec.toml",
+                    "ref_kind": "table",
+                    "ref_id": "output"
+                  },
+                  {
+                    "layer": "product",
+                    "file": "projects/document_chunking_basic/product_spec.toml",
+                    "ref_kind": "table",
+                    "ref_id": "validation"
+                  }
+                ],
+                "implementation": [
+                  {
+                    "layer": "implementation",
+                    "file": "projects/document_chunking_basic/implementation_config.toml",
+                    "ref_kind": "table",
+                    "ref_id": "pipeline"
+                  }
+                ]
+              },
+              "required_roles": [
+                "pipeline_runner",
+                "pipeline_validator"
+              ],
+              "actual_roles": [],
+              "missing_roles": [
+                "pipeline_runner",
+                "pipeline_validator"
+              ],
+              "overbound_roles": [],
+              "compare_status": "match",
+              "compare_coverage": {
+                "extractor": "document_chunking_runtime.pipeline.run_document_chunking_pipeline",
+                "comparator": "canonical_json_equals",
+                "expected_fingerprint": "sha256:f652b4885d58ffc0e762d782a3a56dea8f811983f2c2d7409acbf2f1c85cc92f",
+                "actual_fingerprint": "sha256:f652b4885d58ffc0e762d782a3a56dea8f811983f2c2d7409acbf2f1c85cc92f"
+              },
+              "closure_status": "partially_closed"
+            },
+            {
+              "object_id": "document_chunking.api",
+              "kind": "runtime_api",
+              "risk_level": "high",
+              "status": "implemented",
+              "source_categories": [
+                "framework",
+                "implementation"
+              ],
+              "sources": {
+                "framework": [
+                  {
+                    "layer": "framework",
+                    "file": "framework/document_chunking/L1-M0-文档分块.md",
+                    "ref_kind": "boundary",
+                    "ref_id": "OUTPUT"
+                  }
+                ],
+                "product": [
+                  {
+                    "layer": "product",
+                    "file": "projects/document_chunking_basic/product_spec.toml",
+                    "ref_kind": "table",
+                    "ref_id": "validation"
+                  }
+                ],
+                "implementation": [
+                  {
+                    "layer": "implementation",
+                    "file": "projects/document_chunking_basic/implementation_config.toml",
+                    "ref_kind": "table",
+                    "ref_id": "runtime"
+                  },
+                  {
+                    "layer": "implementation",
+                    "file": "projects/document_chunking_basic/implementation_config.toml",
+                    "ref_kind": "table",
+                    "ref_id": "evidence"
+                  }
+                ]
+              },
+              "required_roles": [
+                "api_builder",
+                "project_loader"
+              ],
+              "actual_roles": [
+                "api_builder"
+              ],
+              "missing_roles": [
+                "project_loader"
+              ],
+              "overbound_roles": [],
+              "compare_status": "match",
+              "compare_coverage": {
+                "extractor": "document_chunking_runtime.app.build_document_chunking_app",
+                "comparator": "canonical_json_equals",
+                "expected_fingerprint": "sha256:10273a35ed64e99d84a5b183f96036ad646fafa1beb8b2c930ff67f9036199b2",
+                "actual_fingerprint": "sha256:10273a35ed64e99d84a5b183f96036ad646fafa1beb8b2c930ff67f9036199b2"
+              },
+              "closure_status": "partially_closed"
+            },
+            {
+              "object_id": "document_chunking.evidence",
+              "kind": "generated_evidence",
+              "risk_level": "medium",
+              "status": "implemented",
+              "source_categories": [
+                "framework",
+                "implementation"
+              ],
+              "sources": {
+                "framework": [
+                  {
+                    "layer": "framework",
+                    "file": "framework/document_chunking/L1-M0-文档分块.md",
+                    "ref_kind": "rule",
+                    "ref_id": "R4"
+                  }
+                ],
+                "product": [
+                  {
+                    "layer": "product",
+                    "file": "projects/document_chunking_basic/product_spec.toml",
+                    "ref_kind": "table",
+                    "ref_id": "output"
+                  }
+                ],
+                "implementation": [
+                  {
+                    "layer": "implementation",
+                    "file": "projects/document_chunking_basic/implementation_config.toml",
+                    "ref_kind": "table",
+                    "ref_id": "artifacts"
+                  }
+                ]
+              },
+              "required_roles": [
+                "materializer"
+              ],
+              "actual_roles": [
+                "materializer"
+              ],
+              "missing_roles": [],
+              "overbound_roles": [],
+              "compare_status": "match",
+              "compare_coverage": {
+                "extractor": "project_runtime.document_chunking.materialize_document_chunking_project",
+                "comparator": "canonical_json_equals",
+                "expected_fingerprint": "sha256:0a694d64178ca5b0d9ccef0a9a786505bd65010765234c034ac4aa5bfc840b1a",
+                "actual_fingerprint": "sha256:0a694d64178ca5b0d9ccef0a9a786505bd65010765234c034ac4aa5bfc840b1a"
+              },
+              "closure_status": "fully_closed"
+            }
+          ]
+        },
+        "nodes": [
+          {
+            "node_id": "project:document_chunking_basic",
+            "parent": null,
+            "children": [
+              "project:document_chunking_basic:framework",
+              "project:document_chunking_basic:product_spec",
+              "project:document_chunking_basic:implementation_config",
+              "project:document_chunking_basic:structure",
+              "project:document_chunking_basic:code",
+              "project:document_chunking_basic:evidence"
+            ],
+            "kind": "project_root",
+            "layer": "Project",
+            "title": "Shelf AI Document Chunking",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "template_id": "document_chunking_pipeline",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+              "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+              "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+              "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml"
+            ],
+            "kind": "framework_root",
+            "layer": "Framework",
+            "title": "Framework",
+            "file": "projects/document_chunking_basic/product_spec.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:product_spec:section:framework",
+              "project:document_chunking_basic:product_spec:section:input",
+              "project:document_chunking_basic:product_spec:section:segmentation",
+              "project:document_chunking_basic:product_spec:section:role_judgment",
+              "project:document_chunking_basic:product_spec:section:composition",
+              "project:document_chunking_basic:product_spec:section:output",
+              "project:document_chunking_basic:product_spec:section:validation"
+            ],
+            "kind": "product_spec_root",
+            "layer": "Product Spec",
+            "title": "Product Spec",
+            "file": "projects/document_chunking_basic/product_spec.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:implementation_config",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:implementation_config:section:runtime",
+              "project:document_chunking_basic:implementation_config:section:pipeline",
+              "project:document_chunking_basic:implementation_config:section:evidence",
+              "project:document_chunking_basic:implementation_config:section:artifacts"
+            ],
+            "kind": "implementation_root",
+            "layer": "Implementation Config",
+            "title": "Implementation Config",
+            "file": "projects/document_chunking_basic/implementation_config.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:structure",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:structure:object:document_chunking.pipeline",
+              "project:document_chunking_basic:structure:object:document_chunking.api",
+              "project:document_chunking_basic:structure:object:document_chunking.evidence"
+            ],
+            "kind": "structure_root",
+            "layer": "Structure",
+            "title": "Structure",
+            "file": "projects/document_chunking_basic/product_spec.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+              "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+              "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+              "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py"
+            ],
+            "kind": "code_root",
+            "layer": "Code",
+            "title": "Code",
+            "file": "projects/document_chunking_basic/implementation_config.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence",
+            "parent": "project:document_chunking_basic",
+            "children": [
+              "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+              "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+              "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+              "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+              "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+              "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+              "project:document_chunking_basic:evidence:artifact:product_spec_json",
+              "project:document_chunking_basic:evidence:artifact:strict_zone_report_json"
+            ],
+            "kind": "evidence_root",
+            "layer": "Evidence",
+            "title": "Evidence",
+            "file": "projects/document_chunking_basic/implementation_config.toml"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L1-M0-文档分块.md",
+            "file": "framework/document_chunking/L1-M0-文档分块.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L0-M0-段落分界模板.md",
+            "file": "framework/document_chunking/L0-M0-段落分界模板.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L0-M1-段落块.md",
+            "file": "framework/document_chunking/L0-M1-段落块.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L0-M2-文本角色识别模块.md",
+            "file": "framework/document_chunking/L0-M2-文本角色识别模块.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L0-M3-段落块打包器.md",
+            "file": "framework/document_chunking/L0-M3-段落块打包器.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "L0-M4-结果文档.md",
+            "file": "framework/document_chunking/L0-M4-结果文档.md",
+            "ref_id": "R1"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "product_spec.toml",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "framework"
+          },
+          {
+            "node_id": "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+            "parent": "project:document_chunking_basic:framework",
+            "children": [],
+            "kind": "framework_source",
+            "layer": "Framework",
+            "title": "implementation_config.toml",
+            "file": "projects/document_chunking_basic/implementation_config.toml",
+            "ref_id": "runtime"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:framework",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "framework",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "framework"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:input",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "input",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "input"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:segmentation",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "segmentation",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "segmentation"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:role_judgment",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "role_judgment",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "role_judgment"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:composition",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "composition",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "composition"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:output",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "output",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "output"
+          },
+          {
+            "node_id": "project:document_chunking_basic:product_spec:section:validation",
+            "parent": "project:document_chunking_basic:product_spec",
+            "children": [],
+            "kind": "product_section",
+            "layer": "Product Spec",
+            "title": "validation",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "ref_id": "validation"
+          },
+          {
+            "node_id": "project:document_chunking_basic:implementation_config:section:runtime",
+            "parent": "project:document_chunking_basic:implementation_config",
+            "children": [],
+            "kind": "implementation_section",
+            "layer": "Implementation Config",
+            "title": "runtime",
+            "file": "projects/document_chunking_basic/implementation_config.toml",
+            "ref_id": "runtime"
+          },
+          {
+            "node_id": "project:document_chunking_basic:implementation_config:section:pipeline",
+            "parent": "project:document_chunking_basic:implementation_config",
+            "children": [],
+            "kind": "implementation_section",
+            "layer": "Implementation Config",
+            "title": "pipeline",
+            "file": "projects/document_chunking_basic/implementation_config.toml",
+            "ref_id": "pipeline"
+          },
+          {
+            "node_id": "project:document_chunking_basic:implementation_config:section:evidence",
+            "parent": "project:document_chunking_basic:implementation_config",
+            "children": [],
+            "kind": "implementation_section",
+            "layer": "Implementation Config",
+            "title": "evidence",
+            "file": "projects/document_chunking_basic/implementation_config.toml",
+            "ref_id": "evidence"
+          },
+          {
+            "node_id": "project:document_chunking_basic:implementation_config:section:artifacts",
+            "parent": "project:document_chunking_basic:implementation_config",
+            "children": [],
+            "kind": "implementation_section",
+            "layer": "Implementation Config",
+            "title": "artifacts",
+            "file": "projects/document_chunking_basic/implementation_config.toml",
+            "ref_id": "artifacts"
+          },
+          {
+            "node_id": "project:document_chunking_basic:structure:object:document_chunking.pipeline",
+            "parent": "project:document_chunking_basic:structure",
+            "children": [],
+            "kind": "structural_object",
+            "layer": "Structure",
+            "title": "Document Chunking Pipeline",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "object_id": "document_chunking.pipeline"
+          },
+          {
+            "node_id": "project:document_chunking_basic:structure:object:document_chunking.api",
+            "parent": "project:document_chunking_basic:structure",
+            "children": [],
+            "kind": "structural_object",
+            "layer": "Structure",
+            "title": "Document Chunking API",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "object_id": "document_chunking.api"
+          },
+          {
+            "node_id": "project:document_chunking_basic:structure:object:document_chunking.evidence",
+            "parent": "project:document_chunking_basic:structure",
+            "children": [],
+            "kind": "structural_object",
+            "layer": "Structure",
+            "title": "Document Chunking Generated Evidence",
+            "file": "projects/document_chunking_basic/product_spec.toml",
+            "object_id": "document_chunking.evidence"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "framework_ir.json",
+            "file": "projects/document_chunking_basic/generated/framework_ir.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:framework_ir_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact framework_ir_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "generation_manifest.json",
+            "file": "projects/document_chunking_basic/generated/generation_manifest.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:generation_manifest_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact generation_manifest_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "governance_manifest.json",
+            "file": "projects/document_chunking_basic/generated/governance_manifest.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:governance_manifest_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact governance_manifest_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "governance_tree.json",
+            "file": "projects/document_chunking_basic/generated/governance_tree.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:governance_tree_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact governance_tree_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "implementation_bundle.py",
+            "file": "projects/document_chunking_basic/generated/implementation_bundle.py",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:implementation_bundle_py"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact implementation_bundle_py"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "object_coverage_report.json",
+            "file": "projects/document_chunking_basic/generated/object_coverage_report.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:object_coverage_report_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact object_coverage_report_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "product_spec.json",
+            "file": "projects/document_chunking_basic/generated/product_spec.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:product_spec_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact product_spec_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "strict_zone_report.json",
+            "file": "projects/document_chunking_basic/generated/strict_zone_report.json",
+            "object_ids": [],
+            "role_ids": [],
+            "reasons": [
+              "evidence:strict_zone_report_json"
+            ],
+            "why_required": [
+              "remove file breaks evidence artifact strict_zone_report_json"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "app.py",
+            "file": "src/document_chunking_runtime/app.py",
+            "object_ids": [
+              "document_chunking.api"
+            ],
+            "role_ids": [
+              "api_builder"
+            ],
+            "reasons": [
+              "candidate:attached",
+              "candidate:governed",
+              "object:document_chunking.api",
+              "role:api_builder"
+            ],
+            "why_required": [
+              "remove file breaks role closure document_chunking.api -> api_builder"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py",
+            "parent": "project:document_chunking_basic:code",
+            "children": [],
+            "kind": "strict_zone_file",
+            "layer": "Code",
+            "title": "document_chunking.py",
+            "file": "src/project_runtime/document_chunking.py",
+            "object_ids": [
+              "document_chunking.evidence"
+            ],
+            "role_ids": [
+              "materializer"
+            ],
+            "reasons": [
+              "candidate:attached",
+              "candidate:governed",
+              "object:document_chunking.evidence",
+              "role:materializer"
+            ],
+            "why_required": [
+              "remove file breaks role closure document_chunking.evidence -> materializer"
+            ],
+            "minimality_status": "required",
+            "project_id": "document_chunking_basic"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "framework_ir_json",
+            "file": "projects/document_chunking_basic/generated/framework_ir.json",
+            "artifact": "framework_ir_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "generation_manifest_json",
+            "file": "projects/document_chunking_basic/generated/generation_manifest.json",
+            "artifact": "generation_manifest_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "governance_manifest_json",
+            "file": "projects/document_chunking_basic/generated/governance_manifest.json",
+            "artifact": "governance_manifest_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "governance_tree_json",
+            "file": "projects/document_chunking_basic/generated/governance_tree.json",
+            "artifact": "governance_tree_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "implementation_bundle_py",
+            "file": "projects/document_chunking_basic/generated/implementation_bundle.py",
+            "artifact": "implementation_bundle_py"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "object_coverage_report_json",
+            "file": "projects/document_chunking_basic/generated/object_coverage_report.json",
+            "artifact": "object_coverage_report_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:product_spec_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "product_spec_json",
+            "file": "projects/document_chunking_basic/generated/product_spec.json",
+            "artifact": "product_spec_json"
+          },
+          {
+            "node_id": "project:document_chunking_basic:evidence:artifact:strict_zone_report_json",
+            "parent": "project:document_chunking_basic:evidence",
+            "children": [],
+            "kind": "evidence_artifact",
+            "layer": "Evidence",
+            "title": "strict_zone_report_json",
+            "file": "projects/document_chunking_basic/generated/strict_zone_report.json",
+            "artifact": "strict_zone_report_json"
+          }
+        ]
+      },
       "knowledge_base_basic": {
         "tree_version": "governance-tree/v1",
         "project_id": "knowledge_base_basic",
@@ -26674,6 +29142,38 @@
       "projects_dir": "projects",
       "entries": [
         {
+          "project_id": "document_chunking_basic",
+          "directory": "projects/document_chunking_basic",
+          "framework_driven": true,
+          "template_id": "document_chunking_pipeline",
+          "classification": "recognized",
+          "reasons": [
+            "product_spec.toml and implementation_config.toml both exist",
+            "registered template resolved: document_chunking_pipeline",
+            "project loads through the registered framework-driven materialization chain",
+            "framework selections resolve to concrete framework modules",
+            "implementation config exposes generated artifact contract"
+          ],
+          "product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+          "implementation_config_file": "projects/document_chunking_basic/implementation_config.toml",
+          "generated_dir": "projects/document_chunking_basic/generated",
+          "framework_refs": [
+            "framework/document_chunking/L0-M0-段落分界模板.md",
+            "framework/document_chunking/L0-M4-结果文档.md",
+            "framework/document_chunking/L1-M0-文档分块.md"
+          ],
+          "artifact_contract": [
+            "framework_ir.json",
+            "product_spec.json",
+            "implementation_bundle.py",
+            "generation_manifest.json",
+            "governance_manifest.json",
+            "governance_tree.json",
+            "strict_zone_report.json",
+            "object_coverage_report.json"
+          ]
+        },
+        {
           "project_id": "knowledge_base_basic",
           "directory": "projects/knowledge_base_basic",
           "framework_driven": true,
@@ -26707,10 +29207,10 @@
         }
       ],
       "summary": {
-        "recognized_count": 1,
+        "recognized_count": 2,
         "excluded_count": 0,
         "classification_counts": {
-          "recognized": 1
+          "recognized": 2
         }
       }
     },
@@ -26742,6 +29242,24 @@
       "framework/curtain/L2-M0-窗帘框架标准模块.md": [
         "standards:NODE-L2-CURTAIN-L2-M0"
       ],
+      "framework/document_chunking/L0-M0-段落分界模板.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md"
+      ],
+      "framework/document_chunking/L0-M1-段落块.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md"
+      ],
+      "framework/document_chunking/L0-M2-文本角色识别模块.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md"
+      ],
+      "framework/document_chunking/L0-M3-段落块打包器.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md"
+      ],
+      "framework/document_chunking/L0-M4-结果文档.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md"
+      ],
+      "framework/document_chunking/L1-M0-文档分块.md": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md"
+      ],
       "framework/frontend/L2-M0-前端框架标准模块.md": [
         "project:knowledge_base_basic:framework:module:frontend.L2.M0",
         "project:knowledge_base_basic:framework:module:frontend.L2.M0:rule:R1",
@@ -26769,6 +29287,65 @@
       ],
       "projects": [
         "workspace:shelf:projects"
+      ],
+      "projects/document_chunking_basic/generated/framework_ir.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+        "project:document_chunking_basic:evidence:artifact:framework_ir_json"
+      ],
+      "projects/document_chunking_basic/generated/generation_manifest.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+        "project:document_chunking_basic:evidence:artifact:generation_manifest_json"
+      ],
+      "projects/document_chunking_basic/generated/governance_manifest.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+        "project:document_chunking_basic:evidence:artifact:governance_manifest_json"
+      ],
+      "projects/document_chunking_basic/generated/governance_tree.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+        "project:document_chunking_basic:evidence:artifact:governance_tree_json"
+      ],
+      "projects/document_chunking_basic/generated/implementation_bundle.py": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+        "project:document_chunking_basic:evidence:artifact:implementation_bundle_py"
+      ],
+      "projects/document_chunking_basic/generated/object_coverage_report.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+        "project:document_chunking_basic:evidence:artifact:object_coverage_report_json"
+      ],
+      "projects/document_chunking_basic/generated/product_spec.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+        "project:document_chunking_basic:evidence:artifact:product_spec_json"
+      ],
+      "projects/document_chunking_basic/generated/strict_zone_report.json": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+        "project:document_chunking_basic:evidence:artifact:strict_zone_report_json"
+      ],
+      "projects/document_chunking_basic/implementation_config.toml": [
+        "project:document_chunking_basic:code",
+        "project:document_chunking_basic:evidence",
+        "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+        "project:document_chunking_basic:implementation_config",
+        "project:document_chunking_basic:implementation_config:section:artifacts",
+        "project:document_chunking_basic:implementation_config:section:evidence",
+        "project:document_chunking_basic:implementation_config:section:pipeline",
+        "project:document_chunking_basic:implementation_config:section:runtime"
+      ],
+      "projects/document_chunking_basic/product_spec.toml": [
+        "project:document_chunking_basic",
+        "project:document_chunking_basic:framework",
+        "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+        "project:document_chunking_basic:product_spec",
+        "project:document_chunking_basic:product_spec:section:composition",
+        "project:document_chunking_basic:product_spec:section:framework",
+        "project:document_chunking_basic:product_spec:section:input",
+        "project:document_chunking_basic:product_spec:section:output",
+        "project:document_chunking_basic:product_spec:section:role_judgment",
+        "project:document_chunking_basic:product_spec:section:segmentation",
+        "project:document_chunking_basic:product_spec:section:validation",
+        "project:document_chunking_basic:structure",
+        "project:document_chunking_basic:structure:object:document_chunking.api",
+        "project:document_chunking_basic:structure:object:document_chunking.evidence",
+        "project:document_chunking_basic:structure:object:document_chunking.pipeline"
       ],
       "projects/knowledge_base_basic/generated/framework_ir.json": [
         "project:knowledge_base_basic:code:file:projects/knowledge_base_basic/generated/framework_ir.json",
@@ -26939,6 +29516,9 @@
       "specs/规范总纲与树形结构.md": [
         "standards:NODE-L0-ROOT"
       ],
+      "src/document_chunking_runtime/app.py": [
+        "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py"
+      ],
       "src/frontend_kernel/contracts.py": [
         "project:knowledge_base_basic:code:file:src/frontend_kernel/contracts.py",
         "project:knowledge_base_basic:code:file:src/frontend_kernel/contracts.py:candidate:knowledge_base_basic:src/frontend_kernel/contracts.py:function:build_frontend_contract"
@@ -26983,6 +29563,9 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_documents",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_knowledge_bases",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_tags"
+      ],
+      "src/project_runtime/document_chunking.py": [
+        "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py"
       ],
       "src/project_runtime/governance.py": [
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
@@ -27082,6 +29665,53 @@
       "standards:NODE-L2-KNOWLEDGE-BASE-L2-M0": null,
       "standards:NODE-L3-LAYER": null,
       "standards:NODE-L3-REGISTRY": null,
+      "project:document_chunking_basic": "workspace:shelf:projects",
+      "project:document_chunking_basic:code": "project:document_chunking_basic",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py": "project:document_chunking_basic:code",
+      "project:document_chunking_basic:evidence": "project:document_chunking_basic",
+      "project:document_chunking_basic:evidence:artifact:framework_ir_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:generation_manifest_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:governance_manifest_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:governance_tree_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:implementation_bundle_py": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:object_coverage_report_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:product_spec_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:evidence:artifact:strict_zone_report_json": "project:document_chunking_basic:evidence",
+      "project:document_chunking_basic:framework": "project:document_chunking_basic",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml": "project:document_chunking_basic:framework",
+      "project:document_chunking_basic:implementation_config": "project:document_chunking_basic",
+      "project:document_chunking_basic:implementation_config:section:artifacts": "project:document_chunking_basic:implementation_config",
+      "project:document_chunking_basic:implementation_config:section:evidence": "project:document_chunking_basic:implementation_config",
+      "project:document_chunking_basic:implementation_config:section:pipeline": "project:document_chunking_basic:implementation_config",
+      "project:document_chunking_basic:implementation_config:section:runtime": "project:document_chunking_basic:implementation_config",
+      "project:document_chunking_basic:product_spec": "project:document_chunking_basic",
+      "project:document_chunking_basic:product_spec:section:composition": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:framework": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:input": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:output": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:role_judgment": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:segmentation": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:product_spec:section:validation": "project:document_chunking_basic:product_spec",
+      "project:document_chunking_basic:structure": "project:document_chunking_basic",
+      "project:document_chunking_basic:structure:object:document_chunking.api": "project:document_chunking_basic:structure",
+      "project:document_chunking_basic:structure:object:document_chunking.evidence": "project:document_chunking_basic:structure",
+      "project:document_chunking_basic:structure:object:document_chunking.pipeline": "project:document_chunking_basic:structure",
       "project:knowledge_base_basic": "workspace:shelf:projects",
       "project:knowledge_base_basic:code": "project:knowledge_base_basic",
       "project:knowledge_base_basic:code:file:projects/knowledge_base_basic/generated/framework_ir.json": "project:knowledge_base_basic:code",
@@ -27335,6 +29965,106 @@
       "project:knowledge_base_basic:structure:object:knowledge_base_basic.config_effect.frontend.style_profile:role:frontend.style_profile:ui_spec.implementation.style_profile": "project:knowledge_base_basic:structure:object:knowledge_base_basic.config_effect.frontend.style_profile"
     },
     "children_index": {
+      "project:document_chunking_basic": [
+        "project:document_chunking_basic:code",
+        "project:document_chunking_basic:evidence",
+        "project:document_chunking_basic:framework",
+        "project:document_chunking_basic:implementation_config",
+        "project:document_chunking_basic:product_spec",
+        "project:document_chunking_basic:structure"
+      ],
+      "project:document_chunking_basic:code": [
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+        "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+        "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+        "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py"
+      ],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json": [],
+      "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py": [],
+      "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py": [],
+      "project:document_chunking_basic:evidence": [
+        "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+        "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+        "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+        "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+        "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+        "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+        "project:document_chunking_basic:evidence:artifact:product_spec_json",
+        "project:document_chunking_basic:evidence:artifact:strict_zone_report_json"
+      ],
+      "project:document_chunking_basic:evidence:artifact:framework_ir_json": [],
+      "project:document_chunking_basic:evidence:artifact:generation_manifest_json": [],
+      "project:document_chunking_basic:evidence:artifact:governance_manifest_json": [],
+      "project:document_chunking_basic:evidence:artifact:governance_tree_json": [],
+      "project:document_chunking_basic:evidence:artifact:implementation_bundle_py": [],
+      "project:document_chunking_basic:evidence:artifact:object_coverage_report_json": [],
+      "project:document_chunking_basic:evidence:artifact:product_spec_json": [],
+      "project:document_chunking_basic:evidence:artifact:strict_zone_report_json": [],
+      "project:document_chunking_basic:framework": [
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+        "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+        "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+        "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml"
+      ],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md": [],
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml": [],
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml": [],
+      "project:document_chunking_basic:implementation_config": [
+        "project:document_chunking_basic:implementation_config:section:artifacts",
+        "project:document_chunking_basic:implementation_config:section:evidence",
+        "project:document_chunking_basic:implementation_config:section:pipeline",
+        "project:document_chunking_basic:implementation_config:section:runtime"
+      ],
+      "project:document_chunking_basic:implementation_config:section:artifacts": [],
+      "project:document_chunking_basic:implementation_config:section:evidence": [],
+      "project:document_chunking_basic:implementation_config:section:pipeline": [],
+      "project:document_chunking_basic:implementation_config:section:runtime": [],
+      "project:document_chunking_basic:product_spec": [
+        "project:document_chunking_basic:product_spec:section:composition",
+        "project:document_chunking_basic:product_spec:section:framework",
+        "project:document_chunking_basic:product_spec:section:input",
+        "project:document_chunking_basic:product_spec:section:output",
+        "project:document_chunking_basic:product_spec:section:role_judgment",
+        "project:document_chunking_basic:product_spec:section:segmentation",
+        "project:document_chunking_basic:product_spec:section:validation"
+      ],
+      "project:document_chunking_basic:product_spec:section:composition": [],
+      "project:document_chunking_basic:product_spec:section:framework": [],
+      "project:document_chunking_basic:product_spec:section:input": [],
+      "project:document_chunking_basic:product_spec:section:output": [],
+      "project:document_chunking_basic:product_spec:section:role_judgment": [],
+      "project:document_chunking_basic:product_spec:section:segmentation": [],
+      "project:document_chunking_basic:product_spec:section:validation": [],
+      "project:document_chunking_basic:structure": [
+        "project:document_chunking_basic:structure:object:document_chunking.api",
+        "project:document_chunking_basic:structure:object:document_chunking.evidence",
+        "project:document_chunking_basic:structure:object:document_chunking.pipeline"
+      ],
+      "project:document_chunking_basic:structure:object:document_chunking.api": [],
+      "project:document_chunking_basic:structure:object:document_chunking.evidence": [],
+      "project:document_chunking_basic:structure:object:document_chunking.pipeline": [],
       "project:knowledge_base_basic": [
         "project:knowledge_base_basic:code",
         "project:knowledge_base_basic:evidence",
@@ -27907,11 +30637,59 @@
       "workspace:shelf:evidence:artifact:project_discovery_audit_json": [],
       "workspace:shelf:evidence:artifact:project_discovery_audit_md": [],
       "workspace:shelf:projects": [
+        "project:document_chunking_basic",
         "project:knowledge_base_basic"
       ],
       "workspace:shelf:standards": []
     },
     "derived_index": {
+      "project:document_chunking_basic": [],
+      "project:document_chunking_basic:code": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json": [],
+      "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json": [],
+      "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py": [],
+      "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py": [],
+      "project:document_chunking_basic:evidence": [],
+      "project:document_chunking_basic:evidence:artifact:framework_ir_json": [],
+      "project:document_chunking_basic:evidence:artifact:generation_manifest_json": [],
+      "project:document_chunking_basic:evidence:artifact:governance_manifest_json": [],
+      "project:document_chunking_basic:evidence:artifact:governance_tree_json": [],
+      "project:document_chunking_basic:evidence:artifact:implementation_bundle_py": [],
+      "project:document_chunking_basic:evidence:artifact:object_coverage_report_json": [],
+      "project:document_chunking_basic:evidence:artifact:product_spec_json": [],
+      "project:document_chunking_basic:evidence:artifact:strict_zone_report_json": [],
+      "project:document_chunking_basic:framework": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md": [],
+      "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md": [],
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml": [],
+      "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml": [],
+      "project:document_chunking_basic:implementation_config": [],
+      "project:document_chunking_basic:implementation_config:section:artifacts": [],
+      "project:document_chunking_basic:implementation_config:section:evidence": [],
+      "project:document_chunking_basic:implementation_config:section:pipeline": [],
+      "project:document_chunking_basic:implementation_config:section:runtime": [],
+      "project:document_chunking_basic:product_spec": [],
+      "project:document_chunking_basic:product_spec:section:composition": [],
+      "project:document_chunking_basic:product_spec:section:framework": [],
+      "project:document_chunking_basic:product_spec:section:input": [],
+      "project:document_chunking_basic:product_spec:section:output": [],
+      "project:document_chunking_basic:product_spec:section:role_judgment": [],
+      "project:document_chunking_basic:product_spec:section:segmentation": [],
+      "project:document_chunking_basic:product_spec:section:validation": [],
+      "project:document_chunking_basic:structure": [],
+      "project:document_chunking_basic:structure:object:document_chunking.api": [],
+      "project:document_chunking_basic:structure:object:document_chunking.evidence": [],
+      "project:document_chunking_basic:structure:object:document_chunking.pipeline": [],
       "project:knowledge_base_basic": [],
       "project:knowledge_base_basic:code": [],
       "project:knowledge_base_basic:code:file:projects/knowledge_base_basic/generated/framework_ir.json": [],
@@ -29693,6 +32471,60 @@
       ]
     },
     "project_index": {
+      "document_chunking_basic": {
+        "root_node_id": "project:document_chunking_basic",
+        "product_spec_file": "projects/document_chunking_basic/product_spec.toml",
+        "node_ids": [
+          "project:document_chunking_basic",
+          "project:document_chunking_basic:code",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/framework_ir.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/generation_manifest.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_manifest.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/governance_tree.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/implementation_bundle.py",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/object_coverage_report.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/product_spec.json",
+          "project:document_chunking_basic:code:file:projects/document_chunking_basic/generated/strict_zone_report.json",
+          "project:document_chunking_basic:code:file:src/document_chunking_runtime/app.py",
+          "project:document_chunking_basic:code:file:src/project_runtime/document_chunking.py",
+          "project:document_chunking_basic:evidence",
+          "project:document_chunking_basic:evidence:artifact:framework_ir_json",
+          "project:document_chunking_basic:evidence:artifact:generation_manifest_json",
+          "project:document_chunking_basic:evidence:artifact:governance_manifest_json",
+          "project:document_chunking_basic:evidence:artifact:governance_tree_json",
+          "project:document_chunking_basic:evidence:artifact:implementation_bundle_py",
+          "project:document_chunking_basic:evidence:artifact:object_coverage_report_json",
+          "project:document_chunking_basic:evidence:artifact:product_spec_json",
+          "project:document_chunking_basic:evidence:artifact:strict_zone_report_json",
+          "project:document_chunking_basic:framework",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M0-段落分界模板.md",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M1-段落块.md",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M2-文本角色识别模块.md",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M3-段落块打包器.md",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L0-M4-结果文档.md",
+          "project:document_chunking_basic:framework:file:framework/document_chunking/L1-M0-文档分块.md",
+          "project:document_chunking_basic:framework:file:projects/document_chunking_basic/implementation_config.toml",
+          "project:document_chunking_basic:framework:file:projects/document_chunking_basic/product_spec.toml",
+          "project:document_chunking_basic:implementation_config",
+          "project:document_chunking_basic:implementation_config:section:artifacts",
+          "project:document_chunking_basic:implementation_config:section:evidence",
+          "project:document_chunking_basic:implementation_config:section:pipeline",
+          "project:document_chunking_basic:implementation_config:section:runtime",
+          "project:document_chunking_basic:product_spec",
+          "project:document_chunking_basic:product_spec:section:composition",
+          "project:document_chunking_basic:product_spec:section:framework",
+          "project:document_chunking_basic:product_spec:section:input",
+          "project:document_chunking_basic:product_spec:section:output",
+          "project:document_chunking_basic:product_spec:section:role_judgment",
+          "project:document_chunking_basic:product_spec:section:segmentation",
+          "project:document_chunking_basic:product_spec:section:validation",
+          "project:document_chunking_basic:structure",
+          "project:document_chunking_basic:structure:object:document_chunking.api",
+          "project:document_chunking_basic:structure:object:document_chunking.evidence",
+          "project:document_chunking_basic:structure:object:document_chunking.pipeline"
+        ],
+        "evidence_root_id": "project:document_chunking_basic:evidence"
+      },
       "knowledge_base_basic": {
         "root_node_id": "project:knowledge_base_basic",
         "product_spec_file": "projects/knowledge_base_basic/product_spec.toml",

@@ -1,0 +1,108 @@
+# Product Spec 只定义“这个文档分块产品最终是什么”，
+# 不定义 Python 实现细节、FastAPI 路由组织方式或生成文件命名。
+# 这里保留的是对外可讨论、可验证的产品真相：
+# 输入是什么、如何切分、如何判型、如何按 1 标题 + n 正文闭合成文本块、
+# 最终结果对象必须长什么样，以及哪些验证条件属于产品承诺。
+#
+# 本文件作为人与 AI 协作入口，注释优先讲清楚：
+# 1. 当前 section 定义的是哪一层产品真相；
+# 2. 它与 Framework / Implementation Config 的边界在哪里；
+# 3. 为什么这里写的是“产品应该如何表现”，而不是“代码打算怎么实现”。
+
+# [project] 定义这个实例的稳定产品身份。
+# 这里回答“这个分块产品以什么 project_id 被识别、对外叫什么、如何描述自己”，
+# 不讨论生成目录、函数名或运行时模块命名。
+[project]
+project_id = "document_chunking_basic"
+template = "document_chunking_pipeline"
+display_name = "Shelf AI Document Chunking"
+description = "A framework-governed markdown document chunking pipeline that groups paragraph blocks into 1-title-plus-n-body text chunks."
+version = "0.1.0"
+
+# [framework] 声明本产品被实例化时依附的框架来源。
+# 由于当前项目模板沿用通用的 frontend/domain/backend 三槽接口，
+# 这里把它们分别用作“输入侧锚点 / 主编排模块 / 输出侧锚点”的框架来源声明，
+# 表达这条产品链路从哪里进入、在哪个模块完成主闭合、最终输出落到哪个模块。
+# 这些值仍然是框架文件引用，不是实现层组件、API 服务或渲染器名字。
+[framework]
+frontend = "framework/document_chunking/L0-M0-段落分界模板.md"
+domain = "framework/document_chunking/L1-M0-文档分块.md"
+backend = "framework/document_chunking/L0-M4-结果文档.md"
+preset = "markdown_document_chunking_pipeline"
+
+# [input] 定义产品层对输入对象的真相约束。
+# 这里回答“产品接受什么类型的文档、归一化后的输入应如何被识别、文档 ID/名称从哪里来”，
+# 而不是具体正则、Python 函数或文件 I/O 技巧。
+[input]
+accepted_document_kind = "markdown_document"
+normalization = "normalize_markdown_text_v1"
+document_id_strategy = "input_file_stem"
+document_name_source = "input_file_name"
+
+# [segmentation] 定义文本如何被切成段落块。
+# 它只表达产品承诺的切分依据、信号集合和段落块规模边界，
+# 不绑定某个具体实现函数、库调用或算法类名。
+[segmentation]
+boundary_template = "blank_line_paragraph_boundaries"
+boundary_signals = ["blank_line_gap", "document_end"]
+min_block_chars = 1
+max_block_chars = 8000
+allow_cross_document = false
+
+# [role_judgment] 定义段落块进入后续闭合前的角色判型真相。
+# 它回答“标题/正文如何被判定、允许出现哪些角色值”，
+# 不规定代码里如何写 if/regex，只固定对外语义。
+[role_judgment]
+title_rule = "markdown_heading_prefix"
+body_rule = "fallback_to_body"
+allowed_roles = ["title", "body"]
+
+# [composition] 定义 1 标题 + n 正文 的组合真相。
+# 这里固定的是：哪个角色作为锚点、哪个角色可被吸收、闭合如何发生、顺序是否必须保留。
+# 它属于产品行为承诺，不是运行时代码技巧。
+[composition]
+anchor_role = "title"
+member_role = "body"
+group_shape = "1_title_plus_zero_or_more_body"
+closure = "next_title_or_document_end"
+preserve_order = true
+
+# [output] 定义最终结果对象必须对外暴露哪些字段和回溯能力。
+# 这里讨论的是结果对象的产品契约：字段名、字段集合、是否保留段落块与 trace_meta，
+# 不讨论生成目录、JSON 序列化器或 markdown writer 的具体实现。
+# 其中“文档格式”属于整个结果文档级声明，不应在每个 chunk_item 前重复声明。
+# 如果产品还承诺提供“段落块投影文件”与“文本块归属关系投影文件”，
+# 这里应声明它们是否属于正式输出，以及各自对外使用的投影对象名。
+# 当前约定中，段落块投影文档使用单个文档级 markdown fence 包裹，
+# 文本块归属关系投影则只保留 title/body 归属，不再额外重复输出完整 ordered_block_id_set。
+[output]
+format_name = "document_chunking_output_markdown_v1"
+render_medium = "markdown_document"
+document_format_field = "document_format"
+document_format_value = "markdown"
+document_format_scope = "document_level"
+expose_paragraph_block_projection = true
+paragraph_block_projection_name = "paragraph_block_set"
+paragraph_block_projection_fence_scope = "document_level"
+expose_chunk_membership_projection = true
+chunk_membership_projection_name = "chunk_membership_set"
+chunk_membership_include_ordered_block_ids = false
+chunk_item_layout = "chunk_id_then_chunk_text_with_block_refs"
+text_id_field = "text_id"
+chunk_id_field = "chunk_id"
+chunk_text_field = "chunk_text"
+title_block_id_field = "title_block_id"
+body_block_id_set_field = "body_block_id_set"
+chunk_collection_field = "ordered_chunk_item_set"
+include_paragraph_blocks = true
+include_trace_meta = true
+
+# [validation] 定义这个产品必须满足的验证门槛。
+# 它表达的是结果层不变量：段落块不能为空、顺序索引必须唯一、输出必须可回溯、
+# 单次结果最多允许多少文本块。
+# 这仍属于产品层承诺，而不是某个 pytest 断言或实现层脚本配置。
+[validation]
+require_non_empty_blocks = true
+require_unique_order_index = true
+require_output_traceability = true
+max_chunk_items = 2000
