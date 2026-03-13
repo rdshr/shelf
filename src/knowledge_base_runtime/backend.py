@@ -158,6 +158,14 @@ class RankedSection:
     score: int
 
 
+@dataclass(frozen=True)
+class AnswerDraft:
+    answer: str
+    citations: list[KnowledgeCitationResponse]
+    context_document_id: str | None
+    context_section_id: str | None
+
+
 def _make_document_id(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "knowledge-document"
@@ -270,58 +278,21 @@ class KnowledgeRepository:
         document_id: str | None = None,
         section_id: str | None = None,
     ) -> KnowledgeChatTurnResponse:
-        answer_policy = self.backend_spec["answer_policy"]
         retrieval = self.backend_spec["retrieval"]
-        return_policy = self.backend_spec["return_policy"]
         ranked = self._rank_sections(message, document_id=document_id, section_id=section_id)
-        citations = [
-            KnowledgeCitationResponse(
-                citation_id=str(index),
-                document_id=item.document.document_id,
-                document_title=item.document.title,
-                section_id=item.section.section_id,
-                section_title=item.section.title,
-                snippet=item.section.plain_text[:220],
-                return_path=(
-                    f"{return_policy['chat_path']}?document={item.document.document_id}"
-                    f"&section={item.section.section_id}&citation={index}"
-                ),
-                document_path=_document_detail_path(self.project, item.document.document_id, item.section.section_id),
-            )
-            for index, item in enumerate(ranked[: retrieval["max_citations"]], start=1)
-        ]
-        if not citations:
-            answer = answer_policy["no_match_text"]
-            context_document_id = document_id
-            context_section_id = section_id
-        else:
-            lead = citations[0]
-            answer_parts = [
-                answer_policy["lead_template"].format(
-                    document_title=lead.document_title,
-                    section_title=lead.section_title,
-                    citation_index=1,
-                ),
-                answer_policy["lead_snippet_template"].format(snippet=lead.snippet),
-            ]
-            for index, citation in enumerate(citations[1:], start=2):
-                answer_parts.append(
-                    answer_policy["followup_template"].format(
-                        document_title=citation.document_title,
-                        section_title=citation.section_title,
-                        citation_index=index,
-                        snippet=citation.snippet,
-                    )
-                )
-            answer_parts.append(answer_policy["closing_text"])
-            answer = "\n\n".join(answer_parts)
-            context_document_id = lead.document_id
-            context_section_id = lead.section_id
+        citations = self._build_citations(
+            ranked[: retrieval["max_citations"]],
+        )
+        answer_draft = self._build_answer_draft(
+            citations,
+            fallback_document_id=document_id,
+            fallback_section_id=section_id,
+        )
         return KnowledgeChatTurnResponse(
-            answer=answer,
-            citations=citations,
-            context_document_id=context_document_id,
-            context_section_id=context_section_id,
+            answer=answer_draft.answer,
+            citations=answer_draft.citations,
+            context_document_id=answer_draft.context_document_id,
+            context_section_id=answer_draft.context_section_id,
         )
 
     def _rank_sections(
@@ -349,28 +320,116 @@ class KnowledgeRepository:
         if not query_tokens:
             return []
 
-        documents = tuple(self._documents[item] for item in self._document_order)
-        if document_id:
-            focused = self.get_document(document_id)
-            if focused is None:
-                return []
-            documents = (focused,)
+        documents = self._rankable_documents(document_id)
+        if not documents:
+            return []
 
         ranked: list[RankedSection] = []
         for document in documents:
             for section in document.sections[: retrieval["max_preview_sections"]]:
-                score = 0
-                if section_id and document.document_id == document_id and section.section_id == section_id:
-                    score += retrieval["focus_section_bonus"]
-                haystack = f"{document.title} {document.summary} {section.search_text}".lower()
-                for token in query_tokens:
-                    if token in haystack:
-                        score += retrieval["token_match_bonus"]
+                score = self._section_match_score(
+                    document,
+                    section,
+                    query_tokens=query_tokens,
+                    document_id=document_id,
+                    section_id=section_id,
+                )
                 if score == 0:
                     continue
                 ranked.append(RankedSection(document=document, section=section, score=score))
         ranked.sort(key=lambda item: (-item.score, item.document.title, item.section.title))
         return ranked
+
+    def _build_citations(self, ranked_sections: list[RankedSection]) -> list[KnowledgeCitationResponse]:
+        return [
+            KnowledgeCitationResponse(
+                citation_id=str(index),
+                document_id=item.document.document_id,
+                document_title=item.document.title,
+                section_id=item.section.section_id,
+                section_title=item.section.title,
+                snippet=item.section.plain_text[:220],
+                return_path=(
+                    f"{self.backend_spec['return_policy']['chat_path']}?document={item.document.document_id}"
+                    f"&section={item.section.section_id}&citation={index}"
+                ),
+                document_path=_document_detail_path(
+                    self.project,
+                    item.document.document_id,
+                    item.section.section_id,
+                ),
+            )
+            for index, item in enumerate(ranked_sections, start=1)
+        ]
+
+    def _build_answer_draft(
+        self,
+        citations: list[KnowledgeCitationResponse],
+        *,
+        fallback_document_id: str | None,
+        fallback_section_id: str | None,
+    ) -> AnswerDraft:
+        answer_policy = self.backend_spec["answer_policy"]
+        if not citations:
+            return AnswerDraft(
+                answer=answer_policy["no_match_text"],
+                citations=citations,
+                context_document_id=fallback_document_id,
+                context_section_id=fallback_section_id,
+            )
+
+        lead = citations[0]
+        answer_parts = [
+            answer_policy["lead_template"].format(
+                document_title=lead.document_title,
+                section_title=lead.section_title,
+                citation_index=1,
+            ),
+            answer_policy["lead_snippet_template"].format(snippet=lead.snippet),
+        ]
+        for index, citation in enumerate(citations[1:], start=2):
+            answer_parts.append(
+                answer_policy["followup_template"].format(
+                    document_title=citation.document_title,
+                    section_title=citation.section_title,
+                    citation_index=index,
+                    snippet=citation.snippet,
+                )
+            )
+        answer_parts.append(answer_policy["closing_text"])
+        return AnswerDraft(
+            answer="\n\n".join(answer_parts),
+            citations=citations,
+            context_document_id=lead.document_id,
+            context_section_id=lead.section_id,
+        )
+
+    def _rankable_documents(self, document_id: str | None) -> tuple[KnowledgeDocument, ...]:
+        if document_id is None:
+            return tuple(self._documents[item] for item in self._document_order)
+        focused = self.get_document(document_id)
+        if focused is None:
+            return ()
+        return (focused,)
+
+    def _section_match_score(
+        self,
+        document: KnowledgeDocument,
+        section: KnowledgeDocumentSection,
+        *,
+        query_tokens: set[str],
+        document_id: str | None,
+        section_id: str | None,
+    ) -> int:
+        retrieval = self.backend_spec["retrieval"]
+        score = 0
+        if section_id and document.document_id == document_id and section.section_id == section_id:
+            score += retrieval["focus_section_bonus"]
+        haystack = f"{document.title} {document.summary} {section.search_text}".lower()
+        for token in query_tokens:
+            if token in haystack:
+                score += retrieval["token_match_bonus"]
+        return score
 
 
 def _to_document_summary(document: KnowledgeDocument) -> KnowledgeDocumentSummaryResponse:

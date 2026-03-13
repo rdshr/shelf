@@ -3075,7 +3075,7 @@
         "level": 4,
         "description": "kind=strict_zone_file | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | minimality_status=required",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "strict_zone_file",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3108,12 +3108,39 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+        "label": "class:AnswerDraft",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:AnswerDraft | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+        "source_file": "src/knowledge_base_runtime/backend.py",
+        "source_line": 274,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "label": "class:KnowledgeBaseSummaryResponse",
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeBaseSummaryResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3140,7 +3167,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeChatTurnRequest | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3167,7 +3194,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeChatTurnResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3194,7 +3221,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeCitationResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeCitationResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3221,7 +3248,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeDocumentCreateRequest | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeDocumentCreateRequest",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3248,7 +3275,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeDocumentDeleteResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeDocumentDeleteResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3275,7 +3302,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeDocumentSummaryResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeDocumentSummaryResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3302,7 +3329,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeSectionResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeSectionResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3329,7 +3356,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeTagItem | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3356,7 +3383,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:KnowledgeTagListResponse | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3383,7 +3410,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=class:RankedSection | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3405,12 +3432,66 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "label": "function:_build_answer_draft",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:_build_answer_draft | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "source_file": "src/knowledge_base_runtime/backend.py",
+        "source_line": 274,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+        "label": "function:_build_citations",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:_build_citations | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+        "source_file": "src/knowledge_base_runtime/backend.py",
+        "source_line": 274,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "label": "function:_to_document_detail",
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:_to_document_detail | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3437,7 +3518,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:answer_question | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3464,7 +3545,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:build_knowledge_base_router | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3491,7 +3572,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:create_chat_turn | object_id=kb.api.chat_contract | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:create_chat_turn",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3518,7 +3599,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:create_document | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:create_document",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3545,7 +3626,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:delete_document | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:delete_document",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3572,7 +3653,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:get_document | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:get_document",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3599,7 +3680,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:get_knowledge_base | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:get_knowledge_base",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3626,7 +3707,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:get_section | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:get_section",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3653,7 +3734,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:list_documents | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_documents",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3680,7 +3761,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:list_knowledge_bases | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_knowledge_bases",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -3707,7 +3788,7 @@
         "level": 5,
         "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/knowledge_base_runtime/backend.py | locator=function:list_tags | object_id=kb.api.library_contracts | candidate_id=knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_tags",
         "source_file": "src/knowledge_base_runtime/backend.py",
-        "source_line": 266,
+        "source_line": 274,
         "node_kind": "structural_candidate",
         "layer": "Code",
         "project_id": "knowledge_base_basic",
@@ -11241,6 +11322,11 @@
       },
       {
         "from": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "to": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
         "to": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "relation": "tree_child"
       },
@@ -11292,6 +11378,16 @@
       {
         "from": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
         "to": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "to": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "to": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
         "relation": "tree_child"
       },
       {
@@ -12943,6 +13039,7 @@
               "kb.api.library_contracts:list_tags"
             ],
             "candidate_ids": [
+              "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -12954,6 +13051,8 @@
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+              "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+              "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
               "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
@@ -13537,6 +13636,7 @@
                 "kb.api.library_contracts:list_tags"
               ],
               "candidate_ids": [
+                "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -13548,6 +13648,8 @@
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+                "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+                "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
                 "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
@@ -13923,7 +14025,7 @@
             "fully_closed_object_count": 23,
             "partially_closed_object_count": 0,
             "governed_candidate_count": 24,
-            "attached_candidate_count": 95,
+            "attached_candidate_count": 98,
             "internal_candidate_count": 0,
             "uncovered_future_categories": [
               "compiler/evidence builders that are still attached-only",
@@ -21171,6 +21273,20 @@
             ]
           },
           {
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+            "project_id": "knowledge_base_basic",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "class:AnswerDraft",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
             "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
             "project_id": "knowledge_base_basic",
             "file": "src/knowledge_base_runtime/backend.py",
@@ -21319,6 +21435,34 @@
             "confidence": 0.96,
             "reasons": [
               "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+            "project_id": "knowledge_base_basic",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "function:_build_answer_draft",
+            "kind": "python_builder",
+            "confidence": 0.82,
+            "reasons": [
+              "builder/compiler naming pattern"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+            "project_id": "knowledge_base_basic",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "function:_build_citations",
+            "kind": "python_builder",
+            "confidence": 0.82,
+            "reasons": [
+              "builder/compiler naming pattern"
             ],
             "classification": "attached",
             "object_id": "kb.answer.behavior",
@@ -23394,6 +23538,7 @@
             "node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
             "parent": "project:knowledge_base_basic:code",
             "children": [
+              "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -23405,6 +23550,8 @@
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+              "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+              "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
               "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
@@ -23488,6 +23635,29 @@
               "project:knowledge_base_basic:structure:object:kb.api.library_contracts:role:kb.api.library_contracts:list_documents",
               "project:knowledge_base_basic:structure:object:kb.api.library_contracts:role:kb.api.library_contracts:list_knowledge_bases",
               "project:knowledge_base_basic:structure:object:kb.api.library_contracts:role:kb.api.library_contracts:list_tags"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+            "parent": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:AnswerDraft",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "class:AnswerDraft",
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
             ],
             "project_id": "knowledge_base_basic"
           },
@@ -23738,6 +23908,52 @@
             "role_ids": [],
             "reasons": [
               "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+            "parent": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:_build_answer_draft",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "function:_build_answer_draft",
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+            "candidate_kind": "python_builder",
+            "confidence": 0.82,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "builder/compiler naming pattern"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+            "parent": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:_build_citations",
+            "file": "src/knowledge_base_runtime/backend.py",
+            "locator": "function:_build_citations",
+            "candidate_id": "knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
+            "candidate_kind": "python_builder",
+            "confidence": 0.82,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "builder/compiler naming pattern"
             ],
             "derived_from": [
               "project:knowledge_base_basic:structure:object:kb.answer.behavior"
@@ -31946,6 +32162,7 @@
       ],
       "src/knowledge_base_runtime/backend.py": [
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -31957,6 +32174,8 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
@@ -32542,6 +32761,7 @@
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:product_spec": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:root": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py": "project:knowledge_base_basic:code",
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
@@ -32553,6 +32773,8 @@
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router": "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
@@ -32858,6 +33080,7 @@
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:product_spec": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:root": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py": [
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -32869,6 +33092,8 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",
@@ -32882,6 +33107,7 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_knowledge_bases",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_tags"
       ],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse": [],
@@ -32893,6 +33119,8 @@
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection": [],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft": [],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question": [],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router": [],
@@ -33886,6 +34114,9 @@
         "project:knowledge_base_basic:structure:object:kb.api.library_contracts:role:kb.api.library_contracts:list_knowledge_bases",
         "project:knowledge_base_basic:structure:object:kb.api.library_contracts:role:kb.api.library_contracts:list_tags"
       ],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse": [
         "project:knowledge_base_basic:structure:object:kb.answer.behavior"
       ],
@@ -33917,6 +34148,12 @@
         "project:knowledge_base_basic:structure:object:kb.answer.behavior"
       ],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
+      "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations": [
         "project:knowledge_base_basic:structure:object:kb.answer.behavior"
       ],
       "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail": [
@@ -35204,6 +35441,7 @@
         "project:knowledge_base_basic:structure:object:kb.workbench.surface_contract"
       ],
       "project:knowledge_base_basic:structure:object:kb.answer.behavior": [
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -35215,6 +35453,8 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceComparisonContext",
@@ -35879,6 +36119,7 @@
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:product_spec",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:root",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
+          "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:AnswerDraft",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeBaseSummaryResponse",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnRequest",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeChatTurnResponse",
@@ -35890,6 +36131,8 @@
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagItem",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:KnowledgeTagListResponse",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:class:RankedSection",
+          "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_answer_draft",
+          "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_build_citations",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:answer_question",
           "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:build_knowledge_base_router",

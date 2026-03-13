@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from html import escape
 from typing import TYPE_CHECKING
 
@@ -10,6 +11,22 @@ from project_runtime.knowledge_base import KnowledgeBaseProject, KnowledgeDocume
 
 if TYPE_CHECKING:
     from knowledge_base_runtime.backend import KnowledgeBaseDetailResponse, KnowledgeRepository
+
+
+@dataclass(frozen=True)
+class NavLinkSpec:
+    key: str
+    href: str
+    label: str
+
+
+@dataclass(frozen=True)
+class AuxPageSpec:
+    active_nav: str
+    title: str
+    subtitle: str
+    actions: tuple[NavLinkSpec, ...]
+    content_html: str
 
 
 def _resolve_project(project: KnowledgeBaseProject | None) -> KnowledgeBaseProject:
@@ -99,6 +116,18 @@ def _shared_style(project: KnowledgeBaseProject) -> str:
     return build_shared_style(project)
 
 
+def _ghost_link(href: str, label: str) -> str:
+    return f'<a class="ghost-link" href="{escape(href)}">{escape(label)}</a>'
+
+
+def _chip(text: str) -> str:
+    return f'<span class="chip">{escape(text)}</span>'
+
+
+def _chip_list(items: tuple[str, ...] | list[str]) -> str:
+    return "".join(_chip(item) for item in items)
+
+
 def _aux_sidebar(project: KnowledgeBaseProject, active: str) -> str:
     ui_spec = project.ui_spec
     aux_sidebar = ui_spec["components"]["aux_sidebar"]
@@ -106,15 +135,19 @@ def _aux_sidebar(project: KnowledgeBaseProject, active: str) -> str:
         "{knowledge_base_id}", project.library.knowledge_base_id
     )
     items = (
-        ("chat", ui_spec["pages"]["chat_home"]["path"], aux_sidebar["nav"]["chat"]),
-        ("basketball-showcase", ui_spec["pages"]["basketball_showcase"]["path"], aux_sidebar["nav"]["basketball_showcase"]),
-        ("knowledge-list", ui_spec["pages"]["knowledge_list"]["path"], aux_sidebar["nav"]["knowledge_list"]),
-        ("knowledge-detail", knowledge_detail_href, aux_sidebar["nav"]["knowledge_detail"]),
+        NavLinkSpec("chat", ui_spec["pages"]["chat_home"]["path"], aux_sidebar["nav"]["chat"]),
+        NavLinkSpec(
+            "basketball-showcase",
+            ui_spec["pages"]["basketball_showcase"]["path"],
+            aux_sidebar["nav"]["basketball_showcase"],
+        ),
+        NavLinkSpec("knowledge-list", ui_spec["pages"]["knowledge_list"]["path"], aux_sidebar["nav"]["knowledge_list"]),
+        NavLinkSpec("knowledge-detail", knowledge_detail_href, aux_sidebar["nav"]["knowledge_detail"]),
     )
     links = []
-    for key, href, label in items:
-        class_name = "active" if key == active else ""
-        links.append(f'<a class="{class_name}" href="{escape(href)}">{escape(label)}</a>')
+    for item in items:
+        class_name = "active" if item.key == active else ""
+        links.append(f'<a class="{class_name}" href="{escape(item.href)}">{escape(item.label)}</a>')
     return f"""
     <aside class="aux-sidebar">
       <div>
@@ -145,6 +178,30 @@ def _render_page(title: str, style: str, body: str) -> str:
   </body>
 </html>
 """
+
+
+def _render_aux_page(project: KnowledgeBaseProject, *, style: str, page: AuxPageSpec) -> str:
+    header_actions = "".join(_ghost_link(item.href, item.label) for item in page.actions)
+    body = f"""
+    <div class="aux-shell">
+      {_aux_sidebar(project, page.active_nav)}
+      <main class="aux-main">
+        <header class="aux-header">
+          <div class="header-copy">
+            <div class="header-title">{escape(page.title)}</div>
+            <div class="header-subtitle">{escape(page.subtitle)}</div>
+          </div>
+          <div class="header-actions">
+            {header_actions}
+          </div>
+        </header>
+        <section class="aux-content">
+          {page.content_html}
+        </section>
+      </main>
+    </div>
+    """
+    return _render_page(page.title, style, body)
 
 
 def compose_basketball_showcase_page(project: KnowledgeBaseProject) -> str:
@@ -364,65 +421,65 @@ def compose_basketball_showcase_page(project: KnowledgeBaseProject) -> str:
     )
     ui_spec = project.ui_spec
     page_spec = ui_spec["pages"]["basketball_showcase"]
-    body = f"""
-    <div class="aux-shell">
-      {_aux_sidebar(project, "basketball-showcase")}
-      <main class="aux-main">
-        <header class="aux-header">
-          <div class="header-copy">
-            <div class="header-title">{escape(page_spec['title'])}</div>
-            <div class="header-subtitle">{escape(page_spec['intro'])}</div>
-          </div>
-          <div class="header-actions">
-            <a class="ghost-link" href="{escape(ui_spec['pages']['chat_home']['path'])}">{escape(page_spec['back_to_chat_label'])}</a>
-            <a class="ghost-link" href="{escape(ui_spec['pages']['knowledge_list']['path'])}">{escape(page_spec['browse_knowledge_label'])}</a>
-          </div>
-        </header>
-        <section class="aux-content">
-          <article class="showcase-stage">
-            <span class="showcase-kicker">{escape(page_spec['kicker'])}</span>
-            <div class="showcase-grid">
-              <div class="showcase-copy">
-                <h2>{escape(page_spec['headline'])}</h2>
-                <p>{escape(page_spec['intro'])}</p>
-                <div class="showcase-metrics">
-                  <div class="showcase-metric">
-                    <strong>前端扩展页</strong>
-                    <span>不离开知识库工作台，也能挂一个独立专题页。</span>
-                  </div>
-                  <div class="showcase-metric">
-                    <strong>治理树可追踪</strong>
-                    <span>路由、surface contract、ui spec 会一起收敛，不是树外彩蛋。</span>
-                  </div>
-                  <div class="showcase-metric">
-                    <strong>视觉可变体</strong>
-                    <span>主界面保持知识问答秩序，专题页允许更强的视觉表达。</span>
-                  </div>
-                </div>
-                <div class="showcase-cta">
-                  <a class="ghost-link" href="{escape(ui_spec['pages']['chat_home']['path'])}">{escape(page_spec['back_to_chat_label'])}</a>
-                  <a class="ghost-link" href="{escape(ui_spec['pages']['knowledge_list']['path'])}">{escape(page_spec['browse_knowledge_label'])}</a>
-                </div>
-                <div class="showcase-note">页面主题是“蔡徐坤打球”，这里把它做成一个纯前端视觉专题，用来验证知识库产品也能承接轻量扩展场景。</div>
-              </div>
-              <div class="showcase-court" aria-hidden="true">
-                <div class="showcase-ball"></div>
-                <div class="showcase-player">
-                  <div class="head"></div>
-                  <div class="torso"></div>
-                  <div class="arm left"></div>
-                  <div class="arm right"></div>
-                  <div class="leg left"></div>
-                  <div class="leg right"></div>
-                </div>
-              </div>
+    showcase_content = f"""
+    <article class="showcase-stage">
+      <span class="showcase-kicker">{escape(page_spec['kicker'])}</span>
+      <div class="showcase-grid">
+        <div class="showcase-copy">
+          <h2>{escape(page_spec['headline'])}</h2>
+          <p>{escape(page_spec['intro'])}</p>
+          <div class="showcase-metrics">
+            <div class="showcase-metric">
+              <strong>前端扩展页</strong>
+              <span>不离开知识库工作台，也能挂一个独立专题页。</span>
             </div>
-          </article>
-        </section>
-      </main>
-    </div>
+            <div class="showcase-metric">
+              <strong>治理树可追踪</strong>
+              <span>路由、surface contract、ui spec 会一起收敛，不是树外彩蛋。</span>
+            </div>
+            <div class="showcase-metric">
+              <strong>视觉可变体</strong>
+              <span>主界面保持知识问答秩序，专题页允许更强的视觉表达。</span>
+            </div>
+          </div>
+          <div class="showcase-cta">
+            {_ghost_link(ui_spec['pages']['chat_home']['path'], page_spec['back_to_chat_label'])}
+            {_ghost_link(ui_spec['pages']['knowledge_list']['path'], page_spec['browse_knowledge_label'])}
+          </div>
+          <div class="showcase-note">页面主题是“蔡徐坤打球”，这里把它做成一个纯前端视觉专题，用来验证知识库产品也能承接轻量扩展场景。</div>
+        </div>
+        <div class="showcase-court" aria-hidden="true">
+          <div class="showcase-ball"></div>
+          <div class="showcase-player">
+            <div class="head"></div>
+            <div class="torso"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+          </div>
+        </div>
+      </div>
+    </article>
     """
-    return _render_page(page_spec["title"], style, body)
+    return _render_aux_page(
+        project,
+        style=style,
+        page=AuxPageSpec(
+            active_nav="basketball-showcase",
+            title=page_spec["title"],
+            subtitle=page_spec["intro"],
+            actions=(
+                NavLinkSpec("chat", ui_spec["pages"]["chat_home"]["path"], page_spec["back_to_chat_label"]),
+                NavLinkSpec(
+                    "knowledge-list",
+                    ui_spec["pages"]["knowledge_list"]["path"],
+                    page_spec["browse_knowledge_label"],
+                ),
+            ),
+            content_html=showcase_content,
+        ),
+    )
 
 
 def compose_knowledge_base_list_page(project: KnowledgeBaseProject, repository: "KnowledgeRepository") -> str:
@@ -449,32 +506,26 @@ def compose_knowledge_base_list_page(project: KnowledgeBaseProject, repository: 
             </article>
             """
         )
-    body = f"""
-    <div class="aux-shell">
-      {_aux_sidebar(project, "knowledge-list")}
-      <main class="aux-main">
-        <header class="aux-header">
-          <div class="header-copy">
-            <div class="header-title">{escape(page_spec['title'])}</div>
-            <div class="header-subtitle">{escape(page_spec['subtitle'])}</div>
-          </div>
-          <div class="header-actions">
-            <a class="ghost-link" href="{escape(ui_spec['pages']['chat_home']['path'])}">{escape(page_spec['primary_action_label'])}</a>
-          </div>
-        </header>
-        <section class="aux-content">
-          <div class="page-card">
-            <h2>{escape(page_spec['rationale_title'])}</h2>
-            <p>{escape(page_spec['rationale_copy'])}</p>
-          </div>
-          <div class="page-grid">
-            {''.join(cards)}
-          </div>
-        </section>
-      </main>
+    content_html = f"""
+    <div class="page-card">
+      <h2>{escape(page_spec['rationale_title'])}</h2>
+      <p>{escape(page_spec['rationale_copy'])}</p>
+    </div>
+    <div class="page-grid">
+      {''.join(cards)}
     </div>
     """
-    return _render_page("Knowledge Bases", style, body)
+    return _render_aux_page(
+        project,
+        style=style,
+        page=AuxPageSpec(
+            active_nav="knowledge-list",
+            title=page_spec["title"],
+            subtitle=page_spec["subtitle"],
+            actions=(NavLinkSpec("chat", ui_spec["pages"]["chat_home"]["path"], page_spec["primary_action_label"]),),
+            content_html=content_html,
+        ),
+    )
 
 
 def compose_knowledge_base_detail_page(project: KnowledgeBaseProject, knowledge_base: "KnowledgeBaseDetailResponse") -> str:
@@ -501,36 +552,30 @@ def compose_knowledge_base_detail_page(project: KnowledgeBaseProject, knowledge_
             </article>
             """
         )
-    body = f"""
-    <div class="aux-shell">
-      {_aux_sidebar(project, "knowledge-detail")}
-      <main class="aux-main">
-        <header class="aux-header">
-          <div class="header-copy">
-            <div class="header-title">{escape(knowledge_base.name)}</div>
-            <div class="header-subtitle">{escape(knowledge_base.description)}</div>
-          </div>
-          <div class="header-actions">
-            <a class="ghost-link" href="{escape(ui_spec['pages']['chat_home']['path'])}">{escape(page_spec['chat_action_label'])}</a>
-          </div>
-        </header>
-        <section class="aux-content">
-          <div class="page-card">
-            <h2>{escape(page_spec['overview_title'])}</h2>
-            <div class="chip-row">
-              <span class="chip">{knowledge_base.document_count} documents</span>
-              <span class="chip">{escape(knowledge_base.updated_at)}</span>
-              {''.join(f'<span class="chip">{escape(item)}</span>' for item in knowledge_base.source_types)}
-            </div>
-          </div>
-          <div class="stack">
-            {''.join(cards)}
-          </div>
-        </section>
-      </main>
+    content_html = f"""
+    <div class="page-card">
+      <h2>{escape(page_spec['overview_title'])}</h2>
+      <div class="chip-row">
+        {_chip(str(knowledge_base.document_count) + ' documents')}
+        {_chip(knowledge_base.updated_at)}
+        {_chip_list(list(knowledge_base.source_types))}
+      </div>
+    </div>
+    <div class="stack">
+      {''.join(cards)}
     </div>
     """
-    return _render_page(knowledge_base.name, style, body)
+    return _render_aux_page(
+        project,
+        style=style,
+        page=AuxPageSpec(
+            active_nav="knowledge-detail",
+            title=knowledge_base.name,
+            subtitle=knowledge_base.description,
+            actions=(NavLinkSpec("chat", ui_spec["pages"]["chat_home"]["path"], page_spec["chat_action_label"]),),
+            content_html=content_html,
+        ),
+    )
 
 
 def compose_document_detail_page(
@@ -552,37 +597,44 @@ def compose_document_detail_page(
             </section>
             """
         )
-    body = f"""
-    <div class="aux-shell">
-      {_aux_sidebar(project, "knowledge-detail")}
-      <main class="aux-main">
-        <header class="aux-header">
-          <div class="header-copy">
-            <div class="header-title">{escape(page_spec['title'])}</div>
-            <div class="header-subtitle">{escape(page_spec['subtitle'])}</div>
-          </div>
-          <div class="header-actions">
-            <a class="ghost-link" href="{escape(ui_spec['pages']['chat_home']['path'])}?document={escape(document.document_id)}">{escape(page_spec['return_chat_label'])}</a>
-            <a class="ghost-link" href="{escape(ui_spec['pages']['knowledge_detail']['path'].replace('{knowledge_base_id}', project.library.knowledge_base_id))}">{escape(page_spec['return_knowledge_detail_label'])}</a>
-          </div>
-        </header>
-        <section class="aux-content">
-          <article class="document-header">
-            <h2>{escape(document.title)}</h2>
-            <p>{escape(document.summary)}</p>
-            <div class="chip-row">
-              {''.join(f'<span class="chip">{escape(tag)}</span>' for tag in document.tags)}
-              <span class="chip">{escape(document.updated_at)}</span>
-            </div>
-          </article>
-          <div class="stack">
-            {''.join(sections)}
-          </div>
-        </section>
-      </main>
+    content_html = f"""
+    <article class="document-header">
+      <h2>{escape(document.title)}</h2>
+      <p>{escape(document.summary)}</p>
+      <div class="chip-row">
+        {_chip_list(list(document.tags))}
+        {_chip(document.updated_at)}
+      </div>
+    </article>
+    <div class="stack">
+      {''.join(sections)}
     </div>
     """
-    return _render_page(document.title, style, body)
+    return _render_aux_page(
+        project,
+        style=style,
+        page=AuxPageSpec(
+            active_nav="knowledge-detail",
+            title=page_spec["title"],
+            subtitle=page_spec["subtitle"],
+            actions=(
+                NavLinkSpec(
+                    "chat",
+                    f"{ui_spec['pages']['chat_home']['path']}?document={escape(document.document_id)}",
+                    page_spec["return_chat_label"],
+                ),
+                NavLinkSpec(
+                    "knowledge-detail",
+                    ui_spec["pages"]["knowledge_detail"]["path"].replace(
+                        "{knowledge_base_id}",
+                        project.library.knowledge_base_id,
+                    ),
+                    page_spec["return_knowledge_detail_label"],
+                ),
+            ),
+            content_html=content_html,
+        ),
+    )
 
 
 def _chat_script(project: KnowledgeBaseProject) -> str:

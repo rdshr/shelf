@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
+from textwrap import dedent
 
 from project_runtime.knowledge_base import KnowledgeBaseProject
 
@@ -15,12 +17,29 @@ def _require_script_profile(project: KnowledgeBaseProject) -> str:
     return value
 
 
-def build_chat_script(project: KnowledgeBaseProject) -> str:
-    _require_script_profile(project)
-    spec_json = json.dumps(project.to_spec_dict(), ensure_ascii=False)
-    script = """
-    <script>
-      const runtimeBundle = __PROJECT_SPEC__;
+@dataclass(frozen=True)
+class ChatScriptTemplateContext:
+    project_spec_json: str
+
+    def render(self) -> str:
+        sections = (
+            _chat_script_bootstrap(self.project_spec_json),
+            _chat_script_utility_section(),
+            _chat_script_conversation_section(),
+            _chat_script_rendering_section(),
+            _chat_script_loading_section(),
+            _chat_script_drawer_section(),
+            _chat_script_route_and_submit_section(),
+            _chat_script_init_section(),
+        )
+        script_body = "\n".join(section.strip("\n") for section in sections)
+        return "<script>\n" + script_body + "\n</script>"
+
+
+def _chat_script_bootstrap(project_spec_json: str) -> str:
+    return dedent(
+        f"""
+      const runtimeBundle = {project_spec_json};
       const productSpec = runtimeBundle.product_spec;
       const uiSpec = runtimeBundle.ui_spec;
       const backendSpec = runtimeBundle.backend_spec;
@@ -29,8 +48,8 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
       const drawerSpec = uiSpec.components.citation_drawer;
       const switchDialogSpec = uiSpec.components.knowledge_switch_dialog;
       const conversationSpec = uiSpec.conversation;
-      const storageKey = `shelf-kb-conversations:${productSpec.product.project_id}`;
-      const state = {
+      const storageKey = `shelf-kb-conversations:${{productSpec.product.project_id}}`;
+      const state = {{
         knowledgeBases: [],
         documents: [],
         conversations: [],
@@ -44,9 +63,9 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         drawerSectionHtml: "",
         drawerSnippet: "",
         drawerDocumentPath: ""
-      };
+      }};
 
-      const elements = {
+      const elements = {{
         groups: document.getElementById("conversation-groups"),
         newChat: document.getElementById("new-chat"),
         knowledgeSwitchButtons: Array.from(document.querySelectorAll("[data-open-knowledge-switch]")),
@@ -71,8 +90,14 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         knowledgeDialogClose: document.getElementById("knowledge-dialog-close"),
         knowledgeDialogList: document.getElementById("knowledge-dialog-list"),
         promptGrid: document.getElementById("prompt-grid")
-      };
+      }};
+        """
+    )
 
+
+def _chat_script_utility_section() -> str:
+    return dedent(
+        """
       function escapeHtml(value) {
         return String(value)
           .replaceAll("&", "&amp;")
@@ -100,7 +125,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         if (days < 30) return conversationSpec.relative_groups.last_30_days;
         return conversationSpec.relative_groups.older;
       }
+        """
+    )
 
+
+def _chat_script_conversation_section() -> str:
+    return dedent(
+        """
       function persistConversations() {
         window.localStorage.setItem(storageKey, JSON.stringify(state.conversations));
       }
@@ -147,7 +178,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         }
         state.activeConversationId = state.conversations[0].id;
       }
+        """
+    )
 
+
+def _chat_script_rendering_section() -> str:
+    return dedent(
+        """
       function renderPromptGrid() {
         elements.promptGrid.innerHTML = "";
         for (const prompt of uiSpec.conversation.welcome_prompts) {
@@ -310,7 +347,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         renderHeader(conversation);
         renderMessages();
       }
+        """
+    )
 
+
+def _chat_script_loading_section() -> str:
+    return dedent(
+        """
       async function loadKnowledgeBases() {
         const response = await fetch(runtimeBundle.routes.api.knowledge_bases);
         state.knowledgeBases = response.ok ? await response.json() : [];
@@ -366,7 +409,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
       function closeKnowledgeDialog() {
         elements.knowledgeDialogBackdrop.classList.add("hidden");
       }
+        """
+    )
 
+
+def _chat_script_drawer_section() -> str:
+    return dedent(
+        """
       async function fetchSectionHtml(citation) {
         const url = runtimeBundle.routes.api.section_detail
           .replace("{document_id}", citation.document_id)
@@ -432,7 +481,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
         elements.drawerDocumentLink.href = citation.document_path;
         elements.drawerDocumentLink.textContent = drawerSpec.document_link_label;
       }
+        """
+    )
 
+
+def _chat_script_route_and_submit_section() -> str:
+    return dedent(
+        """
       function syncRoute() {
         const params = new URLSearchParams(window.location.search);
         if (state.contextDocumentId) params.set("document", state.contextDocumentId);
@@ -517,7 +572,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
           renderActiveConversation();
         }
       }
+        """
+    )
 
+
+def _chat_script_init_section() -> str:
+    return dedent(
+        """
       elements.newChat.addEventListener("click", () => createConversation());
       for (const button of elements.knowledgeSwitchButtons) {
         button.addEventListener("click", openKnowledgeDialog);
@@ -549,6 +610,13 @@ def build_chat_script(project: KnowledgeBaseProject) -> str:
       }
 
       void init();
-    </script>
-    """
-    return script.replace("__PROJECT_SPEC__", spec_json)
+        """
+    )
+
+
+def build_chat_script(project: KnowledgeBaseProject) -> str:
+    _require_script_profile(project)
+    context = ChatScriptTemplateContext(
+        project_spec_json=json.dumps(project.to_spec_dict(), ensure_ascii=False),
+    )
+    return context.render()
