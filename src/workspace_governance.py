@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 import re
 from typing import Any, cast
 
 from project_runtime import discover_framework_driven_projects, load_registered_project
+from hierarchy_models import HierarchyEdge, HierarchyGraph, HierarchyNode
 from project_runtime.project_config_source import (
     ProjectConfigLoadError,
     load_product_spec_document,
@@ -27,6 +29,48 @@ WORKSPACE_GOVERNANCE_VERSION = "workspace-governance/v1"
 MAPPING_REGISTRY_PATH = REPO_ROOT / "mapping/mapping_registry.json"
 SECTION_HEADER_PATTERN = re.compile(r"^\s*\[([A-Za-z0-9_.-]+)\]\s*$")
 FRAMEWORK_MODULE_DOC_PATTERN = re.compile(r"^L(?P<level>\d+)-M(?P<module>\d+)-[^/]+\.md$")
+WORKSPACE_CODE_FILE_SUFFIXES = frozenset(
+    {".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".scss", ".less"}
+)
+WORKSPACE_CODE_ROOTS: tuple[tuple[str, str], ...] = (
+    ("src", "Workspace Runtime"),
+    ("scripts", "Workspace Scripts"),
+    ("tests", "Workspace Tests"),
+    ("tools/vscode/shelf-ai", "Shelf AI"),
+)
+
+
+@dataclass(frozen=True)
+class HierarchyBuildResult:
+    nodes: list[HierarchyNode]
+    edges: list[HierarchyEdge]
+    root_id: str
+
+
+@dataclass(frozen=True)
+class GovernanceIndexes:
+    file_index: dict[str, list[str]]
+    parent_index: dict[str, str | None]
+    children_index: dict[str, list[str]]
+    derived_index: dict[str, list[str]]
+    reverse_derived_index: dict[str, list[str]]
+    project_index: dict[str, dict[str, Any]]
+
+    def to_payload_dict(self) -> dict[str, Any]:
+        return {
+            "file_index": self.file_index,
+            "parent_index": self.parent_index,
+            "children_index": self.children_index,
+            "derived_index": self.derived_index,
+            "reverse_derived_index": self.reverse_derived_index,
+            "project_index": self.project_index,
+        }
+
+
+@dataclass(frozen=True)
+class WorkspaceCodeArea:
+    relative_root: str
+    label: str
 
 
 def discover_workspace_product_spec_files(projects_dir: Path | None = None) -> list[Path]:
@@ -110,23 +154,25 @@ def _node_description(parts: dict[str, Any]) -> str:
     return " | ".join(ordered) or "workspace governance node"
 
 
-def _mapping_tree_to_hierarchy_nodes() -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
+def _mapping_tree_to_hierarchy_nodes() -> HierarchyBuildResult:
     raw_tree = build_standards_tree()
 
     standards_root_id = "workspace:shelf:standards"
-    nodes: list[dict[str, Any]] = [
-        {
-            "id": standards_root_id,
-            "label": "Standards",
-            "level": 1,
-            "description": "kind=standards_root | layer=Standards",
-            "source_file": _relative(MAPPING_REGISTRY_PATH),
-            "source_line": 1,
-            "node_kind": "standards_root",
-            "layer": "Standards",
-        }
+    nodes: list[HierarchyNode] = [
+        HierarchyNode(
+            node_id=standards_root_id,
+            label="Standards",
+            level=1,
+            description="kind=standards_root | layer=Standards",
+            metadata={
+                "source_file": _relative(MAPPING_REGISTRY_PATH),
+                "source_line": 1,
+                "node_kind": "standards_root",
+                "layer": "Standards",
+            },
+        )
     ]
-    edges: list[dict[str, Any]] = []
+    edges: list[HierarchyEdge] = []
 
     def walk(node_obj: dict[str, Any], parent_id: str, depth: int) -> None:
         node_id = f"standards:{str(node_obj.get('id') or '').strip()}"
@@ -137,11 +183,11 @@ def _mapping_tree_to_hierarchy_nodes() -> tuple[list[dict[str, Any]], list[dict[
         source_line = _first_heading_line(REPO_ROOT / rel_file) if rel_file else 1
         label = Path(rel_file).stem if rel_file else node_id.split(":")[-1]
         nodes.append(
-            {
-                "id": node_id,
-                "label": label,
-                "level": depth,
-                "description": _node_description(
+            HierarchyNode(
+                node_id=node_id,
+                label=label,
+                level=depth,
+                description=_node_description(
                     {
                         "kind": kind,
                         "layer": "Standards",
@@ -149,15 +195,17 @@ def _mapping_tree_to_hierarchy_nodes() -> tuple[list[dict[str, Any]], list[dict[
                         "registry_level": level_value,
                     }
                 ),
-                "source_file": source_file,
-                "source_line": source_line,
-                "node_kind": kind,
-                "layer": "Standards",
-                "registry_level": level_value,
-                "raw_node_id": str(node_obj.get("id") or ""),
-            }
+                metadata={
+                    "source_file": source_file,
+                    "source_line": source_line,
+                    "node_kind": kind,
+                    "layer": "Standards",
+                    "registry_level": level_value,
+                    "raw_node_id": str(node_obj.get("id") or ""),
+                },
+            )
         )
-        edges.append({"from": parent_id, "to": node_id, "relation": "tree_child"})
+        edges.append(HierarchyEdge(source=parent_id, target=node_id, relation="tree_child", metadata={}))
         children = node_obj.get("children")
         if not isinstance(children, list):
             raise ValueError(f"mapping tree children must be list for {node_id}")
@@ -167,14 +215,14 @@ def _mapping_tree_to_hierarchy_nodes() -> tuple[list[dict[str, Any]], list[dict[
             walk(child, node_id, depth + 1)
 
     walk(raw_tree, standards_root_id, 2)
-    return nodes, edges, standards_root_id
+    return HierarchyBuildResult(nodes=nodes, edges=edges, root_id=standards_root_id)
 
 
 def _framework_module_docs_to_hierarchy_nodes(
     *,
     parent_id: str,
     existing_source_files: set[str],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+) -> HierarchyBuildResult:
     framework_root = REPO_ROOT / "framework"
     grouped_docs: dict[str, list[tuple[int, int, str]]] = {}
 
@@ -198,57 +246,63 @@ def _framework_module_docs_to_hierarchy_nodes(
                 )
 
     if not grouped_docs:
-        return [], []
+        return HierarchyBuildResult(nodes=[], edges=[], root_id="")
 
     root_id = "workspace:shelf:standards:framework_modules"
-    nodes: list[dict[str, Any]] = [
-        {
-            "id": root_id,
-            "label": "Framework Modules",
-            "level": 2,
-            "description": "kind=framework_modules_root | layer=Standards",
-            "source_file": "",
-            "source_line": 1,
-            "node_kind": "framework_modules_root",
-            "layer": "Standards",
-            "parent_node_id": parent_id,
-        }
+    nodes: list[HierarchyNode] = [
+        HierarchyNode(
+            node_id=root_id,
+            label="Framework Modules",
+            level=2,
+            description="kind=framework_modules_root | layer=Standards",
+            metadata={
+                "source_file": "",
+                "source_line": 1,
+                "node_kind": "framework_modules_root",
+                "layer": "Standards",
+                "parent_node_id": parent_id,
+            },
+        )
     ]
-    edges: list[dict[str, Any]] = [{"from": parent_id, "to": root_id, "relation": "tree_child"}]
+    edges: list[HierarchyEdge] = [
+        HierarchyEdge(source=parent_id, target=root_id, relation="tree_child", metadata={})
+    ]
 
     for module_name in sorted(grouped_docs):
         domain_id = f"{root_id}:{module_name}"
         nodes.append(
-            {
-                "id": domain_id,
-                "label": module_name,
-                "level": 3,
-                "description": _node_description(
+            HierarchyNode(
+                node_id=domain_id,
+                label=module_name,
+                level=3,
+                description=_node_description(
                     {
                         "kind": "framework_domain",
                         "layer": "Standards",
                         "object_id": module_name,
                     }
                 ),
-                "source_file": "",
-                "source_line": 1,
-                "node_kind": "framework_domain",
-                "layer": "Standards",
-                "parent_node_id": root_id,
-                "object_id": module_name,
-            }
+                metadata={
+                    "source_file": "",
+                    "source_line": 1,
+                    "node_kind": "framework_domain",
+                    "layer": "Standards",
+                    "parent_node_id": root_id,
+                    "object_id": module_name,
+                },
+            )
         )
-        edges.append({"from": root_id, "to": domain_id, "relation": "tree_child"})
+        edges.append(HierarchyEdge(source=root_id, target=domain_id, relation="tree_child", metadata={}))
 
         for level_num, module_num, rel_file in sorted(grouped_docs[module_name]):
             locator = f"L{level_num}.M{module_num}"
             file_id = f"standards:framework_module_file:{rel_file}"
             nodes.append(
-                {
-                    "id": file_id,
-                    "label": Path(rel_file).stem,
-                    "level": 4,
-                    "description": _node_description(
+                HierarchyNode(
+                    node_id=file_id,
+                    label=Path(rel_file).stem,
+                    level=4,
+                    description=_node_description(
                         {
                             "kind": "framework_module_file",
                             "layer": "Standards",
@@ -257,18 +311,158 @@ def _framework_module_docs_to_hierarchy_nodes(
                             "object_id": module_name,
                         }
                     ),
-                    "source_file": rel_file,
-                    "source_line": _first_heading_line(REPO_ROOT / rel_file),
-                    "node_kind": "framework_module_file",
-                    "layer": "Standards",
-                    "parent_node_id": domain_id,
-                    "object_id": module_name,
-                    "locator": locator,
-                }
+                    metadata={
+                        "source_file": rel_file,
+                        "source_line": _first_heading_line(REPO_ROOT / rel_file),
+                        "node_kind": "framework_module_file",
+                        "layer": "Standards",
+                        "parent_node_id": domain_id,
+                        "object_id": module_name,
+                        "locator": locator,
+                    },
+                )
             )
-            edges.append({"from": domain_id, "to": file_id, "relation": "tree_child"})
+            edges.append(HierarchyEdge(source=domain_id, target=file_id, relation="tree_child", metadata={}))
 
-    return nodes, edges
+    return HierarchyBuildResult(nodes=nodes, edges=edges, root_id=root_id)
+
+
+def _workspace_code_to_hierarchy_nodes(*, parent_id: str) -> HierarchyBuildResult:
+    code_areas = [WorkspaceCodeArea(relative_root=root, label=label) for root, label in WORKSPACE_CODE_ROOTS]
+    root_id = "workspace:shelf:code"
+    nodes: list[HierarchyNode] = [
+        HierarchyNode(
+            node_id=root_id,
+            label="Workspace Code",
+            level=1,
+            description="kind=workspace_code_root | layer=Workspace Code",
+            metadata={
+                "source_file": "",
+                "source_line": 1,
+                "node_kind": "workspace_code_root",
+                "layer": "Workspace Code",
+                "parent_node_id": parent_id,
+            },
+        )
+    ]
+    edges: list[HierarchyEdge] = [
+        HierarchyEdge(source=parent_id, target=root_id, relation="tree_child", metadata={})
+    ]
+
+    for area in code_areas:
+        root_dir = REPO_ROOT / area.relative_root
+        if not root_dir.exists():
+            continue
+        area_node_id = f"{root_id}:{area.relative_root.replace('/', ':')}"
+        nodes.append(
+            HierarchyNode(
+                node_id=area_node_id,
+                label=area.label,
+                level=2,
+                description=_node_description(
+                    {
+                        "kind": "workspace_code_area",
+                        "layer": "Workspace Code",
+                        "file": area.relative_root,
+                        "object_id": area.relative_root,
+                    }
+                ),
+                metadata={
+                    "source_file": area.relative_root,
+                    "source_line": 1,
+                    "node_kind": "workspace_code_area",
+                    "layer": "Workspace Code",
+                    "parent_node_id": root_id,
+                    "object_id": area.relative_root,
+                },
+            )
+        )
+        edges.append(HierarchyEdge(source=root_id, target=area_node_id, relation="tree_child", metadata={}))
+
+        directory_nodes: dict[str, str] = {"": area_node_id}
+        code_files = sorted(
+            path
+            for path in root_dir.rglob("*")
+            if path.is_file() and path.suffix in WORKSPACE_CODE_FILE_SUFFIXES
+        )
+        for file_path in code_files:
+            relative_within_area = file_path.relative_to(root_dir).as_posix()
+            parent_dir = file_path.parent.relative_to(root_dir).as_posix()
+            if parent_dir == ".":
+                parent_dir = ""
+            if parent_dir:
+                parts = parent_dir.split("/")
+                current_rel = ""
+                current_parent_id = area_node_id
+                for part in parts:
+                    current_rel = part if not current_rel else f"{current_rel}/{part}"
+                    if current_rel in directory_nodes:
+                        current_parent_id = directory_nodes[current_rel]
+                        continue
+                    directory_node_id = f"{area_node_id}:dir:{current_rel.replace('/', ':')}"
+                    directory_nodes[current_rel] = directory_node_id
+                    nodes.append(
+                        HierarchyNode(
+                            node_id=directory_node_id,
+                            label=part,
+                            level=3 + current_rel.count("/"),
+                            description=_node_description(
+                                {
+                                    "kind": "workspace_code_directory",
+                                    "layer": "Workspace Code",
+                                    "file": f"{area.relative_root}/{current_rel}",
+                                    "object_id": area.relative_root,
+                                }
+                            ),
+                            metadata={
+                                "source_file": f"{area.relative_root}/{current_rel}",
+                                "source_line": 1,
+                                "node_kind": "workspace_code_directory",
+                                "layer": "Workspace Code",
+                                "parent_node_id": current_parent_id,
+                                "object_id": area.relative_root,
+                            },
+                        )
+                    )
+                    edges.append(
+                        HierarchyEdge(
+                            source=current_parent_id,
+                            target=directory_node_id,
+                            relation="tree_child",
+                            metadata={},
+                        )
+                    )
+                    current_parent_id = directory_node_id
+            file_parent_id = directory_nodes.get(parent_dir, area_node_id)
+            rel_file = _relative(file_path)
+            nodes.append(
+                HierarchyNode(
+                    node_id=f"workspace:code:file:{rel_file}",
+                    label=file_path.name,
+                    level=3 + (parent_dir.count("/") + 1 if parent_dir else 0),
+                    description=_node_description(
+                        {
+                            "kind": "workspace_code_file",
+                            "layer": "Workspace Code",
+                            "file": rel_file,
+                            "object_id": area.relative_root,
+                        }
+                    ),
+                    metadata={
+                        "source_file": rel_file,
+                        "source_line": 1,
+                        "node_kind": "workspace_code_file",
+                        "layer": "Workspace Code",
+                        "parent_node_id": file_parent_id,
+                        "object_id": area.relative_root,
+                    },
+                )
+            )
+            edges.append(
+                HierarchyEdge(source=file_parent_id, target=f"workspace:code:file:{rel_file}", relation="tree_child", metadata={})
+            )
+
+    return HierarchyBuildResult(nodes=nodes, edges=edges, root_id=root_id)
 
 
 def _project_node_source_line(node: dict[str, Any]) -> int:
@@ -295,7 +489,7 @@ def _project_tree_to_hierarchy_nodes(
     project_id: str,
     product_spec_file: str,
     parent_id: str,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
+) -> HierarchyBuildResult:
     tree_nodes = project_tree.get("nodes")
     if not isinstance(tree_nodes, list):
         raise ValueError(f"governance tree for {project_id} must contain nodes list")
@@ -329,18 +523,18 @@ def _project_tree_to_hierarchy_nodes(
         level_cache[node_id] = depth(parent) + 1
         return level_cache[node_id]
 
-    nodes: list[dict[str, Any]] = []
-    edges: list[dict[str, Any]] = []
+    nodes: list[HierarchyNode] = []
+    edges: list[HierarchyEdge] = []
     for node_id in sorted(node_index):
         node = node_index[node_id]
         rel_file = str(node.get("file") or "").strip()
         label = _node_label(str(node.get("title") or ""), node_id.split(":")[-1])
         nodes.append(
-            {
-                "id": node_id,
-                "label": label,
-                "level": depth(node_id),
-                "description": _node_description(
+            HierarchyNode(
+                node_id=node_id,
+                label=label,
+                level=depth(node_id),
+                description=_node_description(
                     {
                         "kind": node.get("kind"),
                         "layer": node.get("layer"),
@@ -356,35 +550,39 @@ def _project_tree_to_hierarchy_nodes(
                         "audit_classification": node.get("audit_classification"),
                     }
                 ),
-                "source_file": rel_file or product_spec_file,
-                "source_line": _project_node_source_line(node),
-                "node_kind": node.get("kind"),
-                "layer": node.get("layer"),
-                "project_id": project_id,
-                "project_product_spec_file": product_spec_file,
-                "parent_node_id": node.get("parent"),
-                "derived_from": list(node.get("derived_from") or []),
-                "owner": node.get("owner"),
-                "artifact": node.get("artifact"),
-                "symbol_id": node.get("symbol_id"),
-                "object_id": node.get("object_id"),
-                "role_id": node.get("role_id"),
-                "candidate_id": node.get("candidate_id"),
-                "symbol_kind": node.get("symbol_kind"),
-                "risk": node.get("risk"),
-                "validator": node.get("validator"),
-                "minimality_status": node.get("minimality_status"),
-                "audit_classification": node.get("audit_classification"),
-            }
+                metadata={
+                    "source_file": rel_file or product_spec_file,
+                    "source_line": _project_node_source_line(node),
+                    "node_kind": node.get("kind"),
+                    "layer": node.get("layer"),
+                    "project_id": project_id,
+                    "project_product_spec_file": product_spec_file,
+                    "parent_node_id": node.get("parent"),
+                    "derived_from": list(node.get("derived_from") or []),
+                    "owner": node.get("owner"),
+                    "artifact": node.get("artifact"),
+                    "symbol_id": node.get("symbol_id"),
+                    "object_id": node.get("object_id"),
+                    "role_id": node.get("role_id"),
+                    "candidate_id": node.get("candidate_id"),
+                    "symbol_kind": node.get("symbol_kind"),
+                    "risk": node.get("risk"),
+                    "validator": node.get("validator"),
+                    "minimality_status": node.get("minimality_status"),
+                    "audit_classification": node.get("audit_classification"),
+                },
+            )
         )
         parent_node_id = node.get("parent")
         edge_parent = parent_id if parent_node_id is None else str(parent_node_id)
-        edges.append({"from": edge_parent, "to": node_id, "relation": "tree_child"})
+        edges.append(HierarchyEdge(source=edge_parent, target=node_id, relation="tree_child", metadata={}))
 
-    return nodes, edges, project_root_id
+    return HierarchyBuildResult(nodes=nodes, edges=edges, root_id=project_root_id)
 
 
-def _build_governance_indexes(nodes: list[dict[str, Any]], project_roots: dict[str, str]) -> dict[str, Any]:
+def _build_governance_indexes(
+    nodes: list[HierarchyNode], project_roots: dict[str, str]
+) -> GovernanceIndexes:
     file_index: dict[str, list[str]] = {}
     parent_index: dict[str, str | None] = {}
     children_index: dict[str, list[str]] = {}
@@ -393,46 +591,45 @@ def _build_governance_indexes(nodes: list[dict[str, Any]], project_roots: dict[s
     project_index: dict[str, dict[str, Any]] = {}
 
     for node in nodes:
-        node_id = str(node["id"])
-        rel_file = str(node.get("source_file") or "").strip()
+        node_id = node.node_id
+        metadata = node.metadata or {}
+        rel_file = str(metadata.get("source_file") or "").strip()
         if rel_file:
             file_index.setdefault(rel_file, []).append(node_id)
-        parent = node.get("parent_node_id")
+        parent = metadata.get("parent_node_id")
         if parent is None and node_id in project_roots.values():
             parent = "workspace:shelf:projects"
         parent_index[node_id] = str(parent) if isinstance(parent, str) else None
         children_index.setdefault(node_id, [])
         if isinstance(parent, str):
             children_index.setdefault(parent, []).append(node_id)
-        derived = [str(item) for item in list(node.get("derived_from") or []) if str(item).strip()]
+        derived = [str(item) for item in list(metadata.get("derived_from") or []) if str(item).strip()]
         derived_index[node_id] = derived
         for upstream in derived:
             reverse_derived_index.setdefault(upstream, []).append(node_id)
-        project_id = str(node.get("project_id") or "").strip()
+        project_id = str(metadata.get("project_id") or "").strip()
         if project_id:
             project_entry = project_index.setdefault(
                 project_id,
                 {
                     "root_node_id": project_roots.get(project_id, ""),
-                    "product_spec_file": str(node.get("project_product_spec_file") or ""),
+                    "product_spec_file": str(metadata.get("project_product_spec_file") or ""),
                     "node_ids": [],
                     "evidence_root_id": "",
                 },
             )
             project_entry["node_ids"].append(node_id)
-            if node.get("node_kind") == "evidence_root":
+            if metadata.get("node_kind") == "evidence_root":
                 project_entry["evidence_root_id"] = node_id
 
-    return {
-        "file_index": {key: sorted(value) for key, value in sorted(file_index.items())},
-        "parent_index": parent_index,
-        "children_index": {key: sorted(value) for key, value in sorted(children_index.items())},
-        "derived_index": {key: sorted(value) for key, value in sorted(derived_index.items())},
-        "reverse_derived_index": {
-            key: sorted(value) for key, value in sorted(reverse_derived_index.items())
-        },
-        "project_index": project_index,
-    }
+    return GovernanceIndexes(
+        file_index={key: sorted(value) for key, value in sorted(file_index.items())},
+        parent_index=parent_index,
+        children_index={key: sorted(value) for key, value in sorted(children_index.items())},
+        derived_index={key: sorted(value) for key, value in sorted(derived_index.items())},
+        reverse_derived_index={key: sorted(value) for key, value in sorted(reverse_derived_index.items())},
+        project_index=project_index,
+    )
 
 
 def build_workspace_governance_payload(
@@ -440,6 +637,7 @@ def build_workspace_governance_payload(
 ) -> dict[str, Any]:
     workspace_root_id = "workspace:shelf"
     standards_root_id = "workspace:shelf:standards"
+    workspace_code_root_id = "workspace:shelf:code"
     projects_root_id = "workspace:shelf:projects"
     evidence_root_id = "workspace:shelf:evidence"
     governance_json_rel = _relative(DEFAULT_WORKSPACE_GOVERNANCE_JSON)
@@ -448,131 +646,143 @@ def build_workspace_governance_payload(
     discovery_audit_md_rel = _relative(DEFAULT_PROJECT_DISCOVERY_AUDIT_MD)
     discovery_audit = build_project_discovery_audit()
 
-    nodes: list[dict[str, Any]] = [
-        {
-            "id": workspace_root_id,
-            "label": "Shelf Workspace",
-            "level": 0,
-            "description": "kind=workspace_root | layer=Workspace",
-            "source_file": "README.md",
-            "source_line": 1,
-            "node_kind": "workspace_root",
-            "layer": "Workspace",
+    standard_result = _mapping_tree_to_hierarchy_nodes()
+    standards_root_id = standard_result.root_id
+    workspace_code_result = _workspace_code_to_hierarchy_nodes(parent_id=workspace_root_id)
+    workspace_code_root_id = workspace_code_result.root_id
+    extra_framework_result = _framework_module_docs_to_hierarchy_nodes(
+        parent_id=standards_root_id,
+        existing_source_files={
+            str((node.metadata or {}).get("source_file") or "").strip()
+            for node in standard_result.nodes
+            if str((node.metadata or {}).get("source_file") or "").strip()
         },
-        {
-            "id": projects_root_id,
-            "label": "Projects",
-            "level": 1,
-            "description": "kind=projects_root | layer=Projects",
-            "source_file": "projects",
-            "source_line": 1,
-            "node_kind": "projects_root",
-            "layer": "Projects",
-            "parent_node_id": workspace_root_id,
-        },
-        {
-            "id": evidence_root_id,
-            "label": "Workspace Evidence",
-            "level": 1,
-            "description": "kind=workspace_evidence_root | layer=Workspace Evidence",
-            "source_file": governance_json_rel,
-            "source_line": 1,
-            "node_kind": "workspace_evidence_root",
-            "layer": "Workspace Evidence",
-            "parent_node_id": workspace_root_id,
-        },
-        {
-            "id": "workspace:shelf:evidence:artifact:governance_tree_json",
-            "label": "shelf_governance_tree.json",
-            "level": 2,
-            "description": (
+    )
+
+    nodes: list[HierarchyNode] = [
+        HierarchyNode(
+            node_id=workspace_root_id,
+            label="Shelf Workspace",
+            level=0,
+            description="kind=workspace_root | layer=Workspace",
+            metadata={
+                "source_file": "README.md",
+                "source_line": 1,
+                "node_kind": "workspace_root",
+                "layer": "Workspace",
+            },
+        ),
+        HierarchyNode(
+            node_id=projects_root_id,
+            label="Projects",
+            level=1,
+            description="kind=projects_root | layer=Projects",
+            metadata={
+                "source_file": "projects",
+                "source_line": 1,
+                "node_kind": "projects_root",
+                "layer": "Projects",
+                "parent_node_id": workspace_root_id,
+            },
+        ),
+        HierarchyNode(
+            node_id=evidence_root_id,
+            label="Workspace Evidence",
+            level=1,
+            description="kind=workspace_evidence_root | layer=Workspace Evidence",
+            metadata={
+                "source_file": governance_json_rel,
+                "source_line": 1,
+                "node_kind": "workspace_evidence_root",
+                "layer": "Workspace Evidence",
+                "parent_node_id": workspace_root_id,
+            },
+        ),
+        HierarchyNode(
+            node_id="workspace:shelf:evidence:artifact:governance_tree_json",
+            label="shelf_governance_tree.json",
+            level=2,
+            description=(
                 "kind=workspace_evidence_artifact | layer=Workspace Evidence"
                 f" | file={governance_json_rel} | artifact=governance_tree_json"
             ),
-            "source_file": governance_json_rel,
-            "source_line": 1,
-            "node_kind": "workspace_evidence_artifact",
-            "layer": "Workspace Evidence",
-            "parent_node_id": evidence_root_id,
-            "artifact": "governance_tree_json",
-            "derived_from": [workspace_root_id, standards_root_id, projects_root_id],
-        },
-        {
-            "id": "workspace:shelf:evidence:artifact:governance_tree_html",
-            "label": "shelf_governance_tree.html",
-            "level": 2,
-            "description": (
+            metadata={
+                "source_file": governance_json_rel,
+                "source_line": 1,
+                "node_kind": "workspace_evidence_artifact",
+                "layer": "Workspace Evidence",
+                "parent_node_id": evidence_root_id,
+                "artifact": "governance_tree_json",
+                "derived_from": [workspace_root_id, standards_root_id, projects_root_id],
+            },
+        ),
+        HierarchyNode(
+            node_id="workspace:shelf:evidence:artifact:governance_tree_html",
+            label="shelf_governance_tree.html",
+            level=2,
+            description=(
                 "kind=workspace_evidence_artifact | layer=Workspace Evidence"
                 f" | file={governance_html_rel} | artifact=governance_tree_html"
             ),
-            "source_file": governance_html_rel,
-            "source_line": 1,
-            "node_kind": "workspace_evidence_artifact",
-            "layer": "Workspace Evidence",
-            "parent_node_id": evidence_root_id,
-            "artifact": "governance_tree_html",
-            "derived_from": [workspace_root_id, standards_root_id, projects_root_id],
-        },
-        {
-            "id": "workspace:shelf:evidence:artifact:project_discovery_audit_json",
-            "label": "project_discovery_audit.json",
-            "level": 2,
-            "description": (
+            metadata={
+                "source_file": governance_html_rel,
+                "source_line": 1,
+                "node_kind": "workspace_evidence_artifact",
+                "layer": "Workspace Evidence",
+                "parent_node_id": evidence_root_id,
+                "artifact": "governance_tree_html",
+                "derived_from": [workspace_root_id, standards_root_id, projects_root_id],
+            },
+        ),
+        HierarchyNode(
+            node_id="workspace:shelf:evidence:artifact:project_discovery_audit_json",
+            label="project_discovery_audit.json",
+            level=2,
+            description=(
                 "kind=workspace_evidence_artifact | layer=Workspace Evidence"
                 f" | file={discovery_audit_json_rel} | artifact=project_discovery_audit_json"
             ),
-            "source_file": discovery_audit_json_rel,
-            "source_line": 1,
-            "node_kind": "workspace_evidence_artifact",
-            "layer": "Workspace Evidence",
-            "parent_node_id": evidence_root_id,
-            "artifact": "project_discovery_audit_json",
-            "derived_from": [workspace_root_id, projects_root_id],
-        },
-        {
-            "id": "workspace:shelf:evidence:artifact:project_discovery_audit_md",
-            "label": "project_discovery_audit.md",
-            "level": 2,
-            "description": (
+            metadata={
+                "source_file": discovery_audit_json_rel,
+                "source_line": 1,
+                "node_kind": "workspace_evidence_artifact",
+                "layer": "Workspace Evidence",
+                "parent_node_id": evidence_root_id,
+                "artifact": "project_discovery_audit_json",
+                "derived_from": [workspace_root_id, projects_root_id],
+            },
+        ),
+        HierarchyNode(
+            node_id="workspace:shelf:evidence:artifact:project_discovery_audit_md",
+            label="project_discovery_audit.md",
+            level=2,
+            description=(
                 "kind=workspace_evidence_artifact | layer=Workspace Evidence"
                 f" | file={discovery_audit_md_rel} | artifact=project_discovery_audit_md"
             ),
-            "source_file": discovery_audit_md_rel,
-            "source_line": 1,
-            "node_kind": "workspace_evidence_artifact",
-            "layer": "Workspace Evidence",
-            "parent_node_id": evidence_root_id,
-            "artifact": "project_discovery_audit_md",
-            "derived_from": [workspace_root_id, projects_root_id],
-        },
+            metadata={
+                "source_file": discovery_audit_md_rel,
+                "source_line": 1,
+                "node_kind": "workspace_evidence_artifact",
+                "layer": "Workspace Evidence",
+                "parent_node_id": evidence_root_id,
+                "artifact": "project_discovery_audit_md",
+                "derived_from": [workspace_root_id, projects_root_id],
+            },
+        ),
     ]
-    edges: list[dict[str, Any]] = [
-        {"from": workspace_root_id, "to": projects_root_id, "relation": "tree_child"},
-        {"from": workspace_root_id, "to": evidence_root_id, "relation": "tree_child"},
+    edges: list[HierarchyEdge] = [
+        HierarchyEdge(source=workspace_root_id, target=projects_root_id, relation="tree_child", metadata={}),
+        HierarchyEdge(source=workspace_root_id, target=evidence_root_id, relation="tree_child", metadata={}),
+        HierarchyEdge(source=workspace_root_id, target=standards_root_id, relation="tree_child", metadata={}),
     ]
 
-    standard_nodes, standard_edges, standards_root_id = _mapping_tree_to_hierarchy_nodes()
-    extra_framework_nodes, extra_framework_edges = _framework_module_docs_to_hierarchy_nodes(
-        parent_id=standards_root_id,
-        existing_source_files={
-            str(node.get("source_file") or "").strip()
-            for node in standard_nodes
-            if str(node.get("source_file") or "").strip()
-        },
-    )
-    for node in nodes:
-        if node["id"] in {
-            "workspace:shelf:evidence:artifact:governance_tree_json",
-            "workspace:shelf:evidence:artifact:governance_tree_html",
-            "workspace:shelf:evidence:artifact:project_discovery_audit_json",
-            "workspace:shelf:evidence:artifact:project_discovery_audit_md",
-        }:
-            node["derived_from"] = [workspace_root_id, standards_root_id, projects_root_id]
-    nodes.extend(standard_nodes)
-    nodes.extend(extra_framework_nodes)
-    edges.append({"from": workspace_root_id, "to": standards_root_id, "relation": "tree_child"})
-    edges.extend(standard_edges)
-    edges.extend(extra_framework_edges)
+    nodes.extend(standard_result.nodes)
+    nodes.extend(workspace_code_result.nodes)
+    nodes.extend(extra_framework_result.nodes)
+    edges.extend(standard_result.edges)
+    edges.extend(workspace_code_result.edges)
+    edges.extend(extra_framework_result.edges)
 
     requested_product_spec_files = (
         [path.resolve() for path in product_spec_files]
@@ -588,15 +798,15 @@ def build_workspace_governance_payload(
         project_id = str(project_tree.get("project_id") or project.metadata.project_id)
         rel_product_spec_file = _relative(product_spec_file)
         project_trees[project_id] = project_tree
-        project_nodes, project_edges, project_root_id = _project_tree_to_hierarchy_nodes(
+        project_result = _project_tree_to_hierarchy_nodes(
             project_tree,
             project_id=project_id,
             product_spec_file=rel_product_spec_file,
             parent_id=projects_root_id,
         )
-        project_roots[project_id] = project_root_id
-        nodes.extend(project_nodes)
-        edges.extend(project_edges)
+        project_roots[project_id] = project_result.root_id
+        nodes.extend(project_result.nodes)
+        edges.extend(project_result.edges)
 
     audited_directories = {
         str(item.get("directory") or "").strip(): item
@@ -611,11 +821,11 @@ def build_workspace_governance_payload(
             continue
         node_id = f"workspace:shelf:projects:audit:{project_id}"
         nodes.append(
-            {
-                "id": node_id,
-                "label": project_id,
-                "level": 2,
-                "description": _node_description(
+            HierarchyNode(
+                node_id=node_id,
+                label=project_id,
+                level=2,
+                description=_node_description(
                     {
                         "kind": "project_audit_entry",
                         "layer": "Projects",
@@ -624,53 +834,52 @@ def build_workspace_governance_payload(
                         "artifact": entry.get("classification"),
                     }
                 ),
-                "source_file": directory,
-                "source_line": 1,
-                "node_kind": "project_audit_entry",
-                "layer": "Projects",
-                "project_id": project_id,
-                "audit_classification": entry.get("classification"),
-                "framework_driven": entry.get("framework_driven"),
-                "parent_node_id": projects_root_id,
-                "derived_from": [],
-            }
+                metadata={
+                    "source_file": directory,
+                    "source_line": 1,
+                    "node_kind": "project_audit_entry",
+                    "layer": "Projects",
+                    "project_id": project_id,
+                    "audit_classification": entry.get("classification"),
+                    "framework_driven": entry.get("framework_driven"),
+                    "parent_node_id": projects_root_id,
+                    "derived_from": [],
+                },
+            )
         )
-        edges.append({"from": projects_root_id, "to": node_id, "relation": "tree_child"})
+        edges.append(HierarchyEdge(source=projects_root_id, target=node_id, relation="tree_child", metadata={}))
 
     indexes = _build_governance_indexes(nodes, project_roots)
-    level_labels = {
-        "0": "Workspace",
-        "1": "Top Level",
-        "2": "Project / Standard Root",
-        "3": "Layer Root",
-        "4": "Module / File / Root",
-        "5": "Rule / Section / Symbol / Artifact",
-        "6": "Deep Node",
-        "7": "Deep Node",
-    }
-
-    return {
-        "root": {
-            "title": "Shelf Governance Tree",
-            "description": (
-                "统一治理树，覆盖 Standards -> Projects -> Framework/Product/Implementation/Code/Evidence。"
-            ),
-            "storage_key_stem": "governanceTree",
-            "level_labels": level_labels,
-            "nodes": nodes,
-            "edges": edges,
+    graph = HierarchyGraph(
+        title="Shelf Governance Tree",
+        description="统一治理树，覆盖 Standards -> Projects -> Framework/Product/Implementation/Code/Evidence。",
+        storage_key_stem="governanceTree",
+        level_labels={
+            0: "Workspace",
+            1: "Top Level",
+            2: "Project / Standard Root",
+            3: "Layer Root",
+            4: "Module / File / Root",
+            5: "Rule / Section / Symbol / Artifact",
+            6: "Deep Node",
+            7: "Deep Node",
         },
-        "governance": {
-            "version": WORKSPACE_GOVERNANCE_VERSION,
-            "workspace_root_id": workspace_root_id,
-            "standards_root_id": standards_root_id,
-            "projects_root_id": projects_root_id,
-            "project_roots": project_roots,
-            "project_trees": project_trees,
-            "project_discovery_audit": discovery_audit,
-            **indexes,
-        },
+        nodes=nodes,
+        edges=edges,
+    )
+    payload = graph.to_payload_dict()
+    payload["governance"] = {
+        "version": WORKSPACE_GOVERNANCE_VERSION,
+        "workspace_root_id": workspace_root_id,
+        "standards_root_id": standards_root_id,
+        "workspace_code_root_id": workspace_code_root_id,
+        "projects_root_id": projects_root_id,
+        "project_roots": project_roots,
+        "project_trees": project_trees,
+        "project_discovery_audit": discovery_audit,
+        **indexes.to_payload_dict(),
     }
+    return payload
 
 
 def parse_workspace_governance_payload(path: Path) -> dict[str, Any]:

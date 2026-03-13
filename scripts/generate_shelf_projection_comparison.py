@@ -4,21 +4,67 @@ import argparse
 import csv
 import json
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 
-def _read_csv_rows(path: Path) -> list[dict[str, str]]:
+@dataclass(frozen=True)
+class ProjectionValidationRow:
+    canonical_key: str
+    group_id: str
+    passed: bool
+    projection_ratio: str
+    structural_valid: bool
+    reasons: str
+
+    @classmethod
+    def from_csv_row(cls, row: dict[str, str]) -> "ProjectionValidationRow":
+        return cls(
+            canonical_key=row["canonical_key"],
+            group_id=row["group_id"],
+            passed=_bool(row["passed"]),
+            projection_ratio=row["projection_ratio"],
+            structural_valid=_bool(row.get("structural_valid", "False")),
+            reasons=row["reasons"],
+        )
+
+
+@dataclass(frozen=True)
+class ProjectionDiffRow:
+    canonical_key: str
+    group_id: str
+    change: str
+    projection_ratio_before: str
+    projection_ratio_after: str
+    structural_valid_before: str
+    structural_valid_after: str
+    reasons_after: str
+
+    def to_csv_row(self) -> dict[str, str]:
+        return {
+            "change": self.change,
+            "group_id": self.group_id,
+            "canonical_key": self.canonical_key,
+            "projection_ratio_before": self.projection_ratio_before,
+            "projection_ratio_after": self.projection_ratio_after,
+            "structural_valid_before": self.structural_valid_before,
+            "structural_valid_after": self.structural_valid_after,
+            "reasons_after": self.reasons_after,
+        }
+
+
+def _read_csv_rows(path: Path) -> list[ProjectionValidationRow]:
     with path.open("r", encoding="utf-8", newline="") as handle:
-        return list(csv.DictReader(handle))
+        return [ProjectionValidationRow.from_csv_row(row) for row in csv.DictReader(handle)]
 
 
 def _bool(value: str) -> bool:
     return str(value).strip().lower() == "true"
 
 
-def _build_key_map(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
-    return {row["canonical_key"]: row for row in rows}
+def _build_key_map(rows: list[ProjectionValidationRow]) -> dict[str, ProjectionValidationRow]:
+    return {row.canonical_key: row for row in rows}
 
 
 def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
@@ -29,12 +75,12 @@ def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) ->
         writer.writerows(rows)
 
 
-def _build_group_counts(rows: list[dict[str, str]]) -> dict[str, dict[str, int]]:
+def _build_group_counts(rows: list[ProjectionValidationRow]) -> dict[str, dict[str, int]]:
     out: dict[str, dict[str, int]] = defaultdict(lambda: {"total": 0, "pass": 0, "fail": 0})
     for row in rows:
-        gid = row["group_id"]
+        gid = row.group_id
         out[gid]["total"] += 1
-        if _bool(row["passed"]):
+        if row.passed:
             out[gid]["pass"] += 1
         else:
             out[gid]["fail"] += 1
@@ -42,18 +88,18 @@ def _build_group_counts(rows: list[dict[str, str]]) -> dict[str, dict[str, int]]
 
 
 def _write_dashboard(
-    before_rows: list[dict[str, str]],
-    after_rows: list[dict[str, str]],
-    pass_diff_rows: list[dict[str, Any]],
-    structural_diff_rows: list[dict[str, Any]],
+    before_rows: list[ProjectionValidationRow],
+    after_rows: list[ProjectionValidationRow],
+    pass_diff_rows: list[ProjectionDiffRow],
+    structural_diff_rows: list[ProjectionDiffRow],
     output_html: Path,
 ) -> None:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
-    before_pass = sum(1 for row in before_rows if _bool(row["passed"]))
+    before_pass = sum(1 for row in before_rows if row.passed)
     before_fail = len(before_rows) - before_pass
-    after_pass = sum(1 for row in after_rows if _bool(row["passed"]))
+    after_pass = sum(1 for row in after_rows if row.passed)
     after_fail = len(after_rows) - after_pass
 
     before_group = _build_group_counts(before_rows)
@@ -64,14 +110,14 @@ def _write_dashboard(
     before_group_fail = [before_group.get(gid, {}).get("fail", 0) for gid in group_ids]
     after_group_fail = [after_group.get(gid, {}).get("fail", 0) for gid in group_ids]
 
-    pass_to_fail = [row for row in pass_diff_rows if row["change"] == "pass_to_fail"]
-    fail_to_pass = [row for row in pass_diff_rows if row["change"] == "fail_to_pass"]
-    structural_to_invalid = [row for row in structural_diff_rows if row["change"] == "structural_pass_to_fail"]
-    structural_to_valid = [row for row in structural_diff_rows if row["change"] == "structural_fail_to_pass"]
+    pass_to_fail = [row for row in pass_diff_rows if row.change == "pass_to_fail"]
+    fail_to_pass = [row for row in pass_diff_rows if row.change == "fail_to_pass"]
+    structural_to_invalid = [row for row in structural_diff_rows if row.change == "structural_pass_to_fail"]
+    structural_to_valid = [row for row in structural_diff_rows if row.change == "structural_fail_to_pass"]
 
-    before_structural_valid = sum(1 for row in before_rows if _bool(row.get("structural_valid", "False")))
+    before_structural_valid = sum(1 for row in before_rows if row.structural_valid)
     before_structural_invalid = len(before_rows) - before_structural_valid
-    after_structural_valid = sum(1 for row in after_rows if _bool(row.get("structural_valid", "False")))
+    after_structural_valid = sum(1 for row in after_rows if row.structural_valid)
     after_structural_invalid = len(after_rows) - after_structural_valid
 
     table_rows = (structural_diff_rows + pass_diff_rows)[:40]
@@ -172,14 +218,14 @@ def _write_dashboard(
             },
             cells={
                 "values": [
-                    [row["change"] for row in table_rows],
-                    [row["group_id"] for row in table_rows],
-                    [row["canonical_key"] for row in table_rows],
-                    [row["projection_ratio_before"] for row in table_rows],
-                    [row["projection_ratio_after"] for row in table_rows],
-                    [row.get("structural_valid_before", "") for row in table_rows],
-                    [row.get("structural_valid_after", "") for row in table_rows],
-                    [row["reasons_after"] for row in table_rows],
+                    [row.change for row in table_rows],
+                    [row.group_id for row in table_rows],
+                    [row.canonical_key for row in table_rows],
+                    [row.projection_ratio_before for row in table_rows],
+                    [row.projection_ratio_after for row in table_rows],
+                    [row.structural_valid_before for row in table_rows],
+                    [row.structural_valid_after for row in table_rows],
+                    [row.reasons_after for row in table_rows],
                 ],
                 "fill_color": "#f8fafc",
                 "align": "left",
@@ -232,47 +278,47 @@ def main() -> None:
     after_map = _build_key_map(after_rows)
 
     all_keys = sorted(set(before_map.keys()) | set(after_map.keys()))
-    pass_diff_rows: list[dict[str, Any]] = []
-    structural_diff_rows: list[dict[str, Any]] = []
+    pass_diff_rows: list[ProjectionDiffRow] = []
+    structural_diff_rows: list[ProjectionDiffRow] = []
     for key in all_keys:
         b = before_map.get(key)
         a = after_map.get(key)
         if b is None or a is None:
             continue
-        b_pass = _bool(b["passed"])
-        a_pass = _bool(a["passed"])
+        b_pass = b.passed
+        a_pass = a.passed
         if b_pass != a_pass:
             pass_diff_rows.append(
-                {
-                    "canonical_key": key,
-                    "group_id": a["group_id"],
-                    "change": "pass_to_fail" if b_pass and not a_pass else "fail_to_pass",
-                    "projection_ratio_before": b["projection_ratio"],
-                    "projection_ratio_after": a["projection_ratio"],
-                    "structural_valid_before": b.get("structural_valid", ""),
-                    "structural_valid_after": a.get("structural_valid", ""),
-                    "reasons_after": a["reasons"],
-                }
+                ProjectionDiffRow(
+                    canonical_key=key,
+                    group_id=a.group_id,
+                    change="pass_to_fail" if b_pass and not a_pass else "fail_to_pass",
+                    projection_ratio_before=b.projection_ratio,
+                    projection_ratio_after=a.projection_ratio,
+                    structural_valid_before=str(b.structural_valid),
+                    structural_valid_after=str(a.structural_valid),
+                    reasons_after=a.reasons,
+                )
             )
 
-        b_struct = _bool(b.get("structural_valid", "False"))
-        a_struct = _bool(a.get("structural_valid", "False"))
+        b_struct = b.structural_valid
+        a_struct = a.structural_valid
         if b_struct != a_struct:
             structural_diff_rows.append(
-                {
-                    "canonical_key": key,
-                    "group_id": a["group_id"],
-                    "change": "structural_pass_to_fail" if b_struct and not a_struct else "structural_fail_to_pass",
-                    "projection_ratio_before": b["projection_ratio"],
-                    "projection_ratio_after": a["projection_ratio"],
-                    "structural_valid_before": b.get("structural_valid", ""),
-                    "structural_valid_after": a.get("structural_valid", ""),
-                    "reasons_after": a["reasons"],
-                }
+                ProjectionDiffRow(
+                    canonical_key=key,
+                    group_id=a.group_id,
+                    change="structural_pass_to_fail" if b_struct and not a_struct else "structural_fail_to_pass",
+                    projection_ratio_before=b.projection_ratio,
+                    projection_ratio_after=a.projection_ratio,
+                    structural_valid_before=str(b.structural_valid),
+                    structural_valid_after=str(a.structural_valid),
+                    reasons_after=a.reasons,
+                )
             )
 
-    pass_diff_rows.sort(key=lambda item: (item["change"], item["group_id"], item["canonical_key"]))
-    structural_diff_rows.sort(key=lambda item: (item["change"], item["group_id"], item["canonical_key"]))
+    pass_diff_rows.sort(key=lambda item: (item.change, item.group_id, item.canonical_key))
+    structural_diff_rows.sort(key=lambda item: (item.change, item.group_id, item.canonical_key))
 
     diff_csv = output_dir / "shelf_projection_validation_diff_types.csv"
     summary_json = output_dir / "shelf_projection_validation_compare_summary.json"
@@ -280,7 +326,7 @@ def main() -> None:
 
     _write_csv(
         path=diff_csv,
-        rows=structural_diff_rows + pass_diff_rows,
+        rows=[row.to_csv_row() for row in structural_diff_rows + pass_diff_rows],
         fieldnames=[
             "change",
             "group_id",
@@ -306,15 +352,11 @@ def main() -> None:
         "type_total_before": len(before_rows),
         "type_total_after": len(after_rows),
         "pass_flip_count": len(pass_diff_rows),
-        "pass_to_fail": sum(1 for row in pass_diff_rows if row["change"] == "pass_to_fail"),
-        "fail_to_pass": sum(1 for row in pass_diff_rows if row["change"] == "fail_to_pass"),
+        "pass_to_fail": sum(1 for row in pass_diff_rows if row.change == "pass_to_fail"),
+        "fail_to_pass": sum(1 for row in pass_diff_rows if row.change == "fail_to_pass"),
         "structural_flip_count": len(structural_diff_rows),
-        "structural_pass_to_fail": sum(
-            1 for row in structural_diff_rows if row["change"] == "structural_pass_to_fail"
-        ),
-        "structural_fail_to_pass": sum(
-            1 for row in structural_diff_rows if row["change"] == "structural_fail_to_pass"
-        ),
+        "structural_pass_to_fail": sum(1 for row in structural_diff_rows if row.change == "structural_pass_to_fail"),
+        "structural_fail_to_pass": sum(1 for row in structural_diff_rows if row.change == "structural_fail_to_pass"),
         "artifacts": {
             "diff_csv": str(diff_csv),
             "dashboard_html": str(dashboard_html),

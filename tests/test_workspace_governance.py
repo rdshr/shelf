@@ -74,6 +74,17 @@ class WorkspaceGovernanceTest(unittest.TestCase):
         )
         self.assertTrue(context["affected_nodes"])
 
+    def test_workspace_runtime_source_file_is_governed(self) -> None:
+        payload = build_workspace_governance_payload()
+
+        context = resolve_workspace_change_context(
+            payload,
+            {"src/workspace_governance.py"},
+        )
+
+        self.assertIn("workspace:code:file:src/workspace_governance.py", context["touched_nodes"])
+        self.assertTrue(context["affected_nodes"])
+
 
 if __name__ == "__main__":
     unittest.main()

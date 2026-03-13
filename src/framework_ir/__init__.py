@@ -1,4 +1,4 @@
-from framework_ir.models import (
+from .models import (
     FrameworkBaseIR,
     FrameworkBoundaryIR,
     FrameworkCapabilityIR,
@@ -9,7 +9,7 @@ from framework_ir.models import (
     FrameworkUpstreamRef,
     FrameworkVerificationIR,
 )
-from framework_ir.parser import FRAMEWORK_ROOT, load_framework_registry, parse_framework_module
+from .parser import FRAMEWORK_ROOT, load_framework_registry, parse_framework_module
 
 __all__ = [
     "FRAMEWORK_ROOT",

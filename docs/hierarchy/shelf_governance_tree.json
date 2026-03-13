@@ -2,7 +2,6 @@
   "root": {
     "title": "Shelf Governance Tree",
     "description": "统一治理树，覆盖 Standards -> Projects -> Framework/Product/Implementation/Code/Evidence。",
-    "storage_key_stem": "governanceTree",
     "level_labels": {
       "0": "Workspace",
       "1": "Top Level",
@@ -93,7 +92,6 @@
         "artifact": "project_discovery_audit_json",
         "derived_from": [
           "workspace:shelf",
-          "workspace:shelf:standards",
           "workspace:shelf:projects"
         ]
       },
@@ -110,7 +108,6 @@
         "artifact": "project_discovery_audit_md",
         "derived_from": [
           "workspace:shelf",
-          "workspace:shelf:standards",
           "workspace:shelf:projects"
         ]
       },
@@ -339,6 +336,1709 @@
         "layer": "Standards",
         "registry_level": "L3",
         "raw_node_id": "NODE-L3-REGISTRY"
+      },
+      {
+        "id": "workspace:shelf:code",
+        "label": "Workspace Code",
+        "level": 1,
+        "description": "kind=workspace_code_root | layer=Workspace Code",
+        "source_file": "",
+        "source_line": 1,
+        "node_kind": "workspace_code_root",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf"
+      },
+      {
+        "id": "workspace:shelf:code:src",
+        "label": "Workspace Runtime",
+        "level": 2,
+        "description": "kind=workspace_code_area | layer=Workspace Code | file=src | object_id=src",
+        "source_file": "src",
+        "source_line": 1,
+        "node_kind": "workspace_code_area",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/__init__.py",
+        "label": "__init__.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/__init__.py | object_id=src",
+        "source_file": "src/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:domain",
+        "label": "domain",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/domain | object_id=src",
+        "source_file": "src/domain",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/domain/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/domain/__init__.py | object_id=src",
+        "source_file": "src/domain/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:domain",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/domain/enums.py",
+        "label": "enums.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/domain/enums.py | object_id=src",
+        "source_file": "src/domain/enums.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:domain",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/domain/models.py",
+        "label": "models.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/domain/models.py | object_id=src",
+        "source_file": "src/domain/models.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:domain",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:enumeration",
+        "label": "enumeration",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/enumeration | object_id=src",
+        "source_file": "src/enumeration",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/enumeration/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/enumeration/__init__.py | object_id=src",
+        "source_file": "src/enumeration/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:enumeration",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/enumeration/canonical.py",
+        "label": "canonical.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/enumeration/canonical.py | object_id=src",
+        "source_file": "src/enumeration/canonical.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:enumeration",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/enumeration/enumerator.py",
+        "label": "enumerator.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/enumeration/enumerator.py | object_id=src",
+        "source_file": "src/enumeration/enumerator.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:enumeration",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:examples",
+        "label": "examples",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/examples | object_id=src",
+        "source_file": "src/examples",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/examples/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/examples/__init__.py | object_id=src",
+        "source_file": "src/examples/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:examples",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "label": "legacy_shelf",
+        "level": 4,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/examples/legacy_shelf | object_id=src",
+        "source_file": "src/examples/legacy_shelf",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:examples",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/examples/legacy_shelf/__init__.py",
+        "label": "__init__.py",
+        "level": 5,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/examples/legacy_shelf/__init__.py | object_id=src",
+        "source_file": "src/examples/legacy_shelf/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py",
+        "label": "reference_pipeline.py",
+        "level": 5,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/examples/legacy_shelf/reference_pipeline.py | object_id=src",
+        "source_file": "src/examples/legacy_shelf/reference_pipeline.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/framework_core.py",
+        "label": "framework_core.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/framework_core.py | object_id=src",
+        "source_file": "src/framework_core.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:framework_ir",
+        "label": "framework_ir",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/framework_ir | object_id=src",
+        "source_file": "src/framework_ir",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/framework_ir/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/framework_ir/__init__.py | object_id=src",
+        "source_file": "src/framework_ir/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:framework_ir",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/framework_ir/models.py",
+        "label": "models.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/framework_ir/models.py | object_id=src",
+        "source_file": "src/framework_ir/models.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:framework_ir",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/framework_ir/parser.py",
+        "label": "parser.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/framework_ir/parser.py | object_id=src",
+        "source_file": "src/framework_ir/parser.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:framework_ir",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:frontend_kernel",
+        "label": "frontend_kernel",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/frontend_kernel | object_id=src",
+        "source_file": "src/frontend_kernel",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/frontend_kernel/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/frontend_kernel/__init__.py | object_id=src",
+        "source_file": "src/frontend_kernel/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:frontend_kernel",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/frontend_kernel/contracts.py",
+        "label": "contracts.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/frontend_kernel/contracts.py | object_id=src",
+        "source_file": "src/frontend_kernel/contracts.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:frontend_kernel",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/frontend_kernel/validators.py",
+        "label": "validators.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/frontend_kernel/validators.py | object_id=src",
+        "source_file": "src/frontend_kernel/validators.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:frontend_kernel",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/generate_type_gallery.py",
+        "label": "generate_type_gallery.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/generate_type_gallery.py | object_id=src",
+        "source_file": "src/generate_type_gallery.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/generate_type_gallery_3d.py",
+        "label": "generate_type_gallery_3d.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/generate_type_gallery_3d.py | object_id=src",
+        "source_file": "src/generate_type_gallery_3d.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/generate_type_subpages.py",
+        "label": "generate_type_subpages.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/generate_type_subpages.py | object_id=src",
+        "source_file": "src/generate_type_subpages.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:geometry",
+        "label": "geometry",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/geometry | object_id=src",
+        "source_file": "src/geometry",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/geometry/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/geometry/__init__.py | object_id=src",
+        "source_file": "src/geometry/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:geometry",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/geometry/builders.py",
+        "label": "builders.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/geometry/builders.py | object_id=src",
+        "source_file": "src/geometry/builders.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:geometry",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/geometry/frame.py",
+        "label": "frame.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/geometry/frame.py | object_id=src",
+        "source_file": "src/geometry/frame.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:geometry",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/geometry/grid.py",
+        "label": "grid.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/geometry/grid.py | object_id=src",
+        "source_file": "src/geometry/grid.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:geometry",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/hierarchy_models.py",
+        "label": "hierarchy_models.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/hierarchy_models.py | object_id=src",
+        "source_file": "src/hierarchy_models.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/interactive_viewer.py",
+        "label": "interactive_viewer.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/interactive_viewer.py | object_id=src",
+        "source_file": "src/interactive_viewer.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "label": "knowledge_base_framework",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/knowledge_base_framework | object_id=src",
+        "source_file": "src/knowledge_base_framework",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_framework/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_framework/__init__.py | object_id=src",
+        "source_file": "src/knowledge_base_framework/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_framework/validators.py",
+        "label": "validators.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_framework/validators.py | object_id=src",
+        "source_file": "src/knowledge_base_framework/validators.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_framework/workbench.py",
+        "label": "workbench.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_framework/workbench.py | object_id=src",
+        "source_file": "src/knowledge_base_framework/workbench.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "label": "knowledge_base_runtime",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/knowledge_base_runtime | object_id=src",
+        "source_file": "src/knowledge_base_runtime",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/__init__.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/app.py",
+        "label": "app.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/app.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/app.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/backend.py",
+        "label": "backend.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/backend.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/backend.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/frontend.py",
+        "label": "frontend.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/frontend.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/frontend.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/frontend_script.py",
+        "label": "frontend_script.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/frontend_script.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/frontend_script.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/frontend_style.py",
+        "label": "frontend_style.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/frontend_style.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/frontend_style.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/knowledge_base_runtime/workspace.py",
+        "label": "workspace.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/knowledge_base_runtime/workspace.py | object_id=src",
+        "source_file": "src/knowledge_base_runtime/workspace.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/main.py",
+        "label": "main.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/main.py | object_id=src",
+        "source_file": "src/main.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:metrics",
+        "label": "metrics",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/metrics | object_id=src",
+        "source_file": "src/metrics",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/metrics/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/metrics/__init__.py | object_id=src",
+        "source_file": "src/metrics/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:metrics",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/metrics/efficiency.py",
+        "label": "efficiency.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/metrics/efficiency.py | object_id=src",
+        "source_file": "src/metrics/efficiency.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:metrics",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/metrics/load_check.py",
+        "label": "load_check.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/metrics/load_check.py | object_id=src",
+        "source_file": "src/metrics/load_check.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:metrics",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:project_runtime",
+        "label": "project_runtime",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/project_runtime | object_id=src",
+        "source_file": "src/project_runtime",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/__init__.py | object_id=src",
+        "source_file": "src/project_runtime/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/app_factory.py",
+        "label": "app_factory.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/app_factory.py | object_id=src",
+        "source_file": "src/project_runtime/app_factory.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/config_layout.py",
+        "label": "config_layout.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/config_layout.py | object_id=src",
+        "source_file": "src/project_runtime/config_layout.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/governance.py",
+        "label": "governance.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/governance.py | object_id=src",
+        "source_file": "src/project_runtime/governance.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/knowledge_base.py",
+        "label": "knowledge_base.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/knowledge_base.py | object_id=src",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/knowledge_base_contract.py",
+        "label": "knowledge_base_contract.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/knowledge_base_contract.py | object_id=src",
+        "source_file": "src/project_runtime/knowledge_base_contract.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py",
+        "label": "knowledge_base_scaffold.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/knowledge_base_scaffold.py | object_id=src",
+        "source_file": "src/project_runtime/knowledge_base_scaffold.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/project_config_source.py",
+        "label": "project_config_source.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/project_config_source.py | object_id=src",
+        "source_file": "src/project_runtime/project_config_source.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/project_governance.py",
+        "label": "project_governance.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/project_governance.py | object_id=src",
+        "source_file": "src/project_runtime/project_governance.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/repository_policy.py",
+        "label": "repository_policy.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/repository_policy.py | object_id=src",
+        "source_file": "src/project_runtime/repository_policy.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/project_runtime/template_registry.py",
+        "label": "template_registry.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/project_runtime/template_registry.py | object_id=src",
+        "source_file": "src/project_runtime/template_registry.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:project_runtime",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:rules",
+        "label": "rules",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/rules | object_id=src",
+        "source_file": "src/rules",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/rules/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/rules/__init__.py | object_id=src",
+        "source_file": "src/rules/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:rules",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/rules/combination_rules.py",
+        "label": "combination_rules.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/rules/combination_rules.py | object_id=src",
+        "source_file": "src/rules/combination_rules.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:rules",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/rules/structural_rules.py",
+        "label": "structural_rules.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/rules/structural_rules.py | object_id=src",
+        "source_file": "src/rules/structural_rules.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:rules",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/shelf_domain.py",
+        "label": "shelf_domain.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/shelf_domain.py | object_id=src",
+        "source_file": "src/shelf_domain.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/shelf_framework.py",
+        "label": "shelf_framework.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/shelf_framework.py | object_id=src",
+        "source_file": "src/shelf_framework.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/shelf_reference_pipeline.py",
+        "label": "shelf_reference_pipeline.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/shelf_reference_pipeline.py | object_id=src",
+        "source_file": "src/shelf_reference_pipeline.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/standards_tree.py",
+        "label": "standards_tree.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/standards_tree.py | object_id=src",
+        "source_file": "src/standards_tree.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:verification",
+        "label": "verification",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/verification | object_id=src",
+        "source_file": "src/verification",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/verification/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/verification/__init__.py | object_id=src",
+        "source_file": "src/verification/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:verification",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/verification/verify.py",
+        "label": "verify.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/verification/verify.py | object_id=src",
+        "source_file": "src/verification/verify.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:verification",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:src:dir:visualization",
+        "label": "visualization",
+        "level": 3,
+        "description": "kind=workspace_code_directory | layer=Workspace Code | file=src/visualization | object_id=src",
+        "source_file": "src/visualization",
+        "source_line": 1,
+        "node_kind": "workspace_code_directory",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/__init__.py",
+        "label": "__init__.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/__init__.py | object_id=src",
+        "source_file": "src/visualization/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/interactive_viewer.py",
+        "label": "interactive_viewer.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/interactive_viewer.py | object_id=src",
+        "source_file": "src/visualization/interactive_viewer.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/plotly_html.py",
+        "label": "plotly_html.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/plotly_html.py | object_id=src",
+        "source_file": "src/visualization/plotly_html.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/render_3d.py",
+        "label": "render_3d.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/render_3d.py | object_id=src",
+        "source_file": "src/visualization/render_3d.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/type_gallery.py",
+        "label": "type_gallery.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/type_gallery.py | object_id=src",
+        "source_file": "src/visualization/type_gallery.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/type_gallery_3d.py",
+        "label": "type_gallery_3d.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/type_gallery_3d.py | object_id=src",
+        "source_file": "src/visualization/type_gallery_3d.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/type_grouping.py",
+        "label": "type_grouping.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/type_grouping.py | object_id=src",
+        "source_file": "src/visualization/type_grouping.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/type_subpages.py",
+        "label": "type_subpages.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/type_subpages.py | object_id=src",
+        "source_file": "src/visualization/type_subpages.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/visualization/viewer_backend.py",
+        "label": "viewer_backend.py",
+        "level": 4,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/visualization/viewer_backend.py | object_id=src",
+        "source_file": "src/visualization/viewer_backend.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src:dir:visualization",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:code:file:src/workspace_governance.py",
+        "label": "workspace_governance.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=src/workspace_governance.py | object_id=src",
+        "source_file": "src/workspace_governance.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:src",
+        "object_id": "src"
+      },
+      {
+        "id": "workspace:shelf:code:scripts",
+        "label": "Workspace Scripts",
+        "level": 2,
+        "description": "kind=workspace_code_area | layer=Workspace Code | file=scripts | object_id=scripts",
+        "source_file": "scripts",
+        "source_line": 1,
+        "node_kind": "workspace_code_area",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py",
+        "label": "build_shelf_ai_plugin_presentation.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/build_shelf_ai_plugin_presentation.py | object_id=scripts",
+        "source_file": "scripts/build_shelf_ai_plugin_presentation.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_framework_tree_hierarchy.py",
+        "label": "generate_framework_tree_hierarchy.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_framework_tree_hierarchy.py | object_id=scripts",
+        "source_file": "scripts/generate_framework_tree_hierarchy.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_governance_tree_hierarchy.py",
+        "label": "generate_governance_tree_hierarchy.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_governance_tree_hierarchy.py | object_id=scripts",
+        "source_file": "scripts/generate_governance_tree_hierarchy.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_module_hierarchy_html.py",
+        "label": "generate_module_hierarchy_html.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_module_hierarchy_html.py | object_id=scripts",
+        "source_file": "scripts/generate_module_hierarchy_html.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_shelf_projection_comparison.py",
+        "label": "generate_shelf_projection_comparison.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_shelf_projection_comparison.py | object_id=scripts",
+        "source_file": "scripts/generate_shelf_projection_comparison.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_shelf_projection_validation_report.py",
+        "label": "generate_shelf_projection_validation_report.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_shelf_projection_validation_report.py | object_id=scripts",
+        "source_file": "scripts/generate_shelf_projection_validation_report.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/generate_shelf_validation_report.py",
+        "label": "generate_shelf_validation_report.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/generate_shelf_validation_report.py | object_id=scripts",
+        "source_file": "scripts/generate_shelf_validation_report.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/materialize_project.py",
+        "label": "materialize_project.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/materialize_project.py | object_id=scripts",
+        "source_file": "scripts/materialize_project.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/publish_framework_draft.py",
+        "label": "publish_framework_draft.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/publish_framework_draft.py | object_id=scripts",
+        "source_file": "scripts/publish_framework_draft.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/scaffold_project.py",
+        "label": "scaffold_project.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/scaffold_project.py | object_id=scripts",
+        "source_file": "scripts/scaffold_project.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/sync_mapping_registry.py",
+        "label": "sync_mapping_registry.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/sync_mapping_registry.py | object_id=scripts",
+        "source_file": "scripts/sync_mapping_registry.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:code:file:scripts/validate_strict_mapping.py",
+        "label": "validate_strict_mapping.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=scripts/validate_strict_mapping.py | object_id=scripts",
+        "source_file": "scripts/validate_strict_mapping.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:scripts",
+        "object_id": "scripts"
+      },
+      {
+        "id": "workspace:shelf:code:tests",
+        "label": "Workspace Tests",
+        "level": 2,
+        "description": "kind=workspace_code_area | layer=Workspace Code | file=tests | object_id=tests",
+        "source_file": "tests",
+        "source_line": 1,
+        "node_kind": "workspace_code_area",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/__init__.py",
+        "label": "__init__.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/__init__.py | object_id=tests",
+        "source_file": "tests/__init__.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_code_language_standards_contract.py",
+        "label": "test_code_language_standards_contract.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_code_language_standards_contract.py | object_id=tests",
+        "source_file": "tests/test_code_language_standards_contract.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_combination_rules.py",
+        "label": "test_combination_rules.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_combination_rules.py | object_id=tests",
+        "source_file": "tests/test_combination_rules.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_enumerator.py",
+        "label": "test_enumerator.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_enumerator.py | object_id=tests",
+        "source_file": "tests/test_enumerator.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_exact_fit.py",
+        "label": "test_exact_fit.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_exact_fit.py | object_id=tests",
+        "source_file": "tests/test_exact_fit.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_frame_family.py",
+        "label": "test_frame_family.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_frame_family.py | object_id=tests",
+        "source_file": "tests/test_frame_family.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_framework_draft_publish.py",
+        "label": "test_framework_draft_publish.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_framework_draft_publish.py | object_id=tests",
+        "source_file": "tests/test_framework_draft_publish.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_framework_ir.py",
+        "label": "test_framework_ir.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_framework_ir.py | object_id=tests",
+        "source_file": "tests/test_framework_ir.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_framework_strict_validation.py",
+        "label": "test_framework_strict_validation.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_framework_strict_validation.py | object_id=tests",
+        "source_file": "tests/test_framework_strict_validation.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py",
+        "label": "test_framework_tree_hierarchy_generator.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_framework_tree_hierarchy_generator.py | object_id=tests",
+        "source_file": "tests/test_framework_tree_hierarchy_generator.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_governance_counterexamples.py",
+        "label": "test_governance_counterexamples.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_governance_counterexamples.py | object_id=tests",
+        "source_file": "tests/test_governance_counterexamples.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_governance_manifest.py",
+        "label": "test_governance_manifest.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_governance_manifest.py | object_id=tests",
+        "source_file": "tests/test_governance_manifest.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_interactive_viewer_backend.py",
+        "label": "test_interactive_viewer_backend.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_interactive_viewer_backend.py | object_id=tests",
+        "source_file": "tests/test_interactive_viewer_backend.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_knowledge_base_runtime.py",
+        "label": "test_knowledge_base_runtime.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_knowledge_base_runtime.py | object_id=tests",
+        "source_file": "tests/test_knowledge_base_runtime.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_main_cli.py",
+        "label": "test_main_cli.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_main_cli.py | object_id=tests",
+        "source_file": "tests/test_main_cli.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_project_config_source.py",
+        "label": "test_project_config_source.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_project_config_source.py | object_id=tests",
+        "source_file": "tests/test_project_config_source.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_project_generation_discipline.py",
+        "label": "test_project_generation_discipline.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_project_generation_discipline.py | object_id=tests",
+        "source_file": "tests/test_project_generation_discipline.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_project_governance.py",
+        "label": "test_project_governance.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_project_governance.py | object_id=tests",
+        "source_file": "tests/test_project_governance.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_project_runtime.py",
+        "label": "test_project_runtime.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_project_runtime.py | object_id=tests",
+        "source_file": "tests/test_project_runtime.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_projection_rule.py",
+        "label": "test_projection_rule.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_projection_rule.py | object_id=tests",
+        "source_file": "tests/test_projection_rule.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_python_candidate_scanner.py",
+        "label": "test_python_candidate_scanner.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_python_candidate_scanner.py | object_id=tests",
+        "source_file": "tests/test_python_candidate_scanner.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_repository_policy.py",
+        "label": "test_repository_policy.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_repository_policy.py | object_id=tests",
+        "source_file": "tests/test_repository_policy.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_structural_rules.py",
+        "label": "test_structural_rules.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_structural_rules.py | object_id=tests",
+        "source_file": "tests/test_structural_rules.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_type_gallery.py",
+        "label": "test_type_gallery.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_type_gallery.py | object_id=tests",
+        "source_file": "tests/test_type_gallery.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_type_gallery_3d.py",
+        "label": "test_type_gallery_3d.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_type_gallery_3d.py | object_id=tests",
+        "source_file": "tests/test_type_gallery_3d.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_type_grouping.py",
+        "label": "test_type_grouping.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_type_grouping.py | object_id=tests",
+        "source_file": "tests/test_type_grouping.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_type_subpages.py",
+        "label": "test_type_subpages.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_type_subpages.py | object_id=tests",
+        "source_file": "tests/test_type_subpages.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_verification.py",
+        "label": "test_verification.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_verification.py | object_id=tests",
+        "source_file": "tests/test_verification.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_visualization_smoke.py",
+        "label": "test_visualization_smoke.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_visualization_smoke.py | object_id=tests",
+        "source_file": "tests/test_visualization_smoke.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:code:file:tests/test_workspace_governance.py",
+        "label": "test_workspace_governance.py",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tests/test_workspace_governance.py | object_id=tests",
+        "source_file": "tests/test_workspace_governance.py",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tests",
+        "object_id": "tests"
+      },
+      {
+        "id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "label": "Shelf AI",
+        "level": 2,
+        "description": "kind=workspace_code_area | layer=Workspace Code | file=tools/vscode/shelf-ai | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai",
+        "source_line": 1,
+        "node_kind": "workspace_code_area",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/extension.js",
+        "label": "extension.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/extension.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/extension.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js",
+        "label": "framework_completion.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/framework_completion.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/framework_completion.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js",
+        "label": "framework_navigation.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/framework_navigation.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/framework_navigation.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js",
+        "label": "governance_tree.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/governance_tree.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/governance_tree.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/guarding.js",
+        "label": "guarding.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/guarding.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/guarding.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js",
+        "label": "test_framework_navigation.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/test_framework_navigation.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/test_framework_navigation.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js",
+        "label": "test_governance_tree.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/test_governance_tree.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/test_governance_tree.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js",
+        "label": "test_guarding.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/test_guarding.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/test_guarding.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js",
+        "label": "test_snippets.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/test_snippets.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/test_snippets.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js",
+        "label": "test_validation_runtime.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/test_validation_runtime.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/test_validation_runtime.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
+      },
+      {
+        "id": "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js",
+        "label": "validation_runtime.js",
+        "level": 3,
+        "description": "kind=workspace_code_file | layer=Workspace Code | file=tools/vscode/shelf-ai/validation_runtime.js | object_id=tools/vscode/shelf-ai",
+        "source_file": "tools/vscode/shelf-ai/validation_runtime.js",
+        "source_line": 1,
+        "node_kind": "workspace_code_file",
+        "layer": "Workspace Code",
+        "parent_node_id": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "object_id": "tools/vscode/shelf-ai"
       },
       {
         "id": "workspace:shelf:standards:framework_modules",
@@ -8037,6 +9737,716 @@
         "relation": "tree_child"
       },
       {
+        "from": "workspace:shelf",
+        "to": "workspace:shelf:code",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code",
+        "to": "workspace:shelf:code:src",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:domain",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:domain",
+        "to": "workspace:code:file:src/domain/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:domain",
+        "to": "workspace:code:file:src/domain/enums.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:domain",
+        "to": "workspace:code:file:src/domain/models.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:enumeration",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:enumeration",
+        "to": "workspace:code:file:src/enumeration/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:enumeration",
+        "to": "workspace:code:file:src/enumeration/canonical.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:enumeration",
+        "to": "workspace:code:file:src/enumeration/enumerator.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:examples",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:examples",
+        "to": "workspace:code:file:src/examples/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:examples",
+        "to": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "to": "workspace:code:file:src/examples/legacy_shelf/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+        "to": "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/framework_core.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:framework_ir",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:framework_ir",
+        "to": "workspace:code:file:src/framework_ir/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:framework_ir",
+        "to": "workspace:code:file:src/framework_ir/models.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:framework_ir",
+        "to": "workspace:code:file:src/framework_ir/parser.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:frontend_kernel",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:frontend_kernel",
+        "to": "workspace:code:file:src/frontend_kernel/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:frontend_kernel",
+        "to": "workspace:code:file:src/frontend_kernel/contracts.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:frontend_kernel",
+        "to": "workspace:code:file:src/frontend_kernel/validators.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/generate_type_gallery.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/generate_type_gallery_3d.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/generate_type_subpages.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:geometry",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:geometry",
+        "to": "workspace:code:file:src/geometry/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:geometry",
+        "to": "workspace:code:file:src/geometry/builders.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:geometry",
+        "to": "workspace:code:file:src/geometry/frame.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:geometry",
+        "to": "workspace:code:file:src/geometry/grid.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/hierarchy_models.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/interactive_viewer.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "to": "workspace:code:file:src/knowledge_base_framework/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "to": "workspace:code:file:src/knowledge_base_framework/validators.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "to": "workspace:code:file:src/knowledge_base_framework/workbench.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/app.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/backend.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/frontend.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/frontend_script.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/frontend_style.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "to": "workspace:code:file:src/knowledge_base_runtime/workspace.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/main.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:metrics",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:metrics",
+        "to": "workspace:code:file:src/metrics/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:metrics",
+        "to": "workspace:code:file:src/metrics/efficiency.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:metrics",
+        "to": "workspace:code:file:src/metrics/load_check.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:project_runtime",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/app_factory.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/config_layout.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/governance.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/knowledge_base.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/knowledge_base_contract.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/project_config_source.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/project_governance.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/repository_policy.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:project_runtime",
+        "to": "workspace:code:file:src/project_runtime/template_registry.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:rules",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:rules",
+        "to": "workspace:code:file:src/rules/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:rules",
+        "to": "workspace:code:file:src/rules/combination_rules.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:rules",
+        "to": "workspace:code:file:src/rules/structural_rules.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/shelf_domain.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/shelf_framework.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/shelf_reference_pipeline.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/standards_tree.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:verification",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:verification",
+        "to": "workspace:code:file:src/verification/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:verification",
+        "to": "workspace:code:file:src/verification/verify.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:shelf:code:src:dir:visualization",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/interactive_viewer.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/plotly_html.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/render_3d.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/type_gallery.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/type_gallery_3d.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/type_grouping.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/type_subpages.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src:dir:visualization",
+        "to": "workspace:code:file:src/visualization/viewer_backend.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:src",
+        "to": "workspace:code:file:src/workspace_governance.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code",
+        "to": "workspace:shelf:code:scripts",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_framework_tree_hierarchy.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_governance_tree_hierarchy.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_module_hierarchy_html.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_shelf_projection_comparison.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_shelf_projection_validation_report.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/generate_shelf_validation_report.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/materialize_project.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/publish_framework_draft.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/scaffold_project.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/sync_mapping_registry.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:scripts",
+        "to": "workspace:code:file:scripts/validate_strict_mapping.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code",
+        "to": "workspace:shelf:code:tests",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/__init__.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_code_language_standards_contract.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_combination_rules.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_enumerator.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_exact_fit.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_frame_family.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_framework_draft_publish.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_framework_ir.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_framework_strict_validation.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_governance_counterexamples.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_governance_manifest.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_interactive_viewer_backend.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_knowledge_base_runtime.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_main_cli.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_project_config_source.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_project_generation_discipline.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_project_governance.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_project_runtime.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_projection_rule.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_python_candidate_scanner.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_repository_policy.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_structural_rules.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_type_gallery.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_type_gallery_3d.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_type_grouping.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_type_subpages.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_verification.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_visualization_smoke.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tests",
+        "to": "workspace:code:file:tests/test_workspace_governance.py",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code",
+        "to": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/extension.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/guarding.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js",
+        "relation": "tree_child"
+      },
+      {
+        "from": "workspace:shelf:code:tools:vscode:shelf-ai",
+        "to": "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js",
+        "relation": "tree_child"
+      },
+      {
         "from": "workspace:shelf:standards",
         "to": "workspace:shelf:standards:framework_modules",
         "relation": "tree_child"
@@ -9486,12 +11896,14 @@
         "to": "project:knowledge_base_basic:structure:object:knowledge_base_basic.config_effect.frontend.style_profile:role:frontend.style_profile:ui_spec.implementation.style_profile",
         "relation": "tree_child"
       }
-    ]
+    ],
+    "storage_key_stem": "governanceTree"
   },
   "governance": {
     "version": "workspace-governance/v1",
     "workspace_root_id": "workspace:shelf",
     "standards_root_id": "workspace:shelf:standards",
+    "workspace_code_root_id": "workspace:shelf:code",
     "projects_root_id": "workspace:shelf:projects",
     "project_roots": {
       "knowledge_base_basic": "project:knowledge_base_basic"
@@ -27955,6 +30367,45 @@
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec/surface.toml",
         "project:knowledge_base_basic:product_spec:file:projects/knowledge_base_basic/product_spec/surface.toml:section:surface"
       ],
+      "scripts": [
+        "workspace:shelf:code:scripts"
+      ],
+      "scripts/build_shelf_ai_plugin_presentation.py": [
+        "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py"
+      ],
+      "scripts/generate_framework_tree_hierarchy.py": [
+        "workspace:code:file:scripts/generate_framework_tree_hierarchy.py"
+      ],
+      "scripts/generate_governance_tree_hierarchy.py": [
+        "workspace:code:file:scripts/generate_governance_tree_hierarchy.py"
+      ],
+      "scripts/generate_module_hierarchy_html.py": [
+        "workspace:code:file:scripts/generate_module_hierarchy_html.py"
+      ],
+      "scripts/generate_shelf_projection_comparison.py": [
+        "workspace:code:file:scripts/generate_shelf_projection_comparison.py"
+      ],
+      "scripts/generate_shelf_projection_validation_report.py": [
+        "workspace:code:file:scripts/generate_shelf_projection_validation_report.py"
+      ],
+      "scripts/generate_shelf_validation_report.py": [
+        "workspace:code:file:scripts/generate_shelf_validation_report.py"
+      ],
+      "scripts/materialize_project.py": [
+        "workspace:code:file:scripts/materialize_project.py"
+      ],
+      "scripts/publish_framework_draft.py": [
+        "workspace:code:file:scripts/publish_framework_draft.py"
+      ],
+      "scripts/scaffold_project.py": [
+        "workspace:code:file:scripts/scaffold_project.py"
+      ],
+      "scripts/sync_mapping_registry.py": [
+        "workspace:code:file:scripts/sync_mapping_registry.py"
+      ],
+      "scripts/validate_strict_mapping.py": [
+        "workspace:code:file:scripts/validate_strict_mapping.py"
+      ],
       "specs/code/Git提交信息标准.md": [
         "standards:NODE-L1-CODE-GIT"
       ],
@@ -27979,13 +30430,129 @@
       "specs/规范总纲与树形结构.md": [
         "standards:NODE-L0-ROOT"
       ],
+      "src": [
+        "workspace:shelf:code:src"
+      ],
+      "src/__init__.py": [
+        "workspace:code:file:src/__init__.py"
+      ],
+      "src/domain": [
+        "workspace:shelf:code:src:dir:domain"
+      ],
+      "src/domain/__init__.py": [
+        "workspace:code:file:src/domain/__init__.py"
+      ],
+      "src/domain/enums.py": [
+        "workspace:code:file:src/domain/enums.py"
+      ],
+      "src/domain/models.py": [
+        "workspace:code:file:src/domain/models.py"
+      ],
+      "src/enumeration": [
+        "workspace:shelf:code:src:dir:enumeration"
+      ],
+      "src/enumeration/__init__.py": [
+        "workspace:code:file:src/enumeration/__init__.py"
+      ],
+      "src/enumeration/canonical.py": [
+        "workspace:code:file:src/enumeration/canonical.py"
+      ],
+      "src/enumeration/enumerator.py": [
+        "workspace:code:file:src/enumeration/enumerator.py"
+      ],
+      "src/examples": [
+        "workspace:shelf:code:src:dir:examples"
+      ],
+      "src/examples/__init__.py": [
+        "workspace:code:file:src/examples/__init__.py"
+      ],
+      "src/examples/legacy_shelf": [
+        "workspace:shelf:code:src:dir:examples:legacy_shelf"
+      ],
+      "src/examples/legacy_shelf/__init__.py": [
+        "workspace:code:file:src/examples/legacy_shelf/__init__.py"
+      ],
+      "src/examples/legacy_shelf/reference_pipeline.py": [
+        "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py"
+      ],
+      "src/framework_core.py": [
+        "workspace:code:file:src/framework_core.py"
+      ],
+      "src/framework_ir": [
+        "workspace:shelf:code:src:dir:framework_ir"
+      ],
+      "src/framework_ir/__init__.py": [
+        "workspace:code:file:src/framework_ir/__init__.py"
+      ],
+      "src/framework_ir/models.py": [
+        "workspace:code:file:src/framework_ir/models.py"
+      ],
+      "src/framework_ir/parser.py": [
+        "workspace:code:file:src/framework_ir/parser.py"
+      ],
+      "src/frontend_kernel": [
+        "workspace:shelf:code:src:dir:frontend_kernel"
+      ],
+      "src/frontend_kernel/__init__.py": [
+        "workspace:code:file:src/frontend_kernel/__init__.py"
+      ],
       "src/frontend_kernel/contracts.py": [
         "project:knowledge_base_basic:code:file:src/frontend_kernel/contracts.py",
-        "project:knowledge_base_basic:code:file:src/frontend_kernel/contracts.py:candidate:knowledge_base_basic:src/frontend_kernel/contracts.py:function:build_frontend_contract"
+        "project:knowledge_base_basic:code:file:src/frontend_kernel/contracts.py:candidate:knowledge_base_basic:src/frontend_kernel/contracts.py:function:build_frontend_contract",
+        "workspace:code:file:src/frontend_kernel/contracts.py"
+      ],
+      "src/frontend_kernel/validators.py": [
+        "workspace:code:file:src/frontend_kernel/validators.py"
+      ],
+      "src/generate_type_gallery.py": [
+        "workspace:code:file:src/generate_type_gallery.py"
+      ],
+      "src/generate_type_gallery_3d.py": [
+        "workspace:code:file:src/generate_type_gallery_3d.py"
+      ],
+      "src/generate_type_subpages.py": [
+        "workspace:code:file:src/generate_type_subpages.py"
+      ],
+      "src/geometry": [
+        "workspace:shelf:code:src:dir:geometry"
+      ],
+      "src/geometry/__init__.py": [
+        "workspace:code:file:src/geometry/__init__.py"
+      ],
+      "src/geometry/builders.py": [
+        "workspace:code:file:src/geometry/builders.py"
+      ],
+      "src/geometry/frame.py": [
+        "workspace:code:file:src/geometry/frame.py"
+      ],
+      "src/geometry/grid.py": [
+        "workspace:code:file:src/geometry/grid.py"
+      ],
+      "src/hierarchy_models.py": [
+        "workspace:code:file:src/hierarchy_models.py"
+      ],
+      "src/interactive_viewer.py": [
+        "workspace:code:file:src/interactive_viewer.py"
+      ],
+      "src/knowledge_base_framework": [
+        "workspace:shelf:code:src:dir:knowledge_base_framework"
+      ],
+      "src/knowledge_base_framework/__init__.py": [
+        "workspace:code:file:src/knowledge_base_framework/__init__.py"
+      ],
+      "src/knowledge_base_framework/validators.py": [
+        "workspace:code:file:src/knowledge_base_framework/validators.py"
       ],
       "src/knowledge_base_framework/workbench.py": [
         "project:knowledge_base_basic:code:file:src/knowledge_base_framework/workbench.py",
-        "project:knowledge_base_basic:code:file:src/knowledge_base_framework/workbench.py:candidate:knowledge_base_basic:src/knowledge_base_framework/workbench.py:function:build_workbench_contract"
+        "project:knowledge_base_basic:code:file:src/knowledge_base_framework/workbench.py:candidate:knowledge_base_basic:src/knowledge_base_framework/workbench.py:function:build_workbench_contract",
+        "workspace:code:file:src/knowledge_base_framework/workbench.py"
+      ],
+      "src/knowledge_base_runtime": [
+        "workspace:shelf:code:src:dir:knowledge_base_runtime"
+      ],
+      "src/knowledge_base_runtime/__init__.py": [
+        "workspace:code:file:src/knowledge_base_runtime/__init__.py"
       ],
       "src/knowledge_base_runtime/app.py": [
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py",
@@ -27996,7 +30563,8 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:knowledge_base_list_page",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:knowledge_base_page",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:product_spec",
-        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:root"
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/app.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/app.py:function:root",
+        "workspace:code:file:src/knowledge_base_runtime/app.py"
       ],
       "src/knowledge_base_runtime/backend.py": [
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py",
@@ -28022,7 +30590,47 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:get_section",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_documents",
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_knowledge_bases",
-        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_tags"
+        "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:list_tags",
+        "workspace:code:file:src/knowledge_base_runtime/backend.py"
+      ],
+      "src/knowledge_base_runtime/frontend.py": [
+        "workspace:code:file:src/knowledge_base_runtime/frontend.py"
+      ],
+      "src/knowledge_base_runtime/frontend_script.py": [
+        "workspace:code:file:src/knowledge_base_runtime/frontend_script.py"
+      ],
+      "src/knowledge_base_runtime/frontend_style.py": [
+        "workspace:code:file:src/knowledge_base_runtime/frontend_style.py"
+      ],
+      "src/knowledge_base_runtime/workspace.py": [
+        "workspace:code:file:src/knowledge_base_runtime/workspace.py"
+      ],
+      "src/main.py": [
+        "workspace:code:file:src/main.py"
+      ],
+      "src/metrics": [
+        "workspace:shelf:code:src:dir:metrics"
+      ],
+      "src/metrics/__init__.py": [
+        "workspace:code:file:src/metrics/__init__.py"
+      ],
+      "src/metrics/efficiency.py": [
+        "workspace:code:file:src/metrics/efficiency.py"
+      ],
+      "src/metrics/load_check.py": [
+        "workspace:code:file:src/metrics/load_check.py"
+      ],
+      "src/project_runtime": [
+        "workspace:shelf:code:src:dir:project_runtime"
+      ],
+      "src/project_runtime/__init__.py": [
+        "workspace:code:file:src/project_runtime/__init__.py"
+      ],
+      "src/project_runtime/app_factory.py": [
+        "workspace:code:file:src/project_runtime/app_factory.py"
+      ],
+      "src/project_runtime/config_layout.py": [
+        "workspace:code:file:src/project_runtime/config_layout.py"
       ],
       "src/project_runtime/governance.py": [
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
@@ -28058,7 +30666,8 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:function:parse_governance_manifest",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:function:parse_governance_tree",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:function:validate_manifest_closure",
-        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:function:validate_tree_closure"
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:function:validate_tree_closure",
+        "workspace:code:file:src/project_runtime/governance.py"
       ],
       "src/project_runtime/knowledge_base.py": [
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
@@ -28095,7 +30704,221 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
-        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project"
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+        "workspace:code:file:src/project_runtime/knowledge_base.py"
+      ],
+      "src/project_runtime/knowledge_base_contract.py": [
+        "workspace:code:file:src/project_runtime/knowledge_base_contract.py"
+      ],
+      "src/project_runtime/knowledge_base_scaffold.py": [
+        "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py"
+      ],
+      "src/project_runtime/project_config_source.py": [
+        "workspace:code:file:src/project_runtime/project_config_source.py"
+      ],
+      "src/project_runtime/project_governance.py": [
+        "workspace:code:file:src/project_runtime/project_governance.py"
+      ],
+      "src/project_runtime/repository_policy.py": [
+        "workspace:code:file:src/project_runtime/repository_policy.py"
+      ],
+      "src/project_runtime/template_registry.py": [
+        "workspace:code:file:src/project_runtime/template_registry.py"
+      ],
+      "src/rules": [
+        "workspace:shelf:code:src:dir:rules"
+      ],
+      "src/rules/__init__.py": [
+        "workspace:code:file:src/rules/__init__.py"
+      ],
+      "src/rules/combination_rules.py": [
+        "workspace:code:file:src/rules/combination_rules.py"
+      ],
+      "src/rules/structural_rules.py": [
+        "workspace:code:file:src/rules/structural_rules.py"
+      ],
+      "src/shelf_domain.py": [
+        "workspace:code:file:src/shelf_domain.py"
+      ],
+      "src/shelf_framework.py": [
+        "workspace:code:file:src/shelf_framework.py"
+      ],
+      "src/shelf_reference_pipeline.py": [
+        "workspace:code:file:src/shelf_reference_pipeline.py"
+      ],
+      "src/standards_tree.py": [
+        "workspace:code:file:src/standards_tree.py"
+      ],
+      "src/verification": [
+        "workspace:shelf:code:src:dir:verification"
+      ],
+      "src/verification/__init__.py": [
+        "workspace:code:file:src/verification/__init__.py"
+      ],
+      "src/verification/verify.py": [
+        "workspace:code:file:src/verification/verify.py"
+      ],
+      "src/visualization": [
+        "workspace:shelf:code:src:dir:visualization"
+      ],
+      "src/visualization/__init__.py": [
+        "workspace:code:file:src/visualization/__init__.py"
+      ],
+      "src/visualization/interactive_viewer.py": [
+        "workspace:code:file:src/visualization/interactive_viewer.py"
+      ],
+      "src/visualization/plotly_html.py": [
+        "workspace:code:file:src/visualization/plotly_html.py"
+      ],
+      "src/visualization/render_3d.py": [
+        "workspace:code:file:src/visualization/render_3d.py"
+      ],
+      "src/visualization/type_gallery.py": [
+        "workspace:code:file:src/visualization/type_gallery.py"
+      ],
+      "src/visualization/type_gallery_3d.py": [
+        "workspace:code:file:src/visualization/type_gallery_3d.py"
+      ],
+      "src/visualization/type_grouping.py": [
+        "workspace:code:file:src/visualization/type_grouping.py"
+      ],
+      "src/visualization/type_subpages.py": [
+        "workspace:code:file:src/visualization/type_subpages.py"
+      ],
+      "src/visualization/viewer_backend.py": [
+        "workspace:code:file:src/visualization/viewer_backend.py"
+      ],
+      "src/workspace_governance.py": [
+        "workspace:code:file:src/workspace_governance.py"
+      ],
+      "tests": [
+        "workspace:shelf:code:tests"
+      ],
+      "tests/__init__.py": [
+        "workspace:code:file:tests/__init__.py"
+      ],
+      "tests/test_code_language_standards_contract.py": [
+        "workspace:code:file:tests/test_code_language_standards_contract.py"
+      ],
+      "tests/test_combination_rules.py": [
+        "workspace:code:file:tests/test_combination_rules.py"
+      ],
+      "tests/test_enumerator.py": [
+        "workspace:code:file:tests/test_enumerator.py"
+      ],
+      "tests/test_exact_fit.py": [
+        "workspace:code:file:tests/test_exact_fit.py"
+      ],
+      "tests/test_frame_family.py": [
+        "workspace:code:file:tests/test_frame_family.py"
+      ],
+      "tests/test_framework_draft_publish.py": [
+        "workspace:code:file:tests/test_framework_draft_publish.py"
+      ],
+      "tests/test_framework_ir.py": [
+        "workspace:code:file:tests/test_framework_ir.py"
+      ],
+      "tests/test_framework_strict_validation.py": [
+        "workspace:code:file:tests/test_framework_strict_validation.py"
+      ],
+      "tests/test_framework_tree_hierarchy_generator.py": [
+        "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py"
+      ],
+      "tests/test_governance_counterexamples.py": [
+        "workspace:code:file:tests/test_governance_counterexamples.py"
+      ],
+      "tests/test_governance_manifest.py": [
+        "workspace:code:file:tests/test_governance_manifest.py"
+      ],
+      "tests/test_interactive_viewer_backend.py": [
+        "workspace:code:file:tests/test_interactive_viewer_backend.py"
+      ],
+      "tests/test_knowledge_base_runtime.py": [
+        "workspace:code:file:tests/test_knowledge_base_runtime.py"
+      ],
+      "tests/test_main_cli.py": [
+        "workspace:code:file:tests/test_main_cli.py"
+      ],
+      "tests/test_project_config_source.py": [
+        "workspace:code:file:tests/test_project_config_source.py"
+      ],
+      "tests/test_project_generation_discipline.py": [
+        "workspace:code:file:tests/test_project_generation_discipline.py"
+      ],
+      "tests/test_project_governance.py": [
+        "workspace:code:file:tests/test_project_governance.py"
+      ],
+      "tests/test_project_runtime.py": [
+        "workspace:code:file:tests/test_project_runtime.py"
+      ],
+      "tests/test_projection_rule.py": [
+        "workspace:code:file:tests/test_projection_rule.py"
+      ],
+      "tests/test_python_candidate_scanner.py": [
+        "workspace:code:file:tests/test_python_candidate_scanner.py"
+      ],
+      "tests/test_repository_policy.py": [
+        "workspace:code:file:tests/test_repository_policy.py"
+      ],
+      "tests/test_structural_rules.py": [
+        "workspace:code:file:tests/test_structural_rules.py"
+      ],
+      "tests/test_type_gallery.py": [
+        "workspace:code:file:tests/test_type_gallery.py"
+      ],
+      "tests/test_type_gallery_3d.py": [
+        "workspace:code:file:tests/test_type_gallery_3d.py"
+      ],
+      "tests/test_type_grouping.py": [
+        "workspace:code:file:tests/test_type_grouping.py"
+      ],
+      "tests/test_type_subpages.py": [
+        "workspace:code:file:tests/test_type_subpages.py"
+      ],
+      "tests/test_verification.py": [
+        "workspace:code:file:tests/test_verification.py"
+      ],
+      "tests/test_visualization_smoke.py": [
+        "workspace:code:file:tests/test_visualization_smoke.py"
+      ],
+      "tests/test_workspace_governance.py": [
+        "workspace:code:file:tests/test_workspace_governance.py"
+      ],
+      "tools/vscode/shelf-ai": [
+        "workspace:shelf:code:tools:vscode:shelf-ai"
+      ],
+      "tools/vscode/shelf-ai/extension.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/extension.js"
+      ],
+      "tools/vscode/shelf-ai/framework_completion.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js"
+      ],
+      "tools/vscode/shelf-ai/framework_navigation.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js"
+      ],
+      "tools/vscode/shelf-ai/governance_tree.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js"
+      ],
+      "tools/vscode/shelf-ai/guarding.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/guarding.js"
+      ],
+      "tools/vscode/shelf-ai/test_framework_navigation.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js"
+      ],
+      "tools/vscode/shelf-ai/test_governance_tree.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js"
+      ],
+      "tools/vscode/shelf-ai/test_guarding.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js"
+      ],
+      "tools/vscode/shelf-ai/test_snippets.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js"
+      ],
+      "tools/vscode/shelf-ai/test_validation_runtime.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js"
+      ],
+      "tools/vscode/shelf-ai/validation_runtime.js": [
+        "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js"
       ]
     },
     "parent_index": {
@@ -28125,6 +30948,148 @@
       "standards:NODE-L2-KNOWLEDGE-BASE-L2-M0": null,
       "standards:NODE-L3-LAYER": null,
       "standards:NODE-L3-REGISTRY": null,
+      "workspace:shelf:code": "workspace:shelf",
+      "workspace:shelf:code:src": "workspace:shelf:code",
+      "workspace:code:file:src/__init__.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:domain": "workspace:shelf:code:src",
+      "workspace:code:file:src/domain/__init__.py": "workspace:shelf:code:src:dir:domain",
+      "workspace:code:file:src/domain/enums.py": "workspace:shelf:code:src:dir:domain",
+      "workspace:code:file:src/domain/models.py": "workspace:shelf:code:src:dir:domain",
+      "workspace:shelf:code:src:dir:enumeration": "workspace:shelf:code:src",
+      "workspace:code:file:src/enumeration/__init__.py": "workspace:shelf:code:src:dir:enumeration",
+      "workspace:code:file:src/enumeration/canonical.py": "workspace:shelf:code:src:dir:enumeration",
+      "workspace:code:file:src/enumeration/enumerator.py": "workspace:shelf:code:src:dir:enumeration",
+      "workspace:shelf:code:src:dir:examples": "workspace:shelf:code:src",
+      "workspace:code:file:src/examples/__init__.py": "workspace:shelf:code:src:dir:examples",
+      "workspace:shelf:code:src:dir:examples:legacy_shelf": "workspace:shelf:code:src:dir:examples",
+      "workspace:code:file:src/examples/legacy_shelf/__init__.py": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+      "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py": "workspace:shelf:code:src:dir:examples:legacy_shelf",
+      "workspace:code:file:src/framework_core.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:framework_ir": "workspace:shelf:code:src",
+      "workspace:code:file:src/framework_ir/__init__.py": "workspace:shelf:code:src:dir:framework_ir",
+      "workspace:code:file:src/framework_ir/models.py": "workspace:shelf:code:src:dir:framework_ir",
+      "workspace:code:file:src/framework_ir/parser.py": "workspace:shelf:code:src:dir:framework_ir",
+      "workspace:shelf:code:src:dir:frontend_kernel": "workspace:shelf:code:src",
+      "workspace:code:file:src/frontend_kernel/__init__.py": "workspace:shelf:code:src:dir:frontend_kernel",
+      "workspace:code:file:src/frontend_kernel/contracts.py": "workspace:shelf:code:src:dir:frontend_kernel",
+      "workspace:code:file:src/frontend_kernel/validators.py": "workspace:shelf:code:src:dir:frontend_kernel",
+      "workspace:code:file:src/generate_type_gallery.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/generate_type_gallery_3d.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/generate_type_subpages.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:geometry": "workspace:shelf:code:src",
+      "workspace:code:file:src/geometry/__init__.py": "workspace:shelf:code:src:dir:geometry",
+      "workspace:code:file:src/geometry/builders.py": "workspace:shelf:code:src:dir:geometry",
+      "workspace:code:file:src/geometry/frame.py": "workspace:shelf:code:src:dir:geometry",
+      "workspace:code:file:src/geometry/grid.py": "workspace:shelf:code:src:dir:geometry",
+      "workspace:code:file:src/hierarchy_models.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/interactive_viewer.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:knowledge_base_framework": "workspace:shelf:code:src",
+      "workspace:code:file:src/knowledge_base_framework/__init__.py": "workspace:shelf:code:src:dir:knowledge_base_framework",
+      "workspace:code:file:src/knowledge_base_framework/validators.py": "workspace:shelf:code:src:dir:knowledge_base_framework",
+      "workspace:code:file:src/knowledge_base_framework/workbench.py": "workspace:shelf:code:src:dir:knowledge_base_framework",
+      "workspace:shelf:code:src:dir:knowledge_base_runtime": "workspace:shelf:code:src",
+      "workspace:code:file:src/knowledge_base_runtime/__init__.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/app.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/backend.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/frontend.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/frontend_script.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/frontend_style.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/knowledge_base_runtime/workspace.py": "workspace:shelf:code:src:dir:knowledge_base_runtime",
+      "workspace:code:file:src/main.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:metrics": "workspace:shelf:code:src",
+      "workspace:code:file:src/metrics/__init__.py": "workspace:shelf:code:src:dir:metrics",
+      "workspace:code:file:src/metrics/efficiency.py": "workspace:shelf:code:src:dir:metrics",
+      "workspace:code:file:src/metrics/load_check.py": "workspace:shelf:code:src:dir:metrics",
+      "workspace:shelf:code:src:dir:project_runtime": "workspace:shelf:code:src",
+      "workspace:code:file:src/project_runtime/__init__.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/app_factory.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/config_layout.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/governance.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/knowledge_base.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/knowledge_base_contract.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/project_config_source.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/project_governance.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/repository_policy.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:code:file:src/project_runtime/template_registry.py": "workspace:shelf:code:src:dir:project_runtime",
+      "workspace:shelf:code:src:dir:rules": "workspace:shelf:code:src",
+      "workspace:code:file:src/rules/__init__.py": "workspace:shelf:code:src:dir:rules",
+      "workspace:code:file:src/rules/combination_rules.py": "workspace:shelf:code:src:dir:rules",
+      "workspace:code:file:src/rules/structural_rules.py": "workspace:shelf:code:src:dir:rules",
+      "workspace:code:file:src/shelf_domain.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/shelf_framework.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/shelf_reference_pipeline.py": "workspace:shelf:code:src",
+      "workspace:code:file:src/standards_tree.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:src:dir:verification": "workspace:shelf:code:src",
+      "workspace:code:file:src/verification/__init__.py": "workspace:shelf:code:src:dir:verification",
+      "workspace:code:file:src/verification/verify.py": "workspace:shelf:code:src:dir:verification",
+      "workspace:shelf:code:src:dir:visualization": "workspace:shelf:code:src",
+      "workspace:code:file:src/visualization/__init__.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/interactive_viewer.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/plotly_html.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/render_3d.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/type_gallery.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/type_gallery_3d.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/type_grouping.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/type_subpages.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/visualization/viewer_backend.py": "workspace:shelf:code:src:dir:visualization",
+      "workspace:code:file:src/workspace_governance.py": "workspace:shelf:code:src",
+      "workspace:shelf:code:scripts": "workspace:shelf:code",
+      "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_framework_tree_hierarchy.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_governance_tree_hierarchy.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_module_hierarchy_html.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_shelf_projection_comparison.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_shelf_projection_validation_report.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/generate_shelf_validation_report.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/materialize_project.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/publish_framework_draft.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/scaffold_project.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/sync_mapping_registry.py": "workspace:shelf:code:scripts",
+      "workspace:code:file:scripts/validate_strict_mapping.py": "workspace:shelf:code:scripts",
+      "workspace:shelf:code:tests": "workspace:shelf:code",
+      "workspace:code:file:tests/__init__.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_code_language_standards_contract.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_combination_rules.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_enumerator.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_exact_fit.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_frame_family.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_framework_draft_publish.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_framework_ir.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_framework_strict_validation.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_governance_counterexamples.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_governance_manifest.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_interactive_viewer_backend.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_knowledge_base_runtime.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_main_cli.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_project_config_source.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_project_generation_discipline.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_project_governance.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_project_runtime.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_projection_rule.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_python_candidate_scanner.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_repository_policy.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_structural_rules.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_type_gallery.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_type_gallery_3d.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_type_grouping.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_type_subpages.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_verification.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_visualization_smoke.py": "workspace:shelf:code:tests",
+      "workspace:code:file:tests/test_workspace_governance.py": "workspace:shelf:code:tests",
+      "workspace:shelf:code:tools:vscode:shelf-ai": "workspace:shelf:code",
+      "workspace:code:file:tools/vscode/shelf-ai/extension.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/guarding.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js": "workspace:shelf:code:tools:vscode:shelf-ai",
+      "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js": "workspace:shelf:code:tools:vscode:shelf-ai",
       "workspace:shelf:standards:framework_modules": "workspace:shelf:standards",
       "workspace:shelf:standards:framework_modules:backend": "workspace:shelf:standards:framework_modules",
       "standards:framework_module_file:framework/backend/L0-M0-文件资源与对话契约原子模块.md": "workspace:shelf:standards:framework_modules:backend",
@@ -29024,9 +31989,312 @@
       "standards:framework_module_file:framework/runtime_env/L0-M0-运行环境识别模块.md": [],
       "standards:framework_module_file:framework/shelf/L0-M0-置物架抽象结构模块.md": [],
       "standards:framework_module_file:framework/shelf/L1-M0-置物架装配编排模块.md": [],
+      "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py": [],
+      "workspace:code:file:scripts/generate_framework_tree_hierarchy.py": [],
+      "workspace:code:file:scripts/generate_governance_tree_hierarchy.py": [],
+      "workspace:code:file:scripts/generate_module_hierarchy_html.py": [],
+      "workspace:code:file:scripts/generate_shelf_projection_comparison.py": [],
+      "workspace:code:file:scripts/generate_shelf_projection_validation_report.py": [],
+      "workspace:code:file:scripts/generate_shelf_validation_report.py": [],
+      "workspace:code:file:scripts/materialize_project.py": [],
+      "workspace:code:file:scripts/publish_framework_draft.py": [],
+      "workspace:code:file:scripts/scaffold_project.py": [],
+      "workspace:code:file:scripts/sync_mapping_registry.py": [],
+      "workspace:code:file:scripts/validate_strict_mapping.py": [],
+      "workspace:code:file:src/__init__.py": [],
+      "workspace:code:file:src/domain/__init__.py": [],
+      "workspace:code:file:src/domain/enums.py": [],
+      "workspace:code:file:src/domain/models.py": [],
+      "workspace:code:file:src/enumeration/__init__.py": [],
+      "workspace:code:file:src/enumeration/canonical.py": [],
+      "workspace:code:file:src/enumeration/enumerator.py": [],
+      "workspace:code:file:src/examples/__init__.py": [],
+      "workspace:code:file:src/examples/legacy_shelf/__init__.py": [],
+      "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py": [],
+      "workspace:code:file:src/framework_core.py": [],
+      "workspace:code:file:src/framework_ir/__init__.py": [],
+      "workspace:code:file:src/framework_ir/models.py": [],
+      "workspace:code:file:src/framework_ir/parser.py": [],
+      "workspace:code:file:src/frontend_kernel/__init__.py": [],
+      "workspace:code:file:src/frontend_kernel/contracts.py": [],
+      "workspace:code:file:src/frontend_kernel/validators.py": [],
+      "workspace:code:file:src/generate_type_gallery.py": [],
+      "workspace:code:file:src/generate_type_gallery_3d.py": [],
+      "workspace:code:file:src/generate_type_subpages.py": [],
+      "workspace:code:file:src/geometry/__init__.py": [],
+      "workspace:code:file:src/geometry/builders.py": [],
+      "workspace:code:file:src/geometry/frame.py": [],
+      "workspace:code:file:src/geometry/grid.py": [],
+      "workspace:code:file:src/hierarchy_models.py": [],
+      "workspace:code:file:src/interactive_viewer.py": [],
+      "workspace:code:file:src/knowledge_base_framework/__init__.py": [],
+      "workspace:code:file:src/knowledge_base_framework/validators.py": [],
+      "workspace:code:file:src/knowledge_base_framework/workbench.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/__init__.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/app.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/backend.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend_script.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend_style.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/workspace.py": [],
+      "workspace:code:file:src/main.py": [],
+      "workspace:code:file:src/metrics/__init__.py": [],
+      "workspace:code:file:src/metrics/efficiency.py": [],
+      "workspace:code:file:src/metrics/load_check.py": [],
+      "workspace:code:file:src/project_runtime/__init__.py": [],
+      "workspace:code:file:src/project_runtime/app_factory.py": [],
+      "workspace:code:file:src/project_runtime/config_layout.py": [],
+      "workspace:code:file:src/project_runtime/governance.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base_contract.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py": [],
+      "workspace:code:file:src/project_runtime/project_config_source.py": [],
+      "workspace:code:file:src/project_runtime/project_governance.py": [],
+      "workspace:code:file:src/project_runtime/repository_policy.py": [],
+      "workspace:code:file:src/project_runtime/template_registry.py": [],
+      "workspace:code:file:src/rules/__init__.py": [],
+      "workspace:code:file:src/rules/combination_rules.py": [],
+      "workspace:code:file:src/rules/structural_rules.py": [],
+      "workspace:code:file:src/shelf_domain.py": [],
+      "workspace:code:file:src/shelf_framework.py": [],
+      "workspace:code:file:src/shelf_reference_pipeline.py": [],
+      "workspace:code:file:src/standards_tree.py": [],
+      "workspace:code:file:src/verification/__init__.py": [],
+      "workspace:code:file:src/verification/verify.py": [],
+      "workspace:code:file:src/visualization/__init__.py": [],
+      "workspace:code:file:src/visualization/interactive_viewer.py": [],
+      "workspace:code:file:src/visualization/plotly_html.py": [],
+      "workspace:code:file:src/visualization/render_3d.py": [],
+      "workspace:code:file:src/visualization/type_gallery.py": [],
+      "workspace:code:file:src/visualization/type_gallery_3d.py": [],
+      "workspace:code:file:src/visualization/type_grouping.py": [],
+      "workspace:code:file:src/visualization/type_subpages.py": [],
+      "workspace:code:file:src/visualization/viewer_backend.py": [],
+      "workspace:code:file:src/workspace_governance.py": [],
+      "workspace:code:file:tests/__init__.py": [],
+      "workspace:code:file:tests/test_code_language_standards_contract.py": [],
+      "workspace:code:file:tests/test_combination_rules.py": [],
+      "workspace:code:file:tests/test_enumerator.py": [],
+      "workspace:code:file:tests/test_exact_fit.py": [],
+      "workspace:code:file:tests/test_frame_family.py": [],
+      "workspace:code:file:tests/test_framework_draft_publish.py": [],
+      "workspace:code:file:tests/test_framework_ir.py": [],
+      "workspace:code:file:tests/test_framework_strict_validation.py": [],
+      "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py": [],
+      "workspace:code:file:tests/test_governance_counterexamples.py": [],
+      "workspace:code:file:tests/test_governance_manifest.py": [],
+      "workspace:code:file:tests/test_interactive_viewer_backend.py": [],
+      "workspace:code:file:tests/test_knowledge_base_runtime.py": [],
+      "workspace:code:file:tests/test_main_cli.py": [],
+      "workspace:code:file:tests/test_project_config_source.py": [],
+      "workspace:code:file:tests/test_project_generation_discipline.py": [],
+      "workspace:code:file:tests/test_project_governance.py": [],
+      "workspace:code:file:tests/test_project_runtime.py": [],
+      "workspace:code:file:tests/test_projection_rule.py": [],
+      "workspace:code:file:tests/test_python_candidate_scanner.py": [],
+      "workspace:code:file:tests/test_repository_policy.py": [],
+      "workspace:code:file:tests/test_structural_rules.py": [],
+      "workspace:code:file:tests/test_type_gallery.py": [],
+      "workspace:code:file:tests/test_type_gallery_3d.py": [],
+      "workspace:code:file:tests/test_type_grouping.py": [],
+      "workspace:code:file:tests/test_type_subpages.py": [],
+      "workspace:code:file:tests/test_verification.py": [],
+      "workspace:code:file:tests/test_visualization_smoke.py": [],
+      "workspace:code:file:tests/test_workspace_governance.py": [],
+      "workspace:code:file:tools/vscode/shelf-ai/extension.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/guarding.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js": [],
       "workspace:shelf": [
+        "workspace:shelf:code",
         "workspace:shelf:evidence",
         "workspace:shelf:projects"
+      ],
+      "workspace:shelf:code": [
+        "workspace:shelf:code:scripts",
+        "workspace:shelf:code:src",
+        "workspace:shelf:code:tests",
+        "workspace:shelf:code:tools:vscode:shelf-ai"
+      ],
+      "workspace:shelf:code:scripts": [
+        "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py",
+        "workspace:code:file:scripts/generate_framework_tree_hierarchy.py",
+        "workspace:code:file:scripts/generate_governance_tree_hierarchy.py",
+        "workspace:code:file:scripts/generate_module_hierarchy_html.py",
+        "workspace:code:file:scripts/generate_shelf_projection_comparison.py",
+        "workspace:code:file:scripts/generate_shelf_projection_validation_report.py",
+        "workspace:code:file:scripts/generate_shelf_validation_report.py",
+        "workspace:code:file:scripts/materialize_project.py",
+        "workspace:code:file:scripts/publish_framework_draft.py",
+        "workspace:code:file:scripts/scaffold_project.py",
+        "workspace:code:file:scripts/sync_mapping_registry.py",
+        "workspace:code:file:scripts/validate_strict_mapping.py"
+      ],
+      "workspace:shelf:code:src": [
+        "workspace:code:file:src/__init__.py",
+        "workspace:code:file:src/framework_core.py",
+        "workspace:code:file:src/generate_type_gallery.py",
+        "workspace:code:file:src/generate_type_gallery_3d.py",
+        "workspace:code:file:src/generate_type_subpages.py",
+        "workspace:code:file:src/hierarchy_models.py",
+        "workspace:code:file:src/interactive_viewer.py",
+        "workspace:code:file:src/main.py",
+        "workspace:code:file:src/shelf_domain.py",
+        "workspace:code:file:src/shelf_framework.py",
+        "workspace:code:file:src/shelf_reference_pipeline.py",
+        "workspace:code:file:src/standards_tree.py",
+        "workspace:code:file:src/workspace_governance.py",
+        "workspace:shelf:code:src:dir:domain",
+        "workspace:shelf:code:src:dir:enumeration",
+        "workspace:shelf:code:src:dir:examples",
+        "workspace:shelf:code:src:dir:framework_ir",
+        "workspace:shelf:code:src:dir:frontend_kernel",
+        "workspace:shelf:code:src:dir:geometry",
+        "workspace:shelf:code:src:dir:knowledge_base_framework",
+        "workspace:shelf:code:src:dir:knowledge_base_runtime",
+        "workspace:shelf:code:src:dir:metrics",
+        "workspace:shelf:code:src:dir:project_runtime",
+        "workspace:shelf:code:src:dir:rules",
+        "workspace:shelf:code:src:dir:verification",
+        "workspace:shelf:code:src:dir:visualization"
+      ],
+      "workspace:shelf:code:src:dir:domain": [
+        "workspace:code:file:src/domain/__init__.py",
+        "workspace:code:file:src/domain/enums.py",
+        "workspace:code:file:src/domain/models.py"
+      ],
+      "workspace:shelf:code:src:dir:enumeration": [
+        "workspace:code:file:src/enumeration/__init__.py",
+        "workspace:code:file:src/enumeration/canonical.py",
+        "workspace:code:file:src/enumeration/enumerator.py"
+      ],
+      "workspace:shelf:code:src:dir:examples": [
+        "workspace:code:file:src/examples/__init__.py",
+        "workspace:shelf:code:src:dir:examples:legacy_shelf"
+      ],
+      "workspace:shelf:code:src:dir:examples:legacy_shelf": [
+        "workspace:code:file:src/examples/legacy_shelf/__init__.py",
+        "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py"
+      ],
+      "workspace:shelf:code:src:dir:framework_ir": [
+        "workspace:code:file:src/framework_ir/__init__.py",
+        "workspace:code:file:src/framework_ir/models.py",
+        "workspace:code:file:src/framework_ir/parser.py"
+      ],
+      "workspace:shelf:code:src:dir:frontend_kernel": [
+        "workspace:code:file:src/frontend_kernel/__init__.py",
+        "workspace:code:file:src/frontend_kernel/contracts.py",
+        "workspace:code:file:src/frontend_kernel/validators.py"
+      ],
+      "workspace:shelf:code:src:dir:geometry": [
+        "workspace:code:file:src/geometry/__init__.py",
+        "workspace:code:file:src/geometry/builders.py",
+        "workspace:code:file:src/geometry/frame.py",
+        "workspace:code:file:src/geometry/grid.py"
+      ],
+      "workspace:shelf:code:src:dir:knowledge_base_framework": [
+        "workspace:code:file:src/knowledge_base_framework/__init__.py",
+        "workspace:code:file:src/knowledge_base_framework/validators.py",
+        "workspace:code:file:src/knowledge_base_framework/workbench.py"
+      ],
+      "workspace:shelf:code:src:dir:knowledge_base_runtime": [
+        "workspace:code:file:src/knowledge_base_runtime/__init__.py",
+        "workspace:code:file:src/knowledge_base_runtime/app.py",
+        "workspace:code:file:src/knowledge_base_runtime/backend.py",
+        "workspace:code:file:src/knowledge_base_runtime/frontend.py",
+        "workspace:code:file:src/knowledge_base_runtime/frontend_script.py",
+        "workspace:code:file:src/knowledge_base_runtime/frontend_style.py",
+        "workspace:code:file:src/knowledge_base_runtime/workspace.py"
+      ],
+      "workspace:shelf:code:src:dir:metrics": [
+        "workspace:code:file:src/metrics/__init__.py",
+        "workspace:code:file:src/metrics/efficiency.py",
+        "workspace:code:file:src/metrics/load_check.py"
+      ],
+      "workspace:shelf:code:src:dir:project_runtime": [
+        "workspace:code:file:src/project_runtime/__init__.py",
+        "workspace:code:file:src/project_runtime/app_factory.py",
+        "workspace:code:file:src/project_runtime/config_layout.py",
+        "workspace:code:file:src/project_runtime/governance.py",
+        "workspace:code:file:src/project_runtime/knowledge_base.py",
+        "workspace:code:file:src/project_runtime/knowledge_base_contract.py",
+        "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py",
+        "workspace:code:file:src/project_runtime/project_config_source.py",
+        "workspace:code:file:src/project_runtime/project_governance.py",
+        "workspace:code:file:src/project_runtime/repository_policy.py",
+        "workspace:code:file:src/project_runtime/template_registry.py"
+      ],
+      "workspace:shelf:code:src:dir:rules": [
+        "workspace:code:file:src/rules/__init__.py",
+        "workspace:code:file:src/rules/combination_rules.py",
+        "workspace:code:file:src/rules/structural_rules.py"
+      ],
+      "workspace:shelf:code:src:dir:verification": [
+        "workspace:code:file:src/verification/__init__.py",
+        "workspace:code:file:src/verification/verify.py"
+      ],
+      "workspace:shelf:code:src:dir:visualization": [
+        "workspace:code:file:src/visualization/__init__.py",
+        "workspace:code:file:src/visualization/interactive_viewer.py",
+        "workspace:code:file:src/visualization/plotly_html.py",
+        "workspace:code:file:src/visualization/render_3d.py",
+        "workspace:code:file:src/visualization/type_gallery.py",
+        "workspace:code:file:src/visualization/type_gallery_3d.py",
+        "workspace:code:file:src/visualization/type_grouping.py",
+        "workspace:code:file:src/visualization/type_subpages.py",
+        "workspace:code:file:src/visualization/viewer_backend.py"
+      ],
+      "workspace:shelf:code:tests": [
+        "workspace:code:file:tests/__init__.py",
+        "workspace:code:file:tests/test_code_language_standards_contract.py",
+        "workspace:code:file:tests/test_combination_rules.py",
+        "workspace:code:file:tests/test_enumerator.py",
+        "workspace:code:file:tests/test_exact_fit.py",
+        "workspace:code:file:tests/test_frame_family.py",
+        "workspace:code:file:tests/test_framework_draft_publish.py",
+        "workspace:code:file:tests/test_framework_ir.py",
+        "workspace:code:file:tests/test_framework_strict_validation.py",
+        "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py",
+        "workspace:code:file:tests/test_governance_counterexamples.py",
+        "workspace:code:file:tests/test_governance_manifest.py",
+        "workspace:code:file:tests/test_interactive_viewer_backend.py",
+        "workspace:code:file:tests/test_knowledge_base_runtime.py",
+        "workspace:code:file:tests/test_main_cli.py",
+        "workspace:code:file:tests/test_project_config_source.py",
+        "workspace:code:file:tests/test_project_generation_discipline.py",
+        "workspace:code:file:tests/test_project_governance.py",
+        "workspace:code:file:tests/test_project_runtime.py",
+        "workspace:code:file:tests/test_projection_rule.py",
+        "workspace:code:file:tests/test_python_candidate_scanner.py",
+        "workspace:code:file:tests/test_repository_policy.py",
+        "workspace:code:file:tests/test_structural_rules.py",
+        "workspace:code:file:tests/test_type_gallery.py",
+        "workspace:code:file:tests/test_type_gallery_3d.py",
+        "workspace:code:file:tests/test_type_grouping.py",
+        "workspace:code:file:tests/test_type_subpages.py",
+        "workspace:code:file:tests/test_verification.py",
+        "workspace:code:file:tests/test_visualization_smoke.py",
+        "workspace:code:file:tests/test_workspace_governance.py"
+      ],
+      "workspace:shelf:code:tools:vscode:shelf-ai": [
+        "workspace:code:file:tools/vscode/shelf-ai/extension.js",
+        "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js",
+        "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js",
+        "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js",
+        "workspace:code:file:tools/vscode/shelf-ai/guarding.js",
+        "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js",
+        "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js",
+        "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js",
+        "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js",
+        "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js",
+        "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js"
       ],
       "workspace:shelf:evidence": [
         "workspace:shelf:evidence:artifact:governance_tree_html",
@@ -30112,7 +33380,149 @@
       "standards:framework_module_file:framework/runtime_env/L0-M0-运行环境识别模块.md": [],
       "standards:framework_module_file:framework/shelf/L0-M0-置物架抽象结构模块.md": [],
       "standards:framework_module_file:framework/shelf/L1-M0-置物架装配编排模块.md": [],
+      "workspace:code:file:scripts/build_shelf_ai_plugin_presentation.py": [],
+      "workspace:code:file:scripts/generate_framework_tree_hierarchy.py": [],
+      "workspace:code:file:scripts/generate_governance_tree_hierarchy.py": [],
+      "workspace:code:file:scripts/generate_module_hierarchy_html.py": [],
+      "workspace:code:file:scripts/generate_shelf_projection_comparison.py": [],
+      "workspace:code:file:scripts/generate_shelf_projection_validation_report.py": [],
+      "workspace:code:file:scripts/generate_shelf_validation_report.py": [],
+      "workspace:code:file:scripts/materialize_project.py": [],
+      "workspace:code:file:scripts/publish_framework_draft.py": [],
+      "workspace:code:file:scripts/scaffold_project.py": [],
+      "workspace:code:file:scripts/sync_mapping_registry.py": [],
+      "workspace:code:file:scripts/validate_strict_mapping.py": [],
+      "workspace:code:file:src/__init__.py": [],
+      "workspace:code:file:src/domain/__init__.py": [],
+      "workspace:code:file:src/domain/enums.py": [],
+      "workspace:code:file:src/domain/models.py": [],
+      "workspace:code:file:src/enumeration/__init__.py": [],
+      "workspace:code:file:src/enumeration/canonical.py": [],
+      "workspace:code:file:src/enumeration/enumerator.py": [],
+      "workspace:code:file:src/examples/__init__.py": [],
+      "workspace:code:file:src/examples/legacy_shelf/__init__.py": [],
+      "workspace:code:file:src/examples/legacy_shelf/reference_pipeline.py": [],
+      "workspace:code:file:src/framework_core.py": [],
+      "workspace:code:file:src/framework_ir/__init__.py": [],
+      "workspace:code:file:src/framework_ir/models.py": [],
+      "workspace:code:file:src/framework_ir/parser.py": [],
+      "workspace:code:file:src/frontend_kernel/__init__.py": [],
+      "workspace:code:file:src/frontend_kernel/contracts.py": [],
+      "workspace:code:file:src/frontend_kernel/validators.py": [],
+      "workspace:code:file:src/generate_type_gallery.py": [],
+      "workspace:code:file:src/generate_type_gallery_3d.py": [],
+      "workspace:code:file:src/generate_type_subpages.py": [],
+      "workspace:code:file:src/geometry/__init__.py": [],
+      "workspace:code:file:src/geometry/builders.py": [],
+      "workspace:code:file:src/geometry/frame.py": [],
+      "workspace:code:file:src/geometry/grid.py": [],
+      "workspace:code:file:src/hierarchy_models.py": [],
+      "workspace:code:file:src/interactive_viewer.py": [],
+      "workspace:code:file:src/knowledge_base_framework/__init__.py": [],
+      "workspace:code:file:src/knowledge_base_framework/validators.py": [],
+      "workspace:code:file:src/knowledge_base_framework/workbench.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/__init__.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/app.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/backend.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend_script.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/frontend_style.py": [],
+      "workspace:code:file:src/knowledge_base_runtime/workspace.py": [],
+      "workspace:code:file:src/main.py": [],
+      "workspace:code:file:src/metrics/__init__.py": [],
+      "workspace:code:file:src/metrics/efficiency.py": [],
+      "workspace:code:file:src/metrics/load_check.py": [],
+      "workspace:code:file:src/project_runtime/__init__.py": [],
+      "workspace:code:file:src/project_runtime/app_factory.py": [],
+      "workspace:code:file:src/project_runtime/config_layout.py": [],
+      "workspace:code:file:src/project_runtime/governance.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base_contract.py": [],
+      "workspace:code:file:src/project_runtime/knowledge_base_scaffold.py": [],
+      "workspace:code:file:src/project_runtime/project_config_source.py": [],
+      "workspace:code:file:src/project_runtime/project_governance.py": [],
+      "workspace:code:file:src/project_runtime/repository_policy.py": [],
+      "workspace:code:file:src/project_runtime/template_registry.py": [],
+      "workspace:code:file:src/rules/__init__.py": [],
+      "workspace:code:file:src/rules/combination_rules.py": [],
+      "workspace:code:file:src/rules/structural_rules.py": [],
+      "workspace:code:file:src/shelf_domain.py": [],
+      "workspace:code:file:src/shelf_framework.py": [],
+      "workspace:code:file:src/shelf_reference_pipeline.py": [],
+      "workspace:code:file:src/standards_tree.py": [],
+      "workspace:code:file:src/verification/__init__.py": [],
+      "workspace:code:file:src/verification/verify.py": [],
+      "workspace:code:file:src/visualization/__init__.py": [],
+      "workspace:code:file:src/visualization/interactive_viewer.py": [],
+      "workspace:code:file:src/visualization/plotly_html.py": [],
+      "workspace:code:file:src/visualization/render_3d.py": [],
+      "workspace:code:file:src/visualization/type_gallery.py": [],
+      "workspace:code:file:src/visualization/type_gallery_3d.py": [],
+      "workspace:code:file:src/visualization/type_grouping.py": [],
+      "workspace:code:file:src/visualization/type_subpages.py": [],
+      "workspace:code:file:src/visualization/viewer_backend.py": [],
+      "workspace:code:file:src/workspace_governance.py": [],
+      "workspace:code:file:tests/__init__.py": [],
+      "workspace:code:file:tests/test_code_language_standards_contract.py": [],
+      "workspace:code:file:tests/test_combination_rules.py": [],
+      "workspace:code:file:tests/test_enumerator.py": [],
+      "workspace:code:file:tests/test_exact_fit.py": [],
+      "workspace:code:file:tests/test_frame_family.py": [],
+      "workspace:code:file:tests/test_framework_draft_publish.py": [],
+      "workspace:code:file:tests/test_framework_ir.py": [],
+      "workspace:code:file:tests/test_framework_strict_validation.py": [],
+      "workspace:code:file:tests/test_framework_tree_hierarchy_generator.py": [],
+      "workspace:code:file:tests/test_governance_counterexamples.py": [],
+      "workspace:code:file:tests/test_governance_manifest.py": [],
+      "workspace:code:file:tests/test_interactive_viewer_backend.py": [],
+      "workspace:code:file:tests/test_knowledge_base_runtime.py": [],
+      "workspace:code:file:tests/test_main_cli.py": [],
+      "workspace:code:file:tests/test_project_config_source.py": [],
+      "workspace:code:file:tests/test_project_generation_discipline.py": [],
+      "workspace:code:file:tests/test_project_governance.py": [],
+      "workspace:code:file:tests/test_project_runtime.py": [],
+      "workspace:code:file:tests/test_projection_rule.py": [],
+      "workspace:code:file:tests/test_python_candidate_scanner.py": [],
+      "workspace:code:file:tests/test_repository_policy.py": [],
+      "workspace:code:file:tests/test_structural_rules.py": [],
+      "workspace:code:file:tests/test_type_gallery.py": [],
+      "workspace:code:file:tests/test_type_gallery_3d.py": [],
+      "workspace:code:file:tests/test_type_grouping.py": [],
+      "workspace:code:file:tests/test_type_subpages.py": [],
+      "workspace:code:file:tests/test_verification.py": [],
+      "workspace:code:file:tests/test_visualization_smoke.py": [],
+      "workspace:code:file:tests/test_workspace_governance.py": [],
+      "workspace:code:file:tools/vscode/shelf-ai/extension.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/framework_completion.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/framework_navigation.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/governance_tree.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/guarding.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_framework_navigation.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_governance_tree.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_guarding.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_snippets.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/test_validation_runtime.js": [],
+      "workspace:code:file:tools/vscode/shelf-ai/validation_runtime.js": [],
       "workspace:shelf": [],
+      "workspace:shelf:code": [],
+      "workspace:shelf:code:scripts": [],
+      "workspace:shelf:code:src": [],
+      "workspace:shelf:code:src:dir:domain": [],
+      "workspace:shelf:code:src:dir:enumeration": [],
+      "workspace:shelf:code:src:dir:examples": [],
+      "workspace:shelf:code:src:dir:examples:legacy_shelf": [],
+      "workspace:shelf:code:src:dir:framework_ir": [],
+      "workspace:shelf:code:src:dir:frontend_kernel": [],
+      "workspace:shelf:code:src:dir:geometry": [],
+      "workspace:shelf:code:src:dir:knowledge_base_framework": [],
+      "workspace:shelf:code:src:dir:knowledge_base_runtime": [],
+      "workspace:shelf:code:src:dir:metrics": [],
+      "workspace:shelf:code:src:dir:project_runtime": [],
+      "workspace:shelf:code:src:dir:rules": [],
+      "workspace:shelf:code:src:dir:verification": [],
+      "workspace:shelf:code:src:dir:visualization": [],
+      "workspace:shelf:code:tests": [],
+      "workspace:shelf:code:tools:vscode:shelf-ai": [],
       "workspace:shelf:evidence": [],
       "workspace:shelf:evidence:artifact:governance_tree_html": [
         "workspace:shelf",
@@ -30126,13 +33536,11 @@
       ],
       "workspace:shelf:evidence:artifact:project_discovery_audit_json": [
         "workspace:shelf",
-        "workspace:shelf:projects",
-        "workspace:shelf:standards"
+        "workspace:shelf:projects"
       ],
       "workspace:shelf:evidence:artifact:project_discovery_audit_md": [
         "workspace:shelf",
-        "workspace:shelf:projects",
-        "workspace:shelf:standards"
+        "workspace:shelf:projects"
       ],
       "workspace:shelf:projects": [],
       "workspace:shelf:standards": [],
@@ -30909,9 +34317,7 @@
       ],
       "workspace:shelf:standards": [
         "workspace:shelf:evidence:artifact:governance_tree_html",
-        "workspace:shelf:evidence:artifact:governance_tree_json",
-        "workspace:shelf:evidence:artifact:project_discovery_audit_json",
-        "workspace:shelf:evidence:artifact:project_discovery_audit_md"
+        "workspace:shelf:evidence:artifact:governance_tree_json"
       ]
     },
     "project_index": {

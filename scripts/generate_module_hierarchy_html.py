@@ -2,47 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import dataclass
 from pathlib import Path
+import sys
 from typing import Any
 
+from dataclasses import dataclass
 
-@dataclass(frozen=True)
-class HierarchyNode:
-    node_id: str
-    label: str
-    level: int
-    description: str
-    order: int | None = None
-    metadata: dict[str, Any] | None = None
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-
-@dataclass(frozen=True)
-class HierarchyEdge:
-    source: str
-    target: str
-    relation: str
-    metadata: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class HierarchyFrameworkGroup:
-    name: str
-    order: int
-    local_levels: list[int]
-    level_node_counts: dict[int, int]
-
-
-@dataclass(frozen=True)
-class HierarchyGraph:
-    title: str
-    description: str
-    level_labels: dict[int, str]
-    nodes: list[HierarchyNode]
-    edges: list[HierarchyEdge]
-    layout_mode: str = "global_levels"
-    framework_groups: list[HierarchyFrameworkGroup] | None = None
-    storage_key_stem: str | None = None
+from hierarchy_models import HierarchyEdge, HierarchyFrameworkGroup, HierarchyGraph, HierarchyNode
 
 
 @dataclass(frozen=True)

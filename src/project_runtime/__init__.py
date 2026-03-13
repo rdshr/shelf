@@ -1,4 +1,4 @@
-from project_runtime.knowledge_base import (
+from .knowledge_base import (
     DEFAULT_KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_FILE,
     DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
     KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT,
@@ -13,7 +13,7 @@ from project_runtime.knowledge_base import (
     load_knowledge_base_project,
     materialize_knowledge_base_project,
 )
-from project_runtime.project_governance import (
+from .project_governance import (
     ProjectGovernanceClosure,
     ProjectDiscoveryAuditEntry,
     build_object_coverage_report,
@@ -21,7 +21,7 @@ from project_runtime.project_governance import (
     build_strict_zone_report,
     discover_framework_driven_projects,
 )
-from project_runtime.template_registry import (
+from .template_registry import (
     ProjectTemplateRegistration,
     detect_project_template_id,
     get_default_project_template_registration,

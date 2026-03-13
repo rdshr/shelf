@@ -1,11 +1,11 @@
-from geometry.builders import (
+from .builders import (
     ConnectorNode,
     PanelSurface,
     RodSegment,
     StructureGeometry,
     build_geometry,
 )
-from geometry.frame import (
+from .frame import (
     all_cells_3d,
     derive_boundary_connectors,
     derive_boundary_skeleton_edges,
@@ -13,7 +13,7 @@ from geometry.frame import (
     is_connected_6,
     six_neighbors,
 )
-from geometry.grid import (
+from .grid import (
     all_cells,
     all_non_empty_occupancies,
     candidate_rectangles,
