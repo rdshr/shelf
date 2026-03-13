@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import ast
 import hashlib
 import inspect
@@ -161,6 +161,332 @@ class GovernanceSnapshotSymbol:
                 "evidence": self.evidence,
             },
         }
+
+
+@dataclass(frozen=True)
+class GovernanceTreeRoots:
+    project_root_id: str
+    framework_root_id: str
+    product_root_id: str
+    implementation_root_id: str
+    structure_root_id: str
+    code_root_id: str
+    evidence_root_id: str
+
+    @classmethod
+    def for_project(cls, project_id: str) -> "GovernanceTreeRoots":
+        project_root_id = f"project:{project_id}"
+        return cls(
+            project_root_id=project_root_id,
+            framework_root_id=f"{project_root_id}:framework",
+            product_root_id=f"{project_root_id}:product_spec",
+            implementation_root_id=f"{project_root_id}:implementation_config",
+            structure_root_id=f"{project_root_id}:structure",
+            code_root_id=f"{project_root_id}:code",
+            evidence_root_id=f"{project_root_id}:evidence",
+        )
+
+
+@dataclass
+class GovernanceTreeNodeRecord:
+    node_id: str
+    parent: str | None
+    children: list[str] = field(default_factory=list)
+    payload: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "node_id": self.node_id,
+            "parent": self.parent,
+            "children": list(self.children),
+            **self.payload,
+        }
+
+
+@dataclass
+class GovernanceTreeBuilder:
+    project_id: str
+    roots: GovernanceTreeRoots
+    nodes: dict[str, GovernanceTreeNodeRecord] = field(default_factory=dict)
+    source_node_ids: dict[tuple[str, str, str, str], str] = field(default_factory=dict)
+    role_node_ids: dict[tuple[str, str], str] = field(default_factory=dict)
+    framework_modules: dict[str, FrameworkModuleIR] = field(default_factory=dict)
+
+    def add_node(self, node_id: str, *, parent: str | None, **payload: Any) -> GovernanceTreeNodeRecord:
+        existing = self.nodes.get(node_id)
+        if existing is None:
+            existing = GovernanceTreeNodeRecord(
+                node_id=node_id,
+                parent=parent,
+                payload=dict(payload),
+            )
+            self.nodes[node_id] = existing
+        if parent is not None and parent in self.nodes and node_id not in self.nodes[parent].children:
+            self.nodes[parent].children.append(node_id)
+        return existing
+
+    def add_root_nodes(self, project: KnowledgeBaseProject) -> None:
+        self.add_node(
+            self.roots.project_root_id,
+            parent=None,
+            kind="project_root",
+            layer="Project",
+            title=project.metadata.display_name,
+            file=_relative(project.product_spec_file),
+            template_id=project.metadata.template,
+            project_id=project.metadata.project_id,
+        )
+        self.add_node(
+            self.roots.framework_root_id,
+            parent=self.roots.project_root_id,
+            kind="framework_root",
+            layer="Framework",
+            title="Framework",
+        )
+        self.add_node(
+            self.roots.product_root_id,
+            parent=self.roots.project_root_id,
+            kind="product_root",
+            layer="Product Spec",
+            title="Product Spec",
+        )
+        self.add_node(
+            self.roots.implementation_root_id,
+            parent=self.roots.project_root_id,
+            kind="implementation_root",
+            layer="Implementation Config",
+            title="Implementation Config",
+        )
+        self.add_node(
+            self.roots.structure_root_id,
+            parent=self.roots.project_root_id,
+            kind="structure_root",
+            layer="Project Structure",
+            title="Project Structure",
+        )
+        self.add_node(
+            self.roots.code_root_id,
+            parent=self.roots.project_root_id,
+            kind="code_root",
+            layer="Code",
+            title="Code",
+        )
+        self.add_node(
+            self.roots.evidence_root_id,
+            parent=self.roots.project_root_id,
+            kind="evidence_root",
+            layer="Evidence",
+            title="Evidence",
+        )
+
+    def add_source_ref(self, source: SourceRef) -> None:
+        if source.layer == "framework":
+            module = self.framework_modules.get(source.file)
+            if module is None:
+                module = parse_framework_module(REPO_ROOT / source.file)
+                self.framework_modules[source.file] = module
+            module_node_id = f"{self.roots.framework_root_id}:module:{module.module_id}"
+            self.add_node(
+                module_node_id,
+                parent=self.roots.framework_root_id,
+                kind="framework_module",
+                layer="Framework",
+                title=module.module_id,
+                file=source.file,
+                project_id=self.project_id,
+            )
+            node_id = f"{module_node_id}:rule:{source.ref_id}"
+            self.add_node(
+                node_id,
+                parent=module_node_id,
+                kind="framework_rule",
+                layer="Framework",
+                title=source.ref_id,
+                file=source.file,
+                ref_kind=source.ref_kind,
+                ref_id=source.ref_id,
+                digest=source.digest,
+                project_id=self.project_id,
+            )
+            self.source_node_ids[source.key()] = node_id
+            return
+
+        if source.layer == "product_spec":
+            root_id = self.roots.product_root_id
+            file_kind = "product_file"
+            section_kind = "product_section"
+            layer = "Product Spec"
+        elif source.layer == "implementation_config":
+            root_id = self.roots.implementation_root_id
+            file_kind = "implementation_file"
+            section_kind = "implementation_section"
+            layer = "Implementation Config"
+        else:
+            return
+
+        file_node_id = f"{root_id}:file:{source.file}"
+        self.add_node(
+            file_node_id,
+            parent=root_id,
+            kind=file_kind,
+            layer=layer,
+            title=Path(source.file).name,
+            file=source.file,
+            project_id=self.project_id,
+        )
+        node_id = f"{file_node_id}:section:{source.ref_id}"
+        self.add_node(
+            node_id,
+            parent=file_node_id,
+            kind=section_kind,
+            layer=layer,
+            title=source.ref_id,
+            file=source.file,
+            ref_kind=source.ref_kind,
+            ref_id=source.ref_id,
+            digest=source.digest,
+            project_id=self.project_id,
+        )
+        self.source_node_ids[source.key()] = node_id
+
+    def add_structural_object(self, structural_object: StructuralObject) -> None:
+        object_node_id = f"{self.roots.structure_root_id}:object:{structural_object.object_id}"
+        upstream_ids = [
+            self.source_node_ids[source.key()]
+            for source in structural_object.all_sources()
+            if source.key() in self.source_node_ids
+        ]
+        self.add_node(
+            object_node_id,
+            parent=self.roots.structure_root_id,
+            kind="structural_object",
+            layer="Project Structure",
+            title=structural_object.title,
+            object_id=structural_object.object_id,
+            structural_kind=structural_object.kind,
+            risk=structural_object.risk_level,
+            status=structural_object.status,
+            cardinality=structural_object.cardinality,
+            comparator=structural_object.comparator,
+            extractor=structural_object.extractor,
+            origin_categories=list(structural_object.origin_categories),
+            expected_evidence=structural_object.expected_evidence,
+            expected_fingerprint=structural_object.expected_fingerprint,
+            actual_evidence=structural_object.actual_evidence,
+            actual_fingerprint=structural_object.actual_fingerprint,
+            derived_from=upstream_ids,
+            project_id=self.project_id,
+        )
+        for role in structural_object.required_roles:
+            role_node_id = f"{object_node_id}:role:{role.role_id}"
+            self.add_node(
+                role_node_id,
+                parent=object_node_id,
+                kind="required_role",
+                layer="Project Structure",
+                title=role.role_id,
+                object_id=structural_object.object_id,
+                role_id=role.role_id,
+                role_kind=role.role_kind,
+                classification=role.classification,
+                locator_patterns=list(role.locator_patterns),
+                file_hints=list(role.file_hints),
+                candidate_kinds=list(role.candidate_kinds),
+                derived_from=[object_node_id],
+                project_id=self.project_id,
+            )
+            self.role_node_ids[(structural_object.object_id, role.role_id)] = role_node_id
+
+    def add_strict_zone_entry(self, strict_entry: Any) -> None:
+        file_node_id = f"{self.roots.code_root_id}:file:{strict_entry.file}"
+        derived_from = [
+            self.role_node_ids[(object_id, role_id)]
+            for object_id in strict_entry.object_ids
+            for role_id in strict_entry.role_ids
+            if (object_id, role_id) in self.role_node_ids
+        ]
+        if not derived_from:
+            derived_from = [
+                f"{self.roots.structure_root_id}:object:{object_id}"
+                for object_id in strict_entry.object_ids
+            ]
+        self.add_node(
+            file_node_id,
+            parent=self.roots.code_root_id,
+            kind="strict_zone_file",
+            layer="Code",
+            title=Path(strict_entry.file).name,
+            file=strict_entry.file,
+            object_ids=list(strict_entry.object_ids),
+            role_ids=list(strict_entry.role_ids),
+            reasons=list(strict_entry.reasons),
+            why_required=list(strict_entry.why_required),
+            minimality_status=strict_entry.minimality_status,
+            derived_from=derived_from,
+            project_id=self.project_id,
+        )
+
+    def add_candidate(self, candidate: StructuralCandidate) -> None:
+        file_node_id = f"{self.roots.code_root_id}:file:{candidate.file}"
+        if file_node_id not in self.nodes:
+            self.add_node(
+                file_node_id,
+                parent=self.roots.code_root_id,
+                kind="strict_zone_file",
+                layer="Code",
+                title=Path(candidate.file).name,
+                file=candidate.file,
+                object_ids=[],
+                role_ids=[],
+                reasons=["candidate-only strict zone carrier"],
+                derived_from=[],
+                project_id=self.project_id,
+            )
+        derived_from = [
+            self.role_node_ids[(candidate.object_id, role_id)]
+            for role_id in candidate.role_ids
+            if candidate.object_id is not None and (candidate.object_id, role_id) in self.role_node_ids
+        ]
+        if not derived_from and candidate.object_id is not None:
+            derived_from = [f"{self.roots.structure_root_id}:object:{candidate.object_id}"]
+        self.add_node(
+            f"{file_node_id}:candidate:{candidate.candidate_id}",
+            parent=file_node_id,
+            kind="structural_candidate",
+            layer="Code",
+            title=candidate.locator,
+            file=candidate.file,
+            locator=candidate.locator,
+            candidate_id=candidate.candidate_id,
+            candidate_kind=candidate.kind,
+            confidence=round(candidate.confidence, 3),
+            classification=candidate.classification,
+            object_id=candidate.object_id,
+            role_ids=list(candidate.role_ids),
+            reasons=list(candidate.reasons),
+            derived_from=derived_from,
+            project_id=self.project_id,
+        )
+
+    def add_evidence_artifacts(self, closure: ProjectGovernanceClosure) -> None:
+        all_object_node_ids = [
+            f"{self.roots.structure_root_id}:object:{item.object_id}" for item in closure.structural_objects
+        ]
+        for artifact_key, rel_path in closure.evidence_artifacts.items():
+            self.add_node(
+                f"{self.roots.evidence_root_id}:artifact:{artifact_key}",
+                parent=self.roots.evidence_root_id,
+                kind="evidence_artifact",
+                layer="Evidence",
+                title=artifact_key,
+                artifact=artifact_key,
+                file=rel_path,
+                derived_from=[self.roots.project_root_id, *all_object_node_ids],
+                project_id=self.project_id,
+            )
+
+    def serialized_nodes(self) -> list[dict[str, Any]]:
+        return [self.nodes[node_id].to_dict() for node_id in sorted(self.nodes)]
 
 
 def _canonical_json(value: Any) -> str:
@@ -1784,284 +2110,28 @@ def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
     closure = build_governance_closure(project)
     strict_zone_report = build_strict_zone_report(closure)
     object_coverage_report = build_object_coverage_report(closure)
-    project_root_id = f"project:{project.metadata.project_id}"
-    framework_root_id = f"{project_root_id}:framework"
-    product_root_id = f"{project_root_id}:product_spec"
-    implementation_root_id = f"{project_root_id}:implementation_config"
-    structure_root_id = f"{project_root_id}:structure"
-    code_root_id = f"{project_root_id}:code"
-    evidence_root_id = f"{project_root_id}:evidence"
-
-    nodes: dict[str, dict[str, Any]] = {}
-    source_node_ids: dict[tuple[str, str, str, str], str] = {}
-    role_node_ids: dict[tuple[str, str], str] = {}
-
-    def add_node(node_id: str, *, parent: str | None, **payload: Any) -> dict[str, Any]:
-        existing = nodes.get(node_id)
-        if existing is None:
-            existing = {"node_id": node_id, "parent": parent, "children": []}
-            existing.update(payload)
-            nodes[node_id] = existing
-        if parent is not None and parent in nodes and node_id not in nodes[parent]["children"]:
-            nodes[parent]["children"].append(node_id)
-        return existing
-
-    add_node(
-        project_root_id,
-        parent=None,
-        kind="project_root",
-        layer="Project",
-        title=project.metadata.display_name,
-        file=_relative(project.product_spec_file),
-        template_id=project.metadata.template,
+    roots = GovernanceTreeRoots.for_project(project.metadata.project_id)
+    builder = GovernanceTreeBuilder(
         project_id=project.metadata.project_id,
+        roots=roots,
     )
-    add_node(framework_root_id, parent=project_root_id, kind="framework_root", layer="Framework", title="Framework")
-    add_node(product_root_id, parent=project_root_id, kind="product_root", layer="Product Spec", title="Product Spec")
-    add_node(
-        implementation_root_id,
-        parent=project_root_id,
-        kind="implementation_root",
-        layer="Implementation Config",
-        title="Implementation Config",
-    )
-    add_node(
-        structure_root_id,
-        parent=project_root_id,
-        kind="structure_root",
-        layer="Project Structure",
-        title="Project Structure",
-    )
-    add_node(code_root_id, parent=project_root_id, kind="code_root", layer="Code", title="Code")
-    add_node(evidence_root_id, parent=project_root_id, kind="evidence_root", layer="Evidence", title="Evidence")
-
-    framework_modules: dict[str, FrameworkModuleIR] = {}
+    builder.add_root_nodes(project)
     for source in closure.upstream_closure:
-        if source.layer == "framework":
-            module = framework_modules.get(source.file)
-            if module is None:
-                module = parse_framework_module(REPO_ROOT / source.file)
-                framework_modules[source.file] = module
-            module_node_id = f"{framework_root_id}:module:{module.module_id}"
-            add_node(
-                module_node_id,
-                parent=framework_root_id,
-                kind="framework_module",
-                layer="Framework",
-                title=module.module_id,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{module_node_id}:rule:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=module_node_id,
-                kind="framework_rule",
-                layer="Framework",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-            continue
-
-        if source.layer == "product_spec":
-            file_node_id = f"{product_root_id}:file:{source.file}"
-            add_node(
-                file_node_id,
-                parent=product_root_id,
-                kind="product_file",
-                layer="Product Spec",
-                title=Path(source.file).name,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{file_node_id}:section:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=file_node_id,
-                kind="product_section",
-                layer="Product Spec",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-            continue
-
-        if source.layer == "implementation_config":
-            file_node_id = f"{implementation_root_id}:file:{source.file}"
-            add_node(
-                file_node_id,
-                parent=implementation_root_id,
-                kind="implementation_file",
-                layer="Implementation Config",
-                title=Path(source.file).name,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{file_node_id}:section:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=file_node_id,
-                kind="implementation_section",
-                layer="Implementation Config",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-
+        builder.add_source_ref(source)
     for structural_object in closure.structural_objects:
-        object_node_id = f"{structure_root_id}:object:{structural_object.object_id}"
-        upstream_ids = [
-            source_node_ids[source.key()]
-            for source in structural_object.all_sources()
-            if source.key() in source_node_ids
-        ]
-        add_node(
-            object_node_id,
-            parent=structure_root_id,
-            kind="structural_object",
-            layer="Project Structure",
-            title=structural_object.title,
-            object_id=structural_object.object_id,
-            structural_kind=structural_object.kind,
-            risk=structural_object.risk_level,
-            status=structural_object.status,
-            cardinality=structural_object.cardinality,
-            comparator=structural_object.comparator,
-            extractor=structural_object.extractor,
-            origin_categories=list(structural_object.origin_categories),
-            expected_evidence=structural_object.expected_evidence,
-            expected_fingerprint=structural_object.expected_fingerprint,
-            actual_evidence=structural_object.actual_evidence,
-            actual_fingerprint=structural_object.actual_fingerprint,
-            derived_from=upstream_ids,
-            project_id=project.metadata.project_id,
-        )
-        for role in structural_object.required_roles:
-            role_node_id = f"{object_node_id}:role:{role.role_id}"
-            add_node(
-                role_node_id,
-                parent=object_node_id,
-                kind="required_role",
-                layer="Project Structure",
-                title=role.role_id,
-                object_id=structural_object.object_id,
-                role_id=role.role_id,
-                role_kind=role.role_kind,
-                classification=role.classification,
-                locator_patterns=list(role.locator_patterns),
-                file_hints=list(role.file_hints),
-                candidate_kinds=list(role.candidate_kinds),
-                derived_from=[object_node_id],
-                project_id=project.metadata.project_id,
-            )
-            role_node_ids[(structural_object.object_id, role.role_id)] = role_node_id
-
+        builder.add_structural_object(structural_object)
     for strict_entry in closure.strict_zone:
-        file_node_id = f"{code_root_id}:file:{strict_entry.file}"
-        derived_from = [
-            role_node_ids[(object_id, role_id)]
-            for object_id in strict_entry.object_ids
-            for role_id in strict_entry.role_ids
-            if (object_id, role_id) in role_node_ids
-        ]
-        if not derived_from:
-            derived_from = [
-                f"{structure_root_id}:object:{object_id}"
-                for object_id in strict_entry.object_ids
-            ]
-        add_node(
-            file_node_id,
-            parent=code_root_id,
-            kind="strict_zone_file",
-            layer="Code",
-            title=Path(strict_entry.file).name,
-            file=strict_entry.file,
-            object_ids=list(strict_entry.object_ids),
-            role_ids=list(strict_entry.role_ids),
-            reasons=list(strict_entry.reasons),
-            why_required=list(strict_entry.why_required),
-            minimality_status=strict_entry.minimality_status,
-            derived_from=derived_from,
-            project_id=project.metadata.project_id,
-        )
-
+        builder.add_strict_zone_entry(strict_entry)
     for candidate in closure.candidates:
-        file_node_id = f"{code_root_id}:file:{candidate.file}"
-        if file_node_id not in nodes:
-            add_node(
-                file_node_id,
-                parent=code_root_id,
-                kind="strict_zone_file",
-                layer="Code",
-                title=Path(candidate.file).name,
-                file=candidate.file,
-                object_ids=[],
-                role_ids=[],
-                reasons=["candidate-only strict zone carrier"],
-                derived_from=[],
-                project_id=project.metadata.project_id,
-            )
-        derived_from = [
-            role_node_ids[(candidate.object_id, role_id)]
-            for role_id in candidate.role_ids
-            if candidate.object_id is not None and (candidate.object_id, role_id) in role_node_ids
-        ]
-        if not derived_from and candidate.object_id is not None:
-            derived_from = [f"{structure_root_id}:object:{candidate.object_id}"]
-        add_node(
-            f"{file_node_id}:candidate:{candidate.candidate_id}",
-            parent=file_node_id,
-            kind="structural_candidate",
-            layer="Code",
-            title=candidate.locator,
-            file=candidate.file,
-            locator=candidate.locator,
-            candidate_id=candidate.candidate_id,
-            candidate_kind=candidate.kind,
-            confidence=round(candidate.confidence, 3),
-            classification=candidate.classification,
-            object_id=candidate.object_id,
-            role_ids=list(candidate.role_ids),
-            reasons=list(candidate.reasons),
-            derived_from=derived_from,
-            project_id=project.metadata.project_id,
-        )
-
-    all_object_node_ids = [
-        f"{structure_root_id}:object:{item.object_id}" for item in closure.structural_objects
-    ]
-    for artifact_key, rel_path in closure.evidence_artifacts.items():
-        add_node(
-            f"{evidence_root_id}:artifact:{artifact_key}",
-            parent=evidence_root_id,
-            kind="evidence_artifact",
-            layer="Evidence",
-            title=artifact_key,
-            artifact=artifact_key,
-            file=rel_path,
-            derived_from=[project_root_id, *all_object_node_ids],
-            project_id=project.metadata.project_id,
-        )
+        builder.add_candidate(candidate)
+    builder.add_evidence_artifacts(closure)
 
     return {
         "tree_version": GOVERNANCE_TREE_VERSION,
         "project_id": project.metadata.project_id,
         "template_id": project.metadata.template,
         "generator_version": GOVERNANCE_GENERATOR_VERSION,
-        "root_node_id": project_root_id,
+        "root_node_id": roots.project_root_id,
         "project_discovery": closure.discovery.to_dict(),
         "upstream_closure": [item.to_dict() for item in closure.upstream_closure],
         "strict_zone": [item.to_dict() for item in closure.strict_zone],
@@ -2071,7 +2141,7 @@ def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
         "structural_objects": [item.to_manifest_dict() for item in closure.structural_objects],
         "role_bindings": [item.to_dict() for item in closure.role_bindings],
         "candidates": [item.to_dict() for item in closure.candidates],
-        "nodes": [nodes[node_id] for node_id in sorted(nodes)],
+        "nodes": builder.serialized_nodes(),
     }
 
 

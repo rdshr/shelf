@@ -3825,6 +3825,87 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "label": "class:GovernanceTreeBuilder",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/governance.py | locator=class:GovernanceTreeBuilder | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "source_file": "src/project_runtime/governance.py",
+        "source_line": 1,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "label": "class:GovernanceTreeNodeRecord",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/governance.py | locator=class:GovernanceTreeNodeRecord | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "source_file": "src/project_runtime/governance.py",
+        "source_line": 1,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+        "label": "class:GovernanceTreeRoots",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/governance.py | locator=class:GovernanceTreeRoots | object_id=kb.answer.behavior | candidate_id=knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+        "source_file": "src/project_runtime/governance.py",
+        "source_line": 1,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.answer.behavior",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
         "label": "class:GovernedBinding",
         "level": 5,
@@ -11236,6 +11317,21 @@
       },
       {
         "from": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
         "to": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
         "relation": "tree_child"
       },
@@ -12875,6 +12971,9 @@
             "candidate_ids": [
               "knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
               "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+              "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+              "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+              "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
               "knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
               "knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
               "knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -13464,6 +13563,9 @@
               "candidate_ids": [
                 "knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
                 "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+                "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+                "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+                "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
                 "knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
                 "knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
                 "knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -13753,7 +13855,7 @@
             "fully_closed_object_count": 23,
             "partially_closed_object_count": 0,
             "governed_candidate_count": 24,
-            "attached_candidate_count": 90,
+            "attached_candidate_count": 93,
             "internal_candidate_count": 0,
             "uncovered_future_categories": [
               "compiler/evidence builders that are still attached-only",
@@ -21375,6 +21477,48 @@
             "role_ids": []
           },
           {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeBuilder",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeNodeRecord",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeRoots",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": []
+          },
+          {
             "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
             "project_id": "knowledge_base_basic",
             "file": "src/project_runtime/governance.py",
@@ -23810,6 +23954,9 @@
             "children": [
               "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
               "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+              "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+              "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+              "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
               "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
               "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
               "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -23976,6 +24123,75 @@
             "file": "src/project_runtime/governance.py",
             "locator": "class:GovernanceSnapshotSymbol",
             "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:GovernanceTreeBuilder",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeBuilder",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:GovernanceTreeNodeRecord",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeNodeRecord",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.answer.behavior",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:GovernanceTreeRoots",
+            "file": "src/project_runtime/governance.py",
+            "locator": "class:GovernanceTreeRoots",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
             "candidate_kind": "python_schema_carrier",
             "confidence": 0.96,
             "classification": "attached",
@@ -31654,6 +31870,9 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -32203,6 +32422,9 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py": "project:knowledge_base_basic:code",
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef": "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
@@ -32538,6 +32760,9 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py": [
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -32575,6 +32800,9 @@
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef": [],
@@ -33597,6 +33825,15 @@
         "project:knowledge_base_basic:structure:object:kb.answer.behavior"
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord": [
+        "project:knowledge_base_basic:structure:object:kb.answer.behavior"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots": [
         "project:knowledge_base_basic:structure:object:kb.answer.behavior"
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding": [
@@ -34823,6 +35060,9 @@
         "project:knowledge_base_basic:code:file:src/knowledge_base_runtime/backend.py:candidate:knowledge_base_basic:src/knowledge_base_runtime/backend.py:function:_to_document_detail",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+        "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
         "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
@@ -35505,6 +35745,9 @@
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py",
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GeneratedArtifactPaths",
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceSnapshotSymbol",
+          "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeBuilder",
+          "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeNodeRecord",
+          "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernanceTreeRoots",
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:GovernedBinding",
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:SymbolDefinition",
           "project:knowledge_base_basic:code:file:src/project_runtime/governance.py:candidate:knowledge_base_basic:src/project_runtime/governance.py:class:UpstreamRef",
