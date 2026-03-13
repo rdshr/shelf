@@ -171,11 +171,21 @@ function classifyWorkspaceChanges(repoRoot, relPaths, payload) {
   const normalizedRelPaths = [...new Set((relPaths || []).map(workspaceGuard.normalizeRelPath).filter(Boolean))];
   const watchedRelPaths = normalizedRelPaths.filter(workspaceGuard.isWatchedPath);
   const protectedGeneratedPaths = watchedRelPaths.filter(workspaceGuard.isProtectedGeneratedPath);
-  const protectedWorkspaceArtifacts = protectedGeneratedPaths.filter(
+  const protectedWorkspaceArtifacts = protectedGeneratedPaths.filter((relPath) =>
+    workspaceGuard.isWorkspaceGovernanceArtifact(relPath) || workspaceGuard.isWorkspaceFrameworkArtifact(relPath)
+  );
+  const protectedGovernanceArtifacts = protectedGeneratedPaths.filter(
     workspaceGuard.isWorkspaceGovernanceArtifact
   );
+  const protectedFrameworkArtifacts = protectedGeneratedPaths.filter(
+    workspaceGuard.isWorkspaceFrameworkArtifact
+  );
   const protectedProjectSpecs = protectedGeneratedPaths
-    .filter((relPath) => !workspaceGuard.isWorkspaceGovernanceArtifact(relPath))
+    .filter(
+      (relPath) =>
+        !workspaceGuard.isWorkspaceGovernanceArtifact(relPath)
+        && !workspaceGuard.isWorkspaceFrameworkArtifact(relPath)
+    )
     .map((relPath) => workspaceGuard.resolveProjectProductSpecPath(repoRoot, relPath))
     .filter(Boolean)
     .sort();
@@ -188,6 +198,8 @@ function classifyWorkspaceChanges(repoRoot, relPaths, payload) {
     materializeProjects: changeContext.materializeProjectSpecFiles,
     protectedGeneratedPaths,
     protectedWorkspaceArtifacts,
+    protectedGovernanceArtifacts,
+    protectedFrameworkArtifacts,
     protectedProjectSpecs,
     changeContext,
   };

@@ -200,12 +200,17 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
             self.assertIn("data-framework-toggle", html)
             self.assertIn("data-framework-handle", html)
             self.assertIn("data-pan-ignore", html)
-            self.assertIn("左键拖动画布", html)
+            self.assertIn("左键拖动画布与空白工作区", html)
             self.assertIn("data-node-hit", html)
             self.assertIn("data-edge-hit", html)
             self.assertIn('markerWidth="12"', html)
             self.assertIn("stroke-width: 2.15;", html)
             self.assertIn("const EDGE_END_PADDING = NODE_RADIUS + 1;", html)
+            self.assertIn(".graph-card {\n      padding: 0;\n      display: grid;\n      min-width: 0;", html)
+            self.assertIn(".graph-scroll {\n      overflow: auto;\n      width: 100%;\n      min-width: 0;", html)
+            self.assertIn("const graphStageEl = document.querySelector(\".graph-stage\");", html)
+            self.assertIn("function computeWorkspacePadding()", html)
+            self.assertIn("function centerGraphInViewport()", html)
 
     def test_rendered_html_preserves_interaction_contract(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPO_ROOT) as tmp_dir:
@@ -258,6 +263,7 @@ class FrameworkTreeHierarchyGeneratorTest(unittest.TestCase):
             self.assertIn("graphScrollEl.addEventListener(\"pointerdown\", beginPan, true);", html)
             self.assertIn("svg.addEventListener(\"pointerdown\", beginPan, true);", html)
             self.assertIn("window.addEventListener(\"pointermove\", updatePan);", html)
+            self.assertIn("centerGraphInViewport();", html)
             self.assertIn("window.addEventListener(\"pointerup\", endPan);", html)
             self.assertIn("panState.captured = safeSetPointerCapture(graphScrollEl, event.pointerId);", html)
             self.assertIn("selectNode(node.id);", html)

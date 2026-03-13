@@ -654,6 +654,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     .graph-card {
       padding: 0;
       display: grid;
+      min-width: 0;
     }
 
     .head {
@@ -688,6 +689,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     .graph-shell {
       padding: 12px;
+      min-width: 0;
       background:
         linear-gradient(180deg, rgba(55, 148, 255, 0.06), transparent 40%),
         var(--graph-shell-bg);
@@ -701,6 +703,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       gap: 10px;
       margin-bottom: 10px;
       flex-wrap: wrap;
+      min-width: 0;
     }
 
     .toolbar-tail {
@@ -708,6 +711,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+      min-width: 0;
     }
 
     .zoom-controls {
@@ -715,6 +719,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
+      min-width: 0;
     }
 
     .zoom-btn {
@@ -750,6 +755,8 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 
     .graph-scroll {
       overflow: auto;
+      width: 100%;
+      min-width: 0;
       max-height: min(76vh, 980px);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -1394,7 +1401,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
           <div class=\"toolbar-tail\">
             <button type=\"button\" class=\"zoom-btn\" id=\"resetLayoutButton\">恢复布局</button>
             <button type=\"button\" class=\"zoom-btn\" id=\"sideToggleButton\" aria-expanded=\"true\">隐藏侧栏</button>
-            <span class=\"graph-hint\">左键拖动画布，拖动框标题移动 framework，点击框右上角折叠/展开，Ctrl/⌘ + 滚轮缩放，Ctrl/⌘ + 点击节点或连线打开来源文档</span>
+            <span class=\"graph-hint\">左键拖动画布与空白工作区，拖动框标题移动 framework，点击框右上角折叠/展开，Ctrl/⌘ + 滚轮缩放，Ctrl/⌘ + 点击节点或连线打开来源文档</span>
           </div>
         </div>
         <div class=\"graph-scroll\">
@@ -1440,6 +1447,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     const sideEl = document.querySelector(".side");
     const svg = document.getElementById("graphSvg");
     const graphScrollEl = document.querySelector(".graph-scroll");
+    const graphStageEl = document.querySelector(".graph-stage");
     const titleEl = document.getElementById("title");
     const descriptionEl = document.getElementById("description");
     const summaryNodesEl = document.getElementById("summaryNodes");
@@ -1478,6 +1486,10 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     const NODE_RADIUS = 24;
     const EDGE_START_PADDING = NODE_RADIUS + 2;
     const EDGE_END_PADDING = NODE_RADIUS + 1;
+    const MIN_WORKSPACE_PAD_X = 420;
+    const MIN_WORKSPACE_PAD_Y = 320;
+    const MAX_WORKSPACE_PAD_X = 2200;
+    const MAX_WORKSPACE_PAD_Y = 1800;
     let zoomLevel = 1;
     let sideVisible = true;
     let selectedNodeId = null;
@@ -1590,13 +1602,46 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
     }
 
     function renderZoom() {
+      const workspacePadding = computeWorkspacePadding();
       const scaledWidth = Math.round(canvasWidth * zoomLevel);
       const scaledHeight = Math.round(canvasHeight * zoomLevel);
+      if (graphStageEl) {
+        graphStageEl.style.padding = `${workspacePadding.y}px ${workspacePadding.x}px`;
+      }
       svg.style.width = `${scaledWidth}px`;
       svg.style.height = `${scaledHeight}px`;
       if (zoomIndicatorEl) {
         zoomIndicatorEl.textContent = `${Math.round(zoomLevel * 100)}%`;
       }
+    }
+
+    function computeWorkspacePadding() {
+      const viewportWidth = graphScrollEl?.clientWidth || 0;
+      const viewportHeight = graphScrollEl?.clientHeight || 0;
+      const padX = Math.round(
+        Math.min(
+          MAX_WORKSPACE_PAD_X,
+          Math.max(MIN_WORKSPACE_PAD_X, canvasWidth * 0.44, viewportWidth * 0.72)
+        )
+      );
+      const padY = Math.round(
+        Math.min(
+          MAX_WORKSPACE_PAD_Y,
+          Math.max(MIN_WORKSPACE_PAD_Y, canvasHeight * 0.4, viewportHeight * 0.72)
+        )
+      );
+      return { x: padX, y: padY };
+    }
+
+    function centerGraphInViewport() {
+      if (!graphScrollEl) {
+        return;
+      }
+      const workspacePadding = computeWorkspacePadding();
+      const focusX = workspacePadding.x + canvasWidth / 2;
+      const focusY = workspacePadding.y + canvasHeight / 2;
+      graphScrollEl.scrollLeft = Math.max(0, focusX * zoomLevel - graphScrollEl.clientWidth / 2);
+      graphScrollEl.scrollTop = Math.max(0, focusY * zoomLevel - graphScrollEl.clientHeight / 2);
     }
 
     function computeFitZoom() {
@@ -1637,8 +1682,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
         graphScrollEl.scrollLeft = graphCenterX * zoomLevel - graphScrollEl.clientWidth / 2;
         graphScrollEl.scrollTop = graphCenterY * zoomLevel - graphScrollEl.clientHeight / 2;
       } else {
-        graphScrollEl.scrollLeft = 0;
-        graphScrollEl.scrollTop = 0;
+        centerGraphInViewport();
       }
     }
 
@@ -1671,10 +1715,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
       zoomLevel = fitZoom < 0.78 ? 0.78 : fitZoom;
       zoomLevel = clampZoom(zoomLevel);
       renderZoom();
-      if (graphScrollEl) {
-        graphScrollEl.scrollLeft = 0;
-        graphScrollEl.scrollTop = 0;
-      }
+      centerGraphInViewport();
     }
 
     // Interaction contract:
@@ -3012,10 +3053,7 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
         selectedNodeId = null;
         selectedEdgeKey = null;
         renderGraph();
-        if (graphScrollEl) {
-          graphScrollEl.scrollLeft = 0;
-          graphScrollEl.scrollTop = 0;
-        }
+        centerGraphInViewport();
       });
     }
 

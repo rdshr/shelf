@@ -69,8 +69,20 @@
         }
       },
       {
-        "name": "runtime_env",
+        "name": "message_queue",
         "order": 4,
+        "local_levels": [
+          0,
+          1
+        ],
+        "level_node_counts": {
+          "0": 1,
+          "1": 1
+        }
+      },
+      {
+        "name": "runtime_env",
+        "order": 5,
         "local_levels": [
           0
         ],
@@ -80,7 +92,7 @@
       },
       {
         "name": "shelf",
-        "order": 5,
+        "order": 6,
         "local_levels": [
           0,
           1,
@@ -497,9 +509,61 @@
       },
       {
         "id": "NODE-FW-0009",
-        "label": "L0.runtime_env.M0",
+        "label": "L0.message_queue.M0",
         "level": 0,
         "order": 9,
+        "description": "module=message_queue | level=L0 | node=L0.M0 | file=framework/message_queue/L0-M0-消息队列抽象结构模块.md | title=L0-M0-消息队列抽象结构模块",
+        "source_file": "framework/message_queue/L0-M0-消息队列抽象结构模块.md",
+        "source_line": 23,
+        "doc_line": 1,
+        "module_name": "message_queue",
+        "module_ref": "L0.M0",
+        "module_title": "消息队列抽象结构模块:MessageQueueAbstractStructureModule",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "消息承载能力：使消息可以被写入、暂存、取出，并在约定范围内保持可识别与可排序",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "排队交接能力：使消息进入等待结构后，能够按既定顺序和交接规则被后续取用方接收，从而提供存取两侧的时间解耦",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "存取解耦能力：使发送方与取用方不必直接同步或直接互相调用，仍能借助队列完成交接，从而提供空间上的非干扰协作",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责具体中间件选型、复杂失败治理、跨系统补偿编排和业务处理逻辑本身",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "消息容器基：由消息标识、载荷槽位、容量限额与保留窗口构成的消息容纳结构",
+            "line": "23"
+          },
+          {
+            "token": "B2",
+            "text": "消息标记基：由顺序位置、交接状态、有效性标记与销毁条件构成的消息记录结构",
+            "line": "24"
+          },
+          {
+            "token": "B3",
+            "text": "存取映射基：由发送接入位、取用接入位与两侧关系映射构成的存取连接结构",
+            "line": "25"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0010",
+        "label": "L0.runtime_env.M0",
+        "level": 0,
+        "order": 10,
         "description": "module=runtime_env | level=L0 | node=L0.M0 | file=framework/runtime_env/L0-M0-运行环境识别模块.md | title=L0-M0-运行环境识别模块",
         "source_file": "framework/runtime_env/L0-M0-运行环境识别模块.md",
         "source_line": 24,
@@ -548,10 +612,10 @@
         ]
       },
       {
-        "id": "NODE-FW-0010",
+        "id": "NODE-FW-0011",
         "label": "L0.shelf.M0",
         "level": 0,
-        "order": 10,
+        "order": 11,
         "description": "module=shelf | level=L0 | node=L0.M0 | file=framework/shelf/L0-M0-置物架抽象结构模块.md | title=L0-M0-置物架抽象结构模块",
         "source_file": "framework/shelf/L0-M0-置物架抽象结构模块.md",
         "source_line": 23,
@@ -600,7 +664,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0011",
+        "id": "NODE-FW-0012",
         "label": "L1.backend.M0",
         "level": 1,
         "order": 1,
@@ -652,7 +716,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0012",
+        "id": "NODE-FW-0013",
         "label": "L1.curtain.M0",
         "level": 1,
         "order": 2,
@@ -704,7 +768,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0013",
+        "id": "NODE-FW-0014",
         "label": "L1.frontend.M0",
         "level": 1,
         "order": 3,
@@ -751,7 +815,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0014",
+        "id": "NODE-FW-0015",
         "label": "L1.frontend.M1",
         "level": 1,
         "order": 4,
@@ -798,7 +862,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0015",
+        "id": "NODE-FW-0016",
         "label": "L1.frontend.M2",
         "level": 1,
         "order": 5,
@@ -845,7 +909,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0016",
+        "id": "NODE-FW-0017",
         "label": "L1.frontend.M3",
         "level": 1,
         "order": 6,
@@ -892,7 +956,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0017",
+        "id": "NODE-FW-0018",
         "label": "L1.frontend.M4",
         "level": 1,
         "order": 7,
@@ -939,7 +1003,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0018",
+        "id": "NODE-FW-0019",
         "label": "L1.knowledge_base.M0",
         "level": 1,
         "order": 8,
@@ -991,7 +1055,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0019",
+        "id": "NODE-FW-0020",
         "label": "L1.knowledge_base.M1",
         "level": 1,
         "order": 9,
@@ -1043,10 +1107,62 @@
         ]
       },
       {
-        "id": "NODE-FW-0020",
-        "label": "L1.shelf.M0",
+        "id": "NODE-FW-0021",
+        "label": "L1.message_queue.M0",
         "level": 1,
         "order": 10,
+        "description": "module=message_queue | level=L1 | node=L1.M0 | file=framework/message_queue/L1-M0-消息队列标准模块.md | title=L1-M0-消息队列标准模块",
+        "source_file": "framework/message_queue/L1-M0-消息队列标准模块.md",
+        "source_line": 25,
+        "doc_line": 1,
+        "module_name": "message_queue",
+        "module_ref": "L1.M0",
+        "module_title": "消息队列标准模块:MessageQueueStandardModule",
+        "capability_items": [
+          {
+            "token": "C1",
+            "text": "生产接入编排能力：将消息生产入口、路由选择与入队条件编排为稳定接入主链",
+            "line": "7"
+          },
+          {
+            "token": "C2",
+            "text": "消费确认编排能力：将订阅、消费、确认与重投递条件编排为稳定消费闭环",
+            "line": "8"
+          },
+          {
+            "token": "C3",
+            "text": "积压失败治理能力：将积压观测、失败隔离与回收路径编排为可维护治理链",
+            "line": "9"
+          },
+          {
+            "token": "C4",
+            "text": "非能力项：不负责具体消息中间件产品、SDK 调用细节和业务处理逻辑",
+            "line": "10"
+          }
+        ],
+        "base_items": [
+          {
+            "token": "B1",
+            "text": "序列拓扑接入编排基：L0.M0[R1,R2]",
+            "line": "25"
+          },
+          {
+            "token": "B2",
+            "text": "拓扑游标消费编排基：L0.M0[R2,R3]",
+            "line": "26"
+          },
+          {
+            "token": "B3",
+            "text": "游标失败治理编排基：L0.M0[R3]",
+            "line": "27"
+          }
+        ]
+      },
+      {
+        "id": "NODE-FW-0022",
+        "label": "L1.shelf.M0",
+        "level": 1,
+        "order": 11,
         "description": "module=shelf | level=L1 | node=L1.M0 | file=framework/shelf/L1-M0-置物架装配编排模块.md | title=L1-M0-置物架装配编排模块",
         "source_file": "framework/shelf/L1-M0-置物架装配编排模块.md",
         "source_line": 23,
@@ -1095,7 +1211,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0021",
+        "id": "NODE-FW-0023",
         "label": "L2.backend.M0",
         "level": 2,
         "order": 1,
@@ -1147,7 +1263,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0022",
+        "id": "NODE-FW-0024",
         "label": "L2.curtain.M0",
         "level": 2,
         "order": 2,
@@ -1199,7 +1315,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0023",
+        "id": "NODE-FW-0025",
         "label": "L2.frontend.M0",
         "level": 2,
         "order": 3,
@@ -1246,7 +1362,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0024",
+        "id": "NODE-FW-0026",
         "label": "L2.knowledge_base.M0",
         "level": 2,
         "order": 4,
@@ -1298,7 +1414,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0025",
+        "id": "NODE-FW-0027",
         "label": "L2.shelf.M0",
         "level": 2,
         "order": 5,
@@ -1350,7 +1466,7 @@
         ]
       },
       {
-        "id": "NODE-FW-0026",
+        "id": "NODE-FW-0028",
         "label": "L3.frontend.M0",
         "level": 3,
         "order": 1,
@@ -1400,7 +1516,7 @@
     "edges": [
       {
         "from": "NODE-FW-0001",
-        "to": "NODE-FW-0011",
+        "to": "NODE-FW-0012",
         "relation": "framework_module_growth",
         "module": "backend",
         "from_level": "L0",
@@ -1414,7 +1530,7 @@
       },
       {
         "from": "NODE-FW-0002",
-        "to": "NODE-FW-0012",
+        "to": "NODE-FW-0013",
         "relation": "framework_module_growth",
         "module": "curtain",
         "from_level": "L0",
@@ -1428,7 +1544,7 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0013",
+        "to": "NODE-FW-0014",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1442,7 +1558,7 @@
       },
       {
         "from": "NODE-FW-0006",
-        "to": "NODE-FW-0018",
+        "to": "NODE-FW-0019",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1455,8 +1571,22 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0010",
-        "to": "NODE-FW-0020",
+        "from": "NODE-FW-0009",
+        "to": "NODE-FW-0021",
+        "relation": "framework_module_growth",
+        "module": "message_queue",
+        "from_level": "L0",
+        "to_level": "L1",
+        "source_ref": "L0.M0",
+        "target_ref": "L1.M0",
+        "rules": "R1,R2 | R2,R3 | R3",
+        "terms": "L0.M0[R1,R2] + L0.M0[R2,R3] + L0.M0[R3]",
+        "source_file": "framework/message_queue/L1-M0-消息队列标准模块.md",
+        "source_line": 25
+      },
+      {
+        "from": "NODE-FW-0011",
+        "to": "NODE-FW-0022",
         "relation": "framework_module_growth",
         "module": "shelf",
         "from_level": "L0",
@@ -1470,7 +1600,7 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0014",
+        "to": "NODE-FW-0015",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1484,7 +1614,7 @@
       },
       {
         "from": "NODE-FW-0006",
-        "to": "NODE-FW-0019",
+        "to": "NODE-FW-0020",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1498,7 +1628,7 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0015",
+        "to": "NODE-FW-0016",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1512,7 +1642,7 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0016",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1526,7 +1656,7 @@
       },
       {
         "from": "NODE-FW-0003",
-        "to": "NODE-FW-0017",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1540,7 +1670,7 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0013",
+        "to": "NODE-FW-0014",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1554,7 +1684,7 @@
       },
       {
         "from": "NODE-FW-0007",
-        "to": "NODE-FW-0018",
+        "to": "NODE-FW-0019",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1568,7 +1698,7 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0014",
+        "to": "NODE-FW-0015",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1582,7 +1712,7 @@
       },
       {
         "from": "NODE-FW-0007",
-        "to": "NODE-FW-0019",
+        "to": "NODE-FW-0020",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1596,7 +1726,7 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0015",
+        "to": "NODE-FW-0016",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1610,7 +1740,7 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0016",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1624,7 +1754,7 @@
       },
       {
         "from": "NODE-FW-0004",
-        "to": "NODE-FW-0017",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1638,7 +1768,7 @@
       },
       {
         "from": "NODE-FW-0005",
-        "to": "NODE-FW-0013",
+        "to": "NODE-FW-0014",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1652,7 +1782,7 @@
       },
       {
         "from": "NODE-FW-0008",
-        "to": "NODE-FW-0018",
+        "to": "NODE-FW-0019",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1666,7 +1796,7 @@
       },
       {
         "from": "NODE-FW-0005",
-        "to": "NODE-FW-0014",
+        "to": "NODE-FW-0015",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1680,7 +1810,7 @@
       },
       {
         "from": "NODE-FW-0008",
-        "to": "NODE-FW-0019",
+        "to": "NODE-FW-0020",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L0",
@@ -1694,7 +1824,7 @@
       },
       {
         "from": "NODE-FW-0005",
-        "to": "NODE-FW-0015",
+        "to": "NODE-FW-0016",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1708,7 +1838,7 @@
       },
       {
         "from": "NODE-FW-0005",
-        "to": "NODE-FW-0016",
+        "to": "NODE-FW-0017",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1722,7 +1852,7 @@
       },
       {
         "from": "NODE-FW-0005",
-        "to": "NODE-FW-0017",
+        "to": "NODE-FW-0018",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L0",
@@ -1735,7 +1865,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0013",
+        "from": "NODE-FW-0014",
         "to": "NODE-FW-0006",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1749,7 +1879,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0013",
+        "from": "NODE-FW-0014",
         "to": "NODE-FW-0008",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1763,7 +1893,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0014",
+        "from": "NODE-FW-0015",
         "to": "NODE-FW-0008",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1777,7 +1907,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0015",
+        "from": "NODE-FW-0016",
         "to": "NODE-FW-0006",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1791,7 +1921,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0015",
+        "from": "NODE-FW-0016",
         "to": "NODE-FW-0007",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1805,7 +1935,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0015",
+        "from": "NODE-FW-0016",
         "to": "NODE-FW-0008",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1819,7 +1949,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0016",
+        "from": "NODE-FW-0017",
         "to": "NODE-FW-0006",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1833,7 +1963,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0016",
+        "from": "NODE-FW-0017",
         "to": "NODE-FW-0007",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1847,7 +1977,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0017",
+        "from": "NODE-FW-0018",
         "to": "NODE-FW-0006",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1861,7 +1991,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0017",
+        "from": "NODE-FW-0018",
         "to": "NODE-FW-0007",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1875,7 +2005,7 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0017",
+        "from": "NODE-FW-0018",
         "to": "NODE-FW-0008",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
@@ -1889,8 +2019,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0011",
-        "to": "NODE-FW-0021",
+        "from": "NODE-FW-0012",
+        "to": "NODE-FW-0023",
         "relation": "framework_module_growth",
         "module": "backend",
         "from_level": "L1",
@@ -1903,8 +2033,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0012",
-        "to": "NODE-FW-0022",
+        "from": "NODE-FW-0013",
+        "to": "NODE-FW-0024",
         "relation": "framework_module_growth",
         "module": "curtain",
         "from_level": "L1",
@@ -1917,8 +2047,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0013",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0014",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
@@ -1931,8 +2061,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0018",
-        "to": "NODE-FW-0024",
+        "from": "NODE-FW-0019",
+        "to": "NODE-FW-0026",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L1",
@@ -1945,8 +2075,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0020",
-        "to": "NODE-FW-0025",
+        "from": "NODE-FW-0022",
+        "to": "NODE-FW-0027",
         "relation": "framework_module_growth",
         "module": "shelf",
         "from_level": "L1",
@@ -1959,8 +2089,8 @@
         "source_line": 27
       },
       {
-        "from": "NODE-FW-0014",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0015",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
@@ -1973,8 +2103,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0019",
-        "to": "NODE-FW-0024",
+        "from": "NODE-FW-0020",
+        "to": "NODE-FW-0026",
         "relation": "framework_module_growth",
         "module": "knowledge_base",
         "from_level": "L1",
@@ -1987,8 +2117,8 @@
         "source_line": 25
       },
       {
-        "from": "NODE-FW-0015",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0016",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
@@ -2001,8 +2131,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0016",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0017",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
@@ -2015,8 +2145,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0017",
-        "to": "NODE-FW-0023",
+        "from": "NODE-FW-0018",
+        "to": "NODE-FW-0025",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L1",
@@ -2029,8 +2159,8 @@
         "source_line": 26
       },
       {
-        "from": "NODE-FW-0023",
-        "to": "NODE-FW-0026",
+        "from": "NODE-FW-0025",
+        "to": "NODE-FW-0028",
         "relation": "framework_module_growth",
         "module": "frontend",
         "from_level": "L2",

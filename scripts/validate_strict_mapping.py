@@ -18,8 +18,17 @@ try:
 except ModuleNotFoundError:
     _hierarchy_module = import_module("generate_module_hierarchy_html")
 
+try:
+    _framework_tree_module = import_module("scripts.generate_framework_tree_hierarchy")
+except ModuleNotFoundError:
+    _framework_tree_module = import_module("generate_framework_tree_hierarchy")
+
 load_hierarchy_graph = _hierarchy_module.load_hierarchy
 render_hierarchy_html = _hierarchy_module.render_html
+build_framework_tree_payload = _framework_tree_module.build_payload_from_framework
+DEFAULT_FRAMEWORK_TREE_HTML = _framework_tree_module.DEFAULT_OUTPUT_HTML
+DEFAULT_FRAMEWORK_TREE_JSON = _framework_tree_module.DEFAULT_OUTPUT_JSON
+render_framework_tree_html = _framework_tree_module.render_html
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = REPO_ROOT / "src"
@@ -1141,6 +1150,84 @@ def validate_workspace_governance_artifacts() -> list[Issue]:
                 rel_json,
                 1,
                 code="WORKSPACE_GOVERNANCE_BUILD_FAILED",
+            )
+        )
+
+    return issues
+
+
+def validate_framework_tree_artifacts() -> list[Issue]:
+    issues: list[Issue] = []
+    rel_json = DEFAULT_FRAMEWORK_TREE_JSON.relative_to(REPO_ROOT).as_posix()
+    rel_html = DEFAULT_FRAMEWORK_TREE_HTML.relative_to(REPO_ROOT).as_posix()
+
+    if not DEFAULT_FRAMEWORK_TREE_JSON.exists():
+        issues.append(
+            make_issue(
+                "missing framework tree JSON; run `uv run python scripts/materialize_project.py`",
+                rel_json,
+                1,
+                code="WORKSPACE_FRAMEWORK_TREE_MISSING",
+            )
+        )
+        return issues
+
+    if not DEFAULT_FRAMEWORK_TREE_HTML.exists():
+        issues.append(
+            make_issue(
+                "missing framework tree HTML; run `uv run python scripts/materialize_project.py`",
+                rel_html,
+                1,
+                code="WORKSPACE_FRAMEWORK_TREE_MISSING",
+            )
+        )
+        return issues
+
+    try:
+        load_hierarchy_graph(DEFAULT_FRAMEWORK_TREE_JSON)
+    except Exception as exc:
+        issues.append(
+            make_issue(
+                f"invalid framework tree JSON: {exc}",
+                rel_json,
+                1,
+                code="WORKSPACE_FRAMEWORK_TREE_INVALID",
+            )
+        )
+        return issues
+
+    try:
+        fresh_payload, _ = build_framework_tree_payload(FRAMEWORK_DIR)
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temp_dir:
+            temp_json = Path(temp_dir) / "shelf_framework_tree.json"
+            temp_html = Path(temp_dir) / "shelf_framework_tree.html"
+            temp_json.write_text(json.dumps(fresh_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            render_framework_tree_html(temp_json, temp_html, 1680, 1180)
+            if _read_file_bytes(DEFAULT_FRAMEWORK_TREE_JSON) != _read_file_bytes(temp_json):
+                issues.append(
+                    make_issue(
+                        "framework tree JSON is stale or manually edited; re-materialize the workspace tree",
+                        rel_json,
+                        1,
+                        code="WORKSPACE_FRAMEWORK_TREE_OUT_OF_SYNC",
+                    )
+                )
+            if _read_file_bytes(DEFAULT_FRAMEWORK_TREE_HTML) != _read_file_bytes(temp_html):
+                issues.append(
+                    make_issue(
+                        "framework tree HTML is stale or manually edited; re-materialize the workspace tree",
+                        rel_html,
+                        1,
+                        code="WORKSPACE_FRAMEWORK_TREE_OUT_OF_SYNC",
+                    )
+                )
+    except Exception as exc:
+        issues.append(
+            make_issue(
+                f"failed to rebuild framework tree: {exc}",
+                rel_json,
+                1,
+                code="WORKSPACE_FRAMEWORK_TREE_BUILD_FAILED",
             )
         )
 
@@ -2857,14 +2944,16 @@ def validate_change_propagation(change_context: dict[str, Any], changed_files: s
     affected_nodes = list(change_context.get("affected_nodes", []))
 
     governed_prefixes = ("framework/", "specs/", "mapping/", "projects/", "src/")
-    ignored_governance_artifacts = {
+    ignored_tree_artifacts = {
+        DEFAULT_FRAMEWORK_TREE_JSON.relative_to(REPO_ROOT).as_posix(),
+        DEFAULT_FRAMEWORK_TREE_HTML.relative_to(REPO_ROOT).as_posix(),
         DEFAULT_WORKSPACE_GOVERNANCE_JSON.relative_to(REPO_ROOT).as_posix(),
         DEFAULT_WORKSPACE_GOVERNANCE_HTML.relative_to(REPO_ROOT).as_posix(),
     }
     governed_changed_files = sorted(
         path
         for path in changed_files
-        if path.startswith(governed_prefixes) and path not in ignored_governance_artifacts
+        if path.startswith(governed_prefixes) and path not in ignored_tree_artifacts
     )
     if governed_changed_files and not touched_nodes:
         issues.append(
@@ -2983,6 +3072,7 @@ def main() -> int:
         issues.extend(validate_project_governance(scoped_project_spec_files))
 
     if not issues:
+        issues.extend(validate_framework_tree_artifacts())
         issues.extend(validate_workspace_governance_artifacts())
 
     if args.check_changes and change_context is not None:

@@ -206,7 +206,7 @@ def _parse_rules(lines: list[str]) -> tuple[FrameworkRuleIR, ...]:
         elif body.startswith("输出能力："):
             outputs = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
         elif body.startswith("边界绑定："):
-            bindings = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("/"))
+            bindings = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
     flush()
     return tuple(items)
 

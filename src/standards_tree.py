@@ -11,7 +11,9 @@ CORE_STANDARD_FILES: tuple[tuple[str, str], ...] = (
     ("NODE-L1-LINT", "specs/框架文档Lint标准.md"),
     ("NODE-L1-TRACEABILITY", "specs/可追溯性标准.md"),
     ("NODE-L1-REDUCIBILITY", "specs/可删减性标准.md"),
+    ("NODE-L1-CODE-GIT", "specs/code/Git提交信息标准.md"),
     ("NODE-L1-CODE-PYTHON", "specs/code/Python实现质量标准.md"),
+    ("NODE-L1-CODE-RELEASE", "specs/code/发布与版本说明标准.md"),
 )
 L2_MODULE_ORDER: tuple[str, ...] = (
     "shelf",

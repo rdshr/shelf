@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import unittest
 
+from scripts.generate_framework_tree_hierarchy import DEFAULT_OUTPUT_JSON as DEFAULT_FRAMEWORK_TREE_JSON
 from workspace_governance import (
     DEFAULT_WORKSPACE_GOVERNANCE_JSON,
     build_workspace_governance_payload,
@@ -38,11 +39,26 @@ class WorkspaceGovernanceTest(unittest.TestCase):
         self.assertTrue(context["run_standard_checks"])
         self.assertTrue(context["run_project_checks"])
 
+    def test_resolve_workspace_change_context_maps_framework_low_level_doc_to_governance_node(self) -> None:
+        payload = build_workspace_governance_payload()
+
+        context = resolve_workspace_change_context(
+            payload,
+            {"framework/shelf/L0-M0-置物架抽象结构模块.md"},
+        )
+
+        self.assertTrue(context["touched_nodes"])
+        self.assertTrue(context["affected_nodes"])
+        self.assertTrue(context["run_standard_checks"])
+
     def test_parse_workspace_governance_payload_accepts_generated_file(self) -> None:
         self.assertTrue(DEFAULT_WORKSPACE_GOVERNANCE_JSON.exists())
         payload = parse_workspace_governance_payload(DEFAULT_WORKSPACE_GOVERNANCE_JSON)
         self.assertIn("root", payload)
         self.assertIn("governance", payload)
+
+    def test_framework_tree_artifact_exists(self) -> None:
+        self.assertTrue(DEFAULT_FRAMEWORK_TREE_JSON.exists())
 
     def test_workspace_governance_artifacts_are_nodes_in_the_tree(self) -> None:
         payload = build_workspace_governance_payload()

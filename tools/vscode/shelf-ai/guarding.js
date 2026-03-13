@@ -28,6 +28,14 @@ const WORKSPACE_GOVERNANCE_ARTIFACTS = new Set([
   "docs/hierarchy/shelf_governance_tree.json",
   "docs/hierarchy/shelf_governance_tree.html",
 ]);
+const WORKSPACE_FRAMEWORK_ARTIFACTS = new Set([
+  "docs/hierarchy/shelf_framework_tree.json",
+  "docs/hierarchy/shelf_framework_tree.html",
+]);
+const WORKSPACE_TREE_ARTIFACTS = new Set([
+  ...WORKSPACE_GOVERNANCE_ARTIFACTS,
+  ...WORKSPACE_FRAMEWORK_ARTIFACTS,
+]);
 
 function normalizeRelPath(relPath) {
   if (typeof relPath !== "string") {
@@ -105,11 +113,15 @@ function resolveProjectProductSpecPath(repoRoot, relPath) {
 
 function isProtectedGeneratedPath(relPath) {
   const normalized = normalizeRelPath(relPath);
-  return GENERATED_PATTERN.test(normalized) || WORKSPACE_GOVERNANCE_ARTIFACTS.has(normalized);
+  return GENERATED_PATTERN.test(normalized) || WORKSPACE_TREE_ARTIFACTS.has(normalized);
 }
 
 function isWorkspaceGovernanceArtifact(relPath) {
   return WORKSPACE_GOVERNANCE_ARTIFACTS.has(normalizeRelPath(relPath));
+}
+
+function isWorkspaceFrameworkArtifact(relPath) {
+  return WORKSPACE_FRAMEWORK_ARTIFACTS.has(normalizeRelPath(relPath));
 }
 
 function shouldRunMypyForRelPath(relPath) {
@@ -130,6 +142,9 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
   const materializeProjects = new Set();
   const protectedGeneratedPaths = [];
   const protectedProjectSpecs = new Set();
+  const protectedWorkspaceArtifacts = [];
+  const protectedGovernanceArtifacts = [];
+  const protectedFrameworkArtifacts = [];
   let shouldRunMypy = false;
   let discoveredProductSpecFiles = null;
 
@@ -147,6 +162,15 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
 
     if (isProtectedGeneratedPath(relPath)) {
       protectedGeneratedPaths.push(relPath);
+      if (WORKSPACE_TREE_ARTIFACTS.has(relPath)) {
+        protectedWorkspaceArtifacts.push(relPath);
+      }
+      if (WORKSPACE_GOVERNANCE_ARTIFACTS.has(relPath)) {
+        protectedGovernanceArtifacts.push(relPath);
+      }
+      if (WORKSPACE_FRAMEWORK_ARTIFACTS.has(relPath)) {
+        protectedFrameworkArtifacts.push(relPath);
+      }
       const protectedSpec = resolveProjectProductSpecPath(repoRoot, relPath);
       if (protectedSpec) {
         protectedProjectSpecs.add(protectedSpec);
@@ -191,6 +215,9 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     shouldMaterialize: materializeProjects.size > 0,
     materializeProjects: [...materializeProjects].sort(),
     protectedGeneratedPaths,
+    protectedWorkspaceArtifacts,
+    protectedGovernanceArtifacts,
+    protectedFrameworkArtifacts,
     protectedProjectSpecs: [...protectedProjectSpecs].sort(),
   };
 }
@@ -203,6 +230,7 @@ module.exports = {
   discoverProductSpecFiles,
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
+  isWorkspaceFrameworkArtifact,
   isWorkspaceGovernanceArtifact,
   isWatchedPath,
   isWatchedUri,

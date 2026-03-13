@@ -1,7 +1,11 @@
 {
   "meta": {
-    "updated_at": "2026-03-09",
+    "updated_at": "2026-03-13",
     "l3_sync_notes": [
+      {
+        "id": "SYNC-20260313-code-governance-standards",
+        "note": "Promote repository-level code governance under specs/code/: register Git commit-message rules and the release/version-note standard in the canonical standards tree, and require Chinese-first commit subjects for this repository."
+      },
       {
         "id": "SYNC-20260309-structure-definition-section",
         "note": "Promote 'structure' into a dedicated core-standard section, clarifying that structure is the primary abstract organization unit, that it can be either module-local minimal units or higher-layer composed units, and that it must be distinguished from capabilities, boundaries, modules, and implementation details."
@@ -124,10 +128,24 @@
             "children": []
           },
           {
+            "id": "NODE-L1-CODE-GIT",
+            "kind": "file",
+            "level": "L1",
+            "file": "specs/code/Git提交信息标准.md",
+            "children": []
+          },
+          {
             "id": "NODE-L1-CODE-PYTHON",
             "kind": "file",
             "level": "L1",
             "file": "specs/code/Python实现质量标准.md",
+            "children": []
+          },
+          {
+            "id": "NODE-L1-CODE-RELEASE",
+            "kind": "file",
+            "level": "L1",
+            "file": "specs/code/发布与版本说明标准.md",
             "children": []
           },
           {

@@ -22,6 +22,7 @@ DEFAULT_PROJECT_DISCOVERY_AUDIT_MD = REPO_ROOT / "docs/project_discovery_audit.m
 WORKSPACE_GOVERNANCE_VERSION = "workspace-governance/v1"
 MAPPING_REGISTRY_PATH = REPO_ROOT / "mapping/mapping_registry.json"
 SECTION_HEADER_PATTERN = re.compile(r"^\s*\[([A-Za-z0-9_.-]+)\]\s*$")
+FRAMEWORK_MODULE_DOC_PATTERN = re.compile(r"^L(?P<level>\d+)-M(?P<module>\d+)-[^/]+\.md$")
 
 
 def discover_workspace_product_spec_files(projects_dir: Path | None = None) -> list[Path]:
@@ -158,6 +159,107 @@ def _mapping_tree_to_hierarchy_nodes() -> tuple[list[dict[str, Any]], list[dict[
 
     walk(raw_tree, standards_root_id, 2)
     return nodes, edges, standards_root_id
+
+
+def _framework_module_docs_to_hierarchy_nodes(
+    *,
+    parent_id: str,
+    existing_source_files: set[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    framework_root = REPO_ROOT / "framework"
+    grouped_docs: dict[str, list[tuple[int, int, str]]] = {}
+
+    if framework_root.exists():
+        for module_dir in sorted(framework_root.iterdir()):
+            if not module_dir.is_dir():
+                continue
+            for markdown_file in sorted(module_dir.glob("*.md")):
+                match = FRAMEWORK_MODULE_DOC_PATTERN.fullmatch(markdown_file.name)
+                if match is None:
+                    continue
+                rel_file = _relative(markdown_file)
+                if rel_file in existing_source_files:
+                    continue
+                grouped_docs.setdefault(module_dir.name, []).append(
+                    (
+                        int(match.group("level")),
+                        int(match.group("module")),
+                        rel_file,
+                    )
+                )
+
+    if not grouped_docs:
+        return [], []
+
+    root_id = "workspace:shelf:standards:framework_modules"
+    nodes: list[dict[str, Any]] = [
+        {
+            "id": root_id,
+            "label": "Framework Modules",
+            "level": 2,
+            "description": "kind=framework_modules_root | layer=Standards",
+            "source_file": "",
+            "source_line": 1,
+            "node_kind": "framework_modules_root",
+            "layer": "Standards",
+            "parent_node_id": parent_id,
+        }
+    ]
+    edges: list[dict[str, Any]] = [{"from": parent_id, "to": root_id, "relation": "tree_child"}]
+
+    for module_name in sorted(grouped_docs):
+        domain_id = f"{root_id}:{module_name}"
+        nodes.append(
+            {
+                "id": domain_id,
+                "label": module_name,
+                "level": 3,
+                "description": _node_description(
+                    {
+                        "kind": "framework_domain",
+                        "layer": "Standards",
+                        "object_id": module_name,
+                    }
+                ),
+                "source_file": "",
+                "source_line": 1,
+                "node_kind": "framework_domain",
+                "layer": "Standards",
+                "parent_node_id": root_id,
+                "object_id": module_name,
+            }
+        )
+        edges.append({"from": root_id, "to": domain_id, "relation": "tree_child"})
+
+        for level_num, module_num, rel_file in sorted(grouped_docs[module_name]):
+            locator = f"L{level_num}.M{module_num}"
+            file_id = f"standards:framework_module_file:{rel_file}"
+            nodes.append(
+                {
+                    "id": file_id,
+                    "label": Path(rel_file).stem,
+                    "level": 4,
+                    "description": _node_description(
+                        {
+                            "kind": "framework_module_file",
+                            "layer": "Standards",
+                            "file": rel_file,
+                            "locator": locator,
+                            "object_id": module_name,
+                        }
+                    ),
+                    "source_file": rel_file,
+                    "source_line": _first_heading_line(REPO_ROOT / rel_file),
+                    "node_kind": "framework_module_file",
+                    "layer": "Standards",
+                    "parent_node_id": domain_id,
+                    "object_id": module_name,
+                    "locator": locator,
+                }
+            )
+            edges.append({"from": domain_id, "to": file_id, "relation": "tree_child"})
+
+    return nodes, edges
 
 
 def _project_node_source_line(node: dict[str, Any]) -> int:
@@ -441,6 +543,14 @@ def build_workspace_governance_payload(
     ]
 
     standard_nodes, standard_edges, standards_root_id = _mapping_tree_to_hierarchy_nodes()
+    extra_framework_nodes, extra_framework_edges = _framework_module_docs_to_hierarchy_nodes(
+        parent_id=standards_root_id,
+        existing_source_files={
+            str(node.get("source_file") or "").strip()
+            for node in standard_nodes
+            if str(node.get("source_file") or "").strip()
+        },
+    )
     for node in nodes:
         if node["id"] in {
             "workspace:shelf:evidence:artifact:governance_tree_json",
@@ -450,8 +560,10 @@ def build_workspace_governance_payload(
         }:
             node["derived_from"] = [workspace_root_id, standards_root_id, projects_root_id]
     nodes.extend(standard_nodes)
+    nodes.extend(extra_framework_nodes)
     edges.append({"from": workspace_root_id, "to": standards_root_id, "relation": "tree_child"})
     edges.extend(standard_edges)
+    edges.extend(extra_framework_edges)
 
     requested_product_spec_files = (
         [path.resolve() for path in product_spec_files]

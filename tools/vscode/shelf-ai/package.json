@@ -1,8 +1,8 @@
 {
   "name": "shelf-ai",
   "displayName": "Shelf AI",
-  "description": "Shelf AI: governance-tree-first workspace and strict mapping guard.",
-  "version": "0.0.43",
+  "description": "Shelf AI: framework-tree-first workspace navigation with governance-tree guard.",
+  "version": "0.0.44",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -39,7 +39,9 @@
     "onCommand:shelf.installGitHooks",
     "onCommand:shelf.validateNow",
     "onCommand:shelf.openFrameworkTree",
-    "onCommand:shelf.refreshFrameworkTree"
+    "onCommand:shelf.refreshFrameworkTree",
+    "onCommand:shelf.openGovernanceTree",
+    "onCommand:shelf.refreshGovernanceTree"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -68,10 +70,18 @@
       },
       {
         "command": "shelf.openFrameworkTree",
-        "title": "Shelf: Open Governance Tree"
+        "title": "Shelf: Open Framework Tree"
       },
       {
         "command": "shelf.refreshFrameworkTree",
+        "title": "Shelf: Refresh Framework Tree"
+      },
+      {
+        "command": "shelf.openGovernanceTree",
+        "title": "Shelf: Open Governance Tree"
+      },
+      {
+        "command": "shelf.refreshGovernanceTree",
         "title": "Shelf: Refresh Governance Tree"
       }
     ],
@@ -115,14 +125,24 @@
           "group": "navigation@2"
         },
         {
-          "command": "shelf.validateNow",
+          "command": "shelf.openGovernanceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@3"
         },
         {
-          "command": "shelf.installGitHooks",
+          "command": "shelf.refreshGovernanceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@4"
+        },
+        {
+          "command": "shelf.validateNow",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@5"
+        },
+        {
+          "command": "shelf.installGitHooks",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@6"
         }
       ]
     },
@@ -177,6 +197,21 @@
           "type": "string",
           "default": "uv run python scripts/validate_strict_mapping.py --json",
           "description": "Command used for manual full validation."
+        },
+        "shelf.frameworkTreeJsonPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.json",
+          "description": "Workspace-relative path of generated framework tree JSON."
+        },
+        "shelf.frameworkTreeHtmlPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.html",
+          "description": "Workspace-relative path of generated framework tree HTML."
+        },
+        "shelf.frameworkTreeGenerateCommand": {
+          "type": "string",
+          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
+          "description": "Command used by 'Refresh Framework Tree'."
         },
         "shelf.governanceTreeJsonPath": {
           "type": "string",
