@@ -37,7 +37,7 @@ from project_runtime.project_governance import (
 )
 
 if TYPE_CHECKING:
-    from project_runtime.knowledge_base import KnowledgeBaseProject
+    from project_runtime.knowledge_base import ImplementationEffectEntry, KnowledgeBaseProject
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -1452,11 +1452,11 @@ def _effect_sink_roles(field_path: str, targets: tuple[str, ...]) -> tuple[Requi
 def _config_effect_object(
     project: KnowledgeBaseProject,
     field_path: str,
-    effect_entry: dict[str, Any],
+    effect_entry: ImplementationEffectEntry,
 ) -> StructuralObject:
-    relation = str(effect_entry.get("relation") or "equals")
-    configured_value = effect_entry.get("value")
-    targets = tuple(str(item) for item in effect_entry.get("targets", []) if str(item).strip())
+    relation = effect_entry.relation or "equals"
+    configured_value = effect_entry.value
+    targets = tuple(target_path for target_path in effect_entry.targets if target_path.strip())
     implementation_section = field_path.split(".", 1)[0]
     implementation_ref = SourceRef(
         layer="implementation_config",

@@ -15,7 +15,7 @@ Loader = Callable[[str | Path], Any]
 Materializer = Callable[[str | Path, Path | None], Any]
 RuntimeAppBuilder = Callable[[str | Path], FastAPI]
 GovernanceClosureBuilder = Callable[[Any], Any]
-ImplementationEffectBuilder = Callable[[Any], dict[str, dict[str, Any]]]
+ImplementationEffectBuilder = Callable[[Any], dict[str, Any]]
 ProjectScaffolder = Callable[[Path, str | None, bool, bool], tuple[str, ...]]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

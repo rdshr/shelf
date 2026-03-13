@@ -5044,6 +5044,33 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+        "label": "class:GeneratedArtifactOutputPaths",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=class:GeneratedArtifactOutputPaths | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
         "label": "class:GeneratedArtifactPaths",
         "level": 5,
@@ -5064,6 +5091,60 @@
         "object_id": "kb.backend.surface_spec",
         "role_id": null,
         "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "label": "class:GeneratedArtifactPayloads",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=class:GeneratedArtifactPayloads | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
+        "label": "class:ImplementationEffectEntry",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=class:ImplementationEffectEntry | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
         "symbol_kind": null,
         "risk": null,
         "validator": null,
@@ -5503,6 +5584,33 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+        "label": "function:_build_framework_ir_text",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:_build_framework_ir_text | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
         "label": "function:_build_generated_artifact_payloads",
         "level": 5,
@@ -5523,6 +5631,60 @@
         "object_id": "kb.backend.surface_spec",
         "role_id": null,
         "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "label": "function:_build_generation_manifest_payload",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:_build_generation_manifest_payload | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
+        "label": "function:_build_implementation_bundle_text",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:_build_implementation_bundle_text | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
         "symbol_kind": null,
         "risk": null,
         "validator": null,
@@ -5692,6 +5854,60 @@
         "audit_classification": null
       },
       {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "label": "function:content_sha256",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:content_sha256 | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "label": "function:file_payload",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:file_payload | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
         "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
         "label": "function:materialize_knowledge_base_project",
         "level": 5,
@@ -5712,6 +5928,60 @@
         "object_id": "knowledge_base_basic.config_effect.artifacts.framework_ir_json",
         "role_id": null,
         "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "label": "function:to_dict",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:to_dict | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "symbol_kind": null,
+        "risk": null,
+        "validator": null,
+        "minimality_status": null,
+        "audit_classification": null
+      },
+      {
+        "id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
+        "label": "function:write_to",
+        "level": 5,
+        "description": "kind=structural_candidate | layer=Code | project_id=knowledge_base_basic | file=src/project_runtime/knowledge_base.py | locator=function:write_to | object_id=kb.backend.surface_spec | candidate_id=knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
+        "source_file": "src/project_runtime/knowledge_base.py",
+        "source_line": 176,
+        "node_kind": "structural_candidate",
+        "layer": "Code",
+        "project_id": "knowledge_base_basic",
+        "project_product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
+        "parent_node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "derived_from": [
+          "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+        ],
+        "owner": null,
+        "artifact": null,
+        "symbol_id": null,
+        "object_id": "kb.backend.surface_spec",
+        "role_id": null,
+        "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
         "symbol_kind": null,
         "risk": null,
         "validator": null,
@@ -11186,7 +11456,22 @@
       },
       {
         "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
         "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
         "relation": "tree_child"
       },
       {
@@ -11271,7 +11556,22 @@
       },
       {
         "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
         "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
         "relation": "tree_child"
       },
       {
@@ -11306,7 +11606,27 @@
       },
       {
         "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
         "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "relation": "tree_child"
+      },
+      {
+        "from": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+        "to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
         "relation": "tree_child"
       },
       {
@@ -12702,7 +13022,10 @@
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -12719,14 +13042,21 @@
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
               "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
-              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project"
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+              "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to"
             ],
             "reasons": [
               "candidate:attached",
@@ -13281,7 +13611,10 @@
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -13298,14 +13631,21 @@
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
                 "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
-                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project"
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+                "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to"
               ],
               "reasons": [
                 "candidate:attached",
@@ -13413,7 +13753,7 @@
             "fully_closed_object_count": 23,
             "partially_closed_object_count": 0,
             "governed_candidate_count": 24,
-            "attached_candidate_count": 80,
+            "attached_candidate_count": 90,
             "internal_candidate_count": 0,
             "uncovered_future_categories": [
               "compiler/evidence builders that are still attached-only",
@@ -21673,10 +22013,52 @@
             "role_ids": []
           },
           {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:GeneratedArtifactOutputPaths",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
             "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
             "project_id": "knowledge_base_basic",
             "file": "src/project_runtime/knowledge_base.py",
             "locator": "class:GeneratedArtifactPaths",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:GeneratedArtifactPayloads",
+            "kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:ImplementationEffectEntry",
             "kind": "python_schema_carrier",
             "confidence": 0.96,
             "reasons": [
@@ -21917,6 +22299,21 @@
             ]
           },
           {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_framework_ir_text",
+            "kind": "python_evidence_builder",
+            "confidence": 0.91,
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
             "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
             "project_id": "knowledge_base_basic",
             "file": "src/project_runtime/knowledge_base.py",
@@ -21927,6 +22324,37 @@
               "builder/compiler naming pattern",
               "writes or composes governance/evidence artifacts",
               "consumes implementation/runtime effect structures"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_generation_manifest_payload",
+            "kind": "python_config_sink",
+            "confidence": 0.91,
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts",
+              "consumes implementation/runtime effect structures"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_implementation_bundle_text",
+            "kind": "python_evidence_builder",
+            "confidence": 0.91,
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts"
             ],
             "classification": "attached",
             "object_id": "kb.backend.surface_spec",
@@ -22040,15 +22468,42 @@
             "role_ids": []
           },
           {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:content_sha256",
+            "kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:file_payload",
+            "kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
             "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
             "project_id": "knowledge_base_basic",
             "file": "src/project_runtime/knowledge_base.py",
             "locator": "function:materialize_knowledge_base_project",
-            "kind": "python_evidence_builder",
-            "confidence": 0.91,
+            "kind": "python_builder",
+            "confidence": 0.82,
             "reasons": [
-              "builder/compiler naming pattern",
-              "writes or composes governance/evidence artifacts"
+              "builder/compiler naming pattern"
             ],
             "classification": "governed",
             "object_id": "knowledge_base_basic.config_effect.artifacts.framework_ir_json",
@@ -22062,6 +22517,34 @@
               "artifacts.product_spec_json:generated_artifacts.product_spec_json",
               "artifacts.strict_zone_report_json:generated_artifacts.strict_zone_report_json"
             ]
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:to_dict",
+            "kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
+          },
+          {
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
+            "project_id": "knowledge_base_basic",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:write_to",
+            "kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": []
           }
         ],
         "nodes": [
@@ -24337,7 +24820,10 @@
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -24354,14 +24840,21 @@
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
               "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
-              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project"
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+              "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to"
             ],
             "kind": "strict_zone_file",
             "layer": "Code",
@@ -24752,6 +25245,29 @@
             "project_id": "knowledge_base_basic"
           },
           {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:GeneratedArtifactOutputPaths",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:GeneratedArtifactOutputPaths",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
             "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
             "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
             "children": [],
@@ -24761,6 +25277,52 @@
             "file": "src/project_runtime/knowledge_base.py",
             "locator": "class:GeneratedArtifactPaths",
             "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:GeneratedArtifactPayloads",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:GeneratedArtifactPayloads",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+            "candidate_kind": "python_schema_carrier",
+            "confidence": 0.96,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "class carries request/response/spec schema surface"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "class:ImplementationEffectEntry",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "class:ImplementationEffectEntry",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
             "candidate_kind": "python_schema_carrier",
             "confidence": 0.96,
             "classification": "attached",
@@ -25149,6 +25711,30 @@
             "project_id": "knowledge_base_basic"
           },
           {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:_build_framework_ir_text",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_framework_ir_text",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.91,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
             "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
             "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
             "children": [],
@@ -25167,6 +25753,55 @@
               "builder/compiler naming pattern",
               "writes or composes governance/evidence artifacts",
               "consumes implementation/runtime effect structures"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:_build_generation_manifest_payload",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_generation_manifest_payload",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+            "candidate_kind": "python_config_sink",
+            "confidence": 0.91,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts",
+              "consumes implementation/runtime effect structures"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:_build_implementation_bundle_text",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:_build_implementation_bundle_text",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.91,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "builder/compiler naming pattern",
+              "writes or composes governance/evidence artifacts"
             ],
             "derived_from": [
               "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
@@ -25335,6 +25970,52 @@
             "project_id": "knowledge_base_basic"
           },
           {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:content_sha256",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:content_sha256",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:file_payload",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:file_payload",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
             "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
             "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
             "children": [],
@@ -25344,8 +26025,8 @@
             "file": "src/project_runtime/knowledge_base.py",
             "locator": "function:materialize_knowledge_base_project",
             "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
-            "candidate_kind": "python_evidence_builder",
-            "confidence": 0.91,
+            "candidate_kind": "python_builder",
+            "confidence": 0.82,
             "classification": "governed",
             "object_id": "knowledge_base_basic.config_effect.artifacts.framework_ir_json",
             "role_ids": [
@@ -25359,11 +26040,56 @@
               "artifacts.strict_zone_report_json:generated_artifacts.strict_zone_report_json"
             ],
             "reasons": [
-              "builder/compiler naming pattern",
-              "writes or composes governance/evidence artifacts"
+              "builder/compiler naming pattern"
             ],
             "derived_from": [
               "project:knowledge_base_basic:structure:object:knowledge_base_basic.config_effect.artifacts.framework_ir_json:role:artifacts.framework_ir_json:generated_artifacts.framework_ir_json"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:to_dict",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:to_dict",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+            ],
+            "project_id": "knowledge_base_basic"
+          },
+          {
+            "node_id": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
+            "parent": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+            "children": [],
+            "kind": "structural_candidate",
+            "layer": "Code",
+            "title": "function:write_to",
+            "file": "src/project_runtime/knowledge_base.py",
+            "locator": "function:write_to",
+            "candidate_id": "knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
+            "candidate_kind": "python_evidence_builder",
+            "confidence": 0.84,
+            "classification": "attached",
+            "object_id": "kb.backend.surface_spec",
+            "role_ids": [],
+            "reasons": [
+              "function emits manifest/tree/generated evidence"
+            ],
+            "derived_from": [
+              "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
             ],
             "project_id": "knowledge_base_basic"
           },
@@ -30975,7 +31701,10 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -30992,14 +31721,21 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
         "workspace:code:file:src/project_runtime/knowledge_base.py"
       ],
       "src/project_runtime/knowledge_base_contract.py": [
@@ -31511,7 +32247,10 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
@@ -31528,14 +32267,21 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to": "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py",
       "project:knowledge_base_basic:evidence": "project:knowledge_base_basic",
       "project:knowledge_base_basic:evidence:artifact:framework_ir_json": "project:knowledge_base_basic:evidence",
       "project:knowledge_base_basic:evidence:artifact:generation_manifest_json": "project:knowledge_base_basic:evidence",
@@ -31873,7 +32619,10 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -31890,14 +32639,21 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
-        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project"
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to"
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:A11yConfig": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ArtifactConfig": [],
@@ -31908,7 +32664,10 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject": [],
@@ -31925,14 +32684,21 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload": [],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict": [],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to": [],
       "project:knowledge_base_basic:evidence": [
         "project:knowledge_base_basic:evidence:artifact:framework_ir_json",
         "project:knowledge_base_basic:evidence:artifact:generation_manifest_json",
@@ -32996,7 +33762,16 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig": [
         "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
       ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry": [
         "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig": [
@@ -33047,7 +33822,16 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec": [
         "project:knowledge_base_basic:structure:object:kb.backend.surface_spec:role:kb.backend.surface_spec:_build_backend_spec"
       ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text": [
         "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
       ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec": [
@@ -33068,8 +33852,20 @@
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source": [
         "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
       ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
       "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project": [
         "project:knowledge_base_basic:structure:object:knowledge_base_basic.config_effect.artifacts.framework_ir_json:role:artifacts.framework_ir_json:generated_artifacts.framework_ir_json"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
+      ],
+      "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to": [
+        "project:knowledge_base_basic:structure:object:kb.backend.surface_spec"
       ],
       "project:knowledge_base_basic:evidence": [],
       "project:knowledge_base_basic:evidence:artifact:framework_ir_json": [
@@ -34173,7 +34969,10 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -34189,11 +34988,18 @@
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
         "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+        "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
         "project:knowledge_base_basic:evidence:artifact:framework_ir_json",
         "project:knowledge_base_basic:evidence:artifact:generation_manifest_json",
         "project:knowledge_base_basic:evidence:artifact:governance_manifest_json",
@@ -34743,7 +35549,10 @@
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FeatureConfig",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrameworkSelection",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:FrontendImplementationConfig",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactOutputPaths",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPaths",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:GeneratedArtifactPayloads",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:ImplementationEffectEntry",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseImplementationConfig",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProductSpec",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:KnowledgeBaseProject",
@@ -34760,14 +35569,21 @@
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:SurfaceCopyConfig",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:class:VisualConfig",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_backend_spec",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_framework_ir_text",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generated_artifact_payloads",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_generation_manifest_payload",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_implementation_bundle_text",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_ui_spec",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_build_visual_tokens",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:_load_implementation_config",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_implementation_effect_manifest",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:build_knowledge_base_runtime_app_from_spec",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:compile_knowledge_document_source",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:content_sha256",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:file_payload",
           "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:materialize_knowledge_base_project",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:to_dict",
+          "project:knowledge_base_basic:code:file:src/project_runtime/knowledge_base.py:candidate:knowledge_base_basic:src/project_runtime/knowledge_base.py:function:write_to",
           "project:knowledge_base_basic:evidence",
           "project:knowledge_base_basic:evidence:artifact:framework_ir_json",
           "project:knowledge_base_basic:evidence:artifact:generation_manifest_json",

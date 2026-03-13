@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 import tomllib
-from typing import Any
+from typing import Any, Callable
 
 from framework_ir import FrameworkModuleIR, load_framework_registry, parse_framework_module
 from project_runtime.config_layout import config_layout
@@ -505,6 +505,18 @@ class ArtifactConfig:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    def file_names(self) -> tuple[str, ...]:
+        return (
+            self.framework_ir_json,
+            self.product_spec_json,
+            self.implementation_bundle_py,
+            self.generation_manifest_json,
+            self.governance_manifest_json,
+            self.governance_tree_json,
+            self.strict_zone_report_json,
+            self.object_coverage_report_json,
+        )
+
 
 @dataclass(frozen=True)
 class KnowledgeBaseImplementationConfig:
@@ -609,6 +621,126 @@ class GeneratedArtifactPaths:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    def file_payload(self) -> dict[str, str]:
+        return {
+            "framework_ir_json": self.framework_ir_json,
+            "product_spec_json": self.product_spec_json,
+            "implementation_bundle_py": self.implementation_bundle_py,
+            "generation_manifest_json": self.generation_manifest_json,
+            "governance_manifest_json": self.governance_manifest_json,
+            "governance_tree_json": self.governance_tree_json,
+            "strict_zone_report_json": self.strict_zone_report_json,
+            "object_coverage_report_json": self.object_coverage_report_json,
+        }
+
+    @classmethod
+    def from_artifact_config(
+        cls,
+        artifact_names: ArtifactConfig,
+        *,
+        directory: Path,
+        path_renderer: Callable[[Path], str],
+    ) -> "GeneratedArtifactPaths":
+        return cls(
+            directory=path_renderer(directory),
+            framework_ir_json=path_renderer(directory / artifact_names.framework_ir_json),
+            product_spec_json=path_renderer(directory / artifact_names.product_spec_json),
+            implementation_bundle_py=path_renderer(directory / artifact_names.implementation_bundle_py),
+            generation_manifest_json=path_renderer(directory / artifact_names.generation_manifest_json),
+            governance_manifest_json=path_renderer(directory / artifact_names.governance_manifest_json),
+            governance_tree_json=path_renderer(directory / artifact_names.governance_tree_json),
+            strict_zone_report_json=path_renderer(directory / artifact_names.strict_zone_report_json),
+            object_coverage_report_json=path_renderer(directory / artifact_names.object_coverage_report_json),
+        )
+
+
+@dataclass(frozen=True)
+class GeneratedArtifactOutputPaths:
+    framework_ir_json: Path
+    product_spec_json: Path
+    implementation_bundle_py: Path
+    generation_manifest_json: Path
+    governance_manifest_json: Path
+    governance_tree_json: Path
+    strict_zone_report_json: Path
+    object_coverage_report_json: Path
+
+    @classmethod
+    def from_artifact_config(
+        cls,
+        artifact_names: ArtifactConfig,
+        *,
+        output_dir: Path,
+    ) -> "GeneratedArtifactOutputPaths":
+        return cls(
+            framework_ir_json=output_dir / artifact_names.framework_ir_json,
+            product_spec_json=output_dir / artifact_names.product_spec_json,
+            implementation_bundle_py=output_dir / artifact_names.implementation_bundle_py,
+            generation_manifest_json=output_dir / artifact_names.generation_manifest_json,
+            governance_manifest_json=output_dir / artifact_names.governance_manifest_json,
+            governance_tree_json=output_dir / artifact_names.governance_tree_json,
+            strict_zone_report_json=output_dir / artifact_names.strict_zone_report_json,
+            object_coverage_report_json=output_dir / artifact_names.object_coverage_report_json,
+        )
+
+
+@dataclass(frozen=True)
+class GeneratedArtifactPayloads:
+    framework_ir_json: str
+    product_spec_json: str
+    implementation_bundle_py: str
+    generation_manifest_json: str
+    governance_manifest_json: str
+    governance_tree_json: str
+    strict_zone_report_json: str
+    object_coverage_report_json: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "framework_ir_json": self.framework_ir_json,
+            "product_spec_json": self.product_spec_json,
+            "implementation_bundle_py": self.implementation_bundle_py,
+            "generation_manifest_json": self.generation_manifest_json,
+            "governance_manifest_json": self.governance_manifest_json,
+            "governance_tree_json": self.governance_tree_json,
+            "strict_zone_report_json": self.strict_zone_report_json,
+            "object_coverage_report_json": self.object_coverage_report_json,
+        }
+
+    def content_sha256(self) -> dict[str, str]:
+        return {
+            field_name: _sha256_text(field_value)
+            for field_name, field_value in self.to_dict().items()
+            if field_name != "generation_manifest_json"
+        }
+
+    def write_to(self, output_paths: GeneratedArtifactOutputPaths) -> None:
+        output_paths.framework_ir_json.write_text(self.framework_ir_json, encoding="utf-8")
+        output_paths.product_spec_json.write_text(self.product_spec_json, encoding="utf-8")
+        output_paths.implementation_bundle_py.write_text(self.implementation_bundle_py, encoding="utf-8")
+        output_paths.generation_manifest_json.write_text(self.generation_manifest_json, encoding="utf-8")
+        output_paths.governance_manifest_json.write_text(self.governance_manifest_json, encoding="utf-8")
+        output_paths.governance_tree_json.write_text(self.governance_tree_json, encoding="utf-8")
+        output_paths.strict_zone_report_json.write_text(self.strict_zone_report_json, encoding="utf-8")
+        output_paths.object_coverage_report_json.write_text(
+            self.object_coverage_report_json,
+            encoding="utf-8",
+        )
+
+
+@dataclass(frozen=True)
+class ImplementationEffectEntry:
+    value: Any
+    relation: str
+    targets: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "value": self.value,
+            "relation": self.relation,
+            "targets": list(self.targets),
+        }
 
 
 @dataclass(frozen=True)
@@ -792,98 +924,91 @@ def _effective_generated_artifacts(project: KnowledgeBaseProject) -> GeneratedAr
 
     product_spec_path = _normalize_project_path(project.product_spec_file)
     artifact_directory = product_spec_path.parent / "generated"
-    artifact_names = project.implementation.artifacts
-    return GeneratedArtifactPaths(
-        directory=_relative_path(artifact_directory),
-        framework_ir_json=_relative_path(artifact_directory / artifact_names.framework_ir_json),
-        product_spec_json=_relative_path(artifact_directory / artifact_names.product_spec_json),
-        implementation_bundle_py=_relative_path(artifact_directory / artifact_names.implementation_bundle_py),
-        generation_manifest_json=_relative_path(artifact_directory / artifact_names.generation_manifest_json),
-        governance_manifest_json=_relative_path(artifact_directory / artifact_names.governance_manifest_json),
-        governance_tree_json=_relative_path(artifact_directory / artifact_names.governance_tree_json),
-        strict_zone_report_json=_relative_path(artifact_directory / artifact_names.strict_zone_report_json),
-        object_coverage_report_json=_relative_path(artifact_directory / artifact_names.object_coverage_report_json),
+    return GeneratedArtifactPaths.from_artifact_config(
+        project.implementation.artifacts,
+        directory=artifact_directory,
+        path_renderer=_relative_path,
     )
 
 
-def build_implementation_effect_manifest(project: KnowledgeBaseProject) -> dict[str, dict[str, Any]]:
+def build_implementation_effect_manifest(project: KnowledgeBaseProject) -> dict[str, ImplementationEffectEntry]:
     generated_artifacts = _effective_generated_artifacts(project)
     return {
-        "frontend.renderer": {
-            "value": project.implementation.frontend.renderer,
-            "relation": "equals",
-            "targets": ["ui_spec.implementation.frontend_renderer"],
-        },
-        "frontend.style_profile": {
-            "value": project.implementation.frontend.style_profile,
-            "relation": "equals",
-            "targets": ["ui_spec.implementation.style_profile"],
-        },
-        "frontend.script_profile": {
-            "value": project.implementation.frontend.script_profile,
-            "relation": "equals",
-            "targets": ["ui_spec.implementation.script_profile"],
-        },
-        "backend.renderer": {
-            "value": project.implementation.backend.renderer,
-            "relation": "equals",
-            "targets": ["backend_spec.implementation.backend_renderer"],
-        },
-        "backend.transport": {
-            "value": project.implementation.backend.transport,
-            "relation": "equals",
-            "targets": ["backend_spec.transport.mode"],
-        },
-        "backend.retrieval_strategy": {
-            "value": project.implementation.backend.retrieval_strategy,
-            "relation": "equals",
-            "targets": ["backend_spec.retrieval.strategy"],
-        },
-        "evidence.product_spec_endpoint": {
-            "value": project.implementation.evidence.product_spec_endpoint,
-            "relation": "equals",
-            "targets": ["backend_spec.transport.product_spec_endpoint"],
-        },
-        "artifacts.framework_ir_json": {
-            "value": project.implementation.artifacts.framework_ir_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.framework_ir_json"],
-        },
-        "artifacts.product_spec_json": {
-            "value": project.implementation.artifacts.product_spec_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.product_spec_json"],
-        },
-        "artifacts.implementation_bundle_py": {
-            "value": project.implementation.artifacts.implementation_bundle_py,
-            "relation": "basename",
-            "targets": ["generated_artifacts.implementation_bundle_py"],
-        },
-        "artifacts.generation_manifest_json": {
-            "value": project.implementation.artifacts.generation_manifest_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.generation_manifest_json"],
-        },
-        "artifacts.governance_manifest_json": {
-            "value": project.implementation.artifacts.governance_manifest_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.governance_manifest_json"],
-        },
-        "artifacts.governance_tree_json": {
-            "value": project.implementation.artifacts.governance_tree_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.governance_tree_json"],
-        },
-        "artifacts.strict_zone_report_json": {
-            "value": project.implementation.artifacts.strict_zone_report_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.strict_zone_report_json"],
-        },
-        "artifacts.object_coverage_report_json": {
-            "value": project.implementation.artifacts.object_coverage_report_json,
-            "relation": "basename",
-            "targets": ["generated_artifacts.object_coverage_report_json"],
-        },
+        "frontend.renderer": ImplementationEffectEntry(
+            value=project.implementation.frontend.renderer,
+            relation="equals",
+            targets=("ui_spec.implementation.frontend_renderer",),
+        ),
+        "frontend.style_profile": ImplementationEffectEntry(
+            value=project.implementation.frontend.style_profile,
+            relation="equals",
+            targets=("ui_spec.implementation.style_profile",),
+        ),
+        "frontend.script_profile": ImplementationEffectEntry(
+            value=project.implementation.frontend.script_profile,
+            relation="equals",
+            targets=("ui_spec.implementation.script_profile",),
+        ),
+        "backend.renderer": ImplementationEffectEntry(
+            value=project.implementation.backend.renderer,
+            relation="equals",
+            targets=("backend_spec.implementation.backend_renderer",),
+        ),
+        "backend.transport": ImplementationEffectEntry(
+            value=project.implementation.backend.transport,
+            relation="equals",
+            targets=("backend_spec.transport.mode",),
+        ),
+        "backend.retrieval_strategy": ImplementationEffectEntry(
+            value=project.implementation.backend.retrieval_strategy,
+            relation="equals",
+            targets=("backend_spec.retrieval.strategy",),
+        ),
+        "evidence.product_spec_endpoint": ImplementationEffectEntry(
+            value=project.implementation.evidence.product_spec_endpoint,
+            relation="equals",
+            targets=("backend_spec.transport.product_spec_endpoint",),
+        ),
+        "artifacts.framework_ir_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.framework_ir_json,
+            relation="basename",
+            targets=("generated_artifacts.framework_ir_json",),
+        ),
+        "artifacts.product_spec_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.product_spec_json,
+            relation="basename",
+            targets=("generated_artifacts.product_spec_json",),
+        ),
+        "artifacts.implementation_bundle_py": ImplementationEffectEntry(
+            value=project.implementation.artifacts.implementation_bundle_py,
+            relation="basename",
+            targets=("generated_artifacts.implementation_bundle_py",),
+        ),
+        "artifacts.generation_manifest_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.generation_manifest_json,
+            relation="basename",
+            targets=("generated_artifacts.generation_manifest_json",),
+        ),
+        "artifacts.governance_manifest_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.governance_manifest_json,
+            relation="basename",
+            targets=("generated_artifacts.governance_manifest_json",),
+        ),
+        "artifacts.governance_tree_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.governance_tree_json,
+            relation="basename",
+            targets=("generated_artifacts.governance_tree_json",),
+        ),
+        "artifacts.strict_zone_report_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.strict_zone_report_json,
+            relation="basename",
+            targets=("generated_artifacts.strict_zone_report_json",),
+        ),
+        "artifacts.object_coverage_report_json": ImplementationEffectEntry(
+            value=project.implementation.artifacts.object_coverage_report_json,
+            relation="basename",
+            targets=("generated_artifacts.object_coverage_report_json",),
+        ),
     }
 
 
@@ -1743,26 +1868,28 @@ def _raise_on_validation_failures(reports: dict[str, Any]) -> None:
         raise ValueError("framework rule validation failed: " + " | ".join(errors))
 
 
-def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[str, str]:
-    generated_artifacts = project.generated_artifacts
-    if generated_artifacts is None:
-        raise ValueError("generated_artifacts must be populated before payload generation")
+def _build_framework_ir_text(project: KnowledgeBaseProject) -> str:
+    return json.dumps(
+        {
+            "primary_modules": [
+                project.frontend_ir.to_dict(),
+                project.domain_ir.to_dict(),
+                project.backend_ir.to_dict(),
+            ],
+            "resolved_modules": [item.to_dict() for item in project.resolved_modules],
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
 
-    framework_ir_payload = {
-        "primary_modules": [
-            project.frontend_ir.to_dict(),
-            project.domain_ir.to_dict(),
-            project.backend_ir.to_dict(),
-        ],
-        "resolved_modules": [item.to_dict() for item in project.resolved_modules],
-    }
-    framework_ir_text = json.dumps(framework_ir_payload, ensure_ascii=False, indent=2)
 
-    product_spec = project.to_product_spec_dict()
-    runtime_bundle = project.to_runtime_bundle_dict()
-    configuration_effects = build_implementation_effect_manifest(project)
-    product_spec_text = json.dumps(product_spec, ensure_ascii=False, indent=2)
-    implementation_bundle_text = "\n".join(
+def _build_implementation_bundle_text(
+    project: KnowledgeBaseProject,
+    *,
+    product_spec: dict[str, Any],
+    runtime_bundle: dict[str, Any],
+) -> str:
+    return "\n".join(
         [
             "from __future__ import annotations",
             "",
@@ -1776,6 +1903,58 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
             f"RUNTIME_BUNDLE = json.loads(r'''{json.dumps(runtime_bundle, ensure_ascii=False)}''')",
             "",
         ]
+    )
+
+
+def _build_generation_manifest_payload(
+    project: KnowledgeBaseProject,
+    *,
+    generated_artifacts: GeneratedArtifactPaths,
+    configuration_effect_payload: dict[str, dict[str, Any]],
+    artifact_payloads: GeneratedArtifactPayloads,
+) -> dict[str, Any]:
+    return {
+        "project_id": project.metadata.project_id,
+        "template": project.metadata.template,
+        "product_spec_file": project.product_spec_file,
+        "implementation_config_file": project.implementation_config_file,
+        "generator": {
+            "entry": "project_runtime.knowledge_base.materialize_knowledge_base_project",
+            "discipline": (
+                "project behavior is derived from framework markdown, product spec, and implementation config; "
+                "generated code must not be edited directly"
+            ),
+        },
+        "framework_inputs": {
+            "frontend": project.frontend_ir.path,
+            "domain": project.domain_ir.path,
+            "backend": project.backend_ir.path,
+            "resolved_modules": [item.path for item in project.resolved_modules],
+        },
+        "configuration_effects": configuration_effect_payload,
+        "generated_files": generated_artifacts.file_payload(),
+        "content_sha256": artifact_payloads.content_sha256(),
+    }
+
+
+def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> GeneratedArtifactPayloads:
+    generated_artifacts = project.generated_artifacts
+    if generated_artifacts is None:
+        raise ValueError("generated_artifacts must be populated before payload generation")
+
+    product_spec = project.to_product_spec_dict()
+    runtime_bundle = project.to_runtime_bundle_dict()
+    configuration_effects = build_implementation_effect_manifest(project)
+    configuration_effect_payload = {
+        field_path: effect_entry.to_dict()
+        for field_path, effect_entry in configuration_effects.items()
+    }
+    framework_ir_text = _build_framework_ir_text(project)
+    product_spec_text = json.dumps(product_spec, ensure_ascii=False, indent=2)
+    implementation_bundle_text = _build_implementation_bundle_text(
+        project,
+        product_spec=product_spec,
+        runtime_bundle=runtime_bundle,
     )
     governance_manifest_text = json.dumps(
         build_governance_manifest(project),
@@ -1797,59 +1976,27 @@ def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> dict[st
         ensure_ascii=False,
         indent=2,
     )
+    artifact_payloads = GeneratedArtifactPayloads(
+        framework_ir_json=framework_ir_text,
+        product_spec_json=product_spec_text,
+        implementation_bundle_py=implementation_bundle_text,
+        generation_manifest_json="",
+        governance_manifest_json=governance_manifest_text,
+        governance_tree_json=governance_tree_text,
+        strict_zone_report_json=strict_zone_report_text,
+        object_coverage_report_json=object_coverage_report_text,
+    )
     generation_manifest_text = json.dumps(
-        {
-            "project_id": project.metadata.project_id,
-            "template": project.metadata.template,
-            "product_spec_file": project.product_spec_file,
-            "implementation_config_file": project.implementation_config_file,
-            "generator": {
-                "entry": "project_runtime.knowledge_base.materialize_knowledge_base_project",
-                "discipline": (
-                    "project behavior is derived from framework markdown, product spec, and implementation config; "
-                    "generated code must not be edited directly"
-                ),
-            },
-            "framework_inputs": {
-                "frontend": project.frontend_ir.path,
-                "domain": project.domain_ir.path,
-                "backend": project.backend_ir.path,
-                "resolved_modules": [item.path for item in project.resolved_modules],
-            },
-            "configuration_effects": configuration_effects,
-            "generated_files": {
-                "framework_ir_json": generated_artifacts.framework_ir_json,
-                "product_spec_json": generated_artifacts.product_spec_json,
-                "implementation_bundle_py": generated_artifacts.implementation_bundle_py,
-                "generation_manifest_json": generated_artifacts.generation_manifest_json,
-                "governance_manifest_json": generated_artifacts.governance_manifest_json,
-                "governance_tree_json": generated_artifacts.governance_tree_json,
-                "strict_zone_report_json": generated_artifacts.strict_zone_report_json,
-                "object_coverage_report_json": generated_artifacts.object_coverage_report_json,
-            },
-            "content_sha256": {
-                "framework_ir_json": _sha256_text(framework_ir_text),
-                "product_spec_json": _sha256_text(product_spec_text),
-                "implementation_bundle_py": _sha256_text(implementation_bundle_text),
-                "governance_manifest_json": _sha256_text(governance_manifest_text),
-                "governance_tree_json": _sha256_text(governance_tree_text),
-                "strict_zone_report_json": _sha256_text(strict_zone_report_text),
-                "object_coverage_report_json": _sha256_text(object_coverage_report_text),
-            },
-        },
+        _build_generation_manifest_payload(
+            project,
+            generated_artifacts=generated_artifacts,
+            configuration_effect_payload=configuration_effect_payload,
+            artifact_payloads=artifact_payloads,
+        ),
         ensure_ascii=False,
         indent=2,
     )
-    return {
-        "framework_ir_json": framework_ir_text,
-        "product_spec_json": product_spec_text,
-        "implementation_bundle_py": implementation_bundle_text,
-        "generation_manifest_json": generation_manifest_text,
-        "governance_manifest_json": governance_manifest_text,
-        "governance_tree_json": governance_tree_text,
-        "strict_zone_report_json": strict_zone_report_text,
-        "object_coverage_report_json": object_coverage_report_text,
-    }
+    return replace(artifact_payloads, generation_manifest_json=generation_manifest_text)
 
 
 def _compile_project(
@@ -1930,52 +2077,26 @@ def materialize_knowledge_base_project(
     output_path.mkdir(parents=True, exist_ok=True)
 
     artifact_names = project.implementation.artifacts
-    expected_file_names = {
-        artifact_names.framework_ir_json,
-        artifact_names.product_spec_json,
-        artifact_names.implementation_bundle_py,
-        artifact_names.generation_manifest_json,
-        artifact_names.governance_manifest_json,
-        artifact_names.governance_tree_json,
-        artifact_names.strict_zone_report_json,
-        artifact_names.object_coverage_report_json,
-    }
+    expected_file_names = set(artifact_names.file_names())
     _cleanup_generated_output_dir(output_path, expected_file_names)
-    framework_ir_path = output_path / artifact_names.framework_ir_json
-    product_spec_path_json = output_path / artifact_names.product_spec_json
-    implementation_bundle_path = output_path / artifact_names.implementation_bundle_py
-    generation_manifest_path = output_path / artifact_names.generation_manifest_json
-    governance_manifest_path = output_path / artifact_names.governance_manifest_json
-    governance_tree_path = output_path / artifact_names.governance_tree_json
-    strict_zone_report_path = output_path / artifact_names.strict_zone_report_json
-    object_coverage_report_path = output_path / artifact_names.object_coverage_report_json
+    output_paths = GeneratedArtifactOutputPaths.from_artifact_config(
+        artifact_names,
+        output_dir=output_path,
+    )
     # Keep generated evidence stable even when callers materialize into a temp directory.
     # The output path controls where files are written, but the manifest and runtime bundle
     # should continue to point at the project's canonical generated directory.
     artifact_directory = generated_dir
     project = replace(
         project,
-        generated_artifacts=GeneratedArtifactPaths(
-            directory=_relative_path(artifact_directory),
-            framework_ir_json=_relative_path(artifact_directory / artifact_names.framework_ir_json),
-            product_spec_json=_relative_path(artifact_directory / artifact_names.product_spec_json),
-            implementation_bundle_py=_relative_path(artifact_directory / artifact_names.implementation_bundle_py),
-            generation_manifest_json=_relative_path(artifact_directory / artifact_names.generation_manifest_json),
-            governance_manifest_json=_relative_path(artifact_directory / artifact_names.governance_manifest_json),
-            governance_tree_json=_relative_path(artifact_directory / artifact_names.governance_tree_json),
-            strict_zone_report_json=_relative_path(artifact_directory / artifact_names.strict_zone_report_json),
-            object_coverage_report_json=_relative_path(artifact_directory / artifact_names.object_coverage_report_json),
+        generated_artifacts=GeneratedArtifactPaths.from_artifact_config(
+            artifact_names,
+            directory=artifact_directory,
+            path_renderer=_relative_path,
         ),
     )
     payloads = _build_generated_artifact_payloads(project)
-    framework_ir_path.write_text(payloads["framework_ir_json"], encoding="utf-8")
-    product_spec_path_json.write_text(payloads["product_spec_json"], encoding="utf-8")
-    implementation_bundle_path.write_text(payloads["implementation_bundle_py"], encoding="utf-8")
-    generation_manifest_path.write_text(payloads["generation_manifest_json"], encoding="utf-8")
-    governance_manifest_path.write_text(payloads["governance_manifest_json"], encoding="utf-8")
-    governance_tree_path.write_text(payloads["governance_tree_json"], encoding="utf-8")
-    strict_zone_report_path.write_text(payloads["strict_zone_report_json"], encoding="utf-8")
-    object_coverage_report_path.write_text(payloads["object_coverage_report_json"], encoding="utf-8")
+    payloads.write_to(output_paths)
 
     return project
 

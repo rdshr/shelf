@@ -143,6 +143,87 @@ class ParsedRegistry:
     framework_layer_files: set[str]
 
 
+@dataclass(frozen=True)
+class GeneratedArtifactContract:
+    framework_ir_json: str
+    product_spec_json: str
+    implementation_bundle_py: str
+    generation_manifest_json: str
+    governance_manifest_json: str
+    governance_tree_json: str
+    strict_zone_report_json: str
+    object_coverage_report_json: str
+
+    @classmethod
+    def from_artifacts_table(cls, artifacts: dict[str, Any]) -> "GeneratedArtifactContract":
+        names: dict[str, str] = {}
+        for key in (
+            "framework_ir_json",
+            "product_spec_json",
+            "implementation_bundle_py",
+            "generation_manifest_json",
+            "governance_manifest_json",
+            "governance_tree_json",
+            "strict_zone_report_json",
+            "object_coverage_report_json",
+        ):
+            value = artifacts.get(key)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"implementation_config.toml missing artifacts.{key}")
+            names[key] = value.strip()
+        if len(set(names.values())) != len(names):
+            raise ValueError("artifact file names in implementation_config.toml must be unique")
+        return cls(**names)
+
+    def file_names(self) -> tuple[str, ...]:
+        return (
+            self.framework_ir_json,
+            self.product_spec_json,
+            self.implementation_bundle_py,
+            self.generation_manifest_json,
+            self.governance_manifest_json,
+            self.governance_tree_json,
+            self.strict_zone_report_json,
+            self.object_coverage_report_json,
+        )
+
+    def to_generated_payload(self, *, relative_generated_dir: str) -> dict[str, str]:
+        return {
+            "directory": relative_generated_dir,
+            "framework_ir_json": f"{relative_generated_dir}/{self.framework_ir_json}",
+            "product_spec_json": f"{relative_generated_dir}/{self.product_spec_json}",
+            "implementation_bundle_py": f"{relative_generated_dir}/{self.implementation_bundle_py}",
+            "generation_manifest_json": f"{relative_generated_dir}/{self.generation_manifest_json}",
+            "governance_manifest_json": f"{relative_generated_dir}/{self.governance_manifest_json}",
+            "governance_tree_json": f"{relative_generated_dir}/{self.governance_tree_json}",
+            "strict_zone_report_json": f"{relative_generated_dir}/{self.strict_zone_report_json}",
+            "object_coverage_report_json": f"{relative_generated_dir}/{self.object_coverage_report_json}",
+        }
+
+
+@dataclass(frozen=True)
+class CodeLanguageStandardMapping:
+    patterns: tuple[str, ...]
+    standards: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ImplementationEffectValidationContext:
+    product_spec_file: Path
+    rel_product_spec_file: str
+    implementation_config_file: Path
+    rel_implementation_config_file: str
+    implementation_leaf_values: dict[str, Any]
+    runtime_bundle: dict[str, Any]
+    effect_manifest: dict[str, Any]
+
+    def effect_keys(self) -> set[str]:
+        return set(self.effect_manifest)
+
+    def leaf_keys(self) -> set[str]:
+        return set(self.implementation_leaf_values)
+
+
 def make_issue(
     message: str,
     file: str,
@@ -285,24 +366,7 @@ def expected_generated_files_for(product_spec_file: Path) -> tuple[str, ...]:
     artifacts = data.get("artifacts")
     if not isinstance(artifacts, dict):
         raise ValueError("implementation_config.toml must define [artifacts]")
-    names: list[str] = []
-    for key in (
-        "framework_ir_json",
-        "product_spec_json",
-        "implementation_bundle_py",
-        "generation_manifest_json",
-        "governance_manifest_json",
-        "governance_tree_json",
-        "strict_zone_report_json",
-        "object_coverage_report_json",
-    ):
-        value = artifacts.get(key)
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError(f"implementation_config.toml missing artifacts.{key}")
-        names.append(value.strip())
-    if len(set(names)) != len(names):
-        raise ValueError("artifact file names in implementation_config.toml must be unique")
-    return tuple(names)
+    return GeneratedArtifactContract.from_artifacts_table(artifacts).file_names()
 
 
 def _read_file_bytes(path: Path) -> bytes:
@@ -356,24 +420,8 @@ def _derived_generated_artifacts_payload(
         raise ValueError("implementation_config.toml must define [artifacts]")
     generated_dir = product_spec_file.parent / "generated"
     rel_generated_dir = generated_dir.relative_to(REPO_ROOT).as_posix()
-
-    def rel_path(name_key: str) -> str:
-        value = artifacts.get(name_key)
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError(f"implementation_config.toml missing artifacts.{name_key}")
-        return f"{rel_generated_dir}/{value.strip()}"
-
-    return {
-        "directory": rel_generated_dir,
-        "framework_ir_json": rel_path("framework_ir_json"),
-        "product_spec_json": rel_path("product_spec_json"),
-        "implementation_bundle_py": rel_path("implementation_bundle_py"),
-        "generation_manifest_json": rel_path("generation_manifest_json"),
-        "governance_manifest_json": rel_path("governance_manifest_json"),
-        "governance_tree_json": rel_path("governance_tree_json"),
-        "strict_zone_report_json": rel_path("strict_zone_report_json"),
-        "object_coverage_report_json": rel_path("object_coverage_report_json"),
-    }
+    contract = GeneratedArtifactContract.from_artifacts_table(artifacts)
+    return contract.to_generated_payload(relative_generated_dir=rel_generated_dir)
 
 
 def _relation_matches(relation: str, config_value: Any, target_value: Any) -> bool:
@@ -916,6 +964,7 @@ def validate_code_language_standards_contract(repo_root: Path = REPO_ROOT) -> li
         return issues
 
     referenced_standard_files: set[str] = set()
+    parsed_mappings: list[CodeLanguageStandardMapping] = []
     for entry in mappings:
         if not isinstance(entry, dict):
             issues.append(
@@ -938,6 +987,7 @@ def validate_code_language_standards_contract(repo_root: Path = REPO_ROOT) -> li
                     code="CODE_STANDARDS_INDEX_INVALID",
                 )
             )
+            continue
         if not isinstance(standards, list) or not standards or not all(
             isinstance(item, str) and item for item in standards
         ):
@@ -950,7 +1000,12 @@ def validate_code_language_standards_contract(repo_root: Path = REPO_ROOT) -> li
                 )
             )
             continue
-        for standard_file in standards:
+        mapping = CodeLanguageStandardMapping(
+            patterns=tuple(item.strip() for item in patterns),
+            standards=tuple(item.strip() for item in standards),
+        )
+        parsed_mappings.append(mapping)
+        for standard_file in mapping.standards:
             referenced_standard_files.add(standard_file)
             standard_path = (repo_root / standard_file).resolve()
             if standard_path.exists():
@@ -998,174 +1053,224 @@ def validate_implementation_config_effects(
     issues: list[Issue] = []
     project_product_spec_files = product_spec_files or discover_project_product_spec_files()
     for product_spec_file in project_product_spec_files:
-        rel_product_spec_file = product_spec_file.relative_to(REPO_ROOT).as_posix()
-        implementation_config_file = implementation_config_path_for(product_spec_file)
-        rel_implementation_config_file = implementation_config_file.relative_to(REPO_ROOT).as_posix()
         try:
-            _, implementation_data = _load_toml_text_and_data(implementation_config_file)
-            implementation_leaf_values = _collect_leaf_paths(implementation_data)
-            registration = resolve_project_template_registration(product_spec_file)
-            project = load_registered_project(product_spec_file)
-            runtime_bundle = project.to_runtime_bundle_dict()
-            runtime_bundle["generated_artifacts"] = _derived_generated_artifacts_payload(
-                product_spec_file,
-                implementation_data,
-            )
-            effect_manifest = registration.build_implementation_effect_manifest(project)
+            context = _load_implementation_effect_validation_context(product_spec_file)
         except Exception as exc:
+            implementation_config_file = implementation_config_path_for(product_spec_file)
+            rel_product_spec_file = product_spec_file.relative_to(REPO_ROOT).as_posix()
             issues.append(
                 make_issue(
                     f"failed to build implementation effect graph for {rel_product_spec_file}: {exc}",
-                    rel_implementation_config_file,
+                    implementation_config_file.relative_to(REPO_ROOT).as_posix(),
                     1,
                     code="PROJECT_IMPLEMENTATION_EFFECT_BUILD_FAILED",
                 )
             )
             continue
 
-        effect_keys = set(effect_manifest)
-        leaf_keys = set(implementation_leaf_values)
-
-        for field_path in sorted(leaf_keys - effect_keys):
-            issues.append(
-                make_issue(
-                    f"implementation_config field has no downstream effect declaration: {field_path}",
-                    rel_implementation_config_file,
-                    1,
-                    code="PROJECT_IMPLEMENTATION_CONFIG_DEAD_FIELD",
-                )
-            )
-
-        for field_path in sorted(effect_keys - leaf_keys):
-            issues.append(
-                make_issue(
-                    f"implementation effect manifest references unknown config field: {field_path}",
-                    rel_implementation_config_file,
-                    1,
-                    code="PROJECT_IMPLEMENTATION_EFFECT_STALE",
-                )
-            )
-
-        for field_path in sorted(effect_keys & leaf_keys):
-            expected_value = implementation_leaf_values[field_path]
-            effect_entry = effect_manifest[field_path]
-            manifest_value = effect_entry.get("value")
-            if manifest_value != expected_value:
-                issues.append(
-                    make_issue(
-                        (
-                            f"implementation effect manifest value mismatch for {field_path}: "
-                            f"expected {expected_value!r}, got {manifest_value!r}"
-                        ),
-                        rel_implementation_config_file,
-                        1,
-                        code="PROJECT_IMPLEMENTATION_EFFECT_VALUE_MISMATCH",
-                    )
-                )
-                continue
-
-            relation = effect_entry.get("relation")
-            if not isinstance(relation, str) or not relation:
-                issues.append(
-                    make_issue(
-                        f"implementation effect manifest missing relation for {field_path}",
-                        rel_implementation_config_file,
-                        1,
-                        code="PROJECT_IMPLEMENTATION_EFFECT_RELATION_MISSING",
-                    )
-                )
-                continue
-
-            targets = effect_entry.get("targets")
-            if not isinstance(targets, list) or not targets:
-                issues.append(
-                    make_issue(
-                        f"implementation_config field lacks downstream targets: {field_path}",
-                        rel_implementation_config_file,
-                        1,
-                        code="PROJECT_IMPLEMENTATION_EFFECT_TARGETS_MISSING",
-                    )
-                )
-                continue
-
-            for target_path in targets:
-                if not isinstance(target_path, str) or not target_path.strip():
-                    issues.append(
-                        make_issue(
-                            f"implementation effect target must be a non-empty dotted path for {field_path}",
-                            rel_implementation_config_file,
-                            1,
-                            code="PROJECT_IMPLEMENTATION_EFFECT_TARGET_INVALID",
-                        )
-                    )
-                    continue
-                if target_path.startswith("implementation_config."):
-                    issues.append(
-                        make_issue(
-                            (
-                                f"{field_path} only points back to implementation_config; "
-                                "configuration effects must land in downstream compiled/runtime structures"
-                            ),
-                            rel_implementation_config_file,
-                            1,
-                            code="PROJECT_IMPLEMENTATION_EFFECT_SELF_REFERENCE",
-                        )
-                    )
-                    continue
-                target_value = _get_dotted_value(runtime_bundle, target_path)
-                if target_value is _MISSING:
-                    issues.append(
-                        make_issue(
-                            f"implementation effect target is missing for {field_path}: {target_path}",
-                            rel_product_spec_file,
-                            1,
-                            code="PROJECT_IMPLEMENTATION_EFFECT_TARGET_MISSING",
-                            related=[
-                                {
-                                    "message": "Implementation config",
-                                    "file": rel_implementation_config_file,
-                                    "line": 1,
-                                    "column": 1,
-                                }
-                            ],
-                        )
-                    )
-                    continue
-                try:
-                    matches = _relation_matches(relation, expected_value, target_value)
-                except Exception as exc:
-                    issues.append(
-                        make_issue(
-                            f"failed to evaluate implementation effect for {field_path}: {exc}",
-                            rel_implementation_config_file,
-                            1,
-                            code="PROJECT_IMPLEMENTATION_EFFECT_RELATION_INVALID",
-                        )
-                    )
-                    continue
-                if matches:
-                    continue
-                issues.append(
-                    make_issue(
-                        (
-                            f"implementation effect mismatch for {field_path}: target {target_path} "
-                            f"does not reflect configured value {expected_value!r}"
-                        ),
-                        rel_product_spec_file,
-                        1,
-                        code="PROJECT_IMPLEMENTATION_EFFECT_MISMATCH",
-                        related=[
-                            {
-                                "message": f"Downstream target {target_path} resolved to {target_value!r}",
-                                "file": rel_implementation_config_file,
-                                "line": 1,
-                                "column": 1,
-                            }
-                        ],
-                    )
-                )
+        issues.extend(_validate_implementation_effect_context(context))
 
     return issues
+
+
+def _load_implementation_effect_validation_context(
+    product_spec_file: Path,
+) -> ImplementationEffectValidationContext:
+    implementation_config_file = implementation_config_path_for(product_spec_file)
+    _, implementation_data = _load_toml_text_and_data(implementation_config_file)
+    implementation_leaf_values = _collect_leaf_paths(implementation_data)
+    registration = resolve_project_template_registration(product_spec_file)
+    project = load_registered_project(product_spec_file)
+    runtime_bundle = project.to_runtime_bundle_dict()
+    runtime_bundle["generated_artifacts"] = _derived_generated_artifacts_payload(
+        product_spec_file,
+        implementation_data,
+    )
+    return ImplementationEffectValidationContext(
+        product_spec_file=product_spec_file,
+        rel_product_spec_file=product_spec_file.relative_to(REPO_ROOT).as_posix(),
+        implementation_config_file=implementation_config_file,
+        rel_implementation_config_file=implementation_config_file.relative_to(REPO_ROOT).as_posix(),
+        implementation_leaf_values=implementation_leaf_values,
+        runtime_bundle=runtime_bundle,
+        effect_manifest=registration.build_implementation_effect_manifest(project),
+    )
+
+
+def _validate_implementation_effect_context(
+    context: ImplementationEffectValidationContext,
+) -> list[Issue]:
+    issues: list[Issue] = []
+    effect_keys = context.effect_keys()
+    leaf_keys = context.leaf_keys()
+
+    for field_path in sorted(leaf_keys - effect_keys):
+        issues.append(
+            make_issue(
+                f"implementation_config field has no downstream effect declaration: {field_path}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_CONFIG_DEAD_FIELD",
+            )
+        )
+
+    for field_path in sorted(effect_keys - leaf_keys):
+        issues.append(
+            make_issue(
+                f"implementation effect manifest references unknown config field: {field_path}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_STALE",
+            )
+        )
+
+    for field_path in sorted(effect_keys & leaf_keys):
+        issues.extend(_validate_implementation_effect_field(context, field_path))
+
+    return issues
+
+
+def _validate_implementation_effect_field(
+    context: ImplementationEffectValidationContext,
+    field_path: str,
+) -> list[Issue]:
+    issues: list[Issue] = []
+    expected_value = context.implementation_leaf_values[field_path]
+    effect_entry = context.effect_manifest[field_path]
+    manifest_value = effect_entry.value
+    if manifest_value != expected_value:
+        issues.append(
+            make_issue(
+                (
+                    f"implementation effect manifest value mismatch for {field_path}: "
+                    f"expected {expected_value!r}, got {manifest_value!r}"
+                ),
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_VALUE_MISMATCH",
+            )
+        )
+        return issues
+
+    relation = effect_entry.relation
+    if not relation:
+        issues.append(
+            make_issue(
+                f"implementation effect manifest missing relation for {field_path}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_RELATION_MISSING",
+            )
+        )
+        return issues
+
+    targets = effect_entry.targets
+    if not targets:
+        issues.append(
+            make_issue(
+                f"implementation_config field lacks downstream targets: {field_path}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_TARGETS_MISSING",
+            )
+        )
+        return issues
+
+    for target_path in targets:
+        issues.extend(
+            _validate_implementation_effect_target(
+                context,
+                field_path=field_path,
+                expected_value=expected_value,
+                relation=relation,
+                target_path=target_path,
+            )
+        )
+    return issues
+
+
+def _validate_implementation_effect_target(
+    context: ImplementationEffectValidationContext,
+    *,
+    field_path: str,
+    expected_value: Any,
+    relation: str,
+    target_path: str,
+) -> list[Issue]:
+    if not isinstance(target_path, str) or not target_path.strip():
+        return [
+            make_issue(
+                f"implementation effect target must be a non-empty dotted path for {field_path}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_TARGET_INVALID",
+            )
+        ]
+    if target_path.startswith("implementation_config."):
+        return [
+            make_issue(
+                (
+                    f"{field_path} only points back to implementation_config; "
+                    "configuration effects must land in downstream compiled/runtime structures"
+                ),
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_SELF_REFERENCE",
+            )
+        ]
+
+    target_value = _get_dotted_value(context.runtime_bundle, target_path)
+    if target_value is _MISSING:
+        return [
+            make_issue(
+                f"implementation effect target is missing for {field_path}: {target_path}",
+                context.rel_product_spec_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_TARGET_MISSING",
+                related=[
+                    {
+                        "message": "Implementation config",
+                        "file": context.rel_implementation_config_file,
+                        "line": 1,
+                        "column": 1,
+                    }
+                ],
+            )
+        ]
+
+    try:
+        matches = _relation_matches(relation, expected_value, target_value)
+    except Exception as exc:
+        return [
+            make_issue(
+                f"failed to evaluate implementation effect for {field_path}: {exc}",
+                context.rel_implementation_config_file,
+                1,
+                code="PROJECT_IMPLEMENTATION_EFFECT_RELATION_INVALID",
+            )
+        ]
+    if matches:
+        return []
+
+    return [
+        make_issue(
+            (
+                f"implementation effect mismatch for {field_path}: target {target_path} "
+                f"does not reflect configured value {expected_value!r}"
+            ),
+            context.rel_product_spec_file,
+            1,
+            code="PROJECT_IMPLEMENTATION_EFFECT_MISMATCH",
+            related=[
+                {
+                    "message": f"Downstream target {target_path} resolved to {target_value!r}",
+                    "file": context.rel_implementation_config_file,
+                    "line": 1,
+                    "column": 1,
+                }
+            ],
+        )
+    ]
 
 
 def validate_project_governance(
@@ -1182,10 +1287,8 @@ def validate_project_governance(
             artifacts = implementation_data.get("artifacts")
             if not isinstance(artifacts, dict):
                 raise ValueError("implementation_config.toml must define [artifacts]")
-            governance_file_name = artifacts.get("governance_tree_json")
-            if not isinstance(governance_file_name, str) or not governance_file_name.strip():
-                raise ValueError("implementation_config.toml missing artifacts.governance_tree_json")
-            governance_tree_path = product_spec_file.parent / "generated" / governance_file_name.strip()
+            artifact_contract = GeneratedArtifactContract.from_artifacts_table(artifacts)
+            governance_tree_path = product_spec_file.parent / "generated" / artifact_contract.governance_tree_json
         except Exception as exc:
             issues.append(
                 make_issue(
