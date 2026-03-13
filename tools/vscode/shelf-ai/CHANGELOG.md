@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.0.47 - 2026-03-13
+- Added a structure-first authoring workflow for framework drafts and product truth. Shelf AI now supports `framework_drafts/` navigation plus one-click draft publishing, can scaffold a framework-driven project from the extension, and lets `product_spec.toml` stay as the root entry while splitting concrete product sections into `product_spec/*.toml`.
+- Reworked boundary and authoring flows to remove hardwired single-file assumptions. Boundary jumps now prefer real split section files, repository governance resolves section source files through the composed product-spec loader, and generated governance evidence keeps pointing back to the actual section file instead of only the root `product_spec.toml`.
+- Added manual workflow controls to the extension: validation trigger mode can now be `manual`, `save`, or `all`, and Shelf AI exposes an explicit codegen preflight command so framework / product / implementation checks can be run before asking AI to generate code.
+- Formalized the positive-vs-negative framework protocol. `C*` now stays positive-only, `N*` carries non-responsibility declarations, negative rules use `失效结论` instead of faking `输出能力`, and the framework corpus, snippet templates, parser, strict validator, and regression tests were migrated together.
+
 ## 0.0.46 - 2026-03-13
 - Fixed the long-lived validation deadlock path in Shelf AI. Validation commands now run with timeout protection, and a manual `Shelf: Validate Mapping Now` request can restart a stale in-flight validation instead of leaving the extension apparently unresponsive until `Reload Window`.
 - Changed boundary-to-product-spec navigation to prefer materialized governance manifests when available. This removes the hardcoded knowledge-base bias and lets custom frameworks such as `document_chunking` resolve to the correct `projects/*/product_spec.toml` section after project materialization.

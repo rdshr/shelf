@@ -22,7 +22,7 @@ required_framework_directive_sections = [
   "## 4. 基组合原则",
   "## 5. 验证",
 ]
-allowed_project_top_level_dirs = ["assets", "generated"]
+allowed_project_top_level_dirs = ["assets", "generated", "product_spec"]
 allowed_project_root_files = ["product_spec.toml", "implementation_config.toml"]
 allowed_project_doc_suffixes = [".md"]
 

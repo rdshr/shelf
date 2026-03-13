@@ -10,15 +10,17 @@
 - Refreshes framework-tree and governance-tree artifacts with separate generator commands.
 - Supports node-to-source jump: click a node, then use `打开源文件` in detail panel to jump to the mapped markdown line.
 - Supports `Go to Definition` / `Ctrl/Cmd+Click` inside framework markdown for `B/C/R/V`, boundary ids, `Lx.My`, `framework.Lx.My`, and bracketed module-rule refs like `frontend.L1.M2[R1,R2]`.
-- Boundary navigation is not limited to explicitly exposed top-level sections. Direct boundaries such as `CHAT` / `SURFACE` and derived boundaries such as `CITATION` / `TURN` / `SCOPE` can jump to the owning or related `projects/*/product_spec.toml` section, so every effective boundary stays traceable into project product specs.
+- Boundary navigation is not limited to explicitly exposed top-level sections. Direct boundaries such as `CHAT` / `SURFACE` and derived boundaries such as `CITATION` / `TURN` / `SCOPE` can jump to the owning or related `projects/*/product_spec.toml` section, and when a project uses split specs they now land directly in `projects/*/product_spec/*.toml`.
 - When a project has already been materialized, boundary navigation now prefers the generated governance manifest for project-specific section ownership instead of relying on extension-side hardcoded framework guesses.
+- Framework drafts under `framework_drafts/` reuse the same definition / hover / reference navigation model as published framework docs, but they stay outside strict project materialization until published.
 - Module refs such as `frontend.L1.M2` are treated as one hover/click target, jump straight to the target module's first `B*`, and show capability/base/rule summaries on hover.
 - Hover also works for bracketed module rules such as `frontend.L1.M2[R1,R2]` and local `B/C/R/V` plus boundary symbols, showing the resolved definition content directly in place; boundary hovers also show the mapped config file, primary owning section, related sections, and inferred ownership note when applicable.
 - `Find All References` / `Shift+F12` is implemented for navigable framework symbols, so boundary tokens can return the current usage, framework definition, and mapped config target in one place.
-- Runs strict mapping validation automatically on startup.
-- Runs strict mapping validation on save/create/rename/delete for relevant files.
-- Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
+- Validation trigger mode is configurable: `manual`, `save`, or `all`.
 - Manual validation can recover from a stale in-flight guard task; if a previous validation command has been hanging for too long, `Shelf: Validate Mapping Now` restarts it instead of waiting forever.
+- Adds `Shelf: Run Codegen Preflight` to materialize and fully validate the current workspace before asking AI to generate code.
+- Adds `Shelf: Scaffold Framework-Driven Project` to create a formal `product_spec.toml` / `product_spec/*.toml` / `implementation_config.toml` authoring skeleton from a registered template.
+- Adds `Shelf: Publish Current Framework Draft` to move the active `framework_drafts/...` file into the formal `framework/...` tree.
 - Auto-materializes affected `projects/*` when `framework/*.md`, `product_spec.toml`, or `implementation_config.toml` changes.
 - The validation chain includes `配置即功能` checks: effective `implementation_config.toml` fields must drive downstream compiled behavior instead of becoming dead selectors.
 - Optionally runs `mypy` after relevant Python changes under `src/`, `scripts/`, or `tests/`.
@@ -76,6 +78,9 @@
 - `Shelf: Open Governance Tree`
 - `Shelf: Refresh Governance Tree`
 - `Shelf: Validate Mapping Now`
+- `Shelf: Run Codegen Preflight`
+- `Shelf: Scaffold Framework-Driven Project`
+- `Shelf: Publish Current Framework Draft`
 - `Shelf: Show Mapping Issues`
 
 ## Markdown Snippets
@@ -109,6 +114,7 @@
 
 ## Configuration
 - `shelf.enableOnSave`
+- `shelf.validationTriggerMode`
 - `shelf.notifyOnAutoFail`
 - `shelf.guardMode`
 - `shelf.autoMaterialize`
@@ -133,6 +139,9 @@ Default commands use the repository validator:
 - `uv run mypy`
 
 Guard behavior:
+- `shelf.validationTriggerMode = manual`: only explicit commands run validation.
+- `shelf.validationTriggerMode = save`: only saving watched files runs validation automatically.
+- `shelf.validationTriggerMode = all`: save plus watched workspace events keep validation hot.
 - `shelf.guardMode = normal`: report direct edits under `projects/*/generated/*`, but do not overwrite the file.
 - `shelf.guardMode = strict`: re-run materialization for the owning project and treat restore failure as a hard guard issue.
 - `shelf.autoMaterialize = true`: when upstream framework or project truth files change, Shelf appends `--project <product_spec.toml>` and materializes the affected projects automatically.

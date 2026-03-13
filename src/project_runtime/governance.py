@@ -12,6 +12,10 @@ from typing import TYPE_CHECKING, Any, Callable, get_args, get_origin, get_type_
 
 from fastapi.routing import APIRoute
 from framework_ir import FrameworkModuleIR, parse_framework_module
+from project_runtime.project_config_source import (
+    ProjectConfigLoadError,
+    load_product_spec_document,
+)
 from project_runtime.project_governance import (
     ProjectGovernanceClosure,
     RequiredRole,
@@ -369,15 +373,27 @@ def _framework_rule_refs(module: FrameworkModuleIR, rule_ids: tuple[str, ...] | 
 
 
 def _product_section_refs(product_spec_file: str, *sections: str) -> tuple[UpstreamRef, ...]:
-    return tuple(
-        UpstreamRef(
-            layer="product_spec",
-            file=product_spec_file,
-            ref_kind="section",
-            ref_id=section,
+    product_spec_path = REPO_ROOT / product_spec_file
+    try:
+        document = load_product_spec_document(product_spec_path)
+    except ProjectConfigLoadError:
+        document = None
+    refs: list[UpstreamRef] = []
+    for section in sections:
+        source_file = (
+            relative_path(document.source_file_for_section(section))
+            if document is not None
+            else product_spec_file
         )
-        for section in sections
-    )
+        refs.append(
+            UpstreamRef(
+                layer="product_spec",
+                file=source_file,
+                ref_kind="section",
+                ref_id=section,
+            )
+        )
+    return tuple(refs)
 
 
 def _implementation_section_refs(implementation_config_file: str, *sections: str) -> tuple[UpstreamRef, ...]:

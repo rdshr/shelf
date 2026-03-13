@@ -29,6 +29,7 @@ from project_runtime.template_registry import (
     load_registered_project,
     materialize_registered_project,
     register_project_template,
+    scaffold_registered_project,
     resolve_project_template_registration,
 )
 
@@ -60,5 +61,6 @@ __all__ = [
     "materialize_knowledge_base_project",
     "materialize_registered_project",
     "register_project_template",
+    "scaffold_registered_project",
     "resolve_project_template_registration",
 ]

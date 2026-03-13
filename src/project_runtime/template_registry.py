@@ -16,6 +16,7 @@ Materializer = Callable[[str | Path, Path | None], Any]
 RuntimeAppBuilder = Callable[[str | Path], FastAPI]
 GovernanceClosureBuilder = Callable[[Any], Any]
 ImplementationEffectBuilder = Callable[[Any], dict[str, dict[str, Any]]]
+ProjectScaffolder = Callable[[Path, str | None, bool, bool], tuple[str, ...]]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROJECTS_DIR = REPO_ROOT / "projects"
@@ -32,6 +33,7 @@ class ProjectTemplateRegistration:
     build_runtime_app_from_spec: RuntimeAppBuilder
     build_governance_closure: GovernanceClosureBuilder
     build_implementation_effect_manifest: ImplementationEffectBuilder
+    scaffold_project: ProjectScaffolder | None = None
     default: bool = False
 
 
@@ -122,3 +124,20 @@ def materialize_registered_project(
     target_file = product_spec_file or registration.default_product_spec_file
     normalized_output = None if output_dir is None else Path(output_dir)
     return registration.materialize_project(target_file, normalized_output)
+
+
+def scaffold_registered_project(
+    project_dir: str | Path,
+    *,
+    template_id: str,
+    display_name: str | None = None,
+    modular_product_spec: bool = True,
+    force: bool = False,
+) -> tuple[str, ...]:
+    _ensure_builtin_project_templates_loaded()
+    registration = _REGISTRY.get(template_id)
+    if registration is None:
+        raise ValueError(f"unsupported project template: {template_id}")
+    if registration.scaffold_project is None:
+        raise ValueError(f"template does not expose project scaffold support: {template_id}")
+    return registration.scaffold_project(Path(project_dir), display_name, modular_product_spec, force)

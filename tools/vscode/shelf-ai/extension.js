@@ -19,6 +19,8 @@ const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
 const DEFAULT_GOVERNANCE_TREE_GENERATE_COMMAND =
   "uv run python scripts/generate_governance_tree_hierarchy.py --output-json docs/hierarchy/shelf_governance_tree.json --output-html docs/hierarchy/shelf_governance_tree.html";
 const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
+const DEFAULT_SCAFFOLD_PROJECT_COMMAND = "uv run python scripts/scaffold_project.py";
+const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
 const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
 const DEFAULT_INSTALL_GIT_HOOKS_COMMAND = "bash scripts/install_git_hooks.sh";
 const GENERATED_EVENT_SUPPRESSION_MS = 2500;
@@ -87,6 +89,23 @@ function activate(context) {
     manual: 3
   };
 
+  const getValidationTriggerMode = () => {
+    const config = vscode.workspace.getConfiguration("shelf");
+    const value = String(config.get("validationTriggerMode") || "all");
+    return ["manual", "save", "all"].includes(value) ? value : "all";
+  };
+
+  const shouldRunValidationTrigger = (triggerKind) => {
+    const mode = getValidationTriggerMode();
+    if (mode === "all") {
+      return true;
+    }
+    if (mode === "manual") {
+      return false;
+    }
+    return triggerKind === "save";
+  };
+
   const setStatusOk = () => {
     status.text = "$(check) Shelf OK";
     status.tooltip = "Shelf: no guard issues";
@@ -103,10 +122,14 @@ function activate(context) {
 
   const setStatusPendingSave = () => {
     const dirtyCount = dirtyWatchedFiles.size;
+    const triggerMode = getValidationTriggerMode();
+    const revalidateHint = triggerMode === "manual"
+      ? "Run validation when you are ready."
+      : "Save to revalidate.";
     status.text = "$(close) Shelf pending";
     status.tooltip = dirtyCount > 0
-      ? `Shelf: ${dirtyCount} watched file(s) changed. Save to revalidate.`
-      : "Shelf: watched files changed. Save to revalidate.";
+      ? `Shelf: ${dirtyCount} watched file(s) changed. ${revalidateHint}`
+      : `Shelf: watched files changed. ${revalidateHint}`;
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
   };
@@ -265,6 +288,49 @@ function activate(context) {
     scheduleValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
   };
 
+  const activeFrameworkDraftFile = () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor?.document?.uri?.fsPath) {
+      return null;
+    }
+    const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+    if (!folder) {
+      return null;
+    }
+    const repoRoot = folder.uri.fsPath;
+    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, editor.document.uri.fsPath));
+    if (!/^framework_drafts\/[^/]+\/L\d+-M\d+-[^/]+\.md$/.test(relPath)) {
+      return null;
+    }
+    return {
+      repoRoot,
+      relPath,
+      absPath: editor.document.uri.fsPath,
+      publishedRelPath: relPath.replace(/^framework_drafts\//, "framework/"),
+      publishedAbsPath: path.join(repoRoot, relPath.replace(/^framework_drafts\//, "framework/")),
+    };
+  };
+
+  const buildScaffoldProjectCommand = (projectId, templateId, displayName, modularProductSpec) => {
+    const args = [
+      DEFAULT_SCAFFOLD_PROJECT_COMMAND,
+      "--project-dir",
+      shellQuote(path.join("projects", projectId)),
+      "--template",
+      shellQuote(templateId),
+      "--product-spec-style",
+      modularProductSpec ? "modular" : "single",
+    ];
+    if (displayName) {
+      args.push("--display-name", shellQuote(displayName));
+    }
+    return args.join(" ");
+  };
+
+  const buildPublishFrameworkDraftCommand = (draftRelPath) => (
+    `${DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND} --draft ${shellQuote(draftRelPath)}`
+  );
+
   const refreshGitHookStatus = async ({ promptIfMissing = false } = {}) => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
@@ -300,6 +366,70 @@ function activate(context) {
     );
     if (action === "Install Hooks") {
       await vscode.commands.executeCommand("shelf.installGitHooks");
+    }
+  };
+
+  const runCodegenPreflight = async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      return;
+    }
+    const repoRoot = folder.uri.fsPath;
+    const config = vscode.workspace.getConfiguration("shelf");
+    const productSpecFiles = workspaceGuard.discoverProductSpecFiles(repoRoot);
+    const materializeCommand = buildMaterializeCommand(
+      String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
+      productSpecFiles
+    );
+
+    output.clear();
+    status.text = "$(sync~spin) Shelf preflight";
+    status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+    status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
+
+    const materializeResult = await runParsedCommand(
+      "codegen-preflight-materialize",
+      materializeCommand,
+      repoRoot,
+      (stdout, stderr, code) => parseStageFailure(
+        "SHELF_CODEGEN_PREFLIGHT_MATERIALIZE",
+        "Shelf codegen preflight failed during materialization.",
+        stdout,
+        stderr,
+        code
+      )
+    );
+    if (!materializeResult.passed) {
+      lastRunIssues = materializeResult.errors;
+      lastRepoRoot = repoRoot;
+      lastValidationAt = new Date().toISOString();
+      lastValidationMode = "full";
+      lastValidationPassed = false;
+      applyDiagnostics({ passed: false, errors: materializeResult.errors }, diagnostics, repoRoot, null);
+      refreshStatusFromCurrentState();
+      refreshSidebarHome();
+      const action = await vscode.window.showErrorMessage(
+        "Shelf codegen preflight failed during materialization.",
+        "Open Problems",
+        "Open Log"
+      );
+      if (action === "Open Problems") {
+        await vscode.commands.executeCommand("workbench.actions.view.problems");
+      } else if (action === "Open Log") {
+        output.show(true);
+      }
+      return;
+    }
+
+    if (productSpecFiles.length) {
+      suppressGeneratedEventsForProjectSpecs(repoRoot, productSpecFiles);
+    }
+    await runValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
+    if (lastValidationPassed) {
+      vscode.window.showInformationMessage(
+        "Shelf codegen preflight passed. Framework -> Product Spec -> Implementation Config -> Code chain is consistent."
+      );
     }
   };
 
@@ -786,6 +916,24 @@ function activate(context) {
         tone: "ghost"
       },
       {
+        action: "codegenPreflight",
+        label: "生成前预检",
+        description: "先物化再跑完整校验，确认框架链路闭合后再继续生成代码。",
+        tone: "ghost"
+      },
+      {
+        action: "scaffoldProject",
+        label: "创建项目规格脚手架",
+        description: "按注册模板生成 product spec / implementation config 正式入口。",
+        tone: "ghost"
+      },
+      {
+        action: "publishDraft",
+        label: "发布当前框架草稿",
+        description: "把 framework_drafts 下的当前草稿提升到正式 framework 树。",
+        tone: "ghost"
+      },
+      {
         action: "showIssues",
         label: "查看问题列表",
         description: "打开 Problems 或快速跳转到问题位置。",
@@ -875,6 +1023,7 @@ function activate(context) {
     const governanceTreeSettings = getGovernanceTreeSettings(repoRoot, config);
     const frameworkTreePath = frameworkTreeSettings.htmlPath;
     const governanceTreePath = governanceTreeSettings.htmlPath;
+    const validationTriggerMode = getValidationTriggerMode();
     const standardsExists = hasStandardsTree(repoRoot);
     const validationEnabled = standardsExists && mappingValidationActive;
     const frameworkTreeExists = fs.existsSync(frameworkTreePath);
@@ -1029,7 +1178,15 @@ function activate(context) {
         value: validationEnabled ? "启用" : "停用",
         tone: validationEnabled ? "ok" : "error",
         note: validationEnabled
-          ? "保存、命令和窗口切回时都会自动参与检查。"
+          ? (
+            validationTriggerMode === "manual"
+              ? "当前为手动模式，只在显式命令时检查。"
+              : (
+                validationTriggerMode === "save"
+                  ? "当前为保存模式，只在保存 watched 文件时检查。"
+                  : "当前为全自动模式，保存、命令和工作区事件都会参与检查。"
+              )
+          )
           : "补齐规范总纲后会自动恢复。"
       },
       {
@@ -1145,6 +1302,18 @@ function activate(context) {
         }
         if (message.type === "shelf.sidebar.validate") {
           requestManualValidation();
+          return;
+        }
+        if (message.type === "shelf.sidebar.codegenPreflight") {
+          await vscode.commands.executeCommand("shelf.codegenPreflight");
+          return;
+        }
+        if (message.type === "shelf.sidebar.scaffoldProject") {
+          await vscode.commands.executeCommand("shelf.scaffoldProject");
+          return;
+        }
+        if (message.type === "shelf.sidebar.publishDraft") {
+          await vscode.commands.executeCommand("shelf.publishFrameworkDraft");
           return;
         }
         if (message.type === "shelf.sidebar.showIssues") {
@@ -1333,6 +1502,120 @@ function activate(context) {
     requestManualValidation();
   });
 
+  const codegenPreflightDisposable = vscode.commands.registerCommand("shelf.codegenPreflight", async () => {
+    await runCodegenPreflight();
+  });
+
+  const scaffoldProjectDisposable = vscode.commands.registerCommand("shelf.scaffoldProject", async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      return;
+    }
+
+    const projectId = await vscode.window.showInputBox({
+      title: "Shelf: Scaffold Project",
+      prompt: "Project id (will be created under projects/<project_id>)",
+      placeHolder: "knowledge_base_demo",
+      validateInput(value) {
+        if (!value || !/^[A-Za-z0-9_-]+$/.test(value.trim())) {
+          return "Project id must use letters, numbers, _ or -.";
+        }
+        return null;
+      }
+    });
+    if (!projectId) {
+      return;
+    }
+
+    const displayName = await vscode.window.showInputBox({
+      title: "Shelf: Scaffold Project",
+      prompt: "Optional product display name",
+      placeHolder: "Knowledge Base Demo"
+    });
+    const command = buildScaffoldProjectCommand(
+      projectId.trim(),
+      "knowledge_base_workbench",
+      displayName?.trim() || "",
+      true
+    );
+    const result = await runParsedCommand(
+      "scaffold-project",
+      command,
+      folder.uri.fsPath,
+      (stdout, stderr, code) => parseStageFailure(
+        "SHELF_SCAFFOLD_PROJECT",
+        "Shelf failed to scaffold a framework-driven project.",
+        stdout,
+        stderr,
+        code
+      )
+    );
+    if (!result.passed) {
+      const action = await vscode.window.showErrorMessage(
+        "Shelf: failed to scaffold project files.",
+        "Open Log"
+      );
+      if (action === "Open Log") {
+        output.show(true);
+      }
+      return;
+    }
+
+    const productSpecPath = path.join(folder.uri.fsPath, "projects", projectId.trim(), "product_spec.toml");
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(productSpecPath));
+    await vscode.window.showTextDocument(doc, { preview: false });
+    vscode.window.showInformationMessage(`Shelf: scaffolded projects/${projectId.trim()}.`);
+  });
+
+  const publishFrameworkDraftDisposable = vscode.commands.registerCommand(
+    "shelf.publishFrameworkDraft",
+    async () => {
+      const activeDraft = activeFrameworkDraftFile();
+      if (!activeDraft) {
+        vscode.window.showWarningMessage(
+          "Shelf: open a markdown file under framework_drafts/<framework>/ before publishing."
+        );
+        return;
+      }
+
+      const result = await runParsedCommand(
+        "publish-framework-draft",
+        buildPublishFrameworkDraftCommand(activeDraft.relPath),
+        activeDraft.repoRoot,
+        (stdout, stderr, code) => parseStageFailure(
+          "SHELF_PUBLISH_FRAMEWORK_DRAFT",
+          "Shelf failed to publish the current framework draft.",
+          stdout,
+          stderr,
+          code
+        )
+      );
+      if (!result.passed) {
+        const action = await vscode.window.showErrorMessage(
+          "Shelf: failed to publish the current framework draft.",
+          "Open Log"
+        );
+        if (action === "Open Log") {
+          output.show(true);
+        }
+        return;
+      }
+
+      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(activeDraft.publishedAbsPath));
+      await vscode.window.showTextDocument(doc, { preview: false });
+      scheduleValidation({
+        mode: "full",
+        triggerUris: [vscode.Uri.file(activeDraft.publishedAbsPath)],
+        notifyOnFail: true,
+        source: "manual"
+      });
+      vscode.window.showInformationMessage(
+        `Shelf: published ${workspaceGuard.normalizeRelPath(activeDraft.publishedRelPath)}`
+      );
+    }
+  );
+
   const installGitHooksDisposable = vscode.commands.registerCommand("shelf.installGitHooks", async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
@@ -1519,7 +1802,7 @@ function activate(context) {
 
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const config = vscode.workspace.getConfiguration("shelf");
-    if (!config.get("enableOnSave")) {
+    if (!config.get("enableOnSave") || !shouldRunValidationTrigger("save")) {
       return;
     }
 
@@ -1559,6 +1842,9 @@ function activate(context) {
   });
 
   const createDisposable = vscode.workspace.onDidCreateFiles(async (event) => {
+    if (!shouldRunValidationTrigger("workspace")) {
+      return;
+    }
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return;
@@ -1573,6 +1859,9 @@ function activate(context) {
   });
 
   const deleteDisposable = vscode.workspace.onDidDeleteFiles(async (event) => {
+    if (!shouldRunValidationTrigger("workspace")) {
+      return;
+    }
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return;
@@ -1587,6 +1876,9 @@ function activate(context) {
   });
 
   const renameDisposable = vscode.workspace.onDidRenameFiles(async (event) => {
+    if (!shouldRunValidationTrigger("workspace")) {
+      return;
+    }
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return;
@@ -1605,7 +1897,7 @@ function activate(context) {
   });
 
   const focusDisposable = vscode.window.onDidChangeWindowState(async (state) => {
-    if (!state.focused) {
+    if (!state.focused || !shouldRunValidationTrigger("workspace")) {
       return;
     }
     scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
@@ -1625,6 +1917,9 @@ function activate(context) {
       );
 
       const triggerIfWatched = (uri) => {
+        if (!shouldRunValidationTrigger("workspace")) {
+          return;
+        }
         const relPath = workspaceGuard.normalizeRelPath(path.relative(watcherFolder.uri.fsPath, uri.fsPath));
         if (workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath)) {
           scheduleValidation({ mode: "change", triggerUris: [uri], notifyOnFail: false, source: "auto" });
@@ -1646,6 +1941,9 @@ function activate(context) {
     frameworkCompletionDisposable,
     insertFrameworkTemplateDisposable,
     validateNowDisposable,
+    codegenPreflightDisposable,
+    scaffoldProjectDisposable,
+    publishFrameworkDraftDisposable,
     installGitHooksDisposable,
     showIssuesDisposable,
     openFrameworkTreeDisposable,
@@ -1661,7 +1959,9 @@ function activate(context) {
     ...fileWatcherDisposables
   );
 
-  scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
+  if (shouldRunValidationTrigger("workspace")) {
+    scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
+  }
   void refreshGitHookStatus({ promptIfMissing: true });
 }
 

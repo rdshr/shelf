@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: framework-tree-first workspace navigation with governance-tree guard.",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -39,6 +39,9 @@
     "onCommand:shelf.insertFrameworkModuleTemplate",
     "onCommand:shelf.installGitHooks",
     "onCommand:shelf.validateNow",
+    "onCommand:shelf.codegenPreflight",
+    "onCommand:shelf.scaffoldProject",
+    "onCommand:shelf.publishFrameworkDraft",
     "onCommand:shelf.openFrameworkTree",
     "onCommand:shelf.refreshFrameworkTree",
     "onCommand:shelf.openGovernanceTree",
@@ -60,6 +63,18 @@
       {
         "command": "shelf.validateNow",
         "title": "Shelf: Validate Mapping Now"
+      },
+      {
+        "command": "shelf.codegenPreflight",
+        "title": "Shelf: Run Codegen Preflight"
+      },
+      {
+        "command": "shelf.scaffoldProject",
+        "title": "Shelf: Scaffold Framework-Driven Project"
+      },
+      {
+        "command": "shelf.publishFrameworkDraft",
+        "title": "Shelf: Publish Current Framework Draft"
       },
       {
         "command": "shelf.installGitHooks",
@@ -141,9 +156,24 @@
           "group": "navigation@5"
         },
         {
-          "command": "shelf.installGitHooks",
+          "command": "shelf.codegenPreflight",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@6"
+        },
+        {
+          "command": "shelf.scaffoldProject",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@7"
+        },
+        {
+          "command": "shelf.publishFrameworkDraft",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@8"
+        },
+        {
+          "command": "shelf.installGitHooks",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@9"
         }
       ]
     },
@@ -154,6 +184,16 @@
           "type": "boolean",
           "default": true,
           "description": "Run strict mapping validation when a relevant file is saved."
+        },
+        "shelf.validationTriggerMode": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "save",
+            "all"
+          ],
+          "default": "all",
+          "description": "Choose whether Shelf validates only on demand, only on save, or on all watched workspace events."
         },
         "shelf.notifyOnAutoFail": {
           "type": "boolean",

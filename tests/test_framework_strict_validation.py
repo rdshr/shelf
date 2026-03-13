@@ -68,7 +68,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                     [
                         "- `C1` 承载能力：定义稳定承载结构。",
                         "- `C2` 治理能力：定义治理闭环。",
-                        "- `C4` 非能力项：不负责实例参数。",
+                        "- `N1` 非职责声明：不负责实例参数。",
                     ],
                     [
                         "- `P1` 参数一：承载边界。来源：`C1`。",
@@ -105,7 +105,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                     "支撑模块:SupportOnlyBaseModule",
                     [
                         "- `C1` 承载能力：定义稳定承载结构。",
-                        "- `C4` 非能力项：不负责实例参数。",
+                        "- `N1` 非职责声明：不负责实例参数。",
                     ],
                     [
                         "- `P1` 参数一：承载边界。来源：`C1`。",
@@ -139,7 +139,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 结构能力：定义稳定结构。",
                         "- `C2` 承载能力：定义承载关系。",
                         "- `C3` 扩展能力：允许上层展开。",
-                        "- `C4` 非能力项：不负责上层组合。",
+                        "- `N1` 非职责声明：不负责上层组合。",
                     ],
                     [
                         "- `P1` 参数一：结构边界。来源：`C1`。",
@@ -165,7 +165,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 上层能力：组织下层结构。",
                         "- `C2` 编排能力：约束组合路径。",
                         "- `C3` 扩展能力：支持继续生长。",
-                        "- `C4` 非能力项：不负责实例配置。",
+                        "- `N1` 非职责声明：不负责实例配置。",
                     ],
                     [
                         "- `P1` 参数一：组合边界。来源：`C1 + C2`。",
@@ -198,7 +198,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 结构能力：定义稳定结构。",
                         "- `C2` 承载能力：定义承载关系。",
                         "- `C3` 扩展能力：允许上层展开。",
-                        "- `C4` 非能力项：不负责上层组合。",
+                        "- `N1` 非职责声明：不负责上层组合。",
                     ],
                     [
                         "- `P1` 参数一：结构边界。来源：`C1`。",
@@ -224,7 +224,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 上层能力：组织下层结构。",
                         "- `C2` 编排能力：约束组合路径。",
                         "- `C3` 扩展能力：支持继续生长。",
-                        "- `C4` 非能力项：不负责实例配置。",
+                        "- `N1` 非职责声明：不负责实例配置。",
                     ],
                     [
                         "- `P1` 参数一：组合边界。来源：`C1 + C2`。",
@@ -257,7 +257,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 结构能力：定义稳定结构。",
                         "- `C2` 承载能力：定义承载关系。",
                         "- `C3` 扩展能力：允许上层展开。",
-                        "- `C4` 非能力项：不负责上层组合。",
+                        "- `N1` 非职责声明：不负责上层组合。",
                     ],
                     [
                         "- `P1` 参数一：结构边界。来源：`C1`。",
@@ -283,7 +283,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 辅助能力：提供补充结构。",
                         "- `C2` 承载能力：提供承载关系。",
                         "- `C3` 扩展能力：允许上层展开。",
-                        "- `C4` 非能力项：不负责上层组合。",
+                        "- `N1` 非职责声明：不负责上层组合。",
                     ],
                     [
                         "- `P1` 参数一：结构边界。来源：`C1`。",
@@ -316,7 +316,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 运行能力：定义运行壳。",
                         "- `C2` 承载能力：定义挂载关系。",
                         "- `C3` 治理能力：定义治理约束。",
-                        "- `C4` 非能力项：不负责领域语义。",
+                        "- `N1` 非职责声明：不负责领域语义。",
                     ],
                     [
                         "- `P1` 参数一：平台边界。来源：`C1 + C3`。",
@@ -342,7 +342,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 原子能力：定义输入与展示原子。",
                         "- `C2` 契约能力：定义组件契约。",
                         "- `C3` 扩展能力：支持领域承接。",
-                        "- `C4` 非能力项：不负责领域对象。",
+                        "- `N1` 非职责声明：不负责领域对象。",
                     ],
                     [
                         "- `P1` 参数一：组件边界。来源：`C1 + C2`。",
@@ -368,7 +368,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 目录能力：定义文件目录结构。",
                         "- `C2` 摄取能力：定义文件摄取结构。",
                         "- `C3` 治理能力：定义目录约束。",
-                        "- `C4` 非能力项：不负责对话引用。",
+                        "- `N1` 非职责声明：不负责对话引用。",
                     ],
                     [
                         "- `P1` 参数一：文件集边界。来源：`C1 + C3`。",
@@ -401,7 +401,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 目录能力：定义文件目录结构。",
                         "- `C2` 摄取能力：定义文件摄取结构。",
                         "- `C3` 治理能力：定义目录约束。",
-                        "- `C4` 非能力项：不负责对话引用。",
+                        "- `N1` 非职责声明：不负责对话引用。",
                     ],
                     [
                         "- `P1` 参数一：文件集边界。来源：`C1 + C3`。",
@@ -434,7 +434,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 运行能力：定义运行壳。",
                         "- `C2` 承载能力：定义挂载关系。",
                         "- `C3` 治理能力：定义治理约束。",
-                        "- `C4` 非能力项：不负责领域语义。",
+                        "- `N1` 非职责声明：不负责领域语义。",
                     ],
                     [
                         "- `P1` 参数一：平台边界。来源：`C1 + C3`。",
@@ -460,7 +460,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 原子能力：定义输入与展示原子。",
                         "- `C2` 契约能力：定义组件契约。",
                         "- `C3` 扩展能力：支持领域承接。",
-                        "- `C4` 非能力项：不负责领域对象。",
+                        "- `N1` 非职责声明：不负责领域对象。",
                     ],
                     [
                         "- `P1` 参数一：组件边界。来源：`C1 + C2`。",
@@ -486,7 +486,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 目录能力：定义文件目录结构。",
                         "- `C2` 摄取能力：定义文件摄取结构。",
                         "- `C3` 治理能力：定义目录约束。",
-                        "- `C4` 非能力项：不负责对话引用。",
+                        "- `N1` 非职责声明：不负责对话引用。",
                     ],
                     [
                         "- `P1` 参数一：文件集边界。来源：`C1 + C3`。",
@@ -512,7 +512,7 @@ class FrameworkStrictValidationTest(unittest.TestCase):
                         "- `C1` 骨架能力：定义工作台骨架。",
                         "- `C2` 联动能力：定义多区联动。",
                         "- `C3` 复用能力：支持响应式复用。",
-                        "- `C4` 非能力项：不负责项目实例。",
+                        "- `N1` 非职责声明：不负责项目实例。",
                     ],
                     [
                         "- `P1` 参数一：区域边界。来源：`C1 + C2`。",
@@ -535,6 +535,77 @@ class FrameworkStrictValidationTest(unittest.TestCase):
             }
         )
         self.assertTrue(any(issue["code"] == "FW024" for issue in issues))
+
+    def test_negative_rule_uses_invalid_conclusion_instead_of_output_capability(self) -> None:
+        issues = self.run_framework_validation(
+            {
+                "demo/L0-M0-负向规则模块.md": build_framework_doc(
+                    "负向规则模块:NegativeRuleModule",
+                    [
+                        "- `C1` 承载能力：定义稳定承载结构。",
+                        "- `C2` 组合能力：定义合法组合关系。",
+                        "- `N1` 非职责声明：不负责实例配置。",
+                    ],
+                    [
+                        "- `P1` 参数一：承载边界。来源：`C1`。",
+                        "- `P2` 参数二：组合边界。来源：`C1 + C2`。",
+                    ],
+                    [
+                        "- `B1` 承载结构基：由承载骨架组成。来源：`C1 + P1`。",
+                        "- `B2` 组合结构基：由组合关系组成。来源：`C2 + P2`。",
+                    ],
+                    [
+                        "- `R1` 合法组合",
+                        "  - `R1.1` 参与基：`B1 + B2`。",
+                        "  - `R1.2` 组合方式：固定承载关系后闭合组合。",
+                        "  - `R1.3` 输出能力：`C1 + C2`。",
+                        "  - `R1.4` 边界绑定：`P1 + P2`。",
+                        "- `R2` 禁止组合",
+                        "  - `R2.1` 参与基：`B1 + B2`。",
+                        "  - `R2.2` 组合方式：绕过边界约束的组合均无效。",
+                        "  - `R2.3` 失效结论：`N1`。",
+                        "  - `R2.4` 边界绑定：`P1 + P2`。",
+                    ],
+                    [
+                        "- `V1` 合法组合与禁止组合必须可区分。",
+                    ],
+                ),
+            }
+        )
+        self.assertFalse(any(issue["code"] in {"FW041", "FW050", "FW051", "FW052"} for issue in issues))
+
+    def test_negative_rule_must_not_write_non_responsibility_into_output_capability(self) -> None:
+        issues = self.run_framework_validation(
+            {
+                "demo/L0-M0-错误负向规则模块.md": build_framework_doc(
+                    "错误负向规则模块:InvalidNegativeRuleModule",
+                    [
+                        "- `C1` 承载能力：定义稳定承载结构。",
+                        "- `C2` 组合能力：定义合法组合关系。",
+                        "- `N1` 非职责声明：不负责实例配置。",
+                    ],
+                    [
+                        "- `P1` 参数一：承载边界。来源：`C1`。",
+                        "- `P2` 参数二：组合边界。来源：`C1 + C2`。",
+                    ],
+                    [
+                        "- `B1` 承载结构基：由承载骨架组成。来源：`C1 + P1`。",
+                        "- `B2` 组合结构基：由组合关系组成。来源：`C2 + P2`。",
+                    ],
+                    [
+                        "- `R1` 禁止组合",
+                        "  - `R1.1` 参与基：`B1 + B2`。",
+                        "  - `R1.2` 组合方式：绕过边界约束的组合均无效。",
+                        "  - `R1.3` 输出能力：`N1`。",
+                        "  - `R1.4` 边界绑定：`P1 + P2`。",
+                    ],
+                    [
+                        "- `V1` 禁止组合必须有独立负向结论。",
+                    ],
+                ),
+            }
+        )
+        self.assertTrue(any(issue["code"] in {"FW041", "FW050", "FW052"} for issue in issues))
 
 
 if __name__ == "__main__":

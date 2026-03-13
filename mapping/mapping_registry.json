@@ -154,35 +154,42 @@
             "level": "L2",
             "children": [
               {
-                "id": "NODE-L2-SHELF",
+                "id": "NODE-L2-SHELF-L2-M0",
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/shelf/L2-M0-置物架框架标准模块.md",
                 "children": []
               },
               {
-                "id": "NODE-L2-CURTAIN",
+                "id": "NODE-L2-CURTAIN-L2-M0",
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/curtain/L2-M0-窗帘框架标准模块.md",
                 "children": []
               },
               {
-                "id": "NODE-L2-BACKEND",
+                "id": "NODE-L2-BACKEND-L2-M0",
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/backend/L2-M0-知识库接口框架标准模块.md",
                 "children": []
               },
               {
-                "id": "NODE-L2-FRONTEND",
+                "id": "NODE-L2-FRONTEND-L2-M0",
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/frontend/L2-M0-前端框架标准模块.md",
                 "children": []
               },
               {
-                "id": "NODE-L2-KNOWLEDGE-BASE",
+                "id": "NODE-L2-FRONTEND-L2-M1",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+                "children": []
+              },
+              {
+                "id": "NODE-L2-KNOWLEDGE-BASE-L2-M0",
                 "kind": "file",
                 "level": "L2",
                 "file": "framework/knowledge_base/L2-M0-知识库工作台场景模块.md",
@@ -521,6 +528,89 @@
         {
           "file": "src/knowledge_base_runtime/frontend.py",
           "symbol": "def verify_knowledge_base_frontend("
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-RUNTIME-CAPABILITY",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 1. 能力声明（Capability Statement）",
+      "l2_file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+      "l2_anchor": "## 1. 能力声明（Capability Statement）",
+      "impl_symbols": [
+        {
+          "file": "src/project_runtime/knowledge_base.py",
+          "symbol": "class FrontendImplementationConfig"
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-RUNTIME-B",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+      "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
+      "impl_symbols": [
+        {
+          "file": "src/project_runtime/knowledge_base.py",
+          "symbol": "def _validate_implementation_config("
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-RUNTIME-BASE",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 3. 最小可行基（Bases）",
+      "l2_file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+      "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
+      "impl_symbols": [
+        {
+          "file": "src/project_runtime/knowledge_base.py",
+          "symbol": "def build_implementation_effect_manifest("
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-RUNTIME-COMBINATION",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+      "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/frontend_kernel/contracts.py",
+          "symbol": "def build_frontend_contract("
+        }
+      ]
+    },
+    {
+      "id": "MAP-FRONTEND-RUNTIME-V",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/knowledge_base_runtime/frontend.py",
+          "symbol": "def _require_frontend_renderer("
+        },
+        {
+          "file": "src/knowledge_base_runtime/frontend_style.py",
+          "symbol": "def _require_style_profile("
+        },
+        {
+          "file": "src/knowledge_base_runtime/frontend_script.py",
+          "symbol": "def _require_script_profile("
         }
       ]
     },

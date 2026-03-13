@@ -33,6 +33,10 @@ function main() {
     path.join(repoRoot, "projects", "knowledge_base_basic", "product_spec.toml")
   );
   assert.strictEqual(
+    resolveProjectProductSpecPath(repoRoot, "projects/knowledge_base_basic/product_spec/chat.toml"),
+    path.join(repoRoot, "projects", "knowledge_base_basic", "product_spec.toml")
+  );
+  assert.strictEqual(
     resolveProjectProductSpecPath(repoRoot, "projects/knowledge_base_basic/generated/product_spec.json"),
     path.join(repoRoot, "projects", "knowledge_base_basic", "product_spec.toml")
   );
@@ -51,6 +55,11 @@ backend = "framework/backend/L2-M0-知识库接口框架标准模块.md"
   assert(productPlan.shouldMaterialize, "product spec changes should trigger materialization");
   assert.strictEqual(productPlan.materializeProjects.length, 1);
   assert(productPlan.materializeProjects[0].endsWith("projects/knowledge_base_basic/product_spec.toml"));
+
+  const splitProductPlan = classifyWorkspaceChanges(repoRoot, ["projects/knowledge_base_basic/product_spec/chat.toml"]);
+  assert(splitProductPlan.shouldMaterialize, "split product spec changes should trigger materialization");
+  assert.strictEqual(splitProductPlan.materializeProjects.length, 1);
+  assert(splitProductPlan.materializeProjects[0].endsWith("projects/knowledge_base_basic/product_spec.toml"));
 
   const frameworkPlan = classifyWorkspaceChanges(repoRoot, ["framework/knowledge_base/L1-M0-知识库界面骨架模块.md"]);
   assert(frameworkPlan.shouldMaterialize, "framework changes should trigger materialization");

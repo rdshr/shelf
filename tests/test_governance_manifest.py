@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -23,6 +24,18 @@ from project_runtime.knowledge_base import (
     materialize_knowledge_base_project,
 )
 from scripts import validate_strict_mapping
+
+
+def _copy_sample_project_config(project_dir: Path) -> tuple[Path, Path]:
+    source_product_spec = Path("projects/knowledge_base_basic/product_spec.toml")
+    source_product_spec_dir = Path("projects/knowledge_base_basic/product_spec")
+    source_implementation_config = Path("projects/knowledge_base_basic/implementation_config.toml")
+    product_spec_file = project_dir / "product_spec.toml"
+    implementation_config_file = project_dir / "implementation_config.toml"
+    shutil.copy2(source_product_spec, product_spec_file)
+    shutil.copy2(source_implementation_config, implementation_config_file)
+    shutil.copytree(source_product_spec_dir, project_dir / "product_spec")
+    return product_spec_file, project_dir / "product_spec" / "route.toml"
 
 
 class GovernanceManifestTest(unittest.TestCase):
@@ -106,20 +119,13 @@ class GovernanceManifestTest(unittest.TestCase):
                 )
 
     def test_validate_project_governance_detects_stale_evidence(self) -> None:
-        source_product_spec = Path("projects/knowledge_base_basic/product_spec.toml")
-        source_implementation_config = Path("projects/knowledge_base_basic/implementation_config.toml")
-        product_spec_text = source_product_spec.read_text(encoding="utf-8")
-        implementation_config_text = source_implementation_config.read_text(encoding="utf-8")
-
         with tempfile.TemporaryDirectory(dir=validate_strict_mapping.PROJECTS_DIR) as temp_dir:
             project_dir = Path(temp_dir)
-            product_spec_file = project_dir / "product_spec.toml"
-            implementation_config_file = project_dir / "implementation_config.toml"
-            product_spec_file.write_text(product_spec_text, encoding="utf-8")
-            implementation_config_file.write_text(implementation_config_text, encoding="utf-8")
+            product_spec_file, route_file = _copy_sample_project_config(project_dir)
             materialize_knowledge_base_project(product_spec_file)
-            product_spec_file.write_text(
-                product_spec_text.replace('workbench = "/knowledge-base"', 'workbench = "/knowledge-chat"'),
+            route_text = route_file.read_text(encoding="utf-8")
+            route_file.write_text(
+                route_text.replace('workbench = "/knowledge-base"', 'workbench = "/knowledge-chat"'),
                 encoding="utf-8",
             )
 

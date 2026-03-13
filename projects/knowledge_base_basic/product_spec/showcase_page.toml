@@ -1,0 +1,8 @@
+# [showcase_page] 定义不抢占主聊天链的二级专题页。
+[showcase_page]
+title = "蔡徐坤打球特别页"
+kicker = "Chat-First Special Page"
+headline = "蔡徐坤打球 · 轻量前端专题页"
+intro = "这个页面把聚光灯、节奏和打球动作收成一个轻量专题体验，用来展示前端扩展页也可以挂在知识库产品的治理树里。"
+back_to_chat_label = "返回知识聊天"
+browse_knowledge_label = "去知识库列表"

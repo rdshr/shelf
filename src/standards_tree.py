@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Any
 
 
@@ -49,8 +50,13 @@ def discover_l2_standard_files() -> list[tuple[str, str]]:
     return [*ordered_preferred, *ordered_extras]
 
 
-def _l2_node_id(module_name: str) -> str:
-    return "NODE-L2-" + module_name.upper().replace("_", "-")
+def _slug_token(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9]+", "-", value.upper()).strip("-")
+
+
+def _l2_node_id(module_name: str, rel_file: str) -> str:
+    stem = Path(rel_file).stem
+    return "NODE-L2-" + _slug_token(module_name) + "-" + _slug_token(stem)
 
 
 def build_standards_tree() -> dict[str, Any]:
@@ -67,7 +73,7 @@ def build_standards_tree() -> dict[str, Any]:
 
     l2_children: list[dict[str, Any]] = [
         {
-            "id": _l2_node_id(module_name),
+            "id": _l2_node_id(module_name, file_name),
             "kind": "file",
             "level": "L2",
             "file": file_name,

@@ -298,7 +298,6 @@ def run_reference_pipeline() -> None:
         Capability("C1", "Construct stable load-bearing paths and preserve structural integrity"),
         Capability("C2", "Generate reusable storage units and access channels"),
         Capability("C3", "Remain extensible and maintainable under scene constraints"),
-        Capability("C4", "Exclude material ornament, color style, and decorative preference"),
     ]
 
     boundary = BoundaryDefinition(

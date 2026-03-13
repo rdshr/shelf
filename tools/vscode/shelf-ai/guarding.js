@@ -22,6 +22,7 @@ const WATCH_FILES = new Set([
 ]);
 
 const PRODUCT_SPEC_PATTERN = /^projects\/([^/]+)\/product_spec\.toml$/;
+const PRODUCT_SPEC_SECTION_PATTERN = /^projects\/([^/]+)\/product_spec\/[^/]+\.toml$/;
 const IMPLEMENTATION_CONFIG_PATTERN = /^projects\/([^/]+)\/implementation_config\.toml$/;
 const GENERATED_PATTERN = /^projects\/([^/]+)\/generated(?:\/(.+))?$/;
 const WORKSPACE_GOVERNANCE_ARTIFACTS = new Set([
@@ -85,8 +86,21 @@ function discoverProductSpecFiles(repoRoot) {
 
 function inferConfiguredFrameworks(productSpecText) {
   const frameworks = new Set();
-  for (const match of String(productSpecText).matchAll(/^\s*(frontend|domain|backend)\s*=\s*"framework\/([^/]+)\//gm)) {
-    frameworks.add(match[2]);
+  const lines = String(productSpecText).split(/\r?\n/);
+  let inFrameworkSection = false;
+  for (const lineText of lines) {
+    const sectionMatch = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/.exec(lineText);
+    if (sectionMatch) {
+      inFrameworkSection = sectionMatch[1] === "framework";
+      continue;
+    }
+    if (!inFrameworkSection) {
+      continue;
+    }
+    const valueMatch = /^\s*[A-Za-z0-9_-]+\s*=\s*"framework\/([^/]+)\//.exec(lineText);
+    if (valueMatch) {
+      frameworks.add(valueMatch[1]);
+    }
   }
   return frameworks;
 }
@@ -99,6 +113,11 @@ function resolveProjectProductSpecPath(repoRoot, relPath) {
   }
 
   match = normalized.match(IMPLEMENTATION_CONFIG_PATTERN);
+  if (match) {
+    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
+  }
+
+  match = normalized.match(PRODUCT_SPEC_SECTION_PATTERN);
   if (match) {
     return path.join(repoRoot, "projects", match[1], "product_spec.toml");
   }
@@ -178,7 +197,11 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
       continue;
     }
 
-    if (PRODUCT_SPEC_PATTERN.test(relPath) || IMPLEMENTATION_CONFIG_PATTERN.test(relPath)) {
+    if (
+      PRODUCT_SPEC_PATTERN.test(relPath) ||
+      PRODUCT_SPEC_SECTION_PATTERN.test(relPath) ||
+      IMPLEMENTATION_CONFIG_PATTERN.test(relPath)
+    ) {
       const productSpecFile = resolveProjectProductSpecPath(repoRoot, relPath);
       if (productSpecFile) {
         materializeProjects.add(productSpecFile);

@@ -15,6 +15,8 @@ from project_runtime.knowledge_base_contract import (
     KnowledgeBaseTemplateContract,
     load_knowledge_base_template_contract,
 )
+from project_runtime.knowledge_base_scaffold import scaffold_knowledge_base_project
+from project_runtime.project_config_source import load_product_spec_document
 from project_runtime.governance import (
     build_governance_closure,
     build_governance_manifest,
@@ -1044,7 +1046,7 @@ def _require_documents(data: dict[str, Any]) -> tuple[SeedDocumentSource, ...]:
 
 
 def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
-    raw = _read_toml_file(product_spec_path)
+    raw = load_product_spec_document(product_spec_path).merged_data
     project_table = _require_table(raw, "project")
     framework_table = _require_table(raw, "framework")
     surface_table = _require_table(raw, "surface")
@@ -1998,6 +2000,7 @@ register_project_template(
         build_runtime_app_from_spec=build_knowledge_base_runtime_app_from_spec,
         build_governance_closure=build_governance_closure,
         build_implementation_effect_manifest=build_implementation_effect_manifest,
+        scaffold_project=scaffold_knowledge_base_project,
         default=True,
     )
 )

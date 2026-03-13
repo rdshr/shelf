@@ -42,6 +42,10 @@ from project_runtime import (
     materialize_registered_project,
     resolve_project_template_registration,
 )
+from project_runtime.project_config_source import (
+    ProjectConfigLoadError,
+    load_product_spec_document,
+)
 from project_runtime.repository_policy import load_repository_validation_policy
 from project_runtime.project_governance import (
     build_project_discovery_audit,
@@ -82,6 +86,7 @@ LAYER_DIR_PATTERN = re.compile(r"^L(\d+)$")
 FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN = re.compile(r"^L(\d+)-M(\d+)-[^/]+\.md$")
 CANONICAL_BASE_ID_PATTERN = re.compile(r"^B(\d+)$")
 CANONICAL_CAPABILITY_ID_PATTERN = re.compile(r"^C(\d+)$")
+CANONICAL_NON_RESPONSIBILITY_ID_PATTERN = re.compile(r"^N(\d+)$")
 CANONICAL_VERIFY_ID_PATTERN = re.compile(r"^V(\d+)$")
 FRAMEWORK_L2_FILE_PATTERN = re.compile(r"^framework/[^/]+/L2-M\d+-[^/]+\.md$")
 FRAMEWORK_DIRECTIVE_LINE_PATTERN = re.compile(
@@ -112,6 +117,7 @@ FRAMEWORK_RULE_TOP_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+)`\s*(.*)$")
 FRAMEWORK_RULE_CHILD_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(R\d+\.\d+)`\s*(.*)$")
 FRAMEWORK_BACKTICK_CONTENT_PATTERN = re.compile(r"`([^`]+)`")
 FRAMEWORK_SYMBOL_TOKEN_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+NEGATIVE_RULE_NAME_TOKENS = ("禁止组合", "无效组合", "不适用组合")
 REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS = VALIDATION_POLICY.required_framework_directive_sections
 PROJECT_ALLOWED_TOP_LEVEL_DIRS = VALIDATION_POLICY.allowed_project_top_level_dirs
 PROJECT_ALLOWED_ROOT_FILES = VALIDATION_POLICY.allowed_project_root_files
@@ -450,6 +456,87 @@ def _validate_project_toml_layout(
     return issues
 
 
+def _validate_composed_product_spec_layout(
+    file_path: Path,
+    *,
+    required_top_level_keys: set[str],
+    allowed_top_level_keys: set[str],
+    required_nested_tables: dict[str, set[str]],
+    allowed_nested_tables: dict[str, set[str]],
+    parse_error_code: str,
+    missing_section_code: str,
+    unknown_section_code: str,
+    missing_nested_code: str,
+    unknown_nested_code: str,
+    kind_label: str,
+) -> list[Issue]:
+    issues: list[Issue] = []
+    rel_file = file_path.relative_to(REPO_ROOT).as_posix()
+    try:
+        document = load_product_spec_document(file_path)
+    except ProjectConfigLoadError as exc:
+        issue_file = exc.file_path.relative_to(REPO_ROOT).as_posix()
+        issues.append(
+            make_issue(
+                f"failed to parse {kind_label}: {exc}",
+                issue_file,
+                1,
+                code=parse_error_code,
+            )
+        )
+        return issues
+
+    top_level_keys = set(document.top_level_keys)
+    for key in sorted(required_top_level_keys - top_level_keys):
+        issues.append(
+            make_issue(
+                f"missing required {kind_label} section or array: {key}",
+                rel_file,
+                1,
+                code=missing_section_code,
+            )
+        )
+
+    for key in sorted(top_level_keys - allowed_top_level_keys):
+        issue_file = document.source_file_for_section(key).relative_to(REPO_ROOT).as_posix()
+        issues.append(
+            make_issue(
+                f"unknown {kind_label} top-level section: {key}",
+                issue_file,
+                document.line_for_section(key),
+                code=unknown_section_code,
+            )
+        )
+
+    for parent, required_children in required_nested_tables.items():
+        parent_value = document.merged_data.get(parent)
+        if not isinstance(parent_value, dict):
+            continue
+        nested_table_keys = {key for key, value in parent_value.items() if isinstance(value, dict)}
+        issue_file = document.source_file_for_section(parent).relative_to(REPO_ROOT).as_posix()
+        for child in sorted(required_children - nested_table_keys):
+            issues.append(
+                make_issue(
+                    f"missing required nested {kind_label} section: [{parent}.{child}]",
+                    issue_file,
+                    document.line_for_section(parent),
+                    code=missing_nested_code,
+                )
+            )
+        allowed_children = allowed_nested_tables.get(parent, set())
+        for child in sorted(nested_table_keys - allowed_children):
+            issues.append(
+                make_issue(
+                    f"unknown nested {kind_label} section: [{parent}.{child}]",
+                    issue_file,
+                    document.line_for_nested_section(parent, child),
+                    code=unknown_nested_code,
+                )
+            )
+
+    return issues
+
+
 def validate_project_configuration_layout(product_spec_files: list[Path] | None = None) -> list[Issue]:
     issues: list[Issue] = []
     project_product_spec_files = product_spec_files or discover_project_product_spec_files()
@@ -474,7 +561,7 @@ def validate_project_configuration_layout(product_spec_files: list[Path] | None 
 
         product_spec_layout = registration.product_spec_layout
         issues.extend(
-            _validate_project_toml_layout(
+            _validate_composed_product_spec_layout(
                 product_spec_file,
                 required_top_level_keys=set(product_spec_layout.required_top_level_keys),
                 allowed_top_level_keys=set(product_spec_layout.allowed_top_level_keys),
@@ -578,7 +665,7 @@ def validate_project_generation_discipline(
                 make_issue(
                     (
                         "project configuration directories must not contain direct implementation files "
-                        "outside generated/ or assets/; change framework markdown, product_spec.toml, "
+                        "outside generated/, assets/, or product_spec/; change framework markdown, product_spec.toml, "
                         "or implementation_config.toml instead"
                     ),
                     file_path.relative_to(REPO_ROOT).as_posix(),
@@ -1677,23 +1764,27 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                         code="FW011",
                     )
                 )
+            if re.fullmatch(r"N\d.*", identifier) and CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is None:
+                issues.append(
+                    make_issue(
+                        f"invalid non-responsibility identifier format: {identifier}; expected N<number>",
+                        rel_file,
+                        line_num,
+                        code="FW011",
+                    )
+                )
 
         capability_ids = {
             identifier
             for identifier in file_identifiers
             if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is not None
         }
-        non_capability_ids: set[str] = set()
-        for capability_line_num, capability_line in iter_section_bullet_lines(file_text, "## 1. 能力声明"):
-            capability_match = FRAMEWORK_NUMBERED_ITEM_PATTERN.match(capability_line)
-            if capability_match is None:
-                continue
-            capability_id = capability_match.group(1)
-            if capability_id not in capability_ids:
-                continue
-            if "非能力项" in capability_line:
-                non_capability_ids.add(capability_id)
-        positive_capability_ids = capability_ids - non_capability_ids
+        non_responsibility_ids = {
+            identifier
+            for identifier in file_identifiers
+            if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is not None
+        }
+        positive_capability_ids = capability_ids
         base_ids = {
             identifier for identifier in file_identifiers if CANONICAL_BASE_ID_PATTERN.fullmatch(identifier)
         }
@@ -1911,10 +2002,14 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                         )
                     )
 
-            capability_refs = {
-                token for token in source_tokens if re.fullmatch(r"C\d+", token) is not None
+            positive_capability_refs = {
+                token for token in source_tokens if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
             }
-            invalid_capability_refs = capability_refs - positive_capability_ids
+            negative_capability_refs = {
+                token for token in source_tokens if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(token) is not None
+            }
+            invalid_capability_refs = positive_capability_refs - positive_capability_ids
+            invalid_capability_refs.update(negative_capability_refs)
             if invalid_capability_refs:
                 issues.append(
                     make_issue(
@@ -1928,7 +2023,10 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                     )
                 )
 
-            has_boundary_ref = any(not re.fullmatch(r"C\d+", token) for token in source_tokens)
+            has_boundary_ref = any(
+                token not in positive_capability_ids and token not in non_responsibility_ids
+                for token in source_tokens
+            )
             if not has_boundary_ref:
                 issues.append(
                     make_issue(
@@ -2020,19 +2118,23 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                     )
 
         rule_top_lines: dict[str, int] = {}
+        rule_top_names: dict[str, str] = {}
         rule_child_items: dict[str, list[tuple[int, str]]] = {}
         rule_declared_symbols: dict[str, set[str]] = {}
         rule_participant_bases: dict[str, set[str]] = {}
         rule_output_capabilities: dict[str, set[str]] = {}
+        rule_invalid_conclusions: dict[str, set[str]] = {}
         rule_boundary_bindings: dict[str, set[str]] = {}
         for rule_line_num, rule_line in iter_section_bullet_lines(file_text, "## 4. 基组合原则"):
             top_match = FRAMEWORK_RULE_TOP_LINE_PATTERN.match(rule_line)
             if top_match is not None:
                 parent_rule = top_match.group(1)
                 rule_top_lines.setdefault(parent_rule, rule_line_num)
+                rule_top_names.setdefault(parent_rule, (top_match.group(2) or "").strip())
                 rule_child_items.setdefault(parent_rule, [])
                 rule_participant_bases.setdefault(parent_rule, set())
                 rule_output_capabilities.setdefault(parent_rule, set())
+                rule_invalid_conclusions.setdefault(parent_rule, set())
                 rule_boundary_bindings.setdefault(parent_rule, set())
                 continue
 
@@ -2075,6 +2177,10 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                 output_capabilities = set(re.findall(r"C\d+", content))
                 rule_output_capabilities.setdefault(parent_rule, set()).update(output_capabilities)
 
+            if "失效结论" in content:
+                invalid_conclusions = set(re.findall(r"N\d+", content))
+                rule_invalid_conclusions.setdefault(parent_rule, set()).update(invalid_conclusions)
+
             if "边界绑定" in content:
                 boundary_refs = {token for token in child_tokens if token in boundary_ids}
                 rule_boundary_bindings.setdefault(parent_rule, set()).update(boundary_refs)
@@ -2114,7 +2220,15 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
 
         for parent_rule, parent_line in sorted(rule_top_lines.items()):
             child_items = rule_child_items.get(parent_rule, [])
-            required_keywords = ("参与基", "组合方式", "输出能力", "边界绑定")
+            rule_name = rule_top_names.get(parent_rule, "")
+            is_negative_rule = any(token in rule_name for token in NEGATIVE_RULE_NAME_TOKENS) or any(
+                "失效结论" in content for _, content in child_items
+            )
+            required_keywords = (
+                ("参与基", "组合方式", "失效结论", "边界绑定")
+                if is_negative_rule
+                else ("参与基", "组合方式", "输出能力", "边界绑定")
+            )
             for keyword in required_keywords:
                 if any(keyword in content for _, content in child_items):
                     continue
@@ -2126,22 +2240,54 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                         code="FW041",
                     )
                 )
+            if is_negative_rule and any("输出能力" in content for _, content in child_items):
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} negative rule must not use '输出能力'; use '失效结论' instead",
+                        rel_file,
+                        parent_line,
+                        code="FW052",
+                    )
+                )
+            if not is_negative_rule and any("失效结论" in content for _, content in child_items):
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} positive rule must not use '失效结论'; use '输出能力' instead",
+                        rel_file,
+                        parent_line,
+                        code="FW053",
+                    )
+                )
 
         for parent_rule, child_items in rule_child_items.items():
             for child_line, content in child_items:
                 if "输出能力" not in content:
-                    continue
-                output_capability_refs = re.findall(r"C\d+", content)
-                if not output_capability_refs:
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} output capability must reference at least one C*",
-                            rel_file,
-                            child_line,
-                            code="FW050",
+                    output_capability_refs = []
+                else:
+                    output_capability_refs = re.findall(r"C\d+", content)
+                    invalid_negative_refs = re.findall(r"N\d+", content)
+                    if invalid_negative_refs:
+                        issues.append(
+                            make_issue(
+                                (
+                                    f"{parent_rule} output capability may only reference positive C* ids; "
+                                    f"found invalid ids: {', '.join(sorted(set(invalid_negative_refs)))}"
+                                ),
+                                rel_file,
+                                child_line,
+                                code="FW050",
+                            )
                         )
-                    )
-                    continue
+                if not output_capability_refs:
+                    if "输出能力" in content:
+                        issues.append(
+                            make_issue(
+                                f"{parent_rule} output capability must reference at least one C*",
+                                rel_file,
+                                child_line,
+                                code="FW050",
+                            )
+                        )
                 for cap_id in output_capability_refs:
                     if cap_id in capability_ids:
                         continue
@@ -2151,6 +2297,43 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                             rel_file,
                             child_line,
                             code="FW050",
+                        )
+                    )
+                if "失效结论" not in content:
+                    continue
+                invalid_conclusion_refs = re.findall(r"N\d+", content)
+                invalid_positive_refs = re.findall(r"C\d+", content)
+                if invalid_positive_refs:
+                    issues.append(
+                        make_issue(
+                            (
+                                f"{parent_rule} invalid conclusion may only reference N* ids; "
+                                f"found invalid ids: {', '.join(sorted(set(invalid_positive_refs)))}"
+                            ),
+                            rel_file,
+                            child_line,
+                            code="FW051",
+                        )
+                    )
+                if not invalid_conclusion_refs:
+                    issues.append(
+                        make_issue(
+                            f"{parent_rule} invalid conclusion must reference at least one N*",
+                            rel_file,
+                            child_line,
+                            code="FW051",
+                        )
+                    )
+                    continue
+                for neg_id in invalid_conclusion_refs:
+                    if neg_id in non_responsibility_ids:
+                        continue
+                    issues.append(
+                        make_issue(
+                            f"{parent_rule} invalid conclusion references undefined identifier: {neg_id}",
+                            rel_file,
+                            child_line,
+                            code="FW051",
                         )
                     )
 

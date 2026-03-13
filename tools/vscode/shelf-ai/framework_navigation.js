@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const FRAMEWORK_FILE_PATH_PATTERN = /^framework\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
+const FRAMEWORK_FILE_PATH_PATTERN = /^(framework|framework_drafts)\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
 const MODULE_REF_WITH_RULES_PATTERN =
   /(?:(?<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?<level>\d+)\.M(?<module>\d+)\[(?<rules>[^\]]+)\]/g;
 const MODULE_REF_PATTERN = /(?:(?<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?<level>\d+)\.M(?<module>\d+)/g;
@@ -198,9 +198,10 @@ function getFrameworkDocumentInfo(filePath, repoRoot) {
   }
   return {
     relativePath,
-    frameworkName: match[1],
-    level: `L${match[2]}`,
-    moduleId: `M${match[3]}`,
+    treeRoot: match[1],
+    frameworkName: match[2],
+    level: `L${match[3]}`,
+    moduleId: `M${match[4]}`,
   };
 }
 
@@ -549,24 +550,35 @@ function findTokenContext(lineText, character) {
   return null;
 }
 
-function resolveModuleFile(repoRoot, currentFrameworkName, refFrameworkName, level, moduleId) {
+function resolveModuleFile(repoRoot, currentFrameworkName, refFrameworkName, level, moduleId, preferredTreeRoot = "framework") {
   const frameworkName = refFrameworkName || currentFrameworkName;
   if (!frameworkName || !level || !moduleId) {
     return null;
   }
 
-  const moduleDir = path.join(repoRoot, "framework", frameworkName);
-  if (!fs.existsSync(moduleDir) || !fs.statSync(moduleDir).isDirectory()) {
-    return null;
+  const prefix = `${level}-${moduleId}-`;
+  const searchRoots = [];
+  if (preferredTreeRoot) {
+    searchRoots.push(preferredTreeRoot);
+  }
+  for (const candidateRoot of ["framework", "framework_drafts"]) {
+    if (!searchRoots.includes(candidateRoot)) {
+      searchRoots.push(candidateRoot);
+    }
   }
 
-  const prefix = `${level}-${moduleId}-`;
-  for (const entry of fs.readdirSync(moduleDir)) {
-    if (!entry.endsWith(".md")) {
+  for (const treeRoot of searchRoots) {
+    const moduleDir = path.join(repoRoot, treeRoot, frameworkName);
+    if (!fs.existsSync(moduleDir) || !fs.statSync(moduleDir).isDirectory()) {
       continue;
     }
-    if (entry.startsWith(prefix)) {
-      return path.join(moduleDir, entry);
+    for (const entry of fs.readdirSync(moduleDir)) {
+      if (!entry.endsWith(".md")) {
+        continue;
+      }
+      if (entry.startsWith(prefix)) {
+        return path.join(moduleDir, entry);
+      }
     }
   }
   return null;
@@ -589,6 +601,39 @@ function buildTomlSectionIndex(text) {
     });
   }
   return sections;
+}
+
+function resolveProductSpecSectionFile(productSpecFilePath, sectionName) {
+  const topLevelSection = String(sectionName || "").split(".", 1)[0];
+  if (!topLevelSection) {
+    return productSpecFilePath;
+  }
+  const splitSectionFile = path.join(path.dirname(productSpecFilePath), "product_spec", `${topLevelSection}.toml`);
+  if (fs.existsSync(splitSectionFile) && fs.statSync(splitSectionFile).isFile()) {
+    return splitSectionFile;
+  }
+  return productSpecFilePath;
+}
+
+function resolveTomlSectionTarget(productSpecFilePath, sectionNames) {
+  const wantedSections = [...new Set((sectionNames || []).filter(Boolean))];
+  for (const sectionName of wantedSections) {
+    const targetFilePath = resolveProductSpecSectionFile(productSpecFilePath, sectionName);
+    const targetText = fs.readFileSync(targetFilePath, "utf8");
+    const sectionIndex = buildTomlSectionIndex(targetText);
+    const sectionTarget = sectionIndex.get(sectionName);
+    if (!sectionTarget) {
+      continue;
+    }
+    return {
+      filePath: targetFilePath,
+      line: sectionTarget.line,
+      character: sectionTarget.character,
+      length: sectionTarget.length,
+      targetSection: sectionName,
+    };
+  }
+  return null;
 }
 
 function getBoundaryConfigMapping(frameworkName, token) {
@@ -883,8 +928,6 @@ function resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token) {
       continue;
     }
 
-    const productSpecText = fs.readFileSync(productSpecFilePath, "utf8");
-    const sectionIndex = buildTomlSectionIndex(productSpecText);
     for (const derivedFrom of collectDerivedFromEntries(manifest)) {
       const frameworkModules = derivedFrom && typeof derivedFrom.framework_modules === "object"
         ? derivedFrom.framework_modules
@@ -899,7 +942,7 @@ function resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token) {
       if (typeof mappedSection !== "string" || !mappedSection.trim()) {
         continue;
       }
-      const sectionTarget = sectionIndex.get(mappedSection);
+      const sectionTarget = resolveTomlSectionTarget(productSpecFilePath, [mappedSection]);
       if (!sectionTarget) {
         continue;
       }
@@ -921,12 +964,12 @@ function resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token) {
       }
       seen.add(dedupeKey);
       candidates.push({
-        filePath: productSpecFilePath,
+        filePath: sectionTarget.filePath,
         line: sectionTarget.line,
         character: sectionTarget.character,
         length: sectionTarget.length,
         primarySection: mappedSection,
-        targetSection: mappedSection,
+        targetSection: sectionTarget.targetSection,
         relatedSections: [mappedSection],
         mappingMode: "governance",
         note: "该映射来自已物化项目的治理清单。",
@@ -956,30 +999,18 @@ function resolveBoundaryConfigTarget(repoRoot, frameworkName, token) {
   if (!productSpecFilePath || !fs.existsSync(productSpecFilePath)) {
     return null;
   }
-  const productSpecText = fs.readFileSync(productSpecFilePath, "utf8");
-  const sectionIndex = buildTomlSectionIndex(productSpecText);
-  let targetSectionName = mapping.primarySection;
-  let sectionTarget = sectionIndex.get(targetSectionName);
-  if (!sectionTarget) {
-    for (const relatedSection of mapping.relatedSections) {
-      const candidate = sectionIndex.get(relatedSection);
-      if (candidate) {
-        targetSectionName = relatedSection;
-        sectionTarget = candidate;
-        break;
-      }
-    }
-  }
+  const orderedSections = [mapping.primarySection, ...mapping.relatedSections];
+  const sectionTarget = resolveTomlSectionTarget(productSpecFilePath, orderedSections);
   if (!sectionTarget) {
     return null;
   }
   return {
-    filePath: productSpecFilePath,
+    filePath: sectionTarget.filePath,
     line: sectionTarget.line,
     character: sectionTarget.character,
     length: sectionTarget.length,
     primarySection: mapping.primarySection,
-    targetSection: targetSectionName,
+    targetSection: sectionTarget.targetSection,
     relatedSections: mapping.relatedSections,
     mappingMode: mapping.mappingMode,
     note: mapping.note,
@@ -1176,7 +1207,8 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
       documentInfo.frameworkName,
       tokenContext.frameworkName,
       tokenContext.level,
-      tokenContext.moduleId
+      tokenContext.moduleId,
+      documentInfo.treeRoot
     );
     if (!targetFilePath || !fs.existsSync(targetFilePath)) {
       return null;
@@ -1255,7 +1287,8 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
       documentInfo.frameworkName,
       tokenContext.frameworkName,
       tokenContext.level,
-      tokenContext.moduleId
+      tokenContext.moduleId,
+      documentInfo.treeRoot
     );
     if (!targetFilePath || !fs.existsSync(targetFilePath)) {
       return null;

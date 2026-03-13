@@ -6,6 +6,10 @@ import re
 from typing import Any, cast
 
 from project_runtime import discover_framework_driven_projects, load_registered_project
+from project_runtime.project_config_source import (
+    ProjectConfigLoadError,
+    load_product_spec_document,
+)
 from project_runtime.project_governance import (
     build_project_discovery_audit,
     render_project_discovery_audit_markdown,
@@ -60,6 +64,11 @@ def _first_heading_line(file_path: Path) -> int:
 
 
 def _toml_section_line(file_path: Path, section_path: str) -> int:
+    if file_path.name == "product_spec.toml":
+        try:
+            return load_product_spec_document(file_path).line_for_section(section_path)
+        except ProjectConfigLoadError:
+            return 1
     if not file_path.exists():
         return 1
     wanted = section_path.strip()

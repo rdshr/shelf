@@ -26,6 +26,16 @@ class FrameworkCapabilityIR:
 
 
 @dataclass(frozen=True)
+class FrameworkNonResponsibilityIR:
+    responsibility_id: str
+    name: str
+    statement: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class FrameworkBoundaryIR:
     boundary_id: str
     name: str
@@ -63,6 +73,7 @@ class FrameworkRuleIR:
     participant_bases: tuple[str, ...]
     combination: str
     output_capabilities: tuple[str, ...]
+    invalid_conclusions: tuple[str, ...]
     boundary_bindings: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
@@ -89,6 +100,7 @@ class FrameworkModuleIR:
     title_en: str
     intro: str
     capabilities: tuple[FrameworkCapabilityIR, ...]
+    non_responsibilities: tuple[FrameworkNonResponsibilityIR, ...]
     boundaries: tuple[FrameworkBoundaryIR, ...]
     bases: tuple[FrameworkBaseIR, ...]
     rules: tuple[FrameworkRuleIR, ...]
@@ -109,6 +121,7 @@ class FrameworkModuleIR:
             "title_en": self.title_en,
             "intro": self.intro,
             "capabilities": [item.to_dict() for item in self.capabilities],
+            "non_responsibilities": [item.to_dict() for item in self.non_responsibilities],
             "boundaries": [item.to_dict() for item in self.boundaries],
             "bases": [item.to_dict() for item in self.bases],
             "rules": [item.to_dict() for item in self.rules],

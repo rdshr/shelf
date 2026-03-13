@@ -216,7 +216,7 @@ function main() {
     character: boundaryConfigRef.character,
   });
   assert(boundaryConfigResult, "instance boundary ref should resolve");
-  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml"));
   assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[chat]");
 
   const boundaryDefinitionRef = locate(workbenchL2.text, "`CHAT` 对话边界");
@@ -240,7 +240,7 @@ function main() {
   });
   assert(boundaryConfigHoverResult, "boundary config hover should resolve");
   assert(boundaryConfigHoverResult.markdown.includes("Product Spec"));
-  assert(boundaryConfigHoverResult.markdown.includes("projects/knowledge_base_basic/product_spec.toml"));
+  assert(boundaryConfigHoverResult.markdown.includes("projects/knowledge_base_basic/product_spec/chat.toml"));
   assert(boundaryConfigHoverResult.markdown.includes("`[chat]`"));
 
   const citationConfigRef = locate(knowledgeBaseL2.text, "CITATION + SCOPE");
@@ -252,7 +252,7 @@ function main() {
     character: citationConfigRef.character,
   });
   assert(citationConfigResult, "derived citation boundary ref should resolve");
-  assert(citationConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(citationConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml"));
   assert.strictEqual(targetLineText(citationConfigResult).trim(), "[chat]");
 
   const citationConfigHoverResult = resolveHoverTarget({
@@ -277,7 +277,7 @@ function main() {
   });
   assert(citationReferences.length >= 3, "citation references should include usage, definition, and config");
   assert(citationReferences.some((item) => item.filePath.endsWith("framework/knowledge_base/L0-M2-对话与引用原子模块.md")));
-  assert(citationReferences.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml")));
+  assert(citationReferences.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml")));
 
   const a11yConfigRef = locate(knowledgeBaseL2.text, "STATUS + A11Y");
   const a11yConfigResult = resolveDefinitionTarget({
@@ -288,7 +288,7 @@ function main() {
     character: a11yConfigRef.character + "STATUS + ".length,
   });
   assert(a11yConfigResult, "knowledge base A11Y boundary ref should resolve");
-  assert(a11yConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(a11yConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/a11y.toml"));
   assert.strictEqual(targetLineText(a11yConfigResult).trim(), "[a11y]");
 
   const frontendTokenL0 = loadFrameworkFile("framework/frontend/L0-M2-视觉语义原子模块.md");
@@ -301,7 +301,7 @@ function main() {
     character: tokenConfigRef.character,
   });
   assert(tokenConfigResult, "frontend TOKEN boundary ref should resolve");
-  assert(tokenConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(tokenConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/visual.toml"));
   assert.strictEqual(targetLineText(tokenConfigResult).trim(), "[visual]");
 
   const frontendEntryL1 = loadFrameworkFile("framework/frontend/L1-M0-触发与选择原子模块.md");
@@ -314,7 +314,7 @@ function main() {
     character: entryA11yRef.character + "PICK + OPTION + ACTION + ".length,
   });
   assert(entryA11yResult, "frontend A11Y boundary ref should resolve");
-  assert(entryA11yResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(entryA11yResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/a11y.toml"));
   assert.strictEqual(targetLineText(entryA11yResult).trim(), "[a11y]");
 
   const backendL2 = loadFrameworkFile("framework/backend/L2-M0-知识库接口框架标准模块.md");
@@ -327,7 +327,7 @@ function main() {
     character: backendResultRef.character + "CHAT + ".length,
   });
   assert(backendResult, "backend RESULT boundary ref should resolve");
-  assert(backendResult.filePath.endsWith("projects/knowledge_base_basic/product_spec.toml"));
+  assert(backendResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/return.toml"));
   assert.strictEqual(targetLineText(backendResult).trim(), "[return]");
 
   const tempRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-nav-"));
@@ -427,6 +427,77 @@ function main() {
   assert(chunkingResult, "custom framework boundary ref should resolve to generated project spec");
   assert(chunkingResult.filePath.endsWith("projects/doc_chunk/product_spec.toml"));
   assert.strictEqual(targetLineText(chunkingResult).trim(), "[chunking]");
+
+  const draftRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-draft-nav-"));
+  const draftL1Path = writeFile(
+    draftRepoRoot,
+    "framework_drafts/demo/L1-M0-下游模块.md",
+    [
+      "# 下游模块:DraftChild",
+      "",
+      "@framework",
+      "",
+      "## 1. 能力声明",
+      "- `C1` 下游能力：承接草稿链路。",
+      "",
+      "## 2. 边界定义",
+      "- `BOUND` 下游边界：下游结构必须存在。",
+      "",
+      "## 3. 最小可行基",
+      "- `B1` 下游基：稳定承接。来源：`C1 + BOUND`。",
+      "",
+      "## 4. 基组合原则",
+      "- `R1` 下游规则",
+      "  - `R1.1` 参与基：`B1`",
+      "  - `R1.2` 组合方式：维持承接。",
+      "  - `R1.3` 输出能力：`C1`",
+      "  - `R1.4` 边界绑定：`BOUND`",
+      "",
+      "## 5. 验证",
+      "- `V1` 下游验证：承接必须存在。",
+      "",
+    ].join("\n")
+  );
+  const draftL2Path = writeFile(
+    draftRepoRoot,
+    "framework_drafts/demo/L2-M0-上游模块.md",
+    [
+      "# 上游模块:DraftParent",
+      "",
+      "@framework",
+      "",
+      "## 1. 能力声明",
+      "- `C1` 上游能力：复用下游草稿模块。",
+      "",
+      "## 2. 边界定义",
+      "- `BOUND` 上游边界：复用关系必须稳定。",
+      "",
+      "## 3. 最小可行基",
+      "- `B1` 上游基：L1.M0[R1]。来源：`C1 + BOUND`。",
+      "",
+      "## 4. 基组合原则",
+      "- `R1` 上游规则",
+      "  - `R1.1` 参与基：`B1`",
+      "  - `R1.2` 组合方式：复用草稿下游模块。",
+      "  - `R1.3` 输出能力：`C1`",
+      "  - `R1.4` 边界绑定：`BOUND`",
+      "",
+      "## 5. 验证",
+      "- `V1` 上游验证：草稿引用必须可导航。",
+      "",
+    ].join("\n")
+  );
+  const draftText = fs.readFileSync(draftL2Path, "utf8");
+  const draftModuleRef = locate(draftText, "L1.M0[R1]");
+  const draftModuleResult = resolveDefinitionTarget({
+    repoRoot: draftRepoRoot,
+    filePath: draftL2Path,
+    text: draftText,
+    line: draftModuleRef.line,
+    character: draftModuleRef.character + 1,
+  });
+  assert(draftModuleResult, "draft module ref should resolve");
+  assert.strictEqual(draftModuleResult.filePath, draftL1Path);
 }
 
 main();
