@@ -224,6 +224,47 @@ class ImplementationEffectValidationContext:
         return set(self.implementation_leaf_values)
 
 
+@dataclass(frozen=True)
+class FrameworkModuleCatalog:
+    module_level_module_ids: dict[str, dict[int, set[int]]]
+    module_files_by_key: dict[str, str]
+    module_min_levels: dict[str, int]
+
+
+@dataclass(frozen=True)
+class FrameworkLayerDocContext:
+    module_name: str
+    level_num: int
+    module_num: int
+    root_level_num: int
+    source_module_key: str
+    markdown_file: Path
+    rel_file: str
+    file_text: str
+
+
+@dataclass(frozen=True)
+class FrameworkIdentifierState:
+    file_identifiers: set[str]
+    file_identifier_origin: dict[str, int]
+    capability_ids: set[str]
+    non_responsibility_ids: set[str]
+    positive_capability_ids: set[str]
+    base_ids: set[str]
+
+
+@dataclass(frozen=True)
+class FrameworkRuleState:
+    rule_top_lines: dict[str, int]
+    rule_top_names: dict[str, str]
+    rule_child_items: dict[str, list[tuple[int, str]]]
+    rule_declared_symbols: dict[str, set[str]]
+    rule_participant_bases: dict[str, set[str]]
+    rule_output_capabilities: dict[str, set[str]]
+    rule_invalid_conclusions: dict[str, set[str]]
+    rule_boundary_bindings: dict[str, set[str]]
+
+
 def make_issue(
     message: str,
     file: str,
@@ -1795,14 +1836,8 @@ def validate_framework_reference_graph(
     return issues
 
 
-def validate_framework_layers() -> tuple[list[Issue], set[str]]:
+def _validate_framework_directory_layout(module_levels: dict[str, set[int]]) -> tuple[list[Issue], bool]:
     issues: list[Issue] = []
-    layer_files: set[str] = set()
-    module_levels: dict[str, set[int]] = {}
-    module_level_module_ids: dict[str, dict[int, set[int]]] = {}
-    module_files_by_key: dict[str, str] = {}
-    module_ref_edges: list[dict[str, Any]] = []
-
     if not FRAMEWORK_DIR.exists():
         issues.append(
             make_issue(
@@ -1812,7 +1847,7 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                 code="FRAMEWORK_DIR_MISSING",
             )
         )
-        return issues, layer_files
+        return issues, False
 
     for module_dir in sorted(FRAMEWORK_DIR.iterdir()):
         if not module_dir.is_dir():
@@ -1844,7 +1879,14 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                     )
                 )
 
-    framework_docs = iter_framework_layer_markdown()
+    return issues, True
+
+
+def _build_framework_module_catalog(
+    framework_docs: list[tuple[str, int, Path]],
+) -> FrameworkModuleCatalog:
+    module_level_module_ids: dict[str, dict[int, set[int]]] = {}
+    module_files_by_key: dict[str, str] = {}
     for module_name, level_num, markdown_file in framework_docs:
         layer_match = FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(markdown_file.name)
         if layer_match is None:
@@ -1860,896 +1902,1056 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
         for module_name, level_map in module_level_module_ids.items()
         if level_map
     }
+    return FrameworkModuleCatalog(
+        module_level_module_ids=module_level_module_ids,
+        module_files_by_key=module_files_by_key,
+        module_min_levels=module_min_levels,
+    )
 
-    for module_name, level_num, markdown_file in framework_docs:
-        rel_file = markdown_file.relative_to(REPO_ROOT).as_posix()
-        layer_files.add(rel_file)
-        module_levels.setdefault(module_name, set()).add(level_num)
-        layer_match = FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(markdown_file.name)
-        if layer_match is None:
-            continue
-        module_num = int(layer_match.group(2))
-        source_module_key = make_framework_module_key(module_name, level_num, module_num)
-        root_level_num = module_min_levels.get(module_name, 0)
-        file_text = read_text(markdown_file)
 
-        framework_directive_match = FRAMEWORK_DIRECTIVE_LINE_PATTERN.search(file_text)
-        if framework_directive_match is None:
-            issues.append(
-                make_issue(
-                    "framework file must include plain @framework directive",
-                    rel_file,
-                    1,
-                    code="FW001",
-                )
+def _build_framework_doc_context(
+    module_name: str,
+    level_num: int,
+    markdown_file: Path,
+    catalog: FrameworkModuleCatalog,
+) -> FrameworkLayerDocContext | None:
+    layer_match = FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(markdown_file.name)
+    if layer_match is None:
+        return None
+    module_num = int(layer_match.group(2))
+    return FrameworkLayerDocContext(
+        module_name=module_name,
+        level_num=level_num,
+        module_num=module_num,
+        root_level_num=catalog.module_min_levels.get(module_name, 0),
+        source_module_key=make_framework_module_key(module_name, level_num, module_num),
+        markdown_file=markdown_file,
+        rel_file=markdown_file.relative_to(REPO_ROOT).as_posix(),
+        file_text=read_text(markdown_file),
+    )
+
+
+def _validate_framework_file_preamble(
+    context: FrameworkLayerDocContext,
+) -> tuple[list[Issue], bool]:
+    issues: list[Issue] = []
+    framework_directive_match = FRAMEWORK_DIRECTIVE_LINE_PATTERN.search(context.file_text)
+    if framework_directive_match is None:
+        issues.append(
+            make_issue(
+                "framework file must include plain @framework directive",
+                context.rel_file,
+                1,
+                code="FW001",
             )
-            continue
+        )
+        return issues, False
 
-        directive_line = line_from_offset(file_text, framework_directive_match.start())
-        directive_args = (framework_directive_match.group(1) or "").strip()
-        if directive_args:
-            issues.append(
-                make_issue(
-                    "@framework must be plain directive without arguments",
-                    rel_file,
-                    directive_line,
-                    code="FW002",
-                )
+    directive_line = line_from_offset(context.file_text, framework_directive_match.start())
+    directive_args = (framework_directive_match.group(1) or "").strip()
+    if directive_args:
+        issues.append(
+            make_issue(
+                "@framework must be plain directive without arguments",
+                context.rel_file,
+                directive_line,
+                code="FW002",
             )
+        )
 
-        h1_title = find_first_h1_title(file_text)
-        if h1_title is None:
+    h1_title = find_first_h1_title(context.file_text)
+    if h1_title is None:
+        issues.append(
+            make_issue(
+                "framework file must have a level-1 title line",
+                context.rel_file,
+                1,
+                code="FW003",
+            )
+        )
+    else:
+        title_line, title_text = h1_title
+        if ":" not in title_text:
             issues.append(
                 make_issue(
-                    "framework file must have a level-1 title line",
-                    rel_file,
-                    1,
+                    "framework title must include Chinese and English names separated by ':'",
+                    context.rel_file,
+                    title_line,
                     code="FW003",
                 )
             )
         else:
-            title_line, title_text = h1_title
-            if ":" not in title_text:
+            left, right = title_text.split(":", 1)
+            if not left.strip() or not right.strip():
                 issues.append(
                     make_issue(
-                        "framework title must include Chinese and English names separated by ':'",
-                        rel_file,
+                        "framework title around ':' cannot be empty",
+                        context.rel_file,
                         title_line,
                         code="FW003",
                     )
                 )
-            else:
-                left, right = title_text.split(":", 1)
-                if not left.strip() or not right.strip():
-                    issues.append(
-                        make_issue(
-                            "framework title around ':' cannot be empty",
-                            rel_file,
-                            title_line,
-                            code="FW003",
-                        )
-                    )
-                if re.search(r"[A-Za-z]", right) is None:
-                    issues.append(
-                        make_issue(
-                            "framework title English part must contain ASCII letters",
-                            rel_file,
-                            title_line,
-                            code="FW003",
-                        )
-                    )
-
-        for forbidden_pattern, forbidden_label in FRAMEWORK_FORBIDDEN_DOWNSTREAM_CARRYING_PATTERNS:
-            for forbidden_match in forbidden_pattern.finditer(file_text):
+            if re.search(r"[A-Za-z]", right) is None:
                 issues.append(
                     make_issue(
-                        (
-                            "framework module must stay downstream-carrier-agnostic; "
-                            f"remove forbidden term: {forbidden_label}"
-                        ),
-                        rel_file,
-                        line_from_offset(file_text, forbidden_match.start()),
-                        code="FW004",
+                        "framework title English part must contain ASCII letters",
+                        context.rel_file,
+                        title_line,
+                        code="FW003",
                     )
                 )
 
-        file_identifiers: set[str] = set()
-        file_identifier_origin: dict[str, int] = {}
-        for id_match in FRAMEWORK_NUMBERED_ITEM_PATTERN.finditer(file_text):
-            identifier = id_match.group(1)
-            line_num = line_from_offset(file_text, id_match.start(1))
-            previous_line = file_identifier_origin.get(identifier)
-            if previous_line is not None:
+    for forbidden_pattern, forbidden_label in FRAMEWORK_FORBIDDEN_DOWNSTREAM_CARRYING_PATTERNS:
+        for forbidden_match in forbidden_pattern.finditer(context.file_text):
+            issues.append(
+                make_issue(
+                    (
+                        "framework module must stay downstream-carrier-agnostic; "
+                        f"remove forbidden term: {forbidden_label}"
+                    ),
+                    context.rel_file,
+                    line_from_offset(context.file_text, forbidden_match.start()),
+                    code="FW004",
+                )
+            )
+
+    return issues, True
+
+
+def _collect_framework_identifier_state(
+    context: FrameworkLayerDocContext,
+) -> tuple[FrameworkIdentifierState, list[Issue]]:
+    issues: list[Issue] = []
+    file_identifiers: set[str] = set()
+    file_identifier_origin: dict[str, int] = {}
+    for id_match in FRAMEWORK_NUMBERED_ITEM_PATTERN.finditer(context.file_text):
+        identifier = id_match.group(1)
+        line_num = line_from_offset(context.file_text, id_match.start(1))
+        previous_line = file_identifier_origin.get(identifier)
+        if previous_line is not None:
+            issues.append(
+                make_issue(
+                    f"framework identifier must be unique inside current framework file: {identifier}",
+                    context.rel_file,
+                    line_num,
+                    code="FW010",
+                    related=[
+                        {
+                            "message": "previous declaration",
+                            "file": context.rel_file,
+                            "line": previous_line,
+                            "column": 1,
+                        }
+                    ],
+                )
+            )
+            continue
+        file_identifier_origin[identifier] = line_num
+        file_identifiers.add(identifier)
+
+    for identifier in sorted(file_identifiers):
+        line_num = file_identifier_origin.get(identifier, 1)
+        if re.fullmatch(r"C\d.*", identifier) and CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is None:
+            issues.append(
+                make_issue(
+                    f"invalid capability identifier format: {identifier}; expected C<number>",
+                    context.rel_file,
+                    line_num,
+                    code="FW011",
+                )
+            )
+        if re.fullmatch(r"B\d.*", identifier) and CANONICAL_BASE_ID_PATTERN.fullmatch(identifier) is None:
+            issues.append(
+                make_issue(
+                    f"invalid base identifier format: {identifier}; expected B<number>",
+                    context.rel_file,
+                    line_num,
+                    code="FW011",
+                )
+            )
+        if re.fullmatch(r"V\d.*", identifier) and CANONICAL_VERIFY_ID_PATTERN.fullmatch(identifier) is None:
+            issues.append(
+                make_issue(
+                    f"invalid verification identifier format: {identifier}; expected V<number>",
+                    context.rel_file,
+                    line_num,
+                    code="FW011",
+                )
+            )
+        if re.fullmatch(r"N\d.*", identifier) and CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is None:
+            issues.append(
+                make_issue(
+                    f"invalid non-responsibility identifier format: {identifier}; expected N<number>",
+                    context.rel_file,
+                    line_num,
+                    code="FW011",
+                )
+            )
+
+    capability_ids = {
+        identifier
+        for identifier in file_identifiers
+        if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is not None
+    }
+    non_responsibility_ids = {
+        identifier
+        for identifier in file_identifiers
+        if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is not None
+    }
+    return (
+        FrameworkIdentifierState(
+            file_identifiers=file_identifiers,
+            file_identifier_origin=file_identifier_origin,
+            capability_ids=capability_ids,
+            non_responsibility_ids=non_responsibility_ids,
+            positive_capability_ids=capability_ids,
+            base_ids={
+                identifier
+                for identifier in file_identifiers
+                if CANONICAL_BASE_ID_PATTERN.fullmatch(identifier) is not None
+            },
+        ),
+        issues,
+    )
+
+
+def _validate_framework_base_items(
+    context: FrameworkLayerDocContext,
+    identifiers: FrameworkIdentifierState,
+    catalog: FrameworkModuleCatalog,
+    module_ref_edges: list[dict[str, Any]],
+) -> tuple[list[Issue], dict[str, set[str]]]:
+    issues: list[Issue] = []
+    base_source_tokens_by_base: dict[str, set[str]] = {}
+
+    for base_item_match in FRAMEWORK_BASE_ITEM_LINE_PATTERN.finditer(context.file_text):
+        base_id = base_item_match.group(1)
+        base_line = base_item_match.group(0)
+        base_line_num = line_from_offset(context.file_text, base_item_match.start(1))
+        inline_expr = extract_framework_base_inline_expr(base_line)
+        inline_refs = parse_framework_base_inline_refs(inline_expr)
+        if FRAMEWORK_LEGACY_UPSTREAM_CLAUSE_PATTERN.search(base_line):
+            issues.append(
+                make_issue(
+                    (
+                        f"{base_id} must inline upstream module refs before source expression; "
+                        "legacy '上游模块：...' clause is forbidden"
+                    ),
+                    context.rel_file,
+                    base_line_num,
+                    code="FW023",
+                )
+            )
+        local_inline_refs: list[tuple[int, int, str]] = []
+        external_inline_refs: list[tuple[str, int, int, str]] = []
+        for ref_framework, ref_level, ref_module_num, ref_rules in inline_refs:
+            normalized_framework = ref_framework or context.module_name
+            if normalized_framework == context.module_name:
+                local_inline_refs.append((ref_level, ref_module_num, ref_rules))
+            else:
+                external_inline_refs.append((normalized_framework, ref_level, ref_module_num, ref_rules))
+
+        if context.level_num == context.root_level_num and local_inline_refs:
+            issues.append(
+                make_issue(
+                    (
+                        f"{base_id} in current framework root layer L{context.root_level_num} cannot reference "
+                        "local upstream modules; root bases must stay self-contained inside current framework"
+                    ),
+                    context.rel_file,
+                    base_line_num,
+                    code="FW026",
+                )
+            )
+
+        for ext_framework, ref_level, ref_module_num, _ in external_inline_refs:
+            available_external_ids = catalog.module_level_module_ids.get(ext_framework, {}).get(ref_level, set())
+            if ref_module_num not in available_external_ids:
                 issues.append(
                     make_issue(
-                        f"framework identifier must be unique inside current framework file: {identifier}",
-                        rel_file,
-                        line_num,
-                        code="FW010",
-                        related=[
-                            {
-                                "message": "previous declaration",
-                                "file": rel_file,
-                                "line": previous_line,
-                                "column": 1,
-                            }
-                        ],
+                        (
+                            f"{base_id} external inline ref points to missing framework module: "
+                            f"{ext_framework}.L{ref_level}.M{ref_module_num}"
+                        ),
+                        context.rel_file,
+                        base_line_num,
+                        code="FW028",
                     )
                 )
                 continue
-            file_identifier_origin[identifier] = line_num
-            file_identifiers.add(identifier)
 
-        for identifier in sorted(file_identifiers):
-            line_num = file_identifier_origin.get(identifier, 1)
-            if re.fullmatch(r"C\d.*", identifier) and CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is None:
-                issues.append(
-                    make_issue(
-                        f"invalid capability identifier format: {identifier}; expected C<number>",
-                        rel_file,
-                        line_num,
-                        code="FW011",
-                    )
-                )
-            if re.fullmatch(r"B\d.*", identifier) and CANONICAL_BASE_ID_PATTERN.fullmatch(identifier) is None:
-                issues.append(
-                    make_issue(
-                        f"invalid base identifier format: {identifier}; expected B<number>",
-                        rel_file,
-                        line_num,
-                        code="FW011",
-                    )
-                )
-            if re.fullmatch(r"V\d.*", identifier) and CANONICAL_VERIFY_ID_PATTERN.fullmatch(identifier) is None:
-                issues.append(
-                    make_issue(
-                        f"invalid verification identifier format: {identifier}; expected V<number>",
-                        rel_file,
-                        line_num,
-                        code="FW011",
-                    )
-                )
-            if re.fullmatch(r"N\d.*", identifier) and CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is None:
-                issues.append(
-                    make_issue(
-                        f"invalid non-responsibility identifier format: {identifier}; expected N<number>",
-                        rel_file,
-                        line_num,
-                        code="FW011",
-                    )
-                )
+            module_ref_edges.append(
+                {
+                    "source": context.source_module_key,
+                    "target": make_framework_module_key(ext_framework, ref_level, ref_module_num),
+                    "file": context.rel_file,
+                    "line": base_line_num,
+                    "base_id": base_id,
+                }
+            )
 
-        capability_ids = {
-            identifier
-            for identifier in file_identifiers
-            if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(identifier) is not None
-        }
-        non_responsibility_ids = {
-            identifier
-            for identifier in file_identifiers
-            if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(identifier) is not None
-        }
-        positive_capability_ids = capability_ids
-        base_ids = {
-            identifier for identifier in file_identifiers if CANONICAL_BASE_ID_PATTERN.fullmatch(identifier)
-        }
-        boundary_ids: set[str] = set()
-        base_source_tokens_by_base: dict[str, set[str]] = {}
-
-        for base_item_match in FRAMEWORK_BASE_ITEM_LINE_PATTERN.finditer(file_text):
-            base_id = base_item_match.group(1)
-            base_line = base_item_match.group(0)
-            base_line_num = line_from_offset(file_text, base_item_match.start(1))
-            inline_expr = extract_framework_base_inline_expr(base_line)
-            inline_refs = parse_framework_base_inline_refs(inline_expr)
-            if FRAMEWORK_LEGACY_UPSTREAM_CLAUSE_PATTERN.search(base_line):
+        if context.level_num > context.root_level_num:
+            if not inline_expr:
                 issues.append(
                     make_issue(
                         (
-                            f"{base_id} must inline upstream module refs before source expression; "
-                            "legacy '上游模块：...' clause is forbidden"
+                            f"{base_id} must inline local upstream module refs before source "
+                            "expression, e.g. L0.M0[R1] + L0.M1[R2]"
                         ),
-                        rel_file,
+                        context.rel_file,
                         base_line_num,
-                        code="FW023",
+                        code="FW024",
                     )
                 )
-            local_inline_refs: list[tuple[int, int, str]] = []
-            external_inline_refs: list[tuple[str, int, int, str]] = []
-            for ref_framework, ref_level, ref_module_num, ref_rules in inline_refs:
-                normalized_framework = ref_framework or module_name
-                if normalized_framework == module_name:
-                    local_inline_refs.append((ref_level, ref_module_num, ref_rules))
-                else:
-                    external_inline_refs.append(
+            elif not inline_refs:
+                issues.append(
+                    make_issue(
                         (
-                            normalized_framework,
-                            ref_level,
-                            ref_module_num,
-                            ref_rules,
+                            f"{base_id} inline upstream module expression is invalid: {inline_expr}; "
+                            "expected Lx.My[...] or framework.Lx.My[...] terms joined by '+'"
+                        ),
+                        context.rel_file,
+                        base_line_num,
+                        code="FW024",
+                    )
+                )
+            else:
+                if not local_inline_refs:
+                    issues.append(
+                        make_issue(
+                            (
+                                f"{base_id} must include at least one local upstream ref "
+                                "inside current framework before relying on external refs"
+                            ),
+                            context.rel_file,
+                            base_line_num,
+                            code="FW024",
                         )
                     )
-
-            if level_num == root_level_num and local_inline_refs:
-                issues.append(
-                    make_issue(
-                        (
-                            f"{base_id} in current framework root layer L{root_level_num} cannot reference "
-                            "local upstream modules; root bases must stay self-contained inside current framework"
-                        ),
-                        rel_file,
-                        base_line_num,
-                        code="FW026",
-                    )
-                )
-
-            if external_inline_refs:
-                for ext_framework, ref_level, ref_module_num, _ in external_inline_refs:
-                    available_external_ids = module_level_module_ids.get(ext_framework, {}).get(ref_level, set())
-                    if ref_module_num not in available_external_ids:
+                for ref_level, ref_module_num, _ in local_inline_refs:
+                    if ref_level >= context.level_num:
                         issues.append(
                             make_issue(
                                 (
-                                    f"{base_id} external inline ref points to missing framework module: "
-                                    f"{ext_framework}.L{ref_level}.M{ref_module_num}"
+                                    f"{base_id} inline upstream ref must target a lower local layer "
+                                    f"than L{context.level_num}: L{ref_level}.M{ref_module_num}"
                                 ),
-                                rel_file,
+                                context.rel_file,
                                 base_line_num,
-                                code="FW028",
+                                code="FW025",
+                            )
+                        )
+                        continue
+                    if ref_level < context.root_level_num:
+                        issues.append(
+                            make_issue(
+                                (
+                                    f"{base_id} inline upstream ref points below current framework root "
+                                    f"L{context.root_level_num}: L{ref_level}.M{ref_module_num}"
+                                ),
+                                context.rel_file,
+                                base_line_num,
+                                code="FW025",
+                            )
+                        )
+                        continue
+                    available_ids = catalog.module_level_module_ids.get(context.module_name, {}).get(ref_level, set())
+                    if ref_module_num not in available_ids:
+                        issues.append(
+                            make_issue(
+                                (
+                                    f"{base_id} inline upstream ref points to missing module file "
+                                    f"in current framework directory: L{ref_level}.M{ref_module_num}"
+                                ),
+                                context.rel_file,
+                                base_line_num,
+                                code="FW025",
                             )
                         )
                         continue
 
                     module_ref_edges.append(
                         {
-                            "source": source_module_key,
-                            "target": make_framework_module_key(ext_framework, ref_level, ref_module_num),
-                            "file": rel_file,
+                            "source": context.source_module_key,
+                            "target": make_framework_module_key(context.module_name, ref_level, ref_module_num),
+                            "file": context.rel_file,
                             "line": base_line_num,
                             "base_id": base_id,
                         }
                     )
 
-            if level_num > root_level_num:
-                if not inline_expr:
-                    issues.append(
-                        make_issue(
-                            (
-                                f"{base_id} must inline local upstream module refs before source "
-                                "expression, e.g. L0.M0[R1] + L0.M1[R2]"
-                            ),
-                            rel_file,
-                            base_line_num,
-                            code="FW024",
-                        )
-                    )
-                elif not inline_refs:
-                    issues.append(
-                        make_issue(
-                            (
-                                f"{base_id} inline upstream module expression is invalid: {inline_expr}; "
-                                "expected Lx.My[...] or framework.Lx.My[...] terms joined by '+'"
-                            ),
-                            rel_file,
-                            base_line_num,
-                            code="FW024",
-                        )
-                    )
-                else:
-                    if not local_inline_refs:
-                        issues.append(
-                            make_issue(
-                                (
-                                    f"{base_id} must include at least one local upstream ref "
-                                    "inside current framework before relying on external refs"
-                                ),
-                                rel_file,
-                                base_line_num,
-                                code="FW024",
-                            )
-                        )
-                    for ref_level, ref_module_num, _ in local_inline_refs:
-                        if ref_level >= level_num:
-                            issues.append(
-                                make_issue(
-                                    (
-                                        f"{base_id} inline upstream ref must target a lower local layer "
-                                        f"than L{level_num}: L{ref_level}.M{ref_module_num}"
-                                    ),
-                                    rel_file,
-                                    base_line_num,
-                                    code="FW025",
-                                )
-                            )
-                            continue
-                        if ref_level < root_level_num:
-                            issues.append(
-                                make_issue(
-                                    (
-                                        f"{base_id} inline upstream ref points below current framework root "
-                                        f"L{root_level_num}: L{ref_level}.M{ref_module_num}"
-                                    ),
-                                    rel_file,
-                                    base_line_num,
-                                    code="FW025",
-                                )
-                            )
-                            continue
-                        available_ids = module_level_module_ids.get(module_name, {}).get(ref_level, set())
-                        if ref_module_num not in available_ids:
-                            issues.append(
-                                make_issue(
-                                    (
-                                        f"{base_id} inline upstream ref points to missing module file "
-                                        f"in current framework directory: L{ref_level}.M{ref_module_num}"
-                                    ),
-                                    rel_file,
-                                    base_line_num,
-                                    code="FW025",
-                                )
-                            )
-                            continue
-
-                        module_ref_edges.append(
-                            {
-                                "source": source_module_key,
-                                "target": make_framework_module_key(module_name, ref_level, ref_module_num),
-                                "file": rel_file,
-                                "line": base_line_num,
-                                "base_id": base_id,
-                            }
-                        )
-            source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(base_line)
-            if source_match is None:
-                issues.append(
-                    make_issue(
-                        f"{base_id} must declare source expression using '来源：`...`'",
-                        rel_file,
-                        base_line_num,
-                        code="FW020",
-                    )
+        source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(base_line)
+        if source_match is None:
+            issues.append(
+                make_issue(
+                    f"{base_id} must declare source expression using '来源：`...`'",
+                    context.rel_file,
+                    base_line_num,
+                    code="FW020",
                 )
-                continue
-
-            source_expr = source_match.group(1).strip()
-            if not source_expr:
-                issues.append(
-                    make_issue(
-                        f"{base_id} source expression cannot be empty",
-                        rel_file,
-                        base_line_num,
-                        code="FW021",
-                    )
-                )
-                continue
-
-            source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
-            if not source_tokens:
-                issues.append(
-                    make_issue(
-                        f"{base_id} source expression is invalid: {source_expr}",
-                        rel_file,
-                        base_line_num,
-                        code="FW021",
-                    )
-                )
-                continue
-
-            base_source_tokens_by_base[base_id] = set(source_tokens)
-            for token in source_tokens:
-                if token not in file_identifiers:
-                    issues.append(
-                        make_issue(
-                            f"{base_id} source references undefined identifier: {token}",
-                            rel_file,
-                            base_line_num,
-                            code="FW021",
-                        )
-                    )
-
-            positive_capability_refs = {
-                token for token in source_tokens if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
-            }
-            negative_capability_refs = {
-                token for token in source_tokens if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(token) is not None
-            }
-            invalid_capability_refs = positive_capability_refs - positive_capability_ids
-            invalid_capability_refs.update(negative_capability_refs)
-            if invalid_capability_refs:
-                issues.append(
-                    make_issue(
-                        (
-                            f"{base_id} source may only reference positive capabilities; "
-                            f"found invalid capability ids: {', '.join(sorted(invalid_capability_refs))}"
-                        ),
-                        rel_file,
-                        base_line_num,
-                        code="FW022",
-                    )
-                )
-
-            has_boundary_ref = any(
-                token not in positive_capability_ids and token not in non_responsibility_ids
-                for token in source_tokens
             )
-            if not has_boundary_ref:
+            continue
+
+        source_expr = source_match.group(1).strip()
+        if not source_expr:
+            issues.append(
+                make_issue(
+                    f"{base_id} source expression cannot be empty",
+                    context.rel_file,
+                    base_line_num,
+                    code="FW021",
+                )
+            )
+            continue
+
+        source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
+        if not source_tokens:
+            issues.append(
+                make_issue(
+                    f"{base_id} source expression is invalid: {source_expr}",
+                    context.rel_file,
+                    base_line_num,
+                    code="FW021",
+                )
+            )
+            continue
+
+        base_source_tokens_by_base[base_id] = set(source_tokens)
+        for token in source_tokens:
+            if token not in identifiers.file_identifiers:
                 issues.append(
                     make_issue(
-                        f"{base_id} source must include at least one boundary/parameter identifier",
-                        rel_file,
+                        f"{base_id} source references undefined identifier: {token}",
+                        context.rel_file,
                         base_line_num,
-                        code="FW022",
+                        code="FW021",
                     )
                 )
 
-        for boundary_line_num, boundary_line in iter_section_bullet_lines(file_text, "## 2. 边界定义"):
-            boundary_match = FRAMEWORK_BOUNDARY_ITEM_LINE_PATTERN.match(boundary_line)
-            if boundary_match is None:
-                continue
-            boundary_id = boundary_match.group(1)
-            boundary_ids.add(boundary_id)
-            source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(boundary_line)
-            if source_match is None:
-                issues.append(
-                    make_issue(
-                        f"{boundary_id} must declare source expression using '来源：`...`'",
-                        rel_file,
-                        boundary_line_num,
-                        code="FW030",
-                    )
+        positive_capability_refs = {
+            token
+            for token in source_tokens
+            if CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
+        }
+        negative_capability_refs = {
+            token
+            for token in source_tokens
+            if CANONICAL_NON_RESPONSIBILITY_ID_PATTERN.fullmatch(token) is not None
+        }
+        invalid_capability_refs = positive_capability_refs - identifiers.positive_capability_ids
+        invalid_capability_refs.update(negative_capability_refs)
+        if invalid_capability_refs:
+            issues.append(
+                make_issue(
+                    (
+                        f"{base_id} source may only reference positive capabilities; "
+                        f"found invalid capability ids: {', '.join(sorted(invalid_capability_refs))}"
+                    ),
+                    context.rel_file,
+                    base_line_num,
+                    code="FW022",
                 )
-                continue
+            )
 
-            source_expr = source_match.group(1).strip()
-            source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
-            if not source_tokens:
+        has_boundary_ref = any(
+            token not in identifiers.positive_capability_ids and token not in identifiers.non_responsibility_ids
+            for token in source_tokens
+        )
+        if not has_boundary_ref:
+            issues.append(
+                make_issue(
+                    f"{base_id} source must include at least one boundary/parameter identifier",
+                    context.rel_file,
+                    base_line_num,
+                    code="FW022",
+                )
+            )
+
+    return issues, base_source_tokens_by_base
+
+
+def _validate_framework_boundary_items(
+    context: FrameworkLayerDocContext,
+    identifiers: FrameworkIdentifierState,
+) -> tuple[list[Issue], set[str]]:
+    issues: list[Issue] = []
+    boundary_ids: set[str] = set()
+
+    for boundary_line_num, boundary_line in iter_section_bullet_lines(context.file_text, "## 2. 边界定义"):
+        boundary_match = FRAMEWORK_BOUNDARY_ITEM_LINE_PATTERN.match(boundary_line)
+        if boundary_match is None:
+            continue
+        boundary_id = boundary_match.group(1)
+        boundary_ids.add(boundary_id)
+        source_match = FRAMEWORK_SOURCE_EXPR_PATTERN.search(boundary_line)
+        if source_match is None:
+            issues.append(
+                make_issue(
+                    f"{boundary_id} must declare source expression using '来源：`...`'",
+                    context.rel_file,
+                    boundary_line_num,
+                    code="FW030",
+                )
+            )
+            continue
+
+        source_expr = source_match.group(1).strip()
+        source_tokens = FRAMEWORK_SOURCE_TOKEN_PATTERN.findall(source_expr)
+        if not source_tokens:
+            issues.append(
+                make_issue(
+                    f"{boundary_id} source expression is invalid: {source_expr}",
+                    context.rel_file,
+                    boundary_line_num,
+                    code="FW031",
+                )
+            )
+            continue
+
+        for token in source_tokens:
+            if token not in identifiers.file_identifiers:
                 issues.append(
                     make_issue(
-                        f"{boundary_id} source expression is invalid: {source_expr}",
-                        rel_file,
+                        f"{boundary_id} source references undefined identifier: {token}",
+                        context.rel_file,
                         boundary_line_num,
                         code="FW031",
                     )
                 )
-                continue
 
-            for token in source_tokens:
-                if token not in file_identifiers:
-                    issues.append(
-                        make_issue(
-                            f"{boundary_id} source references undefined identifier: {token}",
-                            rel_file,
-                            boundary_line_num,
-                            code="FW031",
-                        )
-                    )
-
-            has_capability_ref = any(re.fullmatch(r"C\d+", token) for token in source_tokens)
-            if not has_capability_ref:
-                issues.append(
-                    make_issue(
-                        f"{boundary_id} source must include at least one capability id (C*)",
-                        rel_file,
-                        boundary_line_num,
-                        code="FW031",
-                    )
+        if not any(re.fullmatch(r"C\d+", token) for token in source_tokens):
+            issues.append(
+                make_issue(
+                    f"{boundary_id} source must include at least one capability id (C*)",
+                    context.rel_file,
+                    boundary_line_num,
+                    code="FW031",
                 )
+            )
 
-        for identifier in sorted(file_identifiers):
-            if re.fullmatch(r"R\d.*", identifier) is None:
-                continue
-            if FRAMEWORK_RULE_ID_PATTERN.fullmatch(identifier) is None:
-                line_num = file_identifier_origin.get(identifier, 1)
+    return issues, boundary_ids
+
+
+def _collect_framework_rule_state(
+    context: FrameworkLayerDocContext,
+    identifiers: FrameworkIdentifierState,
+    boundary_ids: set[str],
+) -> tuple[FrameworkRuleState, list[Issue]]:
+    issues: list[Issue] = []
+    rule_top_lines: dict[str, int] = {}
+    rule_top_names: dict[str, str] = {}
+    rule_child_items: dict[str, list[tuple[int, str]]] = {}
+    rule_declared_symbols: dict[str, set[str]] = {}
+    rule_participant_bases: dict[str, set[str]] = {}
+    rule_output_capabilities: dict[str, set[str]] = {}
+    rule_invalid_conclusions: dict[str, set[str]] = {}
+    rule_boundary_bindings: dict[str, set[str]] = {}
+
+    for identifier in sorted(identifiers.file_identifiers):
+        if re.fullmatch(r"R\d.*", identifier) is None:
+            continue
+        if FRAMEWORK_RULE_ID_PATTERN.fullmatch(identifier) is None:
+            line_num = identifiers.file_identifier_origin.get(identifier, 1)
+            issues.append(
+                make_issue(
+                    f"invalid rule identifier format: {identifier}; expected R<number> or R<number>.<number>",
+                    context.rel_file,
+                    line_num,
+                    code="FW040",
+                )
+            )
+            continue
+        if "." in identifier:
+            parent = identifier.split(".", 1)[0]
+            if parent not in identifiers.file_identifiers:
+                line_num = identifiers.file_identifier_origin.get(identifier, 1)
                 issues.append(
                     make_issue(
-                        f"invalid rule identifier format: {identifier}; expected R<number> or R<number>.<number>",
-                        rel_file,
+                        f"rule child identifier requires parent declaration: {identifier} (missing {parent})",
+                        context.rel_file,
                         line_num,
                         code="FW040",
                     )
                 )
-                continue
-            if "." in identifier:
-                parent = identifier.split(".", 1)[0]
-                if parent not in file_identifiers:
-                    line_num = file_identifier_origin.get(identifier, 1)
-                    issues.append(
-                        make_issue(
-                            f"rule child identifier requires parent declaration: {identifier} (missing {parent})",
-                            rel_file,
-                            line_num,
-                            code="FW040",
-                        )
+
+    for rule_line_num, rule_line in iter_section_bullet_lines(context.file_text, "## 4. 基组合原则"):
+        top_match = FRAMEWORK_RULE_TOP_LINE_PATTERN.match(rule_line)
+        if top_match is not None:
+            parent_rule = top_match.group(1)
+            rule_top_lines.setdefault(parent_rule, rule_line_num)
+            rule_top_names.setdefault(parent_rule, (top_match.group(2) or "").strip())
+            rule_child_items.setdefault(parent_rule, [])
+            rule_participant_bases.setdefault(parent_rule, set())
+            rule_output_capabilities.setdefault(parent_rule, set())
+            rule_invalid_conclusions.setdefault(parent_rule, set())
+            rule_boundary_bindings.setdefault(parent_rule, set())
+            continue
+
+        child_match = FRAMEWORK_RULE_CHILD_LINE_PATTERN.match(rule_line)
+        if child_match is None:
+            continue
+        child_rule = child_match.group(1)
+        parent_rule = child_rule.split(".", 1)[0]
+        content = child_match.group(2).strip()
+        rule_child_items.setdefault(parent_rule, []).append((rule_line_num, content))
+        child_tokens = extract_backtick_tokens(content)
+
+        if "参与基" in content:
+            participant_bases = {
+                token for token in child_tokens if CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
+            }
+            rule_participant_bases.setdefault(parent_rule, set()).update(participant_bases)
+            if not participant_bases:
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} participating bases must reference at least one B*",
+                        context.rel_file,
+                        rule_line_num,
+                        code="FW042",
                     )
-
-        rule_top_lines: dict[str, int] = {}
-        rule_top_names: dict[str, str] = {}
-        rule_child_items: dict[str, list[tuple[int, str]]] = {}
-        rule_declared_symbols: dict[str, set[str]] = {}
-        rule_participant_bases: dict[str, set[str]] = {}
-        rule_output_capabilities: dict[str, set[str]] = {}
-        rule_invalid_conclusions: dict[str, set[str]] = {}
-        rule_boundary_bindings: dict[str, set[str]] = {}
-        for rule_line_num, rule_line in iter_section_bullet_lines(file_text, "## 4. 基组合原则"):
-            top_match = FRAMEWORK_RULE_TOP_LINE_PATTERN.match(rule_line)
-            if top_match is not None:
-                parent_rule = top_match.group(1)
-                rule_top_lines.setdefault(parent_rule, rule_line_num)
-                rule_top_names.setdefault(parent_rule, (top_match.group(2) or "").strip())
-                rule_child_items.setdefault(parent_rule, [])
-                rule_participant_bases.setdefault(parent_rule, set())
-                rule_output_capabilities.setdefault(parent_rule, set())
-                rule_invalid_conclusions.setdefault(parent_rule, set())
-                rule_boundary_bindings.setdefault(parent_rule, set())
-                continue
-
-            child_match = FRAMEWORK_RULE_CHILD_LINE_PATTERN.match(rule_line)
-            if child_match is None:
-                continue
-            child_rule = child_match.group(1)
-            parent_rule = child_rule.split(".", 1)[0]
-            content = child_match.group(2).strip()
-            rule_child_items.setdefault(parent_rule, []).append((rule_line_num, content))
-            child_tokens = extract_backtick_tokens(content)
-
-            if "参与基" in content:
-                participant_bases = {
-                    token for token in child_tokens if CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
-                }
-                rule_participant_bases.setdefault(parent_rule, set()).update(participant_bases)
-                if not participant_bases:
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} participating bases must reference at least one B*",
-                            rel_file,
-                            rule_line_num,
-                            code="FW042",
-                        )
-                    )
-                for token in child_tokens:
-                    if token in base_ids:
-                        continue
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} participating bases reference undefined base: {token}",
-                            rel_file,
-                            rule_line_num,
-                            code="FW042",
-                        )
-                    )
-
-            if "输出能力" in content:
-                output_capabilities = set(re.findall(r"C\d+", content))
-                rule_output_capabilities.setdefault(parent_rule, set()).update(output_capabilities)
-
-            if "失效结论" in content:
-                invalid_conclusions = set(re.findall(r"N\d+", content))
-                rule_invalid_conclusions.setdefault(parent_rule, set()).update(invalid_conclusions)
-
-            if "边界绑定" in content:
-                boundary_refs = {token for token in child_tokens if token in boundary_ids}
-                rule_boundary_bindings.setdefault(parent_rule, set()).update(boundary_refs)
-                if not boundary_refs:
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} boundary binding must reference at least one declared boundary",
-                            rel_file,
-                            rule_line_num,
-                            code="FW043",
-                        )
-                    )
-                for token in child_tokens:
-                    if token in boundary_ids:
-                        continue
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} boundary binding references undefined boundary: {token}",
-                            rel_file,
-                            rule_line_num,
-                            code="FW043",
-                        )
-                    )
-
-            if "输出结构" in content:
-                for token in extract_backtick_tokens(content):
-                    if token in file_identifiers or token in boundary_ids:
-                        continue
-                    if (
-                        CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
-                        or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
-                        or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
-                        or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
-                    ):
-                        continue
-                    rule_declared_symbols.setdefault(parent_rule, set()).add(token)
-
-        for parent_rule, parent_line in sorted(rule_top_lines.items()):
-            child_items = rule_child_items.get(parent_rule, [])
-            rule_name = rule_top_names.get(parent_rule, "")
-            is_negative_rule = any(token in rule_name for token in NEGATIVE_RULE_NAME_TOKENS) or any(
-                "失效结论" in content for _, content in child_items
-            )
-            required_keywords = (
-                ("参与基", "组合方式", "失效结论", "边界绑定")
-                if is_negative_rule
-                else ("参与基", "组合方式", "输出能力", "边界绑定")
-            )
-            for keyword in required_keywords:
-                if any(keyword in content for _, content in child_items):
+                )
+            for token in child_tokens:
+                if token in identifiers.base_ids:
                     continue
                 issues.append(
                     make_issue(
-                        f"{parent_rule} missing required field: {keyword}",
-                        rel_file,
-                        parent_line,
-                        code="FW041",
-                    )
-                )
-            if is_negative_rule and any("输出能力" in content for _, content in child_items):
-                issues.append(
-                    make_issue(
-                        f"{parent_rule} negative rule must not use '输出能力'; use '失效结论' instead",
-                        rel_file,
-                        parent_line,
-                        code="FW052",
-                    )
-                )
-            if not is_negative_rule and any("失效结论" in content for _, content in child_items):
-                issues.append(
-                    make_issue(
-                        f"{parent_rule} positive rule must not use '失效结论'; use '输出能力' instead",
-                        rel_file,
-                        parent_line,
-                        code="FW053",
+                        f"{parent_rule} participating bases reference undefined base: {token}",
+                        context.rel_file,
+                        rule_line_num,
+                        code="FW042",
                     )
                 )
 
-        for parent_rule, child_items in rule_child_items.items():
-            for child_line, content in child_items:
-                if "输出能力" not in content:
-                    output_capability_refs = []
-                else:
-                    output_capability_refs = re.findall(r"C\d+", content)
-                    invalid_negative_refs = re.findall(r"N\d+", content)
-                    if invalid_negative_refs:
-                        issues.append(
-                            make_issue(
-                                (
-                                    f"{parent_rule} output capability may only reference positive C* ids; "
-                                    f"found invalid ids: {', '.join(sorted(set(invalid_negative_refs)))}"
-                                ),
-                                rel_file,
-                                child_line,
-                                code="FW050",
-                            )
-                        )
-                if not output_capability_refs:
-                    if "输出能力" in content:
-                        issues.append(
-                            make_issue(
-                                f"{parent_rule} output capability must reference at least one C*",
-                                rel_file,
-                                child_line,
-                                code="FW050",
-                            )
-                        )
-                for cap_id in output_capability_refs:
-                    if cap_id in capability_ids:
-                        continue
+        if "输出能力" in content:
+            output_capabilities = set(re.findall(r"C\d+", content))
+            rule_output_capabilities.setdefault(parent_rule, set()).update(output_capabilities)
+
+        if "失效结论" in content:
+            invalid_conclusions = set(re.findall(r"N\d+", content))
+            rule_invalid_conclusions.setdefault(parent_rule, set()).update(invalid_conclusions)
+
+        if "边界绑定" in content:
+            boundary_refs = {token for token in child_tokens if token in boundary_ids}
+            rule_boundary_bindings.setdefault(parent_rule, set()).update(boundary_refs)
+            if not boundary_refs:
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} boundary binding must reference at least one declared boundary",
+                        context.rel_file,
+                        rule_line_num,
+                        code="FW043",
+                    )
+                )
+            for token in child_tokens:
+                if token in boundary_ids:
+                    continue
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} boundary binding references undefined boundary: {token}",
+                        context.rel_file,
+                        rule_line_num,
+                        code="FW043",
+                    )
+                )
+
+        if "输出结构" in content:
+            for token in extract_backtick_tokens(content):
+                if token in identifiers.file_identifiers or token in boundary_ids:
+                    continue
+                if (
+                    CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
+                    or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
+                    or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
+                    or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
+                ):
+                    continue
+                rule_declared_symbols.setdefault(parent_rule, set()).add(token)
+
+    return (
+        FrameworkRuleState(
+            rule_top_lines=rule_top_lines,
+            rule_top_names=rule_top_names,
+            rule_child_items=rule_child_items,
+            rule_declared_symbols=rule_declared_symbols,
+            rule_participant_bases=rule_participant_bases,
+            rule_output_capabilities=rule_output_capabilities,
+            rule_invalid_conclusions=rule_invalid_conclusions,
+            rule_boundary_bindings=rule_boundary_bindings,
+        ),
+        issues,
+    )
+
+
+def _validate_framework_rule_state(
+    context: FrameworkLayerDocContext,
+    identifiers: FrameworkIdentifierState,
+    rule_state: FrameworkRuleState,
+) -> list[Issue]:
+    issues: list[Issue] = []
+
+    for parent_rule, parent_line in sorted(rule_state.rule_top_lines.items()):
+        child_items = rule_state.rule_child_items.get(parent_rule, [])
+        rule_name = rule_state.rule_top_names.get(parent_rule, "")
+        is_negative_rule = any(token in rule_name for token in NEGATIVE_RULE_NAME_TOKENS) or any(
+            "失效结论" in content for _, content in child_items
+        )
+        required_keywords = (
+            ("参与基", "组合方式", "失效结论", "边界绑定")
+            if is_negative_rule
+            else ("参与基", "组合方式", "输出能力", "边界绑定")
+        )
+        for keyword in required_keywords:
+            if any(keyword in content for _, content in child_items):
+                continue
+            issues.append(
+                make_issue(
+                    f"{parent_rule} missing required field: {keyword}",
+                    context.rel_file,
+                    parent_line,
+                    code="FW041",
+                )
+            )
+        if is_negative_rule and any("输出能力" in content for _, content in child_items):
+            issues.append(
+                make_issue(
+                    f"{parent_rule} negative rule must not use '输出能力'; use '失效结论' instead",
+                    context.rel_file,
+                    parent_line,
+                    code="FW052",
+                )
+            )
+        if not is_negative_rule and any("失效结论" in content for _, content in child_items):
+            issues.append(
+                make_issue(
+                    f"{parent_rule} positive rule must not use '失效结论'; use '输出能力' instead",
+                    context.rel_file,
+                    parent_line,
+                    code="FW053",
+                )
+            )
+
+    for parent_rule, child_items in rule_state.rule_child_items.items():
+        for child_line, content in child_items:
+            output_capability_refs: list[str]
+            if "输出能力" not in content:
+                output_capability_refs = []
+            else:
+                output_capability_refs = re.findall(r"C\d+", content)
+                invalid_negative_refs = re.findall(r"N\d+", content)
+                if invalid_negative_refs:
                     issues.append(
                         make_issue(
-                            f"{parent_rule} output capability references undefined identifier: {cap_id}",
-                            rel_file,
+                            (
+                                f"{parent_rule} output capability may only reference positive C* ids; "
+                                f"found invalid ids: {', '.join(sorted(set(invalid_negative_refs)))}"
+                            ),
+                            context.rel_file,
                             child_line,
                             code="FW050",
                         )
                     )
-                if "失效结论" not in content:
+            if not output_capability_refs and "输出能力" in content:
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} output capability must reference at least one C*",
+                        context.rel_file,
+                        child_line,
+                        code="FW050",
+                    )
+                )
+            for cap_id in output_capability_refs:
+                if cap_id in identifiers.capability_ids:
                     continue
-                invalid_conclusion_refs = re.findall(r"N\d+", content)
-                invalid_positive_refs = re.findall(r"C\d+", content)
-                if invalid_positive_refs:
-                    issues.append(
-                        make_issue(
-                            (
-                                f"{parent_rule} invalid conclusion may only reference N* ids; "
-                                f"found invalid ids: {', '.join(sorted(set(invalid_positive_refs)))}"
-                            ),
-                            rel_file,
-                            child_line,
-                            code="FW051",
-                        )
-                    )
-                if not invalid_conclusion_refs:
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} invalid conclusion must reference at least one N*",
-                            rel_file,
-                            child_line,
-                            code="FW051",
-                        )
-                    )
-                    continue
-                for neg_id in invalid_conclusion_refs:
-                    if neg_id in non_responsibility_ids:
-                        continue
-                    issues.append(
-                        make_issue(
-                            f"{parent_rule} invalid conclusion references undefined identifier: {neg_id}",
-                            rel_file,
-                            child_line,
-                            code="FW051",
-                        )
-                    )
-
-        capability_source_bases: dict[str, set[str]] = {cap_id: set() for cap_id in positive_capability_ids}
-        for base_ref_id, base_source_tokens in base_source_tokens_by_base.items():
-            for capability_id in positive_capability_ids:
-                if capability_id in base_source_tokens:
-                    capability_source_bases.setdefault(capability_id, set()).add(base_ref_id)
-
-        capability_output_rules: dict[str, set[str]] = {cap_id: set() for cap_id in positive_capability_ids}
-        for parent_rule, parent_rule_output_capabilities in rule_output_capabilities.items():
-            for capability_id in positive_capability_ids:
-                if capability_id in parent_rule_output_capabilities:
-                    capability_output_rules.setdefault(capability_id, set()).add(parent_rule)
-
-        for capability_id in sorted(positive_capability_ids):
-            capability_line_num = int(file_identifier_origin.get(capability_id, 1))
-            supporting_bases = capability_source_bases.get(capability_id, set())
-            output_rules = capability_output_rules.get(capability_id, set())
-            if not supporting_bases:
                 issues.append(
                     make_issue(
-                        (
-                            f"{capability_id} lacks weak sufficiency support: no B* source expression "
-                            "references this capability"
-                        ),
-                        rel_file,
-                        capability_line_num,
-                        code="FW070",
+                        f"{parent_rule} output capability references undefined identifier: {cap_id}",
+                        context.rel_file,
+                        child_line,
+                        code="FW050",
                     )
                 )
-            elif len(supporting_bases) > 1:
-                issues.append(
-                    make_issue(
-                        (
-                            f"{capability_id} must map to exactly one B* source expression; "
-                            f"found multiple bases: {', '.join(sorted(supporting_bases))}"
-                        ),
-                        rel_file,
-                        capability_line_num,
-                        code="FW075",
-                    )
-                )
-            if not output_rules:
-                issues.append(
-                    make_issue(
-                        (
-                            f"{capability_id} lacks weak sufficiency support: no R* output capability "
-                            "references this capability"
-                        ),
-                        rel_file,
-                        capability_line_num,
-                        code="FW071",
-                    )
-                )
-            if supporting_bases and output_rules:
-                has_chain = any(
-                    bool(rule_participant_bases.get(parent_rule, set()).intersection(supporting_bases))
-                    for parent_rule in output_rules
-                )
-                if not has_chain:
-                    issues.append(
-                        make_issue(
-                            (
-                                f"{capability_id} lacks weak sufficiency chain: expected at least one "
-                                "B -> R -> C derivation path"
-                            ),
-                            rel_file,
-                            capability_line_num,
-                            code="FW072",
-                        )
-                    )
 
-        used_bases = {
-            base_id
-            for base_refs in rule_participant_bases.values()
-            for base_id in base_refs
-        }
-        for base_id in sorted(base_ids):
-            if base_id in used_bases:
+            if "失效结论" not in content:
                 continue
+            invalid_conclusion_refs = re.findall(r"N\d+", content)
+            invalid_positive_refs = re.findall(r"C\d+", content)
+            if invalid_positive_refs:
+                issues.append(
+                    make_issue(
+                        (
+                            f"{parent_rule} invalid conclusion may only reference N* ids; "
+                            f"found invalid ids: {', '.join(sorted(set(invalid_positive_refs)))}"
+                        ),
+                        context.rel_file,
+                        child_line,
+                        code="FW051",
+                    )
+                )
+            if not invalid_conclusion_refs:
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} invalid conclusion must reference at least one N*",
+                        context.rel_file,
+                        child_line,
+                        code="FW051",
+                    )
+                )
+                continue
+            for neg_id in invalid_conclusion_refs:
+                if neg_id in identifiers.non_responsibility_ids:
+                    continue
+                issues.append(
+                    make_issue(
+                        f"{parent_rule} invalid conclusion references undefined identifier: {neg_id}",
+                        context.rel_file,
+                        child_line,
+                        code="FW051",
+                    )
+                )
+
+    return issues
+
+
+def _validate_framework_capability_relationships(
+    context: FrameworkLayerDocContext,
+    identifiers: FrameworkIdentifierState,
+    base_source_tokens_by_base: dict[str, set[str]],
+    rule_state: FrameworkRuleState,
+    boundary_ids: set[str],
+) -> list[Issue]:
+    issues: list[Issue] = []
+
+    capability_source_bases: dict[str, set[str]] = {
+        cap_id: set() for cap_id in identifiers.positive_capability_ids
+    }
+    for base_ref_id, base_source_tokens in base_source_tokens_by_base.items():
+        for capability_id in identifiers.positive_capability_ids:
+            if capability_id in base_source_tokens:
+                capability_source_bases.setdefault(capability_id, set()).add(base_ref_id)
+
+    capability_output_rules: dict[str, set[str]] = {
+        cap_id: set() for cap_id in identifiers.positive_capability_ids
+    }
+    for parent_rule, output_capabilities in rule_state.rule_output_capabilities.items():
+        for capability_id in identifiers.positive_capability_ids:
+            if capability_id in output_capabilities:
+                capability_output_rules.setdefault(capability_id, set()).add(parent_rule)
+
+    for capability_id in sorted(identifiers.positive_capability_ids):
+        capability_line_num = int(identifiers.file_identifier_origin.get(capability_id, 1))
+        supporting_bases = capability_source_bases.get(capability_id, set())
+        output_rules = capability_output_rules.get(capability_id, set())
+        if not supporting_bases:
             issues.append(
                 make_issue(
-                    f"{base_id} is never used by any R* participating bases",
-                    rel_file,
-                    file_identifier_origin.get(base_id, 1),
-                    code="FW073",
+                    (
+                        f"{capability_id} lacks weak sufficiency support: no B* source expression "
+                        "references this capability"
+                    ),
+                    context.rel_file,
+                    capability_line_num,
+                    code="FW070",
                 )
             )
-
-        used_boundaries = {
-            boundary_id
-            for boundary_refs in rule_boundary_bindings.values()
-            for boundary_id in boundary_refs
-        }
-        for boundary_id in sorted(boundary_ids):
-            used_in_base_source = any(
-                boundary_id in source_tokens for source_tokens in base_source_tokens_by_base.values()
-            )
-            if used_in_base_source or boundary_id in used_boundaries:
-                continue
+        elif len(supporting_bases) > 1:
             issues.append(
                 make_issue(
-                    f"{boundary_id} is not used by any B* source or R* boundary binding",
-                    rel_file,
-                    file_identifier_origin.get(boundary_id, 1),
-                    code="FW074",
+                    (
+                        f"{capability_id} must map to exactly one B* source expression; "
+                        f"found multiple bases: {', '.join(sorted(supporting_bases))}"
+                    ),
+                    context.rel_file,
+                    capability_line_num,
+                    code="FW075",
                 )
             )
-
-        declared_by_order: list[tuple[int, set[str]]] = []
-        for parent_rule, symbols in rule_declared_symbols.items():
-            try:
-                parent_num = int(parent_rule[1:])
-            except ValueError:
-                continue
-            declared_by_order.append((parent_num, symbols))
-        declared_by_order.sort(key=lambda item: item[0])
-
-        for parent_rule, child_items in rule_child_items.items():
-            try:
-                parent_num = int(parent_rule[1:])
-            except ValueError:
-                continue
-            for child_line, content in child_items:
-                for token in extract_backtick_tokens(content):
-                    if token in file_identifiers or token in boundary_ids:
-                        continue
-                    if (
-                        CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
-                        or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
-                        or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
-                        or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
-                    ):
-                        continue
-
-                    declared_in_same = token in rule_declared_symbols.get(parent_rule, set())
-                    if declared_in_same:
-                        continue
-
-                    declared_in_upstream = False
-                    for upstream_num, symbols in declared_by_order:
-                        if upstream_num >= parent_num:
-                            break
-                        if token in symbols:
-                            declared_in_upstream = True
-                            break
-                    if declared_in_upstream:
-                        continue
-
-                    issues.append(
-                        make_issue(
-                            (
-                                f"rule symbol '{token}' is used without declaration via '输出结构' "
-                                f"in same or upstream rules for {parent_rule}"
-                            ),
-                            rel_file,
-                            child_line,
-                            code="FW060",
-                        )
-                    )
-        for required_heading in REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS:
-            if required_heading not in file_text:
+        if not output_rules:
+            issues.append(
+                make_issue(
+                    (
+                        f"{capability_id} lacks weak sufficiency support: no R* output capability "
+                        "references this capability"
+                    ),
+                    context.rel_file,
+                    capability_line_num,
+                    code="FW071",
+                )
+            )
+        if supporting_bases and output_rules:
+            has_chain = any(
+                bool(rule_state.rule_participant_bases.get(parent_rule, set()).intersection(supporting_bases))
+                for parent_rule in output_rules
+            )
+            if not has_chain:
                 issues.append(
                     make_issue(
-                        f"missing required section heading: {required_heading}",
-                        rel_file,
-                        1,
-                        code="FRAMEWORK_LAYER_SECTION_MISSING",
+                        (
+                            f"{capability_id} lacks weak sufficiency chain: expected at least one "
+                            "B -> R -> C derivation path"
+                        ),
+                        context.rel_file,
+                        capability_line_num,
+                        code="FW072",
                     )
                 )
+
+    used_bases = {
+        base_id for base_refs in rule_state.rule_participant_bases.values() for base_id in base_refs
+    }
+    for base_id in sorted(identifiers.base_ids):
+        if base_id in used_bases:
+            continue
+        issues.append(
+            make_issue(
+                f"{base_id} is never used by any R* participating bases",
+                context.rel_file,
+                identifiers.file_identifier_origin.get(base_id, 1),
+                code="FW073",
+            )
+        )
+
+    used_boundaries = {
+        boundary_id
+        for boundary_refs in rule_state.rule_boundary_bindings.values()
+        for boundary_id in boundary_refs
+    }
+    for boundary_id in sorted(boundary_ids):
+        used_in_base_source = any(
+            boundary_id in source_tokens for source_tokens in base_source_tokens_by_base.values()
+        )
+        if used_in_base_source or boundary_id in used_boundaries:
+            continue
+        issues.append(
+            make_issue(
+                f"{boundary_id} is not used by any B* source or R* boundary binding",
+                context.rel_file,
+                identifiers.file_identifier_origin.get(boundary_id, 1),
+                code="FW074",
+            )
+        )
+
+    declared_by_order: list[tuple[int, set[str]]] = []
+    for parent_rule, symbols in rule_state.rule_declared_symbols.items():
+        try:
+            parent_num = int(parent_rule[1:])
+        except ValueError:
+            continue
+        declared_by_order.append((parent_num, symbols))
+    declared_by_order.sort(key=lambda item: item[0])
+
+    for parent_rule, child_items in rule_state.rule_child_items.items():
+        try:
+            parent_num = int(parent_rule[1:])
+        except ValueError:
+            continue
+        for child_line, content in child_items:
+            for token in extract_backtick_tokens(content):
+                if token in identifiers.file_identifiers or token in boundary_ids:
+                    continue
+                if (
+                    CANONICAL_CAPABILITY_ID_PATTERN.fullmatch(token) is not None
+                    or CANONICAL_BASE_ID_PATTERN.fullmatch(token) is not None
+                    or FRAMEWORK_RULE_ID_PATTERN.fullmatch(token) is not None
+                    or CANONICAL_VERIFY_ID_PATTERN.fullmatch(token) is not None
+                ):
+                    continue
+
+                if token in rule_state.rule_declared_symbols.get(parent_rule, set()):
+                    continue
+
+                declared_in_upstream = False
+                for upstream_num, symbols in declared_by_order:
+                    if upstream_num >= parent_num:
+                        break
+                    if token in symbols:
+                        declared_in_upstream = True
+                        break
+                if declared_in_upstream:
+                    continue
+
+                issues.append(
+                    make_issue(
+                        (
+                            f"rule symbol '{token}' is used without declaration via '输出结构' "
+                            f"in same or upstream rules for {parent_rule}"
+                        ),
+                        context.rel_file,
+                        child_line,
+                        code="FW060",
+                    )
+                )
+
+    return issues
+
+
+def _validate_framework_required_sections(context: FrameworkLayerDocContext) -> list[Issue]:
+    issues: list[Issue] = []
+    for required_heading in REQUIRED_FRAMEWORK_DIRECTIVE_SECTIONS:
+        if required_heading in context.file_text:
+            continue
+        issues.append(
+            make_issue(
+                f"missing required section heading: {required_heading}",
+                context.rel_file,
+                1,
+                code="FRAMEWORK_LAYER_SECTION_MISSING",
+            )
+        )
+    return issues
+
+
+def validate_framework_layers() -> tuple[list[Issue], set[str]]:
+    issues: list[Issue] = []
+    layer_files: set[str] = set()
+    module_levels: dict[str, set[int]] = {}
+    module_ref_edges: list[dict[str, Any]] = []
+
+    dir_issues, framework_exists = _validate_framework_directory_layout(module_levels)
+    issues.extend(dir_issues)
+    if not framework_exists:
+        return issues, layer_files
+
+    framework_docs = iter_framework_layer_markdown()
+    catalog = _build_framework_module_catalog(framework_docs)
+
+    for module_name, level_num, markdown_file in framework_docs:
+        context = _build_framework_doc_context(module_name, level_num, markdown_file, catalog)
+        if context is None:
+            continue
+        layer_files.add(context.rel_file)
+        module_levels.setdefault(module_name, set()).add(level_num)
+        preamble_issues, has_framework_directive = _validate_framework_file_preamble(context)
+        issues.extend(preamble_issues)
+        if not has_framework_directive:
+            continue
+
+        identifiers, identifier_issues = _collect_framework_identifier_state(context)
+        issues.extend(identifier_issues)
+
+        base_issues, base_source_tokens_by_base = _validate_framework_base_items(
+            context,
+            identifiers,
+            catalog,
+            module_ref_edges,
+        )
+        issues.extend(base_issues)
+
+        boundary_issues, boundary_ids = _validate_framework_boundary_items(context, identifiers)
+        issues.extend(boundary_issues)
+
+        rule_state, rule_collect_issues = _collect_framework_rule_state(context, identifiers, boundary_ids)
+        issues.extend(rule_collect_issues)
+        issues.extend(_validate_framework_rule_state(context, identifiers, rule_state))
+        issues.extend(
+            _validate_framework_capability_relationships(
+                context,
+                identifiers,
+                base_source_tokens_by_base,
+                rule_state,
+                boundary_ids,
+            )
+        )
+        issues.extend(_validate_framework_required_sections(context))
 
     for module_name, levels in module_levels.items():
         if not levels:
@@ -2764,7 +2966,7 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
                 )
             )
 
-    issues.extend(validate_framework_reference_graph(module_ref_edges, module_files_by_key))
+    issues.extend(validate_framework_reference_graph(module_ref_edges, catalog.module_files_by_key))
 
     return issues, layer_files
 
