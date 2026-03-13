@@ -216,6 +216,30 @@ class ProjectDiscoveryAuditEntry:
 
 
 @dataclass(frozen=True)
+class ProjectDirectoryAuditContext:
+    project_id: str
+    project_dir: Path
+    product_spec_file: Path
+    implementation_config_file: Path
+
+    @property
+    def directory(self) -> str:
+        return relative_path(self.project_dir)
+
+    @property
+    def product_spec_rel(self) -> str:
+        return relative_path(self.product_spec_file)
+
+    @property
+    def implementation_config_rel(self) -> str:
+        return relative_path(self.implementation_config_file)
+
+    @property
+    def generated_dir_rel(self) -> str:
+        return relative_path(self.project_dir / "generated")
+
+
+@dataclass(frozen=True)
 class ProjectGovernanceClosure:
     project_id: str
     template_id: str
@@ -1007,6 +1031,126 @@ def discover_framework_driven_projects(projects_dir: Path | None = None) -> tupl
     return tuple(discovered)
 
 
+def _audit_entry(
+    context: ProjectDirectoryAuditContext,
+    *,
+    framework_driven: bool,
+    template_id: str | None,
+    classification: str,
+    reasons: tuple[str, ...],
+    framework_refs: tuple[str, ...] = (),
+    artifact_contract: tuple[str, ...] = (),
+) -> ProjectDiscoveryAuditEntry:
+    return ProjectDiscoveryAuditEntry(
+        project_id=context.project_id,
+        directory=context.directory,
+        framework_driven=framework_driven,
+        template_id=template_id,
+        classification=classification,
+        reasons=reasons,
+        product_spec_file=context.product_spec_rel if context.product_spec_file.exists() else None,
+        implementation_config_file=(
+            context.implementation_config_rel if context.implementation_config_file.exists() else None
+        ),
+        generated_dir=context.generated_dir_rel if framework_driven else None,
+        framework_refs=framework_refs,
+        artifact_contract=artifact_contract,
+    )
+
+
+def _missing_required_files_reasons(
+    context: ProjectDirectoryAuditContext,
+) -> tuple[str, ...]:
+    missing: list[str] = []
+    if not context.product_spec_file.exists():
+        missing.append("missing product_spec.toml")
+    if not context.implementation_config_file.exists():
+        missing.append("missing implementation_config.toml")
+    return tuple(missing)
+
+
+def _audit_project_directory(context: ProjectDirectoryAuditContext) -> ProjectDiscoveryAuditEntry:
+    missing_reasons = _missing_required_files_reasons(context)
+    if missing_reasons:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=None,
+            classification="missing_required_files",
+            reasons=missing_reasons,
+        )
+
+    try:
+        template_id = detect_project_template_id(context.product_spec_file)
+    except Exception as exc:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=None,
+            classification="template_not_registered",
+            reasons=(f"unable to resolve project.template: {exc}",),
+        )
+
+    try:
+        registration = resolve_project_template_registration(context.product_spec_file)
+    except Exception as exc:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=template_id,
+            classification="template_not_registered",
+            reasons=(f"template {template_id} is not registered: {exc}",),
+        )
+
+    try:
+        project = registration.load_project(context.product_spec_file)
+    except Exception as exc:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=template_id,
+            classification="materialization_failed",
+            reasons=(f"registered loader failed: {exc}",),
+        )
+
+    framework_refs = _framework_refs_from_project(project)
+    if not framework_refs:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=template_id,
+            classification="not_framework_driven_project",
+            reasons=("loaded project does not expose framework module refs",),
+        )
+
+    artifact_contract = _artifact_contract_from_project(project)
+    if not artifact_contract:
+        return _audit_entry(
+            context,
+            framework_driven=False,
+            template_id=template_id,
+            classification="generated_contract_missing",
+            reasons=("implementation config does not expose generated artifact contract",),
+            framework_refs=framework_refs,
+        )
+
+    return _audit_entry(
+        context,
+        framework_driven=True,
+        template_id=template_id,
+        classification="recognized",
+        reasons=(
+            "product_spec.toml and implementation_config.toml both exist",
+            f"registered template resolved: {template_id}",
+            "project loads through the registered framework-driven materialization chain",
+            "framework selections resolve to concrete framework modules",
+            "implementation config exposes generated artifact contract",
+        ),
+        framework_refs=framework_refs,
+        artifact_contract=artifact_contract,
+    )
+
+
 def audit_project_directories(projects_dir: Path | None = None) -> tuple[ProjectDiscoveryAuditEntry, ...]:
     root = projects_dir or PROJECTS_DIR
     if not root.exists():
@@ -1014,131 +1158,11 @@ def audit_project_directories(projects_dir: Path | None = None) -> tuple[Project
 
     entries: list[ProjectDiscoveryAuditEntry] = []
     for project_dir in sorted(item for item in root.iterdir() if item.is_dir()):
-        product_spec_file = project_dir / "product_spec.toml"
-        implementation_config_file = project_dir / "implementation_config.toml"
-        project_id = project_dir.name
-
-        if not product_spec_file.exists() or not implementation_config_file.exists():
-            missing = []
-            if not product_spec_file.exists():
-                missing.append("missing product_spec.toml")
-            if not implementation_config_file.exists():
-                missing.append("missing implementation_config.toml")
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=None,
-                    classification="missing_required_files",
-                    reasons=tuple(missing),
-                )
-            )
-            continue
-
-        try:
-            template_id = detect_project_template_id(product_spec_file)
-        except Exception as exc:
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=None,
-                    classification="template_not_registered",
-                    reasons=(f"unable to resolve project.template: {exc}",),
-                    product_spec_file=relative_path(product_spec_file),
-                    implementation_config_file=relative_path(implementation_config_file),
-                )
-            )
-            continue
-
-        try:
-            registration = resolve_project_template_registration(product_spec_file)
-        except Exception as exc:
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=template_id,
-                    classification="template_not_registered",
-                    reasons=(f"template {template_id} is not registered: {exc}",),
-                    product_spec_file=relative_path(product_spec_file),
-                    implementation_config_file=relative_path(implementation_config_file),
-                )
-            )
-            continue
-
-        try:
-            project = registration.load_project(product_spec_file)
-        except Exception as exc:
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=template_id,
-                    classification="materialization_failed",
-                    reasons=(f"registered loader failed: {exc}",),
-                    product_spec_file=relative_path(product_spec_file),
-                    implementation_config_file=relative_path(implementation_config_file),
-                )
-            )
-            continue
-
-        framework_refs = _framework_refs_from_project(project)
-        if not framework_refs:
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=template_id,
-                    classification="not_framework_driven_project",
-                    reasons=("loaded project does not expose framework module refs",),
-                    product_spec_file=relative_path(product_spec_file),
-                    implementation_config_file=relative_path(implementation_config_file),
-                )
-            )
-            continue
-
-        artifact_contract = _artifact_contract_from_project(project)
-        if not artifact_contract:
-            entries.append(
-                ProjectDiscoveryAuditEntry(
-                    project_id=project_id,
-                    directory=relative_path(project_dir),
-                    framework_driven=False,
-                    template_id=template_id,
-                    classification="generated_contract_missing",
-                    reasons=("implementation config does not expose generated artifact contract",),
-                    product_spec_file=relative_path(product_spec_file),
-                    implementation_config_file=relative_path(implementation_config_file),
-                    framework_refs=framework_refs,
-                )
-            )
-            continue
-
-        entries.append(
-            ProjectDiscoveryAuditEntry(
-                project_id=project_id,
-                directory=relative_path(project_dir),
-                framework_driven=True,
-                template_id=template_id,
-                classification="recognized",
-                reasons=(
-                    "product_spec.toml and implementation_config.toml both exist",
-                    f"registered template resolved: {template_id}",
-                    "project loads through the registered framework-driven materialization chain",
-                    "framework selections resolve to concrete framework modules",
-                    "implementation config exposes generated artifact contract",
-                ),
-                product_spec_file=relative_path(product_spec_file),
-                implementation_config_file=relative_path(implementation_config_file),
-                generated_dir=relative_path(project_dir / "generated"),
-                framework_refs=framework_refs,
-                artifact_contract=artifact_contract,
-            )
+        context = ProjectDirectoryAuditContext(
+            project_id=project_dir.name,
+            project_dir=project_dir,
+            product_spec_file=project_dir / "product_spec.toml",
+            implementation_config_file=project_dir / "implementation_config.toml",
         )
+        entries.append(_audit_project_directory(context))
     return tuple(entries)
