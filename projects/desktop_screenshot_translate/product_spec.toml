@@ -16,7 +16,7 @@ project_id = "desktop_screenshot_translate"
 template = "desktop_screenshot_translate"
 display_name = "AiTrans 截图翻译"
 description = "A desktop screenshot translation tool compiled from framework standards, one product truth, and one implementation path."
-version = "0.1.1"
+version = "0.1.2"
 
 # [framework] 声明这个产品实例依附于哪些共同结构语言。
 # frontend 约束可见界面壳体与交互边界；

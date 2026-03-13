@@ -62,7 +62,7 @@ Windows 可发布安装包路径：
 
 发布时还应同步准备：
 
-- [0.1.1.md](/home/zx/shelf/projects/desktop_screenshot_translate/release-notes/0.1.1.md)
+- [0.1.2.md](/home/zx/shelf/projects/desktop_screenshot_translate/release-notes/0.1.2.md)
 - [WINDOWS-安装后回归清单.md](/home/zx/shelf/apps/desktop_screenshot_translate/WINDOWS-%E5%AE%89%E8%A3%85%E5%90%8E%E5%9B%9E%E5%BD%92%E6%B8%85%E5%8D%95.md)
 
 当前发布边界：
