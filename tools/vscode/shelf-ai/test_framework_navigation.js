@@ -348,7 +348,7 @@ function main() {
   assert(ownershipCountResult.filePath.endsWith("projects/document_chunking_basic/product_spec.toml"));
   assert.strictEqual(targetLineText(ownershipCountResult).trim(), "[ownership]");
 
-  const outputFormatL0 = loadFrameworkFile("framework/document_chunking/L0-M4-输出格式.md");
+  const outputFormatL0 = loadFrameworkFile("framework/document_chunking/L0-M4-结果文档.md");
   const outputCountRef = locate(outputFormatL0.text, "FORMAT/FIELD/COUNT");
   const outputCountResult = resolveDefinitionTarget({
     repoRoot,
