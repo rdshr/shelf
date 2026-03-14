@@ -8,6 +8,32 @@ require_command() {
   fi
 }
 
+major_node_version() {
+  node -p "process.versions.node.split('.')[0]"
+}
+
+package_vsix() {
+  local script_dir="$1"
+  local output_path="$2"
+  local major_version
+
+  major_version="$(major_node_version)"
+  if [[ "${major_version}" =~ ^[0-9]+$ ]] && (( major_version >= 20 )); then
+    (
+      cd "${script_dir}"
+      npx --yes @vscode/vsce package -o "${output_path}"
+    )
+    return
+  fi
+
+  echo "Node ${major_version} detected; packaging VSIX with temporary Node 20 toolchain..."
+  (
+    cd "${script_dir}"
+    TARGET_VSIX="${output_path}" \
+      npx --yes -p node@20 -p @vscode/vsce bash -lc 'vsce package -o "$TARGET_VSIX"'
+  )
+}
+
 resolve_code_bin() {
   if [[ -n "${CODE_BIN:-}" ]]; then
     echo "${CODE_BIN}"
@@ -49,10 +75,7 @@ PREVIOUS_VERSION="$(installed_version "${CODE_BIN}" || true)"
 mkdir -p "${RELEASES_DIR}"
 
 echo "Packaging Shelf AI ${VERSION}..."
-(
-  cd "${SCRIPT_DIR}"
-  npx --yes @vscode/vsce package -o "${VSIX_PATH}"
-)
+package_vsix "${SCRIPT_DIR}" "${VSIX_PATH}"
 
 if [[ -n "${PREVIOUS_VERSION}" ]]; then
   echo "Installed version before update: ${PREVIOUS_VERSION}"

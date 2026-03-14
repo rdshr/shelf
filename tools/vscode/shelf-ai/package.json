@@ -1,8 +1,8 @@
 {
   "name": "shelf-ai",
   "displayName": "Shelf AI",
-  "description": "Shelf AI: governance-tree-first workspace and strict mapping guard.",
-  "version": "0.0.43",
+  "description": "Shelf AI: framework-tree-first workspace navigation with governance-tree guard.",
+  "version": "0.0.48",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -25,6 +25,7 @@
     "governance_tree.js",
     "framework_completion.js",
     "framework_navigation.js",
+    "validation_runtime.js",
     "media/**",
     "snippets/**"
   ],
@@ -38,8 +39,13 @@
     "onCommand:shelf.insertFrameworkModuleTemplate",
     "onCommand:shelf.installGitHooks",
     "onCommand:shelf.validateNow",
+    "onCommand:shelf.codegenPreflight",
+    "onCommand:shelf.scaffoldProject",
+    "onCommand:shelf.publishFrameworkDraft",
     "onCommand:shelf.openFrameworkTree",
-    "onCommand:shelf.refreshFrameworkTree"
+    "onCommand:shelf.refreshFrameworkTree",
+    "onCommand:shelf.openGovernanceTree",
+    "onCommand:shelf.refreshGovernanceTree"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -59,6 +65,18 @@
         "title": "Shelf: Validate Mapping Now"
       },
       {
+        "command": "shelf.codegenPreflight",
+        "title": "Shelf: Run Codegen Preflight"
+      },
+      {
+        "command": "shelf.scaffoldProject",
+        "title": "Shelf: Scaffold Framework-Driven Project"
+      },
+      {
+        "command": "shelf.publishFrameworkDraft",
+        "title": "Shelf: Publish Current Framework Draft"
+      },
+      {
         "command": "shelf.installGitHooks",
         "title": "Shelf: Install Git Hooks"
       },
@@ -68,10 +86,18 @@
       },
       {
         "command": "shelf.openFrameworkTree",
-        "title": "Shelf: Open Governance Tree"
+        "title": "Shelf: Open Framework Tree"
       },
       {
         "command": "shelf.refreshFrameworkTree",
+        "title": "Shelf: Refresh Framework Tree"
+      },
+      {
+        "command": "shelf.openGovernanceTree",
+        "title": "Shelf: Open Governance Tree"
+      },
+      {
+        "command": "shelf.refreshGovernanceTree",
         "title": "Shelf: Refresh Governance Tree"
       }
     ],
@@ -115,14 +141,39 @@
           "group": "navigation@2"
         },
         {
-          "command": "shelf.validateNow",
+          "command": "shelf.openGovernanceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@3"
         },
         {
-          "command": "shelf.installGitHooks",
+          "command": "shelf.refreshGovernanceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@4"
+        },
+        {
+          "command": "shelf.validateNow",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@5"
+        },
+        {
+          "command": "shelf.codegenPreflight",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@6"
+        },
+        {
+          "command": "shelf.scaffoldProject",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@7"
+        },
+        {
+          "command": "shelf.publishFrameworkDraft",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@8"
+        },
+        {
+          "command": "shelf.installGitHooks",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@9"
         }
       ]
     },
@@ -133,6 +184,16 @@
           "type": "boolean",
           "default": true,
           "description": "Run strict mapping validation when a relevant file is saved."
+        },
+        "shelf.validationTriggerMode": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "save",
+            "all"
+          ],
+          "default": "all",
+          "description": "Choose whether Shelf validates only on demand, only on save, or on all watched workspace events."
         },
         "shelf.notifyOnAutoFail": {
           "type": "boolean",
@@ -177,6 +238,21 @@
           "type": "string",
           "default": "uv run python scripts/validate_strict_mapping.py --json",
           "description": "Command used for manual full validation."
+        },
+        "shelf.frameworkTreeJsonPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.json",
+          "description": "Workspace-relative path of generated framework tree JSON."
+        },
+        "shelf.frameworkTreeHtmlPath": {
+          "type": "string",
+          "default": "docs/hierarchy/shelf_framework_tree.html",
+          "description": "Workspace-relative path of generated framework tree HTML."
+        },
+        "shelf.frameworkTreeGenerateCommand": {
+          "type": "string",
+          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
+          "description": "Command used by 'Refresh Framework Tree'."
         },
         "shelf.governanceTreeJsonPath": {
           "type": "string",

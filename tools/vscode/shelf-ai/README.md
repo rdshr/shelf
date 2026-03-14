@@ -2,20 +2,27 @@
 
 ## What It Does
 - Adds an Activity Bar icon entry (`Shelf AI`) for direct plugin access from the sidebar.
-- Sidebar home view provides one-click actions: open tree, refresh tree, run validation, show issues.
+- Sidebar home view provides one-click actions for the framework tree, governance tree, validation, and issue review.
 - Treats the current governance scope as mainline-first: Shelf strongly guards the structural path that carries `Framework -> Product Spec -> Implementation Config -> Code -> Evidence` plus the reverse validation path back to upstream structure.
+- Treats `projects/*/generated/canonical_graph.json` as the sole machine truth for the main project chain. Governance manifests / trees / reports are read as derived views rather than parallel truth sources.
 - Makes the current coverage boundary explicit instead of overstating it: runtime assembly, compiled contracts/specs, evidence, and governance compare are strongly covered; lower-level renderer/style/script details can still be only partially governed.
-- Opens governance tree structure HTML in Webview (`docs/hierarchy/shelf_governance_tree.html`).
-- Refreshes governance tree artifacts by running the generator script.
+- Opens the framework tree structure HTML in Webview by default (`docs/hierarchy/shelf_framework_tree.html`).
+- Keeps the workspace governance tree as a separate, secondary view for strict-guard closure and code/evidence trace inspection (`docs/hierarchy/shelf_governance_tree.html`).
+- Navigation should be read in two modes: the primary path is always layer-by-layer (`Framework -> Product Spec -> Implementation Config -> Code -> Evidence`), while direct framework-to-code jumps inside governance views are diagnostic shortcuts built from the same canonical graph.
+- Refreshes framework-tree and governance-tree artifacts with separate generator commands.
 - Supports node-to-source jump: click a node, then use `打开源文件` in detail panel to jump to the mapped markdown line.
 - Supports `Go to Definition` / `Ctrl/Cmd+Click` inside framework markdown for `B/C/R/V`, boundary ids, `Lx.My`, `framework.Lx.My`, and bracketed module-rule refs like `frontend.L1.M2[R1,R2]`.
-- Boundary navigation is not limited to explicitly exposed top-level sections. Direct boundaries such as `CHAT` / `SURFACE` and derived boundaries such as `CITATION` / `TURN` / `SCOPE` can jump to the owning or related `projects/*/product_spec.toml` section, so every effective boundary stays traceable into project product specs.
+- Boundary navigation is not limited to explicitly exposed top-level sections. Direct boundaries such as `CHAT` / `SURFACE` and derived boundaries such as `CITATION` / `TURN` / `SCOPE` can jump to the owning or related `projects/*/product_spec.toml` section, and when a project uses split specs they now land directly in `projects/*/product_spec/*.toml`.
+- When a project has already been materialized, boundary navigation now prefers the generated governance manifest for project-specific section ownership instead of relying on extension-side hardcoded framework guesses.
+- Framework drafts under `framework_drafts/` reuse the same definition / hover / reference navigation model as published framework docs, but they stay outside strict project materialization until published.
 - Module refs such as `frontend.L1.M2` are treated as one hover/click target, jump straight to the target module's first `B*`, and show capability/base/rule summaries on hover.
 - Hover also works for bracketed module rules such as `frontend.L1.M2[R1,R2]` and local `B/C/R/V` plus boundary symbols, showing the resolved definition content directly in place; boundary hovers also show the mapped config file, primary owning section, related sections, and inferred ownership note when applicable.
 - `Find All References` / `Shift+F12` is implemented for navigable framework symbols, so boundary tokens can return the current usage, framework definition, and mapped config target in one place.
-- Runs strict mapping validation automatically on startup.
-- Runs strict mapping validation on save/create/rename/delete for relevant files.
-- Runs strict mapping validation when watched files change outside VSCode and when window regains focus.
+- Validation trigger mode is configurable: `manual`, `save`, or `all`.
+- Manual validation can recover from a stale in-flight guard task; if a previous validation command has been hanging for too long, `Shelf: Validate Mapping Now` restarts it instead of waiting forever.
+- Adds `Shelf: Run Codegen Preflight` to materialize and fully validate the current workspace before asking AI to generate code.
+- Adds `Shelf: Scaffold Framework-Driven Project` to create a formal `product_spec.toml` / `product_spec/*.toml` / `implementation_config.toml` authoring skeleton from a registered template.
+- Adds `Shelf: Publish Current Framework Draft` to move the active `framework_drafts/...` file into the formal `framework/...` tree.
 - Auto-materializes affected `projects/*` when `framework/*.md`, `product_spec.toml`, or `implementation_config.toml` changes.
 - The validation chain includes `配置即功能` checks: effective `implementation_config.toml` fields must drive downstream compiled behavior instead of becoming dead selectors.
 - Optionally runs `mypy` after relevant Python changes under `src/`, `scripts/`, or `tests/`.
@@ -26,7 +33,7 @@
 - Status bar (`Shelf AI issues`) is clickable and opens an issue picker for direct file/line jump.
 - Disabled status text no longer shows `n/a`.
 - Auto-fail notification provides buttons: `Open Problems` / `Open Log`.
-- Provides manual commands for validation and governance tree viewing.
+- Provides manual commands for validation, framework-tree viewing, and governance-tree viewing.
 - Provides a direct fallback command to insert the standard `@framework` module template even when editor snippet suggestions are not showing.
 - Uses the VSCode output channel for recent command output only; it does not create persistent log files in the repository.
 
@@ -68,9 +75,14 @@
 ## Commands
 - `Shelf: Insert Framework Module Template`
 - `Shelf: Install Git Hooks`
+- `Shelf: Open Framework Tree`
+- `Shelf: Refresh Framework Tree`
 - `Shelf: Open Governance Tree`
 - `Shelf: Refresh Governance Tree`
 - `Shelf: Validate Mapping Now`
+- `Shelf: Run Codegen Preflight`
+- `Shelf: Scaffold Framework-Driven Project`
+- `Shelf: Publish Current Framework Draft`
 - `Shelf: Show Mapping Issues`
 
 ## Markdown Snippets
@@ -104,6 +116,7 @@
 
 ## Configuration
 - `shelf.enableOnSave`
+- `shelf.validationTriggerMode`
 - `shelf.notifyOnAutoFail`
 - `shelf.guardMode`
 - `shelf.autoMaterialize`
@@ -112,6 +125,9 @@
 - `shelf.promptInstallGitHooks`
 - `shelf.changeValidationCommand`
 - `shelf.fullValidationCommand`
+- `shelf.frameworkTreeJsonPath`
+- `shelf.frameworkTreeHtmlPath`
+- `shelf.frameworkTreeGenerateCommand`
 - `shelf.governanceTreeJsonPath`
 - `shelf.governanceTreeHtmlPath`
 - `shelf.governanceTreeGenerateCommand`
@@ -125,25 +141,33 @@ Default commands use the repository validator:
 - `uv run mypy`
 
 Guard behavior:
+- `shelf.validationTriggerMode = manual`: only explicit commands run validation.
+- `shelf.validationTriggerMode = save`: only saving watched files runs validation automatically.
+- `shelf.validationTriggerMode = all`: save plus watched workspace events keep validation hot.
 - `shelf.guardMode = normal`: report direct edits under `projects/*/generated/*`, but do not overwrite the file.
 - `shelf.guardMode = strict`: re-run materialization for the owning project and treat restore failure as a hard guard issue.
 - `shelf.autoMaterialize = true`: when upstream framework or project truth files change, Shelf appends `--project <product_spec.toml>` and materializes the affected projects automatically.
-- `shelf.protectGeneratedFiles = true`: direct edits under generated artifacts are always surfaced; `strict` mode upgrades this to automatic restore.
+- `shelf.protectGeneratedFiles = true`: direct edits under generated artifacts are always surfaced; `strict` mode upgrades this to automatic restore, including both `shelf_framework_tree.*` and `shelf_governance_tree.*`.
 - `shelf.runMypyOnPythonChanges = true`: Python-only checks are scoped to relevant source changes so routine Markdown work does not trigger mypy.
 - `shelf.promptInstallGitHooks = true`: prompt once per session if `core.hooksPath` is not set to the repository `.githooks`.
+
+Default framework tree generation command:
+- `uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html`
 
 Default governance tree generation command:
 - `uv run python scripts/generate_governance_tree_hierarchy.py --output-json docs/hierarchy/shelf_governance_tree.json --output-html docs/hierarchy/shelf_governance_tree.html`
 
 Tree generation behavior:
+- Framework tree is the default reading view. It focuses on `framework/*.md` and their cross-module structure without mixing in code nodes.
+- Framework tree HTML is regenerated from `docs/hierarchy/shelf_framework_tree.json`.
 - Workspace governance tree combines:
   - standards tree from `mapping/mapping_registry.json`
   - project governance trees derived from `Framework -> Product Spec -> Implementation Config -> Code -> Evidence`
 - Governance tree HTML is regenerated from `docs/hierarchy/shelf_governance_tree.json`.
-- Interaction contract for the generated governance tree:
+- Interaction contract for the generated framework tree and governance tree:
   - Left-drag on background scrolls / pans the whole graph canvas.
   - Clicking a node or edge must keep selection and relationship-detail inspection working.
   - `Ctrl/⌘ + click` on a node or edge must keep source-file jump working.
   - These interactions are repository-side regression constraints and are guarded by the hierarchy HTML generator tests.
 - Governance tree nodes carry `source_file` and `source_line` metadata for line-level jump.
-- Shelf sidebar also shows the most recent touched / affected governance node closure after each validation run.
+- Shelf sidebar opens the framework tree by default, while still showing the most recent touched / affected governance node closure after each validation run.

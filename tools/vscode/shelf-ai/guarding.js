@@ -22,11 +22,20 @@ const WATCH_FILES = new Set([
 ]);
 
 const PRODUCT_SPEC_PATTERN = /^projects\/([^/]+)\/product_spec\.toml$/;
+const PRODUCT_SPEC_SECTION_PATTERN = /^projects\/([^/]+)\/product_spec\/[^/]+\.toml$/;
 const IMPLEMENTATION_CONFIG_PATTERN = /^projects\/([^/]+)\/implementation_config\.toml$/;
 const GENERATED_PATTERN = /^projects\/([^/]+)\/generated(?:\/(.+))?$/;
 const WORKSPACE_GOVERNANCE_ARTIFACTS = new Set([
   "docs/hierarchy/shelf_governance_tree.json",
   "docs/hierarchy/shelf_governance_tree.html",
+]);
+const WORKSPACE_FRAMEWORK_ARTIFACTS = new Set([
+  "docs/hierarchy/shelf_framework_tree.json",
+  "docs/hierarchy/shelf_framework_tree.html",
+]);
+const WORKSPACE_TREE_ARTIFACTS = new Set([
+  ...WORKSPACE_GOVERNANCE_ARTIFACTS,
+  ...WORKSPACE_FRAMEWORK_ARTIFACTS,
 ]);
 
 function normalizeRelPath(relPath) {
@@ -77,8 +86,21 @@ function discoverProductSpecFiles(repoRoot) {
 
 function inferConfiguredFrameworks(productSpecText) {
   const frameworks = new Set();
-  for (const match of String(productSpecText).matchAll(/^\s*(frontend|domain|backend)\s*=\s*"framework\/([^/]+)\//gm)) {
-    frameworks.add(match[2]);
+  const lines = String(productSpecText).split(/\r?\n/);
+  let inFrameworkSection = false;
+  for (const lineText of lines) {
+    const sectionMatch = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/.exec(lineText);
+    if (sectionMatch) {
+      inFrameworkSection = sectionMatch[1] === "framework";
+      continue;
+    }
+    if (!inFrameworkSection) {
+      continue;
+    }
+    const valueMatch = /^\s*[A-Za-z0-9_-]+\s*=\s*"framework\/([^/]+)\//.exec(lineText);
+    if (valueMatch) {
+      frameworks.add(valueMatch[1]);
+    }
   }
   return frameworks;
 }
@@ -95,6 +117,11 @@ function resolveProjectProductSpecPath(repoRoot, relPath) {
     return path.join(repoRoot, "projects", match[1], "product_spec.toml");
   }
 
+  match = normalized.match(PRODUCT_SPEC_SECTION_PATTERN);
+  if (match) {
+    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
+  }
+
   match = normalized.match(GENERATED_PATTERN);
   if (match) {
     return path.join(repoRoot, "projects", match[1], "product_spec.toml");
@@ -105,11 +132,15 @@ function resolveProjectProductSpecPath(repoRoot, relPath) {
 
 function isProtectedGeneratedPath(relPath) {
   const normalized = normalizeRelPath(relPath);
-  return GENERATED_PATTERN.test(normalized) || WORKSPACE_GOVERNANCE_ARTIFACTS.has(normalized);
+  return GENERATED_PATTERN.test(normalized) || WORKSPACE_TREE_ARTIFACTS.has(normalized);
 }
 
 function isWorkspaceGovernanceArtifact(relPath) {
   return WORKSPACE_GOVERNANCE_ARTIFACTS.has(normalizeRelPath(relPath));
+}
+
+function isWorkspaceFrameworkArtifact(relPath) {
+  return WORKSPACE_FRAMEWORK_ARTIFACTS.has(normalizeRelPath(relPath));
 }
 
 function shouldRunMypyForRelPath(relPath) {
@@ -130,6 +161,9 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
   const materializeProjects = new Set();
   const protectedGeneratedPaths = [];
   const protectedProjectSpecs = new Set();
+  const protectedWorkspaceArtifacts = [];
+  const protectedGovernanceArtifacts = [];
+  const protectedFrameworkArtifacts = [];
   let shouldRunMypy = false;
   let discoveredProductSpecFiles = null;
 
@@ -147,6 +181,15 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
 
     if (isProtectedGeneratedPath(relPath)) {
       protectedGeneratedPaths.push(relPath);
+      if (WORKSPACE_TREE_ARTIFACTS.has(relPath)) {
+        protectedWorkspaceArtifacts.push(relPath);
+      }
+      if (WORKSPACE_GOVERNANCE_ARTIFACTS.has(relPath)) {
+        protectedGovernanceArtifacts.push(relPath);
+      }
+      if (WORKSPACE_FRAMEWORK_ARTIFACTS.has(relPath)) {
+        protectedFrameworkArtifacts.push(relPath);
+      }
       const protectedSpec = resolveProjectProductSpecPath(repoRoot, relPath);
       if (protectedSpec) {
         protectedProjectSpecs.add(protectedSpec);
@@ -154,7 +197,11 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
       continue;
     }
 
-    if (PRODUCT_SPEC_PATTERN.test(relPath) || IMPLEMENTATION_CONFIG_PATTERN.test(relPath)) {
+    if (
+      PRODUCT_SPEC_PATTERN.test(relPath) ||
+      PRODUCT_SPEC_SECTION_PATTERN.test(relPath) ||
+      IMPLEMENTATION_CONFIG_PATTERN.test(relPath)
+    ) {
       const productSpecFile = resolveProjectProductSpecPath(repoRoot, relPath);
       if (productSpecFile) {
         materializeProjects.add(productSpecFile);
@@ -191,6 +238,9 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     shouldMaterialize: materializeProjects.size > 0,
     materializeProjects: [...materializeProjects].sort(),
     protectedGeneratedPaths,
+    protectedWorkspaceArtifacts,
+    protectedGovernanceArtifacts,
+    protectedFrameworkArtifacts,
     protectedProjectSpecs: [...protectedProjectSpecs].sort(),
   };
 }
@@ -203,6 +253,7 @@ module.exports = {
   discoverProductSpecFiles,
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
+  isWorkspaceFrameworkArtifact,
   isWorkspaceGovernanceArtifact,
   isWatchedPath,
   isWatchedUri,

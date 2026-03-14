@@ -40,6 +40,14 @@ function main() {
     (item) => item.command === "shelf.installGitHooks"
   );
   assert(installHooksCommand, "package.json must contribute the git hooks install command");
+  const openFrameworkTreeCommand = (packageJson.contributes?.commands || []).find(
+    (item) => item.command === "shelf.openFrameworkTree"
+  );
+  assert(openFrameworkTreeCommand, "package.json must contribute the framework tree open command");
+  const openGovernanceTreeCommand = (packageJson.contributes?.commands || []).find(
+    (item) => item.command === "shelf.openGovernanceTree"
+  );
+  assert(openGovernanceTreeCommand, "package.json must contribute the governance tree open command");
 
   assert(
     (packageJson.activationEvents || []).includes("onCommand:shelf.insertFrameworkModuleTemplate"),
@@ -49,6 +57,14 @@ function main() {
     (packageJson.activationEvents || []).includes("onCommand:shelf.installGitHooks"),
     "package.json must activate on the git hooks install command"
   );
+  assert(
+    (packageJson.activationEvents || []).includes("onCommand:shelf.openFrameworkTree"),
+    "package.json must activate on the framework tree open command"
+  );
+  assert(
+    (packageJson.activationEvents || []).includes("onCommand:shelf.openGovernanceTree"),
+    "package.json must activate on the governance tree open command"
+  );
 
   const configuration = packageJson.contributes?.configuration?.properties || {};
   for (const key of [
@@ -57,6 +73,9 @@ function main() {
     "shelf.runMypyOnPythonChanges",
     "shelf.protectGeneratedFiles",
     "shelf.promptInstallGitHooks",
+    "shelf.frameworkTreeJsonPath",
+    "shelf.frameworkTreeHtmlPath",
+    "shelf.frameworkTreeGenerateCommand",
     "shelf.governanceTreeJsonPath",
     "shelf.governanceTreeHtmlPath",
     "shelf.governanceTreeGenerateCommand",
@@ -101,8 +120,24 @@ function main() {
     "extension.js must register the git hooks install command"
   );
   assert(
+    /registerCommand\s*\(\s*"shelf\.openFrameworkTree"/.test(extensionSource),
+    "extension.js must register the framework tree open command"
+  );
+  assert(
+    /registerCommand\s*\(\s*"shelf\.openGovernanceTree"/.test(extensionSource),
+    "extension.js must register the governance tree open command"
+  );
+  assert(
     /registerCompletionItemProvider\s*\(/.test(extensionSource),
     "extension.js must register a markdown completion provider"
+  );
+  assert(
+    /onDidChangeTextDocument\s*\(/.test(extensionSource),
+    "extension.js must clear stale shelf diagnostics when watched documents are edited"
+  );
+  assert(
+    extensionSource.includes('$(close) Shelf failed'),
+    "extension.js must expose a visible cross icon for failing Shelf status"
   );
   assert(
     readme.includes("Shelf: Insert Framework Module Template"),
@@ -113,8 +148,20 @@ function main() {
     "README must document the git hooks install command"
   );
   assert(
+    readme.includes("Shelf: Open Framework Tree"),
+    "README must document the framework tree open command"
+  );
+  assert(
+    readme.includes("Shelf: Refresh Framework Tree"),
+    "README must document the framework tree refresh command"
+  );
+  assert(
     readme.includes("Shelf: Open Governance Tree"),
     "README must document the governance tree open command"
+  );
+  assert(
+    readme.includes("shelf.frameworkTreeJsonPath"),
+    "README must document the framework tree JSON path setting"
   );
   assert(
     readme.includes("shelf.governanceTreeJsonPath"),

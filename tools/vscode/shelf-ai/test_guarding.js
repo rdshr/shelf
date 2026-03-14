@@ -19,6 +19,7 @@ function main() {
   assert(!isWatchedPath("../outside.txt"));
 
   assert(isProtectedGeneratedPath("projects/knowledge_base_basic/generated/product_spec.json"));
+  assert(isProtectedGeneratedPath("docs/hierarchy/shelf_framework_tree.json"));
   assert(isProtectedGeneratedPath("docs/hierarchy/shelf_governance_tree.json"));
   assert(!isProtectedGeneratedPath("projects/knowledge_base_basic/product_spec.toml"));
 
@@ -29,6 +30,10 @@ function main() {
 
   assert.strictEqual(
     resolveProjectProductSpecPath(repoRoot, "projects/knowledge_base_basic/implementation_config.toml"),
+    path.join(repoRoot, "projects", "knowledge_base_basic", "product_spec.toml")
+  );
+  assert.strictEqual(
+    resolveProjectProductSpecPath(repoRoot, "projects/knowledge_base_basic/product_spec/chat.toml"),
     path.join(repoRoot, "projects", "knowledge_base_basic", "product_spec.toml")
   );
   assert.strictEqual(
@@ -51,6 +56,11 @@ backend = "framework/backend/L2-M0-知识库接口框架标准模块.md"
   assert.strictEqual(productPlan.materializeProjects.length, 1);
   assert(productPlan.materializeProjects[0].endsWith("projects/knowledge_base_basic/product_spec.toml"));
 
+  const splitProductPlan = classifyWorkspaceChanges(repoRoot, ["projects/knowledge_base_basic/product_spec/chat.toml"]);
+  assert(splitProductPlan.shouldMaterialize, "split product spec changes should trigger materialization");
+  assert.strictEqual(splitProductPlan.materializeProjects.length, 1);
+  assert(splitProductPlan.materializeProjects[0].endsWith("projects/knowledge_base_basic/product_spec.toml"));
+
   const frameworkPlan = classifyWorkspaceChanges(repoRoot, ["framework/knowledge_base/L1-M0-知识库界面骨架模块.md"]);
   assert(frameworkPlan.shouldMaterialize, "framework changes should trigger materialization");
   assert(
@@ -64,6 +74,9 @@ backend = "framework/backend/L2-M0-知识库接口框架标准模块.md"
 
   const workspaceTreePlan = classifyWorkspaceChanges(repoRoot, ["docs/hierarchy/shelf_governance_tree.json"]);
   assert.strictEqual(workspaceTreePlan.protectedGeneratedPaths.length, 1);
+
+  const frameworkTreePlan = classifyWorkspaceChanges(repoRoot, ["docs/hierarchy/shelf_framework_tree.json"]);
+  assert.strictEqual(frameworkTreePlan.protectedGeneratedPaths.length, 1);
 }
 
 main();

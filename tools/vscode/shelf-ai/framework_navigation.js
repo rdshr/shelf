@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const FRAMEWORK_FILE_PATH_PATTERN = /^framework\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
+const FRAMEWORK_FILE_PATH_PATTERN = /^(framework|framework_drafts)\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
 const MODULE_REF_WITH_RULES_PATTERN =
   /(?:(?<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?<level>\d+)\.M(?<module>\d+)\[(?<rules>[^\]]+)\]/g;
 const MODULE_REF_PATTERN = /(?:(?<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?<level>\d+)\.M(?<module>\d+)/g;
@@ -12,6 +12,7 @@ const BACKTICK_SEGMENT_PATTERN = /`([^`]+)`/g;
 const SYMBOL_TOKEN_PATTERN = /[A-Za-z][A-Za-z0-9_]*/g;
 const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
 const DEFAULT_PRODUCT_SPEC_FILE = path.join("projects", "knowledge_base_basic", "product_spec.toml");
+const GOVERNANCE_MANIFEST_RELATIVE_PATH = path.join("generated", "governance_manifest.json");
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],
@@ -183,118 +184,6 @@ const FRAMEWORK_BOUNDARY_SECTION_MAP = {
       "该边界由统一返回与多接口一致性配置共同承接。"
     ),
   },
-  document_chunking: {
-    __moduleScopes: {
-      "L0.M0": {
-        INPUT: directConfigMapping("input"),
-        STRLEN: derivedConfigMapping(
-          "segmentation",
-          ["segmentation", "input"],
-          "该边界由分段长度约束与输入文本对象共同承接。"
-        ),
-        ELEMENT: directConfigMapping("segmentation"),
-        MATCHRULE: directConfigMapping("segmentation"),
-        MATCHRESULT: derivedConfigMapping(
-          "output",
-          ["output", "validation"],
-          "该边界由输出结构与结果校验共同承接。"
-        ),
-      },
-      "L0.M1": {
-        INDEX: derivedConfigMapping(
-          "segmentation",
-          ["segmentation", "output"],
-          "该边界由段落分段顺序与结果输出顺序共同承接。"
-        ),
-        LENGTH: directConfigMapping("segmentation"),
-        TRACE: derivedConfigMapping(
-          "output",
-          ["output", "input"],
-          "该边界由结果回溯字段与输入文档标识共同承接。"
-        ),
-        BELONG: directConfigMapping("input"),
-        ENDING: derivedConfigMapping(
-          "validation",
-          ["validation", "output"],
-          "该边界由终止段落标记与输出回溯信息共同承接。"
-        ),
-      },
-      "L0.M2": {
-        INPUT: directConfigMapping("role_judgment"),
-        STRLEN: derivedConfigMapping(
-          "segmentation",
-          ["segmentation", "role_judgment"],
-          "该边界由段落长度约束与角色判型输入条件共同承接。"
-        ),
-        ROLE: directConfigMapping("role_judgment"),
-        OUTPUT: derivedConfigMapping(
-          "role_judgment",
-          ["role_judgment", "validation"],
-          "该边界由角色集合与判型结果约束共同承接。"
-        ),
-      },
-      "L0.M3": {
-        PARAMETER: derivedConfigMapping(
-          "output",
-          ["output", "input"],
-          "该边界由打包输入对象字段与结果回溯字段共同承接。"
-        ),
-        STRLEN: derivedConfigMapping(
-          "segmentation",
-          ["segmentation", "output"],
-          "该边界由段落长度约束与文本块内容承接共同约束。"
-        ),
-        CONTENT: directConfigMapping("output"),
-        ORDER: derivedConfigMapping(
-          "validation",
-          ["validation", "output"],
-          "该边界由输出顺序约束与结果结构共同承接。"
-        ),
-        PACKAGING: directConfigMapping("composition"),
-        CONDITION: derivedConfigMapping(
-          "validation",
-          ["composition", "validation", "output"],
-          "该边界由打包闭合条件、结果结构与校验条件共同承接。"
-        ),
-      },
-      "L0.M4": {
-        FORMAT: directConfigMapping("output"),
-        TRACE: derivedConfigMapping(
-          "input",
-          ["input", "output"],
-          "该边界由原文标识策略与输出追溯字段共同承接。"
-        ),
-        CONTENT: directConfigMapping("output"),
-        STANDARD: derivedConfigMapping(
-          "validation",
-          ["validation", "output"],
-          "该边界由输出顺序稳定性与结果字段结构共同承接。"
-        ),
-        LENGTH: derivedConfigMapping(
-          "validation",
-          ["segmentation", "validation", "output"],
-          "该边界由段落长度约束、结果长度校验与输出字段结构共同承接。"
-        ),
-      },
-      "L1.M0": {
-        NORMDOC: directConfigMapping("input"),
-        CUTRELY: directConfigMapping("segmentation"),
-        BLOCKNUM: derivedConfigMapping(
-          "segmentation",
-          ["segmentation", "validation"],
-          "该边界由分段规模与结果校验共同承接。"
-        ),
-        ROLEJUDGE: directConfigMapping("role_judgment"),
-        ROLETYPE: directConfigMapping("role_judgment"),
-        BLOCKCOMBINE: directConfigMapping("composition"),
-        OUTPUT: derivedConfigMapping(
-          "output",
-          ["output", "validation"],
-          "该边界由输出结果结构与结果校验共同承接。"
-        ),
-      },
-    },
-  },
 };
 
 function normalizePathSlashes(value) {
@@ -309,9 +198,10 @@ function getFrameworkDocumentInfo(filePath, repoRoot) {
   }
   return {
     relativePath,
-    frameworkName: match[1],
-    level: `L${match[2]}`,
-    moduleId: `M${match[3]}`,
+    treeRoot: match[1],
+    frameworkName: match[2],
+    level: `L${match[3]}`,
+    moduleId: `M${match[4]}`,
   };
 }
 
@@ -660,24 +550,35 @@ function findTokenContext(lineText, character) {
   return null;
 }
 
-function resolveModuleFile(repoRoot, currentFrameworkName, refFrameworkName, level, moduleId) {
+function resolveModuleFile(repoRoot, currentFrameworkName, refFrameworkName, level, moduleId, preferredTreeRoot = "framework") {
   const frameworkName = refFrameworkName || currentFrameworkName;
   if (!frameworkName || !level || !moduleId) {
     return null;
   }
 
-  const moduleDir = path.join(repoRoot, "framework", frameworkName);
-  if (!fs.existsSync(moduleDir) || !fs.statSync(moduleDir).isDirectory()) {
-    return null;
+  const prefix = `${level}-${moduleId}-`;
+  const searchRoots = [];
+  if (preferredTreeRoot) {
+    searchRoots.push(preferredTreeRoot);
+  }
+  for (const candidateRoot of ["framework", "framework_drafts"]) {
+    if (!searchRoots.includes(candidateRoot)) {
+      searchRoots.push(candidateRoot);
+    }
   }
 
-  const prefix = `${level}-${moduleId}-`;
-  for (const entry of fs.readdirSync(moduleDir)) {
-    if (!entry.endsWith(".md")) {
+  for (const treeRoot of searchRoots) {
+    const moduleDir = path.join(repoRoot, treeRoot, frameworkName);
+    if (!fs.existsSync(moduleDir) || !fs.statSync(moduleDir).isDirectory()) {
       continue;
     }
-    if (entry.startsWith(prefix)) {
-      return path.join(moduleDir, entry);
+    for (const entry of fs.readdirSync(moduleDir)) {
+      if (!entry.endsWith(".md")) {
+        continue;
+      }
+      if (entry.startsWith(prefix)) {
+        return path.join(moduleDir, entry);
+      }
     }
   }
   return null;
@@ -702,21 +603,45 @@ function buildTomlSectionIndex(text) {
   return sections;
 }
 
-function getBoundaryConfigMapping(frameworkName, token, moduleContext = null) {
-  const mapping = FRAMEWORK_BOUNDARY_SECTION_MAP[frameworkName];
-  if (mapping) {
-    if (moduleContext && mapping.__moduleScopes) {
-      const scopeKey = `${moduleContext.level}.${moduleContext.moduleId}`;
-      const scopedMapping = mapping.__moduleScopes[scopeKey];
-      if (scopedMapping && scopedMapping[token]) {
-        return scopedMapping[token];
-      }
-    }
-    if (mapping[token]) {
-      return mapping[token];
-    }
+function resolveProductSpecSectionFile(productSpecFilePath, sectionName) {
+  const topLevelSection = String(sectionName || "").split(".", 1)[0];
+  if (!topLevelSection) {
+    return productSpecFilePath;
   }
-  return inferBoundaryConfigMapping(frameworkName, token, moduleContext);
+  const splitSectionFile = path.join(path.dirname(productSpecFilePath), "product_spec", `${topLevelSection}.toml`);
+  if (fs.existsSync(splitSectionFile) && fs.statSync(splitSectionFile).isFile()) {
+    return splitSectionFile;
+  }
+  return productSpecFilePath;
+}
+
+function resolveTomlSectionTarget(productSpecFilePath, sectionNames) {
+  const wantedSections = [...new Set((sectionNames || []).filter(Boolean))];
+  for (const sectionName of wantedSections) {
+    const targetFilePath = resolveProductSpecSectionFile(productSpecFilePath, sectionName);
+    const targetText = fs.readFileSync(targetFilePath, "utf8");
+    const sectionIndex = buildTomlSectionIndex(targetText);
+    const sectionTarget = sectionIndex.get(sectionName);
+    if (!sectionTarget) {
+      continue;
+    }
+    return {
+      filePath: targetFilePath,
+      line: sectionTarget.line,
+      character: sectionTarget.character,
+      length: sectionTarget.length,
+      targetSection: sectionName,
+    };
+  }
+  return null;
+}
+
+function getBoundaryConfigMapping(frameworkName, token) {
+  const mapping = FRAMEWORK_BOUNDARY_SECTION_MAP[frameworkName];
+  if (mapping && mapping[token]) {
+    return mapping[token];
+  }
+  return inferBoundaryConfigMapping(frameworkName, token);
 }
 
 function inferFrontendBoundaryConfigMapping(token) {
@@ -861,7 +786,7 @@ function inferBackendBoundaryConfigMapping(token) {
   return null;
 }
 
-function inferBoundaryConfigMapping(frameworkName, token, moduleContext = null) {
+function inferBoundaryConfigMapping(frameworkName, token) {
   if (frameworkName === "frontend") {
     return inferFrontendBoundaryConfigMapping(token);
   }
@@ -871,12 +796,22 @@ function inferBoundaryConfigMapping(frameworkName, token, moduleContext = null) 
   if (frameworkName === "backend") {
     return inferBackendBoundaryConfigMapping(token);
   }
-  if (frameworkName === "document_chunking" && moduleContext) {
-    const mapping = FRAMEWORK_BOUNDARY_SECTION_MAP.document_chunking;
-    const scopeKey = `${moduleContext.level}.${moduleContext.moduleId}`;
-    return mapping?.__moduleScopes?.[scopeKey]?.[token] || null;
-  }
   return null;
+}
+
+function discoverGovernanceManifestFiles(repoRoot) {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
+    return [];
+  }
+  const files = [];
+  for (const entry of fs.readdirSync(projectsDir)) {
+    const manifestPath = path.join(projectsDir, entry, GOVERNANCE_MANIFEST_RELATIVE_PATH);
+    if (fs.existsSync(manifestPath) && fs.statSync(manifestPath).isFile()) {
+      files.push(manifestPath);
+    }
+  }
+  return files.sort();
 }
 
 function discoverProductSpecFiles(repoRoot) {
@@ -896,30 +831,36 @@ function discoverProductSpecFiles(repoRoot) {
 
 function inferConfiguredFrameworks(productSpecText) {
   const frameworks = new Set();
-  for (const match of productSpecText.matchAll(/^\s*(frontend|domain|backend)\s*=\s*"framework\/([^/]+)\//gm)) {
-    frameworks.add(match[2]);
+  const lines = String(productSpecText).split(/\r?\n/);
+  let inFrameworkSection = false;
+  for (const lineText of lines) {
+    const sectionMatch = TOML_SECTION_PATTERN.exec(lineText);
+    if (sectionMatch) {
+      inFrameworkSection = sectionMatch[1] === "framework";
+      continue;
+    }
+    if (!inFrameworkSection) {
+      continue;
+    }
+    const valueMatch = /^\s*[A-Za-z0-9_-]+\s*=\s*"framework\/([^/]+)\//.exec(lineText);
+    if (valueMatch) {
+      frameworks.add(valueMatch[1]);
+    }
   }
   return frameworks;
 }
 
 function resolvePreferredProductSpecFile(repoRoot, frameworkName) {
-  const preferredDefault = path.join(repoRoot, DEFAULT_PRODUCT_SPEC_FILE);
   const candidates = discoverProductSpecFiles(repoRoot);
-  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
-    candidates.unshift(preferredDefault);
-  }
-
+  const preferredDefault = path.join(repoRoot, DEFAULT_PRODUCT_SPEC_FILE);
   let bestFile = null;
   let bestScore = -1;
   for (const filePath of candidates) {
-    let score = 0;
+    let score = filePath === preferredDefault ? 1 : 0;
     try {
       const frameworks = inferConfiguredFrameworks(fs.readFileSync(filePath, "utf8"));
       if (frameworks.has(frameworkName)) {
         score += 10;
-      }
-      if (filePath === preferredDefault) {
-        score += 1;
       }
     } catch {
       // Ignore broken product spec files here; main parser/validator handles them elsewhere.
@@ -929,11 +870,128 @@ function resolvePreferredProductSpecFile(repoRoot, frameworkName) {
       bestFile = filePath;
     }
   }
-  return bestFile;
+  if (bestFile) {
+    return bestFile;
+  }
+  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
+    return preferredDefault;
+  }
+  return null;
 }
 
-function resolveBoundaryConfigTarget(repoRoot, frameworkName, token, moduleContext = null) {
-  const mapping = getBoundaryConfigMapping(frameworkName, token, moduleContext);
+function collectDerivedFromEntries(node, results = []) {
+  if (Array.isArray(node)) {
+    for (const value of node) {
+      collectDerivedFromEntries(value, results);
+    }
+    return results;
+  }
+  if (!node || typeof node !== "object") {
+    return results;
+  }
+  if (node.derived_from && typeof node.derived_from === "object") {
+    results.push(node.derived_from);
+  }
+  for (const value of Object.values(node)) {
+    collectDerivedFromEntries(value, results);
+  }
+  return results;
+}
+
+function resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token) {
+  const manifests = discoverGovernanceManifestFiles(repoRoot);
+  if (!manifests.length) {
+    return [];
+  }
+
+  const preferredProductSpec = resolvePreferredProductSpecFile(repoRoot, frameworkName);
+  const candidates = [];
+  const seen = new Set();
+
+  for (const manifestPath of manifests) {
+    let manifest = null;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    } catch {
+      continue;
+    }
+    if (!manifest || typeof manifest !== "object") {
+      continue;
+    }
+
+    const relProductSpec = normalizePathSlashes(String(manifest.product_spec_file || ""));
+    if (!relProductSpec) {
+      continue;
+    }
+    const productSpecFilePath = path.resolve(repoRoot, relProductSpec);
+    if (!fs.existsSync(productSpecFilePath)) {
+      continue;
+    }
+
+    for (const derivedFrom of collectDerivedFromEntries(manifest)) {
+      const frameworkModules = derivedFrom && typeof derivedFrom.framework_modules === "object"
+        ? derivedFrom.framework_modules
+        : null;
+      const boundarySections = derivedFrom && typeof derivedFrom.boundary_sections === "object"
+        ? derivedFrom.boundary_sections
+        : null;
+      if (!frameworkModules || !boundarySections) {
+        continue;
+      }
+      const mappedSection = boundarySections[token];
+      if (typeof mappedSection !== "string" || !mappedSection.trim()) {
+        continue;
+      }
+      const sectionTarget = resolveTomlSectionTarget(productSpecFilePath, [mappedSection]);
+      if (!sectionTarget) {
+        continue;
+      }
+
+      const frameworkNames = new Set();
+      for (const moduleId of Object.values(frameworkModules)) {
+        if (typeof moduleId !== "string" || !moduleId.includes(".")) {
+          continue;
+        }
+        frameworkNames.add(moduleId.split(".", 1)[0]);
+      }
+      if (!frameworkNames.has(frameworkName)) {
+        continue;
+      }
+
+      const dedupeKey = `${productSpecFilePath}:${mappedSection}:${frameworkName}:${token}`;
+      if (seen.has(dedupeKey)) {
+        continue;
+      }
+      seen.add(dedupeKey);
+      candidates.push({
+        filePath: sectionTarget.filePath,
+        line: sectionTarget.line,
+        character: sectionTarget.character,
+        length: sectionTarget.length,
+        primarySection: mappedSection,
+        targetSection: sectionTarget.targetSection,
+        relatedSections: [mappedSection],
+        mappingMode: "governance",
+        note: "该映射来自已物化项目的治理清单。",
+        preferred: preferredProductSpec === productSpecFilePath,
+      });
+    }
+  }
+
+  return candidates.sort((left, right) => {
+    if (left.preferred !== right.preferred) {
+      return left.preferred ? -1 : 1;
+    }
+    return left.filePath.localeCompare(right.filePath);
+  });
+}
+
+function resolveBoundaryConfigTarget(repoRoot, frameworkName, token) {
+  const governanceTargets = resolveGovernanceBoundaryTargets(repoRoot, frameworkName, token);
+  if (governanceTargets.length) {
+    return governanceTargets[0];
+  }
+  const mapping = getBoundaryConfigMapping(frameworkName, token);
   if (!mapping) {
     return null;
   }
@@ -941,30 +999,18 @@ function resolveBoundaryConfigTarget(repoRoot, frameworkName, token, moduleConte
   if (!productSpecFilePath || !fs.existsSync(productSpecFilePath)) {
     return null;
   }
-  const productSpecText = fs.readFileSync(productSpecFilePath, "utf8");
-  const sectionIndex = buildTomlSectionIndex(productSpecText);
-  let targetSectionName = mapping.primarySection;
-  let sectionTarget = sectionIndex.get(targetSectionName);
-  if (!sectionTarget) {
-    for (const relatedSection of mapping.relatedSections) {
-      const candidate = sectionIndex.get(relatedSection);
-      if (candidate) {
-        targetSectionName = relatedSection;
-        sectionTarget = candidate;
-        break;
-      }
-    }
-  }
+  const orderedSections = [mapping.primarySection, ...mapping.relatedSections];
+  const sectionTarget = resolveTomlSectionTarget(productSpecFilePath, orderedSections);
   if (!sectionTarget) {
     return null;
   }
   return {
-    filePath: productSpecFilePath,
+    filePath: sectionTarget.filePath,
     line: sectionTarget.line,
     character: sectionTarget.character,
     length: sectionTarget.length,
     primarySection: mapping.primarySection,
-    targetSection: targetSectionName,
+    targetSection: sectionTarget.targetSection,
     relatedSections: mapping.relatedSections,
     mappingMode: mapping.mappingMode,
     note: mapping.note,
@@ -1086,8 +1132,8 @@ function buildRuleHoverMarkdown(moduleInfo, rule) {
   return parts.join("\n");
 }
 
-function appendBoundaryConfigHover(parts, repoRoot, frameworkName, token, moduleContext = null) {
-  const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, token, moduleContext);
+function appendBoundaryConfigHover(parts, repoRoot, frameworkName, token) {
+  const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, token);
   if (!boundaryTarget) {
     return;
   }
@@ -1137,7 +1183,7 @@ function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot) {
 
   const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
   if (item.kind === "boundary" && repoRoot && moduleInfo?.frameworkName) {
-    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, item.token, moduleInfo);
+    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, item.token);
   }
   return parts.join("\n");
 }
@@ -1161,7 +1207,8 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
       documentInfo.frameworkName,
       tokenContext.frameworkName,
       tokenContext.level,
-      tokenContext.moduleId
+      tokenContext.moduleId,
+      documentInfo.treeRoot
     );
     if (!targetFilePath || !fs.existsSync(targetFilePath)) {
       return null;
@@ -1207,8 +1254,7 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
     const boundaryTarget = resolveBoundaryConfigTarget(
       repoRoot,
       documentInfo.frameworkName,
-      tokenContext.token,
-      documentInfo
+      tokenContext.token
     );
     if (boundaryTarget) {
       return boundaryTarget;
@@ -1241,7 +1287,8 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
       documentInfo.frameworkName,
       tokenContext.frameworkName,
       tokenContext.level,
-      tokenContext.moduleId
+      tokenContext.moduleId,
+      documentInfo.treeRoot
     );
     if (!targetFilePath || !fs.existsSync(targetFilePath)) {
       return null;
@@ -1337,12 +1384,7 @@ function resolveReferenceTargets({ repoRoot, filePath, text, line, character }) 
 
   const localItem = getItemForToken(index, tokenContext.token);
   if (localItem && localItem.kind === "boundary" && documentInfo.frameworkName) {
-    const boundaryTarget = resolveBoundaryConfigTarget(
-      repoRoot,
-      documentInfo.frameworkName,
-      tokenContext.token,
-      documentInfo
-    );
+    const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, documentInfo.frameworkName, tokenContext.token);
     if (boundaryTarget) {
       targets.push(boundaryTarget);
     }
