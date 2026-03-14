@@ -230,7 +230,7 @@ Default entry points:
 Legacy shelf reference output is still available:
 
 ```bash
-uv run python src/main.py reference-shelf
+uv run python src/main.py legacy-reference-shelf
 ```
 
 ## Start Here

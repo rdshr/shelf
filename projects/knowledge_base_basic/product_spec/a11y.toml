@@ -1,0 +1,5 @@
+# [a11y] 定义产品层的可访问规则。
+[a11y]
+reading_order = ["conversation_sidebar", "chat_header", "message_stream", "chat_composer", "citation_drawer"]
+keyboard_nav = ["new-chat", "conversation-item", "chat-input", "citation-ref", "citation-drawer-close"]
+announcements = ["current knowledge base", "active conversation", "citation source opened"]

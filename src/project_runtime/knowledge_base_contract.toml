@@ -1,0 +1,243 @@
+# 知识库模板契约。
+# 这里承载 knowledge_base_workbench 的稳定框架契约，
+# 避免把同一批模板约束散落到编译器、前端 validator、治理闭包里反复硬编码。
+
+[template]
+id = "knowledge_base_workbench"
+
+[product.surface]
+shell = "conversation_sidebar_shell"
+layout_variant = "chatgpt_knowledge_client"
+preview_mode = "drawer"
+
+[product.library]
+required_source_types = ["markdown"]
+required_metadata_fields = ["title"]
+default_focus = "current_knowledge_base"
+
+[product.preview]
+anchor_mode = "heading"
+preview_variant = "citation_drawer"
+show_toc_required = true
+
+[product.chat]
+mode = "retrieval_stub"
+citation_style = "inline_refs"
+
+[product.return]
+required_targets = ["citation_drawer", "document_detail"]
+anchor_restore_required = true
+supported_citation_card_variants = ["chips", "stacked", "compact"]
+
+[product.a11y]
+reading_order = [
+  "conversation_sidebar",
+  "chat_header",
+  "message_stream",
+  "chat_composer",
+  "citation_drawer",
+]
+
+[implementation]
+supported_frontend_renderers = ["knowledge_chat_client_v1"]
+supported_frontend_style_profiles = ["knowledge_chat_web_v1"]
+supported_frontend_script_profiles = ["knowledge_chat_browser_v1"]
+supported_backend_renderers = ["knowledge_chat_backend_v1"]
+supported_backend_transports = ["http_json"]
+supported_backend_retrieval_strategies = ["retrieval_stub"]
+
+[implementation.style_profiles]
+message_width = "820px"
+
+[implementation.style_profiles.surface_presets.sand]
+bg = "#f4efe5"
+panel = "#fffaf2"
+panel_soft = "#f7f1e7"
+ink = "#1b1f24"
+muted = "#6d6a65"
+line = "rgba(27, 31, 36, 0.12)"
+
+[implementation.style_profiles.surface_presets.light]
+bg = "#f6f7fb"
+panel = "#ffffff"
+panel_soft = "#f4f6fb"
+ink = "#111827"
+muted = "#667085"
+line = "rgba(17, 24, 39, 0.10)"
+
+[implementation.style_profiles.radius_scales]
+sm = "12px"
+md = "18px"
+lg = "24px"
+xl = "30px"
+
+[implementation.style_profiles.shadow_levels]
+sm = "0 10px 28px rgba(15, 23, 42, 0.08)"
+md = "0 18px 48px rgba(15, 23, 42, 0.10)"
+lg = "0 24px 60px rgba(12, 17, 22, 0.30)"
+
+[implementation.style_profiles.font_scales.sm]
+body = "0.94rem"
+title = "1.45rem"
+hero = "1.55rem"
+
+[implementation.style_profiles.font_scales.md]
+body = "1rem"
+title = "1.6rem"
+hero = "1.7rem"
+
+[implementation.style_profiles.font_scales.lg]
+body = "1.05rem"
+title = "1.72rem"
+hero = "1.84rem"
+
+[implementation.style_profiles.sidebar_widths]
+compact = "280px"
+md = "300px"
+wide = "320px"
+
+[implementation.style_profiles.drawer_widths]
+compact = "340px"
+md = "370px"
+wide = "390px"
+
+[implementation.style_profiles.density_presets.compact]
+shell_gap = "14px"
+shell_padding = "14px"
+panel_gap = "12px"
+
+[implementation.style_profiles.density_presets.comfortable]
+shell_gap = "18px"
+shell_padding = "18px"
+panel_gap = "16px"
+
+[frontend]
+shell_regions = ["conversation_sidebar", "chat_main", "citation_drawer"]
+secondary_pages = ["basketball_showcase", "knowledge_list", "knowledge_detail", "document_detail"]
+chat_home_slots = [
+  "conversation_sidebar",
+  "chat_header",
+  "message_stream",
+  "chat_composer",
+  "citation_drawer",
+  "knowledge_switch_dialog",
+]
+required_page_ids = ["chat_home", "knowledge_list", "knowledge_detail", "document_detail"]
+drawer_sections = ["snippet", "source_context"]
+surface_composition_sidebar = ["conversation_sidebar"]
+surface_composition_main = ["chat_header", "message_stream", "chat_composer"]
+surface_composition_overlay = ["citation_drawer", "knowledge_switch_dialog"]
+required_surface_region_ids = ["conversation_sidebar", "chat_main", "citation_drawer", "knowledge_pages"]
+supported_chat_bubble_variants = ["assistant_soft", "assistant_minimal"]
+supported_chat_composer_variants = ["chatgpt_compact", "expanded"]
+optional_create_action_id = "create_document"
+optional_create_action_boundary = "INTERACT"
+optional_delete_action_id = "delete_document"
+optional_delete_action_boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "start_new_chat"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "select_session"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "open_knowledge_switch"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "search_documents"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "select_document"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "submit_chat"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "open_citation_drawer"
+boundary = "INTERACT"
+
+[[frontend.interaction_actions]]
+action_id = "browse_knowledge_bases"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_basketball_showcase"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_knowledge_base_detail"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "open_document_detail"
+boundary = "ROUTE"
+
+[[frontend.interaction_actions]]
+action_id = "return_from_citation"
+boundary = "ROUTE"
+
+[[frontend.state_channels]]
+state_id = "current_conversation"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "current_knowledge_base"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "current_document"
+sticky_from_context = "sticky_document"
+
+[[frontend.state_channels]]
+state_id = "current_section"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "citation_drawer_state"
+sticky = true
+
+[[frontend.state_channels]]
+state_id = "streaming_reply"
+sticky = false
+
+[workbench]
+required_region_ids = [
+  "conversation_sidebar",
+  "chat_main",
+  "citation_drawer",
+  "basketball_showcase_page",
+  "knowledge_list_page",
+  "knowledge_detail_page",
+  "document_detail_page",
+]
+required_library_actions = ["switch_knowledge_base", "browse_documents", "open_document_detail"]
+citation_query_keys = ["document", "section", "citation"]
+optional_create_action_id = "create_document"
+optional_delete_action_id = "delete_document"
+
+[[workbench.flow]]
+stage_id = "knowledge_base_select"
+depends_on = []
+produces = ["knowledge_base_id"]
+
+[[workbench.flow]]
+stage_id = "conversation"
+depends_on = ["knowledge_base_id"]
+produces = ["conversation_id", "answer", "citations"]
+
+[[workbench.flow]]
+stage_id = "citation_review"
+depends_on = ["conversation_id", "citations"]
+produces = ["document_id", "section_id", "drawer_state"]
+
+[[workbench.flow]]
+stage_id = "document_detail"
+depends_on = ["document_id", "section_id"]
+produces = ["document_page", "return_path"]

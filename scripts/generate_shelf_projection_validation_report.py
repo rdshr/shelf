@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 
@@ -78,6 +79,189 @@ class ProjectionValidationSummary:
         }
 
 
+@dataclass(frozen=True)
+class ProjectionValidationRow:
+    index: int
+    group_id: str
+    group_counts_per_layer: str
+    canonical_key: str
+    panel_count: int
+    boundary_valid: bool
+    combination_valid: bool
+    structural_valid: bool
+    projection_improved: bool
+    passed: bool
+    weighted_projected_cells: int
+    union_projected_cells: int
+    effective_area: float
+    footprint_area: float
+    projection_ratio: float
+    threshold: float
+    reasons: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "index": self.index,
+            "group_id": self.group_id,
+            "group_counts_per_layer": self.group_counts_per_layer,
+            "canonical_key": self.canonical_key,
+            "panel_count": self.panel_count,
+            "boundary_valid": self.boundary_valid,
+            "combination_valid": self.combination_valid,
+            "structural_valid": self.structural_valid,
+            "projection_improved": self.projection_improved,
+            "passed": self.passed,
+            "weighted_projected_cells": self.weighted_projected_cells,
+            "union_projected_cells": self.union_projected_cells,
+            "effective_area": self.effective_area,
+            "footprint_area": self.footprint_area,
+            "projection_ratio": self.projection_ratio,
+            "threshold": self.threshold,
+            "reasons": self.reasons,
+        }
+
+
+@dataclass(frozen=True)
+class ProjectionScenario:
+    scenario_id: str
+    x_cells: int
+    y_cells: int
+    layers: int
+    allow_empty_layer: bool
+    footprint_cells: int
+    rows: tuple[ProjectionValidationRow, ...]
+    reason_counter: dict[str, int]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.scenario_id,
+            "x_cells": self.x_cells,
+            "y_cells": self.y_cells,
+            "layers": self.layers,
+            "allow_empty_layer": self.allow_empty_layer,
+            "footprint_cells": self.footprint_cells,
+            "rows": [row.to_dict() for row in self.rows],
+            "reason_counter": dict(self.reason_counter),
+        }
+
+
+@dataclass(frozen=True)
+class ProjectionDashboardDefaultState:
+    x_cells: int
+    y_cells: int
+    layers: int
+    allow_empty_layer: bool
+    ratio_threshold: float
+    require_boundary: bool
+    require_combination: bool
+    require_structural: bool
+    require_ratio_threshold: bool
+    require_r6_weighted_gt_footprint: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "x_cells": self.x_cells,
+            "y_cells": self.y_cells,
+            "layers": self.layers,
+            "allow_empty_layer": self.allow_empty_layer,
+            "ratio_threshold": self.ratio_threshold,
+            "require_boundary": self.require_boundary,
+            "require_combination": self.require_combination,
+            "require_structural": self.require_structural,
+            "require_ratio_threshold": self.require_ratio_threshold,
+            "require_r6_weighted_gt_footprint": self.require_r6_weighted_gt_footprint,
+        }
+
+
+@dataclass(frozen=True)
+class ProjectionValidationArtifacts:
+    row_csv: Path
+    group_csv: Path
+    summary_markdown: Path
+    dashboard_html: Path
+    summary_json: Path
+    scenarios_json: Path
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "row_csv": str(self.row_csv),
+            "group_csv": str(self.group_csv),
+            "summary_markdown": str(self.summary_markdown),
+            "dashboard_html": str(self.dashboard_html),
+            "summary_json": str(self.summary_json),
+            "scenarios_json": str(self.scenarios_json),
+        }
+
+
+@dataclass(frozen=True)
+class ProjectionValidationReportContext:
+    scenarios: list[ProjectionScenario]
+    rows: list[ProjectionValidationRow]
+    reason_counter: dict[str, int]
+    mapping_default: MappingCheckResult
+    mapping_changes: MappingCheckResult
+    summary: ProjectionValidationSummary
+    default_state: ProjectionDashboardDefaultState
+
+    @classmethod
+    def build(
+        cls,
+        *,
+        scenarios: list[ProjectionScenario],
+        selected_scenario: ProjectionScenario,
+        mapping_default: MappingCheckResult,
+        mapping_changes: MappingCheckResult,
+        ratio_threshold: float,
+        default_state: ProjectionDashboardDefaultState,
+    ) -> "ProjectionValidationReportContext":
+        rows = list(selected_scenario.rows)
+        reason_counter = dict(selected_scenario.reason_counter)
+        return cls(
+            scenarios=scenarios,
+            rows=rows,
+            reason_counter=reason_counter,
+            mapping_default=mapping_default,
+            mapping_changes=mapping_changes,
+            summary=_build_summary(
+                rows=rows,
+                mapping_default=mapping_default,
+                mapping_changes=mapping_changes,
+                ratio_threshold=ratio_threshold,
+            ),
+            default_state=default_state,
+        )
+
+
+@dataclass(frozen=True)
+class ProjectionDashboardTemplateContext:
+    payload_json: str
+
+    def render(self) -> str:
+        script = _dashboard_script_block().replace("__PAYLOAD_JSON__", self.payload_json)
+        return dedent(
+            f"""\
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>Shelf Top-Projection Validation Dashboard</title>
+              <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+              <style>
+            {_dashboard_style_block()}
+              </style>
+            </head>
+            <body>
+            {_dashboard_body_block()}
+              <script>
+            {script}
+              </script>
+            </body>
+            </html>
+            """
+        )
+
+
 def _parse_int_options(raw: str, *, name: str) -> list[int]:
     items = [item.strip() for item in raw.split(",")]
     values: list[int] = []
@@ -127,6 +311,29 @@ def _scenario_id(x_cells: int, y_cells: int, layers: int, allow_empty_layer: boo
     return f"x{x_cells}_y{y_cells}_l{layers}_e{1 if allow_empty_layer else 0}"
 
 
+def _parse_mapping_check_payload(stdout: str, stderr: str) -> dict[str, Any]:
+    if stdout.strip():
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError:
+            for line in reversed([item.strip() for item in stdout.splitlines() if item.strip()]):
+                if not line.startswith("{"):
+                    continue
+                try:
+                    return json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+            return {"passed": False, "errors": [{"message": stdout.strip()}]}
+    return {
+        "passed": False,
+        "errors": [
+            {
+                "message": stderr.strip() or "mapping validation produced no output",
+            }
+        ],
+    }
+
+
 def _run_mapping_check(check_changes: bool) -> MappingCheckResult:
     cmd = [sys.executable, str(REPO_ROOT / "scripts/validate_strict_mapping.py")]
     if check_changes:
@@ -141,21 +348,7 @@ def _run_mapping_check(check_changes: bool) -> MappingCheckResult:
         check=False,
     )
 
-    payload: dict[str, Any]
-    if result.stdout.strip():
-        try:
-            payload = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            payload = {"passed": False, "errors": [{"message": result.stdout.strip()}]}
-    else:
-        payload = {
-            "passed": False,
-            "errors": [
-                {
-                    "message": result.stderr.strip() or "mapping validation produced no output",
-                }
-            ],
-        }
+    payload = _parse_mapping_check_payload(result.stdout, result.stderr)
 
     errors = payload.get("errors", [])
     first_error = ""
@@ -232,7 +425,7 @@ def _collect_rows(
     ratio_threshold: float,
     allow_empty_layer: bool,
     max_type_count: int,
-) -> tuple[list[dict[str, Any]], dict[str, int]]:
+) -> tuple[list[ProjectionValidationRow], dict[str, int]]:
     enum_result = enumerate_structure_types(
         EnumerationConfig(
             grid=grid,
@@ -249,7 +442,7 @@ def _collect_rows(
     valid_combo_keys = {frozenset(combo) for combo in geometric_type_combinations()}
     boundary_valid, boundary_errors = boundary.validate()
 
-    rows: list[dict[str, Any]] = []
+    rows: list[ProjectionValidationRow] = []
     reason_counter: Counter[str] = Counter()
     for idx, candidate in enumerate(enum_result.unique_candidates, start=1):
         projection = _projection_metric(candidate.topology, grid, boundary)
@@ -277,25 +470,25 @@ def _collect_rows(
             reason_counter[reason] += 1
 
         rows.append(
-            {
-                "index": idx,
-                "group_id": group_id,
-                "group_counts_per_layer": ",".join(str(x) for x in (group.counts_per_layer if group else ())),
-                "canonical_key": candidate.canonical_key,
-                "panel_count": candidate.topology.panel_count(),
-                "boundary_valid": boundary_valid,
-                "combination_valid": combo_valid,
-                "structural_valid": structural_valid,
-                "projection_improved": projection_improved,
-                "passed": boundary_valid and combo_valid and structural_valid and projection_improved,
-                "weighted_projected_cells": projection.weighted_cells,
-                "union_projected_cells": projection.union_cells,
-                "effective_area": round(projection.effective_area, 6),
-                "footprint_area": round(projection.footprint_area, 6),
-                "projection_ratio": round(projection.ratio, 6),
-                "threshold": round(ratio_threshold, 6),
-                "reasons": " | ".join(reasons),
-            }
+            ProjectionValidationRow(
+                index=idx,
+                group_id=group_id,
+                group_counts_per_layer=",".join(str(x) for x in (group.counts_per_layer if group else ())),
+                canonical_key=candidate.canonical_key,
+                panel_count=candidate.topology.panel_count(),
+                boundary_valid=boundary_valid,
+                combination_valid=combo_valid,
+                structural_valid=structural_valid,
+                projection_improved=projection_improved,
+                passed=boundary_valid and combo_valid and structural_valid and projection_improved,
+                weighted_projected_cells=projection.weighted_cells,
+                union_projected_cells=projection.union_cells,
+                effective_area=round(projection.effective_area, 6),
+                footprint_area=round(projection.footprint_area, 6),
+                projection_ratio=round(projection.ratio, 6),
+                threshold=round(ratio_threshold, 6),
+                reasons=" | ".join(reasons),
+            )
         )
 
     return rows, dict(reason_counter)
@@ -310,8 +503,8 @@ def _collect_scenarios(
     allow_empty_options: list[bool],
     ratio_threshold: float,
     max_type_count: int,
-) -> list[dict[str, Any]]:
-    scenarios: list[dict[str, Any]] = []
+) -> list[ProjectionScenario]:
+    scenarios: list[ProjectionScenario] = []
     for layers in layers_options:
         boundary = BoundaryDefinition(
             layers_n=layers,
@@ -332,39 +525,39 @@ def _collect_scenarios(
                         max_type_count=max_type_count,
                     )
                     scenarios.append(
-                        {
-                            "id": _scenario_id(x_cells, y_cells, layers, allow_empty_layer),
-                            "x_cells": x_cells,
-                            "y_cells": y_cells,
-                            "layers": layers,
-                            "allow_empty_layer": allow_empty_layer,
-                            "footprint_cells": x_cells * y_cells,
-                            "rows": rows,
-                            "reason_counter": reason_counter,
-                        }
+                        ProjectionScenario(
+                            scenario_id=_scenario_id(x_cells, y_cells, layers, allow_empty_layer),
+                            x_cells=x_cells,
+                            y_cells=y_cells,
+                            layers=layers,
+                            allow_empty_layer=allow_empty_layer,
+                            footprint_cells=x_cells * y_cells,
+                            rows=tuple(rows),
+                            reason_counter=reason_counter,
+                        )
                     )
     scenarios.sort(
         key=lambda item: (
-            int(item["layers"]),
-            int(item["x_cells"]),
-            int(item["y_cells"]),
-            0 if bool(item["allow_empty_layer"]) else 1,
+            item.layers,
+            item.x_cells,
+            item.y_cells,
+            0 if item.allow_empty_layer else 1,
         )
     )
     return scenarios
 
 
 def _build_summary(
-    rows: list[dict[str, Any]],
+    rows: list[ProjectionValidationRow],
     mapping_default: MappingCheckResult,
     mapping_changes: MappingCheckResult,
     ratio_threshold: float,
 ) -> ProjectionValidationSummary:
-    ratios = [float(row["projection_ratio"]) for row in rows]
-    passed_rows = [row for row in rows if row["passed"]]
-    structural_valid_rows = [row for row in rows if row["structural_valid"]]
-    improved_rows = [row for row in rows if row["projection_improved"]]
-    boundary_valid = bool(rows[0]["boundary_valid"]) if rows else False
+    ratios = [row.projection_ratio for row in rows]
+    passed_rows = [row for row in rows if row.passed]
+    structural_valid_rows = [row for row in rows if row.structural_valid]
+    improved_rows = [row for row in rows if row.projection_improved]
+    boundary_valid = rows[0].boundary_valid if rows else False
 
     return ProjectionValidationSummary(
         generated_at_utc=datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
@@ -385,7 +578,7 @@ def _build_summary(
     )
 
 
-def _write_rows_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
+def _write_rows_csv(rows: list[ProjectionValidationRow], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "index",
@@ -409,14 +602,15 @@ def _write_rows_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(rows)
+        for row in rows:
+            writer.writerow(row.to_dict())
 
 
-def _write_group_summary_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
+def _write_group_summary_csv(rows: list[ProjectionValidationRow], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    group_buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    group_buckets: dict[str, list[ProjectionValidationRow]] = defaultdict(list)
     for row in rows:
-        group_buckets[str(row["group_id"])].append(row)
+        group_buckets[row.group_id].append(row)
 
     fieldnames = [
         "group_id",
@@ -433,12 +627,12 @@ def _write_group_summary_csv(rows: list[dict[str, Any]], output_path: Path) -> N
         writer.writeheader()
         for gid in sorted(group_buckets.keys()):
             bucket = group_buckets[gid]
-            ratios = [float(row["projection_ratio"]) for row in bucket]
-            passed_types = sum(1 for row in bucket if row["passed"])
+            ratios = [row.projection_ratio for row in bucket]
+            passed_types = sum(1 for row in bucket if row.passed)
             writer.writerow(
                 {
                     "group_id": gid,
-                    "counts_per_layer": bucket[0]["group_counts_per_layer"],
+                    "counts_per_layer": bucket[0].group_counts_per_layer,
                     "total_types": len(bucket),
                     "passed_types": passed_types,
                     "failed_types": len(bucket) - passed_types,
@@ -449,964 +643,963 @@ def _write_group_summary_csv(rows: list[dict[str, Any]], output_path: Path) -> N
             )
 
 
-def _write_markdown_summary(
-    summary: ProjectionValidationSummary,
-    mapping_default: MappingCheckResult,
-    mapping_changes: MappingCheckResult,
-    output_path: Path,
-) -> None:
+def _write_markdown_summary(report: ProjectionValidationReportContext, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
         "# Shelf Projection Validation Summary",
         "",
         "Metric rule:",
-        f"- pass if `projection_ratio > {summary.ratio_threshold:.6f}` and boundary/combination/structural checks all pass.",
+        f"- pass if `projection_ratio > {report.summary.ratio_threshold:.6f}` and boundary/combination/structural checks all pass.",
         "",
         "## Validation Checks",
         "",
         "| Check | Passed | Error Count | First Error |",
         "|---|---:|---:|---|",
         (
-            f"| strict_mapping | {mapping_default.passed} | {mapping_default.error_count} | "
-            f"{mapping_default.first_error or '-'} |"
+            f"| strict_mapping | {report.mapping_default.passed} | {report.mapping_default.error_count} | "
+            f"{report.mapping_default.first_error or '-'} |"
         ),
         (
-            f"| strict_mapping_change_propagation | {mapping_changes.passed} | {mapping_changes.error_count} | "
-            f"{mapping_changes.first_error or '-'} |"
+            f"| strict_mapping_change_propagation | {report.mapping_changes.passed} | {report.mapping_changes.error_count} | "
+            f"{report.mapping_changes.first_error or '-'} |"
         ),
         "",
         "## Stats",
         "",
         "| Metric | Value |",
         "|---|---:|",
-        f"| generated_at_utc | {summary.generated_at_utc} |",
-        f"| total_types | {summary.total_types} |",
-        f"| structural_valid_types | {summary.structural_valid_types} |",
-        f"| projection_improved_types | {summary.projection_improved_types} |",
-        f"| passed_types | {summary.passed_types} |",
-        f"| failed_types | {summary.failed_types} |",
-        f"| avg_ratio | {summary.avg_ratio:.6f} |",
-        f"| min_ratio | {summary.min_ratio:.6f} |",
-        f"| max_ratio | {summary.max_ratio:.6f} |",
+        f"| generated_at_utc | {report.summary.generated_at_utc} |",
+        f"| total_types | {report.summary.total_types} |",
+        f"| structural_valid_types | {report.summary.structural_valid_types} |",
+        f"| projection_improved_types | {report.summary.projection_improved_types} |",
+        f"| passed_types | {report.summary.passed_types} |",
+        f"| failed_types | {report.summary.failed_types} |",
+        f"| avg_ratio | {report.summary.avg_ratio:.6f} |",
+        f"| min_ratio | {report.summary.min_ratio:.6f} |",
+        f"| max_ratio | {report.summary.max_ratio:.6f} |",
         "",
     ]
     output_path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def _write_json_summary(summary: ProjectionValidationSummary, output_path: Path) -> None:
+def _write_json_summary(report: ProjectionValidationReportContext, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(summary.to_dict(), ensure_ascii=False, indent=2),
+        json.dumps(report.summary.to_dict(), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
 
-def _write_dashboard(
-    scenarios: list[dict[str, Any]],
-    default_state: dict[str, Any],
-    output_path: Path,
-) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "scenarios": scenarios,
-        "default": default_state,
-    }
-    payload_json = json.dumps(payload, ensure_ascii=False)
-    html = """<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shelf Top-Projection Validation Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <style>
-    :root {
-      --bg: #f4f6fb;
-      --panel: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --line: #d9e2f1;
-      --pass: #1f9d55;
-      --fail: #d64545;
-      --chip-on: #e7f1ff;
-      --chip-off: #f4f4f6;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .page {
-      max-width: 1760px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .title {
-      margin: 0 0 8px 0;
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(170px, 1fr));
-      gap: 10px 12px;
-      align-items: end;
-    }
-    .control label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    .control select,
-    .control input[type="number"] {
-      width: 100%;
-      padding: 7px 9px;
-      border: 1px solid #c6d3e8;
-      border-radius: 7px;
-      font-size: 14px;
-      background: #fff;
-    }
-    .check-group {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(200px, 1fr));
-      gap: 6px 12px;
-      margin-top: 10px;
-      margin-bottom: 8px;
-    }
-    .check-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text);
-    }
-    .hint {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 6px;
-    }
-    .btn {
-      padding: 8px 10px;
-      border: 1px solid #bfd0ea;
-      border-radius: 8px;
-      background: #f7fbff;
-      color: #26456d;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(170px, 1fr));
-      gap: 10px;
-    }
-    .stat {
-      background: #f8fbff;
-      border: 1px solid #d9e2f1;
-      border-radius: 9px;
-      padding: 10px;
-    }
-    .stat .k {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 6px;
-    }
-    .stat .v {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .rule-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(180px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .rule-card {
-      border-radius: 9px;
-      border: 1px solid #d9e2f1;
-      padding: 9px;
-      background: var(--chip-off);
-    }
-    .rule-card.on {
-      background: var(--chip-on);
-      border-color: #b6cbee;
-    }
-    .rule-card .rk {
-      font-size: 12px;
-      color: #4b5563;
-      margin-bottom: 6px;
-    }
-    .rule-card .rv {
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .layout-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 10px;
-    }
-    .charts {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(300px, 1fr));
-      gap: 10px;
-    }
-    .chart-box {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 8px;
-      min-height: 320px;
-    }
-    .table-wrap {
-      overflow: auto;
-      max-height: 360px;
-      border: 1px solid #d9e2f1;
-      border-radius: 8px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    thead th {
-      position: sticky;
-      top: 0;
-      background: #edf3ff;
-      text-align: left;
-      padding: 6px;
-      border-bottom: 1px solid #d9e2f1;
-      z-index: 1;
-    }
-    tbody td {
-      padding: 6px;
-      border-bottom: 1px solid #eef3fb;
-      vertical-align: top;
-      word-break: break-all;
-    }
-    .status-pass { color: var(--pass); font-weight: 700; }
-    .status-fail { color: var(--fail); font-weight: 700; }
-    .cell-btn {
-      border: 0;
-      background: transparent;
-      color: #1f4f9a;
-      cursor: pointer;
-      text-align: left;
-      padding: 0;
-      font-size: 12px;
-      text-decoration: underline;
-    }
-    .detail {
-      font-size: 13px;
-      line-height: 1.5;
-      background: #fcfdff;
-      border: 1px solid #d9e2f1;
-      border-radius: 8px;
-      padding: 10px;
-      min-height: 240px;
-    }
-    .detail .line {
-      margin: 4px 0;
-    }
-    .chips {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-    .chip {
-      border-radius: 999px;
-      font-size: 11px;
-      padding: 3px 8px;
-      border: 1px solid #c9d7ee;
-      background: #f5f9ff;
-    }
-    .chip.fail {
-      border-color: #f2b9b9;
-      background: #fff1f1;
-      color: #a11a1a;
-    }
-    .chip.pass {
-      border-color: #b8e3c8;
-      background: #eefcf2;
-      color: #0f6a34;
-    }
-    @media (max-width: 1380px) {
-      .controls { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
-      .check-group { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
-      .rule-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-      .stats { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-      .layout-grid { grid-template-columns: 1fr; }
-      .charts { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="panel">
-      <h1 class="title">Shelf Top-Projection Validation Dashboard</h1>
-      <p class="subtitle">边界与组合原则可调；支持分组筛选、点击分型看详情、显示各原则对通过/失败的影响。</p>
-    </div>
+def _dashboard_style_block() -> str:
+    return dedent(
+        """\
+        :root {
+          --bg: #f4f6fb;
+          --panel: #ffffff;
+          --text: #1f2937;
+          --muted: #6b7280;
+          --line: #d9e2f1;
+          --pass: #1f9d55;
+          --fail: #d64545;
+          --chip-on: #e7f1ff;
+          --chip-off: #f4f4f6;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+          background: var(--bg);
+          color: var(--text);
+        }
+        .page {
+          max-width: 1760px;
+          margin: 0 auto;
+          padding: 16px;
+        }
+        .panel {
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          padding: 14px;
+          margin-bottom: 12px;
+        }
+        .title {
+          margin: 0 0 8px 0;
+          font-size: 20px;
+          font-weight: 700;
+        }
+        .subtitle {
+          margin: 0;
+          color: var(--muted);
+          font-size: 13px;
+        }
+        .controls {
+          display: grid;
+          grid-template-columns: repeat(6, minmax(170px, 1fr));
+          gap: 10px 12px;
+          align-items: end;
+        }
+        .control label {
+          display: block;
+          font-size: 12px;
+          color: var(--muted);
+          margin-bottom: 4px;
+        }
+        .control select,
+        .control input[type="number"] {
+          width: 100%;
+          padding: 7px 9px;
+          border: 1px solid #c6d3e8;
+          border-radius: 7px;
+          font-size: 14px;
+          background: #fff;
+        }
+        .check-group {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(200px, 1fr));
+          gap: 6px 12px;
+          margin-top: 10px;
+          margin-bottom: 8px;
+        }
+        .check-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: var(--text);
+        }
+        .hint {
+          color: var(--muted);
+          font-size: 12px;
+          margin-top: 6px;
+        }
+        .btn {
+          padding: 8px 10px;
+          border: 1px solid #bfd0ea;
+          border-radius: 8px;
+          background: #f7fbff;
+          color: #26456d;
+          cursor: pointer;
+          font-size: 13px;
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(170px, 1fr));
+          gap: 10px;
+        }
+        .stat {
+          background: #f8fbff;
+          border: 1px solid #d9e2f1;
+          border-radius: 9px;
+          padding: 10px;
+        }
+        .stat .k {
+          color: var(--muted);
+          font-size: 12px;
+          margin-bottom: 6px;
+        }
+        .stat .v {
+          font-size: 22px;
+          font-weight: 700;
+        }
+        .rule-grid {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(180px, 1fr));
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .rule-card {
+          border-radius: 9px;
+          border: 1px solid #d9e2f1;
+          padding: 9px;
+          background: var(--chip-off);
+        }
+        .rule-card.on {
+          background: var(--chip-on);
+          border-color: #b6cbee;
+        }
+        .rule-card .rk {
+          font-size: 12px;
+          color: #4b5563;
+          margin-bottom: 6px;
+        }
+        .rule-card .rv {
+          font-size: 20px;
+          font-weight: 700;
+        }
+        .layout-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          gap: 10px;
+        }
+        .charts {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(300px, 1fr));
+          gap: 10px;
+        }
+        .chart-box {
+          background: #fff;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          padding: 8px;
+          min-height: 320px;
+        }
+        .table-wrap {
+          overflow: auto;
+          max-height: 360px;
+          border: 1px solid #d9e2f1;
+          border-radius: 8px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        thead th {
+          position: sticky;
+          top: 0;
+          background: #edf3ff;
+          text-align: left;
+          padding: 6px;
+          border-bottom: 1px solid #d9e2f1;
+          z-index: 1;
+        }
+        tbody td {
+          padding: 6px;
+          border-bottom: 1px solid #eef3fb;
+          vertical-align: top;
+          word-break: break-all;
+        }
+        .status-pass { color: var(--pass); font-weight: 700; }
+        .status-fail { color: var(--fail); font-weight: 700; }
+        .cell-btn {
+          border: 0;
+          background: transparent;
+          color: #1f4f9a;
+          cursor: pointer;
+          text-align: left;
+          padding: 0;
+          font-size: 12px;
+          text-decoration: underline;
+        }
+        .detail {
+          font-size: 13px;
+          line-height: 1.5;
+          background: #fcfdff;
+          border: 1px solid #d9e2f1;
+          border-radius: 8px;
+          padding: 10px;
+          min-height: 240px;
+        }
+        .detail .line {
+          margin: 4px 0;
+        }
+        .chips {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          margin-top: 4px;
+        }
+        .chip {
+          border-radius: 999px;
+          font-size: 11px;
+          padding: 3px 8px;
+          border: 1px solid #c9d7ee;
+          background: #f5f9ff;
+        }
+        .chip.fail {
+          border-color: #f2b9b9;
+          background: #fff1f1;
+          color: #a11a1a;
+        }
+        .chip.pass {
+          border-color: #b8e3c8;
+          background: #eefcf2;
+          color: #0f6a34;
+        }
+        @media (max-width: 1380px) {
+          .controls { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+          .check-group { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+          .rule-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+          .stats { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+          .layout-grid { grid-template-columns: 1fr; }
+          .charts { grid-template-columns: 1fr; }
+        }
+        """
+    ).strip()
 
-    <div class="panel">
-      <div class="controls">
-        <div class="control">
-          <label for="xCells">x_cells</label>
-          <select id="xCells"></select>
+
+def _dashboard_body_block() -> str:
+    return dedent(
+        """\
+        <div class="page">
+          <div class="panel">
+            <h1 class="title">Shelf Top-Projection Validation Dashboard</h1>
+            <p class="subtitle">边界与组合原则可调；支持分组筛选、点击分型看详情、显示各原则对通过/失败的影响。</p>
+          </div>
+
+          <div class="panel">
+            <div class="controls">
+              <div class="control">
+                <label for="xCells">x_cells</label>
+                <select id="xCells"></select>
+              </div>
+              <div class="control">
+                <label for="yCells">y_cells</label>
+                <select id="yCells"></select>
+              </div>
+              <div class="control">
+                <label for="layers">layers</label>
+                <select id="layers"></select>
+              </div>
+              <div class="control">
+                <label for="allowEmptyLayer">allow_empty_layer</label>
+                <select id="allowEmptyLayer">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </div>
+              <div class="control">
+                <label for="ratioThreshold">ratio_threshold</label>
+                <input id="ratioThreshold" type="number" step="0.01" min="0" />
+              </div>
+              <div class="control">
+                <label for="groupFilter">group filter</label>
+                <select id="groupFilter"></select>
+              </div>
+            </div>
+
+            <div class="check-group">
+              <label class="check-item"><input id="requireBoundary" type="checkbox" /> B1: boundary_valid</label>
+              <label class="check-item"><input id="requireCombination" type="checkbox" /> C1: combination_valid</label>
+              <label class="check-item"><input id="requireStructural" type="checkbox" /> S1: structural_valid</label>
+              <label class="check-item"><input id="requireR6" type="checkbox" /> S2: weighted_cells &gt; footprint_cells</label>
+              <label class="check-item"><input id="requireRatioThreshold" type="checkbox" /> E1: projection_ratio &gt; threshold</label>
+            </div>
+
+            <button id="btnResetConstraints" class="btn" type="button">重置为默认约束</button>
+            <div class="hint" id="scenarioHint"></div>
+            <div class="hint" id="constraintImpact"></div>
+          </div>
+
+          <div class="panel">
+            <div class="stats">
+              <div class="stat"><div class="k">types (filtered)</div><div class="v" id="statTotal">0</div></div>
+              <div class="stat"><div class="k">passed</div><div class="v" id="statPassed">0</div></div>
+              <div class="stat"><div class="k">failed</div><div class="v" id="statFailed">0</div></div>
+              <div class="stat"><div class="k">pass_rate</div><div class="v" id="statPassRate">0%</div></div>
+              <div class="stat"><div class="k">avg_ratio</div><div class="v" id="statAvgRatio">0.000</div></div>
+            </div>
+            <div class="rule-grid" id="ruleGrid"></div>
+          </div>
+
+          <div class="layout-grid">
+            <div class="panel">
+              <div class="charts">
+                <div class="chart-box"><div id="chartOverall"></div></div>
+                <div class="chart-box"><div id="chartGroup"></div></div>
+                <div class="chart-box"><div id="chartPrinciple"></div></div>
+                <div class="chart-box"><div id="chartScatter"></div></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>分型详情（点击右侧表格行或散点）</h3>
+              <div class="detail" id="detailPanel">请选择一个结构分型。</div>
+            </div>
+          </div>
+
+          <div class="layout-grid">
+            <div class="panel">
+              <h3>分组汇总</h3>
+              <div class="table-wrap" id="groupTable"></div>
+            </div>
+            <div class="panel">
+              <h3>结构分型列表</h3>
+              <div class="table-wrap" id="typeTable"></div>
+            </div>
+          </div>
         </div>
-        <div class="control">
-          <label for="yCells">y_cells</label>
-          <select id="yCells"></select>
-        </div>
-        <div class="control">
-          <label for="layers">layers</label>
-          <select id="layers"></select>
-        </div>
-        <div class="control">
-          <label for="allowEmptyLayer">allow_empty_layer</label>
-          <select id="allowEmptyLayer">
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select>
-        </div>
-        <div class="control">
-          <label for="ratioThreshold">ratio_threshold</label>
-          <input id="ratioThreshold" type="number" step="0.01" min="0" />
-        </div>
-        <div class="control">
-          <label for="groupFilter">group filter</label>
-          <select id="groupFilter"></select>
-        </div>
-      </div>
+        """
+    ).strip()
 
-      <div class="check-group">
-        <label class="check-item"><input id="requireBoundary" type="checkbox" /> B1: boundary_valid</label>
-        <label class="check-item"><input id="requireCombination" type="checkbox" /> C1: combination_valid</label>
-        <label class="check-item"><input id="requireStructural" type="checkbox" /> S1: structural_valid</label>
-        <label class="check-item"><input id="requireR6" type="checkbox" /> S2: weighted_cells &gt; footprint_cells</label>
-        <label class="check-item"><input id="requireRatioThreshold" type="checkbox" /> E1: projection_ratio &gt; threshold</label>
-      </div>
 
-      <button id="btnResetConstraints" class="btn" type="button">重置为默认约束</button>
-      <div class="hint" id="scenarioHint"></div>
-      <div class="hint" id="constraintImpact"></div>
-    </div>
+def _dashboard_script_block() -> str:
+    return dedent(
+        """\
+        const PAYLOAD = __PAYLOAD_JSON__;
+        const scenarios = PAYLOAD.scenarios;
+        const defaultState = PAYLOAD.default;
 
-    <div class="panel">
-      <div class="stats">
-        <div class="stat"><div class="k">types (filtered)</div><div class="v" id="statTotal">0</div></div>
-        <div class="stat"><div class="k">passed</div><div class="v" id="statPassed">0</div></div>
-        <div class="stat"><div class="k">failed</div><div class="v" id="statFailed">0</div></div>
-        <div class="stat"><div class="k">pass_rate</div><div class="v" id="statPassRate">0%</div></div>
-        <div class="stat"><div class="k">avg_ratio</div><div class="v" id="statAvgRatio">0.000</div></div>
-      </div>
-      <div class="rule-grid" id="ruleGrid"></div>
-    </div>
+        const PRINCIPLE_META = [
+          { id: "BOUNDARY", label: "B1 boundary_valid", checkKey: "requireBoundary" },
+          { id: "COMBO", label: "C1 combination_valid", checkKey: "requireCombination" },
+          { id: "STRUCTURAL", label: "S1 structural_valid", checkKey: "requireStructural" },
+          { id: "R6", label: "S2 weighted_cells > footprint_cells", checkKey: "requireR6" },
+          { id: "RATIO", label: "E1 projection_ratio > threshold", checkKey: "requireRatioThreshold" },
+        ];
 
-    <div class="layout-grid">
-      <div class="panel">
-        <div class="charts">
-          <div class="chart-box"><div id="chartOverall"></div></div>
-          <div class="chart-box"><div id="chartGroup"></div></div>
-          <div class="chart-box"><div id="chartPrinciple"></div></div>
-          <div class="chart-box"><div id="chartScatter"></div></div>
-        </div>
-      </div>
+        let latestRows = [];
+        let selectedKey = null;
 
-      <div class="panel">
-        <h3>分型详情（点击右侧表格行或散点）</h3>
-        <div class="detail" id="detailPanel">请选择一个结构分型。</div>
-      </div>
-    </div>
-
-    <div class="layout-grid">
-      <div class="panel">
-        <h3>分组汇总</h3>
-        <div class="table-wrap" id="groupTable"></div>
-      </div>
-      <div class="panel">
-        <h3>结构分型列表</h3>
-        <div class="table-wrap" id="typeTable"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const PAYLOAD = __PAYLOAD_JSON__;
-    const scenarios = PAYLOAD.scenarios;
-    const defaultState = PAYLOAD.default;
-
-    const PRINCIPLE_META = [
-      { id: "BOUNDARY", label: "B1 boundary_valid", checkKey: "requireBoundary" },
-      { id: "COMBO", label: "C1 combination_valid", checkKey: "requireCombination" },
-      { id: "STRUCTURAL", label: "S1 structural_valid", checkKey: "requireStructural" },
-      { id: "R6", label: "S2 weighted_cells > footprint_cells", checkKey: "requireR6" },
-      { id: "RATIO", label: "E1 projection_ratio > threshold", checkKey: "requireRatioThreshold" },
-    ];
-
-    let latestRows = [];
-    let selectedKey = null;
-
-    const dom = {
-      xCells: document.getElementById("xCells"),
-      yCells: document.getElementById("yCells"),
-      layers: document.getElementById("layers"),
-      allowEmptyLayer: document.getElementById("allowEmptyLayer"),
-      ratioThreshold: document.getElementById("ratioThreshold"),
-      groupFilter: document.getElementById("groupFilter"),
-      requireBoundary: document.getElementById("requireBoundary"),
-      requireCombination: document.getElementById("requireCombination"),
-      requireStructural: document.getElementById("requireStructural"),
-      requireR6: document.getElementById("requireR6"),
-      requireRatioThreshold: document.getElementById("requireRatioThreshold"),
-      btnResetConstraints: document.getElementById("btnResetConstraints"),
-      scenarioHint: document.getElementById("scenarioHint"),
-      constraintImpact: document.getElementById("constraintImpact"),
-      statTotal: document.getElementById("statTotal"),
-      statPassed: document.getElementById("statPassed"),
-      statFailed: document.getElementById("statFailed"),
-      statPassRate: document.getElementById("statPassRate"),
-      statAvgRatio: document.getElementById("statAvgRatio"),
-      ruleGrid: document.getElementById("ruleGrid"),
-      groupTable: document.getElementById("groupTable"),
-      typeTable: document.getElementById("typeTable"),
-      detailPanel: document.getElementById("detailPanel"),
-    };
-
-    function uniqueValues(field) {
-      return [...new Set(scenarios.map((item) => item[field]))].sort((a, b) => Number(a) - Number(b));
-    }
-
-    function fillSelect(selectEl, values) {
-      selectEl.innerHTML = "";
-      for (const value of values) {
-        const option = document.createElement("option");
-        option.value = String(value);
-        option.textContent = String(value);
-        selectEl.appendChild(option);
-      }
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    function rowKey(row) {
-      return String(row.canonical_key);
-    }
-
-    function scenarioBySelection() {
-      const x = Number(dom.xCells.value);
-      const y = Number(dom.yCells.value);
-      const layers = Number(dom.layers.value);
-      const allowEmptyLayer = dom.allowEmptyLayer.value === "true";
-      return scenarios.find((item) =>
-        item.x_cells === x &&
-        item.y_cells === y &&
-        item.layers === layers &&
-        Boolean(item.allow_empty_layer) === allowEmptyLayer
-      ) || null;
-    }
-
-    function currentConfig() {
-      return {
-        ratioThreshold: Number(dom.ratioThreshold.value),
-        requireBoundary: dom.requireBoundary.checked,
-        requireCombination: dom.requireCombination.checked,
-        requireStructural: dom.requireStructural.checked,
-        requireR6: dom.requireR6.checked,
-        requireRatioThreshold: dom.requireRatioThreshold.checked,
-      };
-    }
-
-    function baselineConfigFromCurrent() {
-      const cfg = currentConfig();
-      return {
-        ...cfg,
-        requireBoundary: true,
-        requireCombination: true,
-        requireStructural: true,
-        requireR6: true,
-        requireRatioThreshold: true,
-      };
-    }
-
-    function evaluateRows(scenario, config) {
-      const out = [];
-      for (const row of scenario.rows) {
-        const flags = {
-          BOUNDARY: !row.boundary_valid,
-          COMBO: !row.combination_valid,
-          STRUCTURAL: !row.structural_valid,
-          R6: !(row.weighted_projected_cells > scenario.footprint_cells),
-          RATIO: !(Number(row.projection_ratio) > config.ratioThreshold),
+        const dom = {
+          xCells: document.getElementById("xCells"),
+          yCells: document.getElementById("yCells"),
+          layers: document.getElementById("layers"),
+          allowEmptyLayer: document.getElementById("allowEmptyLayer"),
+          ratioThreshold: document.getElementById("ratioThreshold"),
+          groupFilter: document.getElementById("groupFilter"),
+          requireBoundary: document.getElementById("requireBoundary"),
+          requireCombination: document.getElementById("requireCombination"),
+          requireStructural: document.getElementById("requireStructural"),
+          requireR6: document.getElementById("requireR6"),
+          requireRatioThreshold: document.getElementById("requireRatioThreshold"),
+          btnResetConstraints: document.getElementById("btnResetConstraints"),
+          scenarioHint: document.getElementById("scenarioHint"),
+          constraintImpact: document.getElementById("constraintImpact"),
+          statTotal: document.getElementById("statTotal"),
+          statPassed: document.getElementById("statPassed"),
+          statFailed: document.getElementById("statFailed"),
+          statPassRate: document.getElementById("statPassRate"),
+          statAvgRatio: document.getElementById("statAvgRatio"),
+          ruleGrid: document.getElementById("ruleGrid"),
+          groupTable: document.getElementById("groupTable"),
+          typeTable: document.getElementById("typeTable"),
+          detailPanel: document.getElementById("detailPanel"),
         };
 
-        const failedPrinciples = [];
-        if (config.requireBoundary && flags.BOUNDARY) failedPrinciples.push("BOUNDARY");
-        if (config.requireCombination && flags.COMBO) failedPrinciples.push("COMBO");
-        if (config.requireStructural && flags.STRUCTURAL) failedPrinciples.push("STRUCTURAL");
-        if (config.requireR6 && flags.R6) failedPrinciples.push("R6");
-        if (config.requireRatioThreshold && flags.RATIO) failedPrinciples.push("RATIO");
-
-        const passed = failedPrinciples.length === 0;
-        const principleText = passed
-          ? "满足启用原则"
-          : `违反: ${failedPrinciples.map((id) => PRINCIPLE_META.find((it) => it.id === id).label).join(" | ")}`;
-
-        out.push({
-          ...row,
-          key: rowKey(row),
-          footprint_cells: scenario.footprint_cells,
-          rule_flags: flags,
-          failed_principles: failedPrinciples,
-          principle_text: principleText,
-          dynamic_reasons: passed ? "passed" : principleText,
-          passed,
-        });
-      }
-      return out;
-    }
-
-    function filteredByGroup(rows) {
-      const gid = dom.groupFilter.value || "ALL";
-      if (gid === "ALL") return rows;
-      return rows.filter((row) => row.group_id === gid);
-    }
-
-    function getGroupIds(rows) {
-      return [...new Set(rows.map((row) => row.group_id))].sort();
-    }
-
-    function refreshGroupFilterOptions(scenarioRows) {
-      const current = dom.groupFilter.value || "ALL";
-      const groups = getGroupIds(scenarioRows);
-      dom.groupFilter.innerHTML = `<option value="ALL">ALL</option>${groups
-        .map((gid) => `<option value="${escapeHtml(gid)}">${escapeHtml(gid)}</option>`)
-        .join("")}`;
-      if (groups.includes(current)) {
-        dom.groupFilter.value = current;
-      } else {
-        dom.groupFilter.value = "ALL";
-      }
-    }
-
-    function renderStats(rows) {
-      const total = rows.length;
-      const passed = rows.filter((row) => row.passed).length;
-      const failed = total - passed;
-      const avgRatio = total === 0
-        ? 0
-        : rows.reduce((acc, row) => acc + Number(row.projection_ratio), 0) / total;
-
-      dom.statTotal.textContent = String(total);
-      dom.statPassed.textContent = String(passed);
-      dom.statFailed.textContent = String(failed);
-      dom.statPassRate.textContent = total === 0 ? "0%" : `${((passed / total) * 100).toFixed(1)}%`;
-      dom.statAvgRatio.textContent = avgRatio.toFixed(3);
-    }
-
-    function renderRuleCards(rows, config) {
-      const cards = PRINCIPLE_META.map((meta) => {
-        const failCount = rows.filter((row) => row.rule_flags[meta.id]).length;
-        const on = Boolean(config[meta.checkKey]);
-        const rowClass = on ? "rule-card on" : "rule-card";
-        return `
-          <div class="${rowClass}">
-            <div class="rk">${escapeHtml(meta.label)} (${on ? "启用" : "未启用"})</div>
-            <div class="rv">${failCount}</div>
-          </div>
-        `;
-      }).join("");
-      dom.ruleGrid.innerHTML = cards;
-    }
-
-    function renderCharts(rows, config) {
-      const passedRows = rows.filter((row) => row.passed);
-      const failedRows = rows.filter((row) => !row.passed);
-
-      Plotly.react(
-        "chartOverall",
-        [{
-          type: "bar",
-          x: ["passed", "failed"],
-          y: [passedRows.length, failedRows.length],
-          marker: { color: ["#1f9d55", "#d64545"] },
-          showlegend: false,
-        }],
-        {
-          title: "通过 / 失败",
-          margin: { l: 40, r: 20, t: 36, b: 40 },
-          template: "plotly_white",
-        },
-        { responsive: true }
-      );
-
-      const groupMap = new Map();
-      for (const row of rows) {
-        if (!groupMap.has(row.group_id)) {
-          groupMap.set(row.group_id, { pass: 0, fail: 0 });
+        function uniqueValues(field) {
+          return [...new Set(scenarios.map((item) => item[field]))].sort((a, b) => Number(a) - Number(b));
         }
-        if (row.passed) groupMap.get(row.group_id).pass += 1;
-        else groupMap.get(row.group_id).fail += 1;
-      }
-      const groups = [...groupMap.keys()].sort();
-      Plotly.react(
-        "chartGroup",
-        [
-          {
-            type: "bar",
-            name: "passed",
-            x: groups,
-            y: groups.map((g) => groupMap.get(g).pass),
-            marker: { color: "#1f9d55" },
-          },
-          {
-            type: "bar",
-            name: "failed",
-            x: groups,
-            y: groups.map((g) => groupMap.get(g).fail),
-            marker: { color: "#d64545" },
-          },
-        ],
-        {
-          title: "分组通过/失败",
-          barmode: "stack",
-          margin: { l: 40, r: 20, t: 36, b: 40 },
-          template: "plotly_white",
-        },
-        { responsive: true }
-      );
 
-      const failByPrinciple = PRINCIPLE_META.map((meta) => {
-        const count = rows.filter((row) => row.rule_flags[meta.id]).length;
-        return { label: meta.label, count };
-      });
+        function fillSelect(selectEl, values) {
+          selectEl.innerHTML = "";
+          for (const value of values) {
+            const option = document.createElement("option");
+            option.value = String(value);
+            option.textContent = String(value);
+            selectEl.appendChild(option);
+          }
+        }
 
-      Plotly.react(
-        "chartPrinciple",
-        [{
-          type: "bar",
-          x: failByPrinciple.map((item) => item.count),
-          y: failByPrinciple.map((item) => item.label),
-          orientation: "h",
-          marker: { color: "#2b6cb0" },
-          showlegend: false,
-        }],
-        {
-          title: "各原则违反计数（当前过滤后）",
-          margin: { l: 170, r: 20, t: 36, b: 40 },
-          template: "plotly_white",
-        },
-        { responsive: true }
-      );
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
 
-      Plotly.react(
-        "chartScatter",
-        [{
-          type: "scatter",
-          mode: "markers",
-          x: rows.map((row) => Number(row.index)),
-          y: rows.map((row) => Number(row.projection_ratio)),
-          customdata: rows.map((row) => [row.key, row.group_id, row.canonical_key]),
-          text: rows.map((row) => `${row.group_id}<br>${row.canonical_key}<br>${row.principle_text}`),
-          hovertemplate: "%{text}<extra></extra>",
-          marker: {
-            size: 8,
-            opacity: 0.9,
-            color: rows.map((row) => row.passed ? "#1f9d55" : "#d64545"),
-          },
-          showlegend: false,
-        }],
-        {
-          title: "分型散点（点击查看详情）",
-          margin: { l: 40, r: 20, t: 36, b: 40 },
-          template: "plotly_white",
-          shapes: config.requireRatioThreshold ? [{
-            type: "line",
-            x0: 0,
-            x1: Math.max(...rows.map((row) => Number(row.index)), 1),
-            y0: Number(config.ratioThreshold),
-            y1: Number(config.ratioThreshold),
-            line: { color: "#1f6feb", width: 2, dash: "dash" },
-          }] : [],
-        },
-        { responsive: true }
-      );
-    }
+        function rowKey(row) {
+          return String(row.canonical_key);
+        }
 
-    function renderGroupTable(rows) {
-      const map = new Map();
-      for (const row of rows) {
-        if (!map.has(row.group_id)) {
-          map.set(row.group_id, {
-            group_id: row.group_id,
-            counts_per_layer: row.group_counts_per_layer,
-            total: 0,
-            pass: 0,
-            fail: 0,
+        function scenarioBySelection() {
+          const x = Number(dom.xCells.value);
+          const y = Number(dom.yCells.value);
+          const layers = Number(dom.layers.value);
+          const allowEmptyLayer = dom.allowEmptyLayer.value === "true";
+          return scenarios.find((item) =>
+            item.x_cells === x &&
+            item.y_cells === y &&
+            item.layers === layers &&
+            Boolean(item.allow_empty_layer) === allowEmptyLayer
+          ) || null;
+        }
+
+        function currentConfig() {
+          return {
+            ratioThreshold: Number(dom.ratioThreshold.value),
+            requireBoundary: dom.requireBoundary.checked,
+            requireCombination: dom.requireCombination.checked,
+            requireStructural: dom.requireStructural.checked,
+            requireR6: dom.requireR6.checked,
+            requireRatioThreshold: dom.requireRatioThreshold.checked,
+          };
+        }
+
+        function baselineConfigFromCurrent() {
+          const cfg = currentConfig();
+          return {
+            ...cfg,
+            requireBoundary: true,
+            requireCombination: true,
+            requireStructural: true,
+            requireR6: true,
+            requireRatioThreshold: true,
+          };
+        }
+
+        function evaluateRows(scenario, config) {
+          const out = [];
+          for (const row of scenario.rows) {
+            const flags = {
+              BOUNDARY: !row.boundary_valid,
+              COMBO: !row.combination_valid,
+              STRUCTURAL: !row.structural_valid,
+              R6: !(row.weighted_projected_cells > scenario.footprint_cells),
+              RATIO: !(Number(row.projection_ratio) > config.ratioThreshold),
+            };
+
+            const failedPrinciples = [];
+            if (config.requireBoundary && flags.BOUNDARY) failedPrinciples.push("BOUNDARY");
+            if (config.requireCombination && flags.COMBO) failedPrinciples.push("COMBO");
+            if (config.requireStructural && flags.STRUCTURAL) failedPrinciples.push("STRUCTURAL");
+            if (config.requireR6 && flags.R6) failedPrinciples.push("R6");
+            if (config.requireRatioThreshold && flags.RATIO) failedPrinciples.push("RATIO");
+
+            const passed = failedPrinciples.length === 0;
+            const principleText = passed
+              ? "满足启用原则"
+              : `违反: ${failedPrinciples.map((id) => PRINCIPLE_META.find((it) => it.id === id).label).join(" | ")}`;
+
+            out.push({
+              ...row,
+              key: rowKey(row),
+              footprint_cells: scenario.footprint_cells,
+              rule_flags: flags,
+              failed_principles: failedPrinciples,
+              principle_text: principleText,
+              dynamic_reasons: passed ? "passed" : principleText,
+              passed,
+            });
+          }
+          return out;
+        }
+
+        function filteredByGroup(rows) {
+          const gid = dom.groupFilter.value || "ALL";
+          if (gid === "ALL") return rows;
+          return rows.filter((row) => row.group_id === gid);
+        }
+
+        function getGroupIds(rows) {
+          return [...new Set(rows.map((row) => row.group_id))].sort();
+        }
+
+        function refreshGroupFilterOptions(scenarioRows) {
+          const current = dom.groupFilter.value || "ALL";
+          const groups = getGroupIds(scenarioRows);
+          dom.groupFilter.innerHTML = `<option value="ALL">ALL</option>${groups
+            .map((gid) => `<option value="${escapeHtml(gid)}">${escapeHtml(gid)}</option>`)
+            .join("")}`;
+          if (groups.includes(current)) {
+            dom.groupFilter.value = current;
+          } else {
+            dom.groupFilter.value = "ALL";
+          }
+        }
+
+        function renderStats(rows) {
+          const total = rows.length;
+          const passed = rows.filter((row) => row.passed).length;
+          const failed = total - passed;
+          const avgRatio = total === 0
+            ? 0
+            : rows.reduce((acc, row) => acc + Number(row.projection_ratio), 0) / total;
+
+          dom.statTotal.textContent = String(total);
+          dom.statPassed.textContent = String(passed);
+          dom.statFailed.textContent = String(failed);
+          dom.statPassRate.textContent = total === 0 ? "0%" : `${((passed / total) * 100).toFixed(1)}%`;
+          dom.statAvgRatio.textContent = avgRatio.toFixed(3);
+        }
+
+        function renderRuleCards(rows, config) {
+          const cards = PRINCIPLE_META.map((meta) => {
+            const failCount = rows.filter((row) => row.rule_flags[meta.id]).length;
+            const on = Boolean(config[meta.checkKey]);
+            const rowClass = on ? "rule-card on" : "rule-card";
+            return `
+              <div class="${rowClass}">
+                <div class="rk">${escapeHtml(meta.label)} (${on ? "启用" : "未启用"})</div>
+                <div class="rv">${failCount}</div>
+              </div>
+            `;
+          }).join("");
+          dom.ruleGrid.innerHTML = cards;
+        }
+
+        function renderCharts(rows, config) {
+          const passedRows = rows.filter((row) => row.passed);
+          const failedRows = rows.filter((row) => !row.passed);
+
+          Plotly.react(
+            "chartOverall",
+            [{
+              type: "bar",
+              x: ["passed", "failed"],
+              y: [passedRows.length, failedRows.length],
+              marker: { color: ["#1f9d55", "#d64545"] },
+              showlegend: false,
+            }],
+            {
+              title: "通过 / 失败",
+              margin: { l: 40, r: 20, t: 36, b: 40 },
+              template: "plotly_white",
+            },
+            { responsive: true }
+          );
+
+          const groupMap = new Map();
+          for (const row of rows) {
+            if (!groupMap.has(row.group_id)) {
+              groupMap.set(row.group_id, { pass: 0, fail: 0 });
+            }
+            if (row.passed) groupMap.get(row.group_id).pass += 1;
+            else groupMap.get(row.group_id).fail += 1;
+          }
+          const groups = [...groupMap.keys()].sort();
+          Plotly.react(
+            "chartGroup",
+            [
+              {
+                type: "bar",
+                name: "passed",
+                x: groups,
+                y: groups.map((g) => groupMap.get(g).pass),
+                marker: { color: "#1f9d55" },
+              },
+              {
+                type: "bar",
+                name: "failed",
+                x: groups,
+                y: groups.map((g) => groupMap.get(g).fail),
+                marker: { color: "#d64545" },
+              },
+            ],
+            {
+              title: "分组通过/失败",
+              barmode: "stack",
+              margin: { l: 40, r: 20, t: 36, b: 40 },
+              template: "plotly_white",
+            },
+            { responsive: true }
+          );
+
+          const failByPrinciple = PRINCIPLE_META.map((meta) => {
+            const count = rows.filter((row) => row.rule_flags[meta.id]).length;
+            return { label: meta.label, count };
           });
+
+          Plotly.react(
+            "chartPrinciple",
+            [{
+              type: "bar",
+              x: failByPrinciple.map((item) => item.count),
+              y: failByPrinciple.map((item) => item.label),
+              orientation: "h",
+              marker: { color: "#2b6cb0" },
+              showlegend: false,
+            }],
+            {
+              title: "各原则违反计数（当前过滤后）",
+              margin: { l: 170, r: 20, t: 36, b: 40 },
+              template: "plotly_white",
+            },
+            { responsive: true }
+          );
+
+          Plotly.react(
+            "chartScatter",
+            [{
+              type: "scatter",
+              mode: "markers",
+              x: rows.map((row) => Number(row.index)),
+              y: rows.map((row) => Number(row.projection_ratio)),
+              customdata: rows.map((row) => [row.key, row.group_id, row.canonical_key]),
+              text: rows.map((row) => `${row.group_id}<br>${row.canonical_key}<br>${row.principle_text}`),
+              hovertemplate: "%{text}<extra></extra>",
+              marker: {
+                size: 8,
+                opacity: 0.9,
+                color: rows.map((row) => row.passed ? "#1f9d55" : "#d64545"),
+              },
+              showlegend: false,
+            }],
+            {
+              title: "分型散点（点击查看详情）",
+              margin: { l: 40, r: 20, t: 36, b: 40 },
+              template: "plotly_white",
+              shapes: config.requireRatioThreshold ? [{
+                type: "line",
+                x0: 0,
+                x1: Math.max(...rows.map((row) => Number(row.index)), 1),
+                y0: Number(config.ratioThreshold),
+                y1: Number(config.ratioThreshold),
+                line: { color: "#1f6feb", width: 2, dash: "dash" },
+              }] : [],
+            },
+            { responsive: true }
+          );
         }
-        const item = map.get(row.group_id);
-        item.total += 1;
-        if (row.passed) item.pass += 1;
-        else item.fail += 1;
-      }
-      const list = [...map.values()].sort((a, b) => a.group_id.localeCompare(b.group_id));
-      const body = list.map((item) => {
-        const rate = item.total === 0 ? 0 : (item.pass / item.total) * 100;
-        return `
-          <tr>
-            <td><button class="cell-btn" data-group="${escapeHtml(item.group_id)}">${escapeHtml(item.group_id)}</button></td>
-            <td>${escapeHtml(item.counts_per_layer)}</td>
-            <td>${item.total}</td>
-            <td class="status-pass">${item.pass}</td>
-            <td class="status-fail">${item.fail}</td>
-            <td>${rate.toFixed(1)}%</td>
-          </tr>
-        `;
-      }).join("");
 
-      dom.groupTable.innerHTML = `
-        <table>
-          <thead>
-            <tr><th>group</th><th>counts_per_layer</th><th>total</th><th>pass</th><th>fail</th><th>pass_rate</th></tr>
-          </thead>
-          <tbody>${body}</tbody>
-        </table>
-      `;
-    }
+        function renderGroupTable(rows) {
+          const map = new Map();
+          for (const row of rows) {
+            if (!map.has(row.group_id)) {
+              map.set(row.group_id, {
+                group_id: row.group_id,
+                counts_per_layer: row.group_counts_per_layer,
+                total: 0,
+                pass: 0,
+                fail: 0,
+              });
+            }
+            const item = map.get(row.group_id);
+            item.total += 1;
+            if (row.passed) item.pass += 1;
+            else item.fail += 1;
+          }
+          const list = [...map.values()].sort((a, b) => a.group_id.localeCompare(b.group_id));
+          const body = list.map((item) => {
+            const rate = item.total === 0 ? 0 : (item.pass / item.total) * 100;
+            return `
+              <tr>
+                <td><button class="cell-btn" data-group="${escapeHtml(item.group_id)}">${escapeHtml(item.group_id)}</button></td>
+                <td>${escapeHtml(item.counts_per_layer)}</td>
+                <td>${item.total}</td>
+                <td class="status-pass">${item.pass}</td>
+                <td class="status-fail">${item.fail}</td>
+                <td>${rate.toFixed(1)}%</td>
+              </tr>
+            `;
+          }).join("");
 
-    function renderTypeTable(rows) {
-      const sorted = [...rows].sort((a, b) => {
-        if (a.passed !== b.passed) return a.passed ? 1 : -1;
-        return Number(a.projection_ratio) - Number(b.projection_ratio);
-      });
+          dom.groupTable.innerHTML = `
+            <table>
+              <thead>
+                <tr><th>group</th><th>counts_per_layer</th><th>total</th><th>pass</th><th>fail</th><th>pass_rate</th></tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          `;
+        }
 
-      const body = sorted.map((row) => {
-        const status = row.passed
-          ? `<span class="status-pass">PASS</span>`
-          : `<span class="status-fail">FAIL</span>`;
-        return `
-          <tr>
-            <td>${status}</td>
-            <td>${escapeHtml(row.group_id)}</td>
-            <td>${escapeHtml(row.group_counts_per_layer)}</td>
-            <td>${row.index}</td>
-            <td>${Number(row.projection_ratio).toFixed(3)}</td>
-            <td>${row.panel_count}</td>
-            <td>${escapeHtml(row.principle_text)}</td>
-            <td><button class="cell-btn" data-key="${escapeHtml(row.key)}">${escapeHtml(row.canonical_key)}</button></td>
-          </tr>
-        `;
-      }).join("");
+        function renderTypeTable(rows) {
+          const sorted = [...rows].sort((a, b) => {
+            if (a.passed !== b.passed) return a.passed ? 1 : -1;
+            return Number(a.projection_ratio) - Number(b.projection_ratio);
+          });
 
-      dom.typeTable.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>status</th><th>group</th><th>group_counts</th><th>index</th><th>ratio</th><th>panel</th><th>原则匹配</th><th>canonical_key</th>
-            </tr>
-          </thead>
-          <tbody>${body}</tbody>
-        </table>
-      `;
-    }
+          const body = sorted.map((row) => {
+            const status = row.passed
+              ? `<span class="status-pass">PASS</span>`
+              : `<span class="status-fail">FAIL</span>`;
+            return `
+              <tr>
+                <td>${status}</td>
+                <td>${escapeHtml(row.group_id)}</td>
+                <td>${escapeHtml(row.group_counts_per_layer)}</td>
+                <td>${row.index}</td>
+                <td>${Number(row.projection_ratio).toFixed(3)}</td>
+                <td>${row.panel_count}</td>
+                <td>${escapeHtml(row.principle_text)}</td>
+                <td><button class="cell-btn" data-key="${escapeHtml(row.key)}">${escapeHtml(row.canonical_key)}</button></td>
+              </tr>
+            `;
+          }).join("");
 
-    function renderDetail(row) {
-      if (!row) {
-        dom.detailPanel.innerHTML = "请选择一个结构分型。";
-        return;
-      }
+          dom.typeTable.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>status</th><th>group</th><th>group_counts</th><th>index</th><th>ratio</th><th>panel</th><th>原则匹配</th><th>canonical_key</th>
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          `;
+        }
 
-      const principleChips = PRINCIPLE_META.map((meta) => {
-        const failed = Boolean(row.rule_flags[meta.id]);
-        const cls = failed ? "chip fail" : "chip pass";
-        return `<span class="${cls}">${escapeHtml(meta.label)}: ${failed ? "不满足" : "满足"}</span>`;
-      }).join("");
+        function renderDetail(row) {
+          if (!row) {
+            dom.detailPanel.innerHTML = "请选择一个结构分型。";
+            return;
+          }
 
-      const failedPrinciples = row.failed_principles.length === 0
-        ? "<span class='chip pass'>全部满足</span>"
-        : row.failed_principles
-            .map((id) => {
-              const found = PRINCIPLE_META.find((item) => item.id === id);
-              return found ? found.label : id;
-            })
-            .map((label) => `<span class="chip fail">${escapeHtml(label)}</span>`)
-            .join("");
+          const principleChips = PRINCIPLE_META.map((meta) => {
+            const failed = Boolean(row.rule_flags[meta.id]);
+            const cls = failed ? "chip fail" : "chip pass";
+            return `<span class="${cls}">${escapeHtml(meta.label)}: ${failed ? "不满足" : "满足"}</span>`;
+          }).join("");
 
-      dom.detailPanel.innerHTML = `
-        <div class="line"><strong>status:</strong> ${row.passed ? "<span class='status-pass'>PASS</span>" : "<span class='status-fail'>FAIL</span>"}</div>
-        <div class="line"><strong>group:</strong> ${escapeHtml(row.group_id)} | <strong>group_counts:</strong> ${escapeHtml(row.group_counts_per_layer)}</div>
-        <div class="line"><strong>index:</strong> ${row.index} | <strong>panel_count:</strong> ${row.panel_count}</div>
-        <div class="line"><strong>projection_ratio:</strong> ${Number(row.projection_ratio).toFixed(6)} | <strong>weighted/footprint_cells:</strong> ${row.weighted_projected_cells}/${row.footprint_cells}</div>
-        <div class="line"><strong>canonical_key:</strong> ${escapeHtml(row.canonical_key)}</div>
-        <div class="line"><strong>当前失败原则:</strong><div class="chips">${failedPrinciples}</div></div>
-        <div class="line"><strong>各原则状态:</strong><div class="chips">${principleChips}</div></div>
-        <div class="line"><strong>动态判定:</strong> ${escapeHtml(row.dynamic_reasons)}</div>
-        <div class="line"><strong>原始规则说明:</strong> ${escapeHtml(row.reasons || "")}</div>
-      `;
-    }
+          const failedPrinciples = row.failed_principles.length === 0
+            ? "<span class='chip pass'>全部满足</span>"
+            : row.failed_principles
+                .map((id) => {
+                  const found = PRINCIPLE_META.find((item) => item.id === id);
+                  return found ? found.label : id;
+                })
+                .map((label) => `<span class="chip fail">${escapeHtml(label)}</span>`)
+                .join("");
 
-    function updateConstraintImpact(filteredRows, baselineFilteredRows) {
-      const currPass = filteredRows.filter((row) => row.passed).length;
-      const basePass = baselineFilteredRows.filter((row) => row.passed).length;
-      const delta = currPass - basePass;
-      const deltaText = delta === 0 ? "无变化" : (delta > 0 ? `+${delta}` : `${delta}`);
-      dom.constraintImpact.textContent =
-        `与“全部原则启用”相比：passed 变化 ${deltaText}（current=${currPass}, baseline=${basePass}）。`;
-    }
+          dom.detailPanel.innerHTML = `
+            <div class="line"><strong>status:</strong> ${row.passed ? "<span class='status-pass'>PASS</span>" : "<span class='status-fail'>FAIL</span>"}</div>
+            <div class="line"><strong>group:</strong> ${escapeHtml(row.group_id)} | <strong>group_counts:</strong> ${escapeHtml(row.group_counts_per_layer)}</div>
+            <div class="line"><strong>index:</strong> ${row.index} | <strong>panel_count:</strong> ${row.panel_count}</div>
+            <div class="line"><strong>projection_ratio:</strong> ${Number(row.projection_ratio).toFixed(6)} | <strong>weighted/footprint_cells:</strong> ${row.weighted_projected_cells}/${row.footprint_cells}</div>
+            <div class="line"><strong>canonical_key:</strong> ${escapeHtml(row.canonical_key)}</div>
+            <div class="line"><strong>当前失败原则:</strong><div class="chips">${failedPrinciples}</div></div>
+            <div class="line"><strong>各原则状态:</strong><div class="chips">${principleChips}</div></div>
+            <div class="line"><strong>动态判定:</strong> ${escapeHtml(row.dynamic_reasons)}</div>
+            <div class="line"><strong>原始规则说明:</strong> ${escapeHtml(row.reasons || "")}</div>
+          `;
+        }
 
-    function bindInteractionHandlers() {
-      dom.groupTable.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        const gid = target.getAttribute("data-group");
-        if (!gid) return;
-        dom.groupFilter.value = gid;
-        render();
-      });
+        function updateConstraintImpact(filteredRows, baselineFilteredRows) {
+          const currPass = filteredRows.filter((row) => row.passed).length;
+          const basePass = baselineFilteredRows.filter((row) => row.passed).length;
+          const delta = currPass - basePass;
+          const deltaText = delta === 0 ? "无变化" : (delta > 0 ? `+${delta}` : `${delta}`);
+          dom.constraintImpact.textContent =
+            `与“全部原则启用”相比：passed 变化 ${deltaText}（current=${currPass}, baseline=${basePass}）。`;
+        }
 
-      dom.typeTable.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        const key = target.getAttribute("data-key");
-        if (!key) return;
-        selectedKey = key;
-        const row = latestRows.find((item) => item.key === key) || null;
-        renderDetail(row);
-      });
+        function bindInteractionHandlers() {
+          dom.groupTable.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+            const gid = target.getAttribute("data-group");
+            if (!gid) return;
+            dom.groupFilter.value = gid;
+            render();
+          });
 
-      const scatter = document.getElementById("chartScatter");
-      if (scatter && typeof scatter.on === "function") {
-        scatter.on("plotly_click", (eventData) => {
-          const points = eventData && eventData.points ? eventData.points : [];
-          const point = points.length > 0 ? points[0] : null;
-          const customData = point && point.customdata ? point.customdata : [];
-          const key = customData.length > 0 ? customData[0] : null;
-          if (!key) return;
-          selectedKey = key;
-          const row = latestRows.find((item) => item.key === key) || null;
-          renderDetail(row);
-        });
-      }
-    }
+          dom.typeTable.addEventListener("click", (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+            const key = target.getAttribute("data-key");
+            if (!key) return;
+            selectedKey = key;
+            const row = latestRows.find((item) => item.key === key) || null;
+            renderDetail(row);
+          });
 
-    function render() {
-      const scenario = scenarioBySelection();
-      if (!scenario) {
-        dom.scenarioHint.textContent = "当前边界组合没有预计算数据。";
-        renderStats([]);
-        dom.ruleGrid.innerHTML = "";
-        dom.groupTable.innerHTML = "";
-        dom.typeTable.innerHTML = "";
-        renderDetail(null);
-        return;
-      }
+          const scatter = document.getElementById("chartScatter");
+          if (scatter && typeof scatter.on === "function") {
+            scatter.on("plotly_click", (eventData) => {
+              const points = eventData && eventData.points ? eventData.points : [];
+              const point = points.length > 0 ? points[0] : null;
+              const customData = point && point.customdata ? point.customdata : [];
+              const key = customData.length > 0 ? customData[0] : null;
+              if (!key) return;
+              selectedKey = key;
+              const row = latestRows.find((item) => item.key === key) || null;
+              renderDetail(row);
+            });
+          }
+        }
 
-      refreshGroupFilterOptions(scenario.rows);
-      const config = currentConfig();
-      const baselineConfig = baselineConfigFromCurrent();
-      const allRows = evaluateRows(scenario, config);
-      const baselineRows = evaluateRows(scenario, baselineConfig);
-      const filteredRows = filteredByGroup(allRows);
-      const baselineFilteredRows = filteredByGroup(baselineRows);
-      latestRows = filteredRows;
+        function render() {
+          const scenario = scenarioBySelection();
+          if (!scenario) {
+            dom.scenarioHint.textContent = "当前边界组合没有预计算数据。";
+            renderStats([]);
+            dom.ruleGrid.innerHTML = "";
+            dom.groupTable.innerHTML = "";
+            dom.typeTable.innerHTML = "";
+            renderDetail(null);
+            return;
+          }
 
-      dom.scenarioHint.textContent =
-        `scenario=${scenario.id} | footprint_cells=${scenario.footprint_cells} | group=${dom.groupFilter.value || "ALL"} | threshold=${Number(config.ratioThreshold).toFixed(3)}`;
+          refreshGroupFilterOptions(scenario.rows);
+          const config = currentConfig();
+          const baselineConfig = baselineConfigFromCurrent();
+          const allRows = evaluateRows(scenario, config);
+          const baselineRows = evaluateRows(scenario, baselineConfig);
+          const filteredRows = filteredByGroup(allRows);
+          const baselineFilteredRows = filteredByGroup(baselineRows);
+          latestRows = filteredRows;
 
-      renderStats(filteredRows);
-      renderRuleCards(filteredRows, config);
-      updateConstraintImpact(filteredRows, baselineFilteredRows);
-      renderCharts(filteredRows, config);
-      renderGroupTable(filteredRows);
-      renderTypeTable(filteredRows);
+          dom.scenarioHint.textContent =
+            `scenario=${scenario.id} | footprint_cells=${scenario.footprint_cells} | group=${dom.groupFilter.value || "ALL"} | threshold=${Number(config.ratioThreshold).toFixed(3)}`;
 
-      const selected = selectedKey
-        ? filteredRows.find((row) => row.key === selectedKey)
-        : null;
-      renderDetail(selected || filteredRows[0] || null);
-    }
+          renderStats(filteredRows);
+          renderRuleCards(filteredRows, config);
+          updateConstraintImpact(filteredRows, baselineFilteredRows);
+          renderCharts(filteredRows, config);
+          renderGroupTable(filteredRows);
+          renderTypeTable(filteredRows);
 
-    function init() {
-      fillSelect(dom.xCells, uniqueValues("x_cells"));
-      fillSelect(dom.yCells, uniqueValues("y_cells"));
-      fillSelect(dom.layers, uniqueValues("layers"));
+          const selected = selectedKey
+            ? filteredRows.find((row) => row.key === selectedKey)
+            : null;
+          renderDetail(selected || filteredRows[0] || null);
+        }
 
-      dom.xCells.value = String(defaultState.x_cells);
-      dom.yCells.value = String(defaultState.y_cells);
-      dom.layers.value = String(defaultState.layers);
-      dom.allowEmptyLayer.value = defaultState.allow_empty_layer ? "true" : "false";
-      dom.ratioThreshold.value = String(defaultState.ratio_threshold);
+        function init() {
+          fillSelect(dom.xCells, uniqueValues("x_cells"));
+          fillSelect(dom.yCells, uniqueValues("y_cells"));
+          fillSelect(dom.layers, uniqueValues("layers"));
 
-      dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
-      dom.requireCombination.checked = Boolean(defaultState.require_combination);
-      dom.requireStructural.checked = Boolean(defaultState.require_structural);
-      dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
-      dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
+          dom.xCells.value = String(defaultState.x_cells);
+          dom.yCells.value = String(defaultState.y_cells);
+          dom.layers.value = String(defaultState.layers);
+          dom.allowEmptyLayer.value = defaultState.allow_empty_layer ? "true" : "false";
+          dom.ratioThreshold.value = String(defaultState.ratio_threshold);
 
-      dom.btnResetConstraints.addEventListener("click", () => {
-        dom.ratioThreshold.value = String(defaultState.ratio_threshold);
-        dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
-        dom.requireCombination.checked = Boolean(defaultState.require_combination);
-        dom.requireStructural.checked = Boolean(defaultState.require_structural);
-        dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
-        dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
-        render();
-      });
+          dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
+          dom.requireCombination.checked = Boolean(defaultState.require_combination);
+          dom.requireStructural.checked = Boolean(defaultState.require_structural);
+          dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
+          dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
 
-      const listeners = [
-        dom.xCells,
-        dom.yCells,
-        dom.layers,
-        dom.allowEmptyLayer,
-        dom.groupFilter,
-        dom.ratioThreshold,
-        dom.requireBoundary,
-        dom.requireCombination,
-        dom.requireStructural,
-        dom.requireR6,
-        dom.requireRatioThreshold,
-      ];
-      for (const item of listeners) {
-        item.addEventListener("change", render);
-      }
+          dom.btnResetConstraints.addEventListener("click", () => {
+            dom.ratioThreshold.value = String(defaultState.ratio_threshold);
+            dom.requireBoundary.checked = Boolean(defaultState.require_boundary);
+            dom.requireCombination.checked = Boolean(defaultState.require_combination);
+            dom.requireStructural.checked = Boolean(defaultState.require_structural);
+            dom.requireR6.checked = Boolean(defaultState.require_r6_weighted_gt_footprint);
+            dom.requireRatioThreshold.checked = Boolean(defaultState.require_ratio_threshold);
+            render();
+          });
 
-      bindInteractionHandlers();
-      render();
-    }
+          const listeners = [
+            dom.xCells,
+            dom.yCells,
+            dom.layers,
+            dom.allowEmptyLayer,
+            dom.groupFilter,
+            dom.ratioThreshold,
+            dom.requireBoundary,
+            dom.requireCombination,
+            dom.requireStructural,
+            dom.requireR6,
+            dom.requireRatioThreshold,
+          ];
+          for (const item of listeners) {
+            item.addEventListener("change", render);
+          }
 
-    init();
-  </script>
-</body>
-</html>
-"""
-    output_path.write_text(html.replace("__PAYLOAD_JSON__", payload_json), encoding="utf-8")
+          bindInteractionHandlers();
+          render();
+        }
+
+        init();
+        """
+    ).strip()
 
 
-def _write_scenarios_json(scenarios: list[dict[str, Any]], output_path: Path) -> None:
+def _write_dashboard(report: ProjectionValidationReportContext, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    context = ProjectionDashboardTemplateContext(
+        payload_json=json.dumps(
+            {
+                "scenarios": [scenario.to_dict() for scenario in report.scenarios],
+                "default": report.default_state.to_dict(),
+            },
+            ensure_ascii=False,
+        )
+    )
+    output_path.write_text(context.render(), encoding="utf-8")
+
+
+def _write_scenarios_json(report: ProjectionValidationReportContext, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps({"scenarios": scenarios}, ensure_ascii=False, indent=2),
+        json.dumps({"scenarios": [scenario.to_dict() for scenario in report.scenarios]}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -1458,7 +1651,7 @@ def main() -> None:
         ratio_threshold=args.ratio_threshold,
         max_type_count=args.max_type_count,
     )
-    scenario_lookup = {str(item["id"]): item for item in scenarios}
+    scenario_lookup = {item.scenario_id: item for item in scenarios}
     selected_scenario_id = _scenario_id(
         args.x_cells,
         args.y_cells,
@@ -1469,60 +1662,51 @@ def main() -> None:
     if selected_scenario is None:
         raise ValueError(f"default scenario missing: {selected_scenario_id}")
 
-    rows = list(selected_scenario["rows"])
-    reason_counter = dict(selected_scenario["reason_counter"])
-    summary = _build_summary(
-        rows=rows,
+    report = ProjectionValidationReportContext.build(
+        scenarios=scenarios,
+        selected_scenario=selected_scenario,
         mapping_default=mapping_default,
         mapping_changes=mapping_changes,
         ratio_threshold=args.ratio_threshold,
+        default_state=ProjectionDashboardDefaultState(
+            x_cells=args.x_cells,
+            y_cells=args.y_cells,
+            layers=args.layers,
+            allow_empty_layer=args.allow_empty_layer,
+            ratio_threshold=args.ratio_threshold,
+            require_boundary=True,
+            require_combination=True,
+            require_structural=True,
+            require_ratio_threshold=True,
+            require_r6_weighted_gt_footprint=True,
+        ),
     )
 
     output_dir = Path(args.output_dir)
-    row_csv_path = output_dir / "shelf_projection_validation_table.csv"
-    group_csv_path = output_dir / "shelf_projection_group_summary.csv"
-    md_path = output_dir / "shelf_projection_validation_summary.md"
-    html_path = output_dir / "shelf_projection_validation_dashboard.html"
-    json_path = output_dir / "shelf_projection_validation_summary.json"
-    scenarios_json_path = output_dir / "shelf_projection_validation_scenarios.json"
-
-    _write_rows_csv(rows, row_csv_path)
-    _write_group_summary_csv(rows, group_csv_path)
-    _write_markdown_summary(summary, mapping_default, mapping_changes, md_path)
-    _write_dashboard(
-        scenarios=scenarios,
-        default_state={
-            "x_cells": args.x_cells,
-            "y_cells": args.y_cells,
-            "layers": args.layers,
-            "allow_empty_layer": args.allow_empty_layer,
-            "ratio_threshold": args.ratio_threshold,
-            "require_boundary": True,
-            "require_combination": True,
-            "require_structural": True,
-            "require_ratio_threshold": True,
-            "require_r6_weighted_gt_footprint": True,
-        },
-        output_path=html_path,
+    artifacts = ProjectionValidationArtifacts(
+        row_csv=output_dir / "shelf_projection_validation_table.csv",
+        group_csv=output_dir / "shelf_projection_group_summary.csv",
+        summary_markdown=output_dir / "shelf_projection_validation_summary.md",
+        dashboard_html=output_dir / "shelf_projection_validation_dashboard.html",
+        summary_json=output_dir / "shelf_projection_validation_summary.json",
+        scenarios_json=output_dir / "shelf_projection_validation_scenarios.json",
     )
-    _write_json_summary(summary, json_path)
-    _write_scenarios_json(scenarios, scenarios_json_path)
+
+    _write_rows_csv(report.rows, artifacts.row_csv)
+    _write_group_summary_csv(report.rows, artifacts.group_csv)
+    _write_markdown_summary(report, artifacts.summary_markdown)
+    _write_dashboard(report, artifacts.dashboard_html)
+    _write_json_summary(report, artifacts.summary_json)
+    _write_scenarios_json(report, artifacts.scenarios_json)
 
     print(
         json.dumps(
             {
-                "summary": summary.to_dict(),
+                "summary": report.summary.to_dict(),
                 "scenario_count": len(scenarios),
                 "default_scenario_id": selected_scenario_id,
-                "default_failure_reason_count": len(reason_counter),
-                "artifacts": {
-                    "row_csv": str(row_csv_path),
-                    "group_csv": str(group_csv_path),
-                    "summary_markdown": str(md_path),
-                    "dashboard_html": str(html_path),
-                    "summary_json": str(json_path),
-                    "scenarios_json": str(scenarios_json_path),
-                },
+                "default_failure_reason_count": len(report.reason_counter),
+                "artifacts": artifacts.to_dict(),
             },
             ensure_ascii=False,
             indent=2,

@@ -1,0 +1,38 @@
+# 代码语言标准索引
+# AI 或人工修改对应文件前，必须先阅读此处列出的标准文件。
+
+version = 1
+
+[[mapping]]
+patterns = ["*.py"]
+standards = ["specs/code/Python实现质量标准.md"]
+
+[[mapping]]
+patterns = ["*.ts"]
+standards = ["specs/code/TypeScript实现质量标准.md"]
+
+[[mapping]]
+patterns = ["*.tsx"]
+standards = [
+  "specs/code/TypeScript实现质量标准.md",
+  "specs/code/HTML与模板实现质量标准.md",
+]
+
+[[mapping]]
+patterns = ["*.js", "*.mjs", "*.cjs"]
+standards = ["specs/code/JavaScript实现质量标准.md"]
+
+[[mapping]]
+patterns = ["*.jsx"]
+standards = [
+  "specs/code/JavaScript实现质量标准.md",
+  "specs/code/HTML与模板实现质量标准.md",
+]
+
+[[mapping]]
+patterns = ["*.html"]
+standards = ["specs/code/HTML与模板实现质量标准.md"]
+
+[[mapping]]
+patterns = ["*.css", "*.scss", "*.less"]
+standards = ["specs/code/前端样式实现质量标准.md"]

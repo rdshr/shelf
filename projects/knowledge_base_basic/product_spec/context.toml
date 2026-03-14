@@ -1,0 +1,6 @@
+# [context] 定义选择、检索、引用与追问过程中，上下文如何持续传递。
+[context]
+selection_mode = "knowledge_base_default"
+max_citations = 3
+max_preview_sections = 10
+sticky_document = false

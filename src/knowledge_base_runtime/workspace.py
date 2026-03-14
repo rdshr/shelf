@@ -4,24 +4,24 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from framework_core import Base, BoundaryDefinition, BoundaryItem, Capability, VerificationInput, VerificationResult, verify
-from project_runtime.knowledge_base import KnowledgeBaseProject, load_knowledge_base_project
+from project_runtime.knowledge_base import KnowledgeBaseCodeModule, load_knowledge_base_code_module
 
 
-def _resolve_project(project: KnowledgeBaseProject | None) -> KnowledgeBaseProject:
-    return project or load_knowledge_base_project()
+def _resolve_project(project: KnowledgeBaseCodeModule | None) -> KnowledgeBaseCodeModule:
+    return project or load_knowledge_base_code_module()
 
 
-def _module_capabilities(project: KnowledgeBaseProject) -> tuple[Capability, ...]:
+def _module_capabilities(project: KnowledgeBaseCodeModule) -> tuple[Capability, ...]:
     return tuple(Capability(item.capability_id, item.statement) for item in project.domain_ir.capabilities)
 
 
-def _module_boundary(project: KnowledgeBaseProject) -> BoundaryDefinition:
+def _module_boundary(project: KnowledgeBaseCodeModule) -> BoundaryDefinition:
     return BoundaryDefinition(
         items=tuple(BoundaryItem(item.boundary_id, item.statement) for item in project.domain_ir.boundaries)
     )
 
 
-def _module_bases(project: KnowledgeBaseProject) -> tuple[Base, ...]:
+def _module_bases(project: KnowledgeBaseCodeModule) -> tuple[Base, ...]:
     return tuple(Base(item.base_id, item.name, item.inline_expr or item.statement) for item in project.domain_ir.bases)
 
 
@@ -61,7 +61,7 @@ class WorkspaceScenario:
         return asdict(self)
 
 
-def compose_workspace_flow(project: KnowledgeBaseProject | None = None) -> tuple[WorkspaceScenario, ...]:
+def compose_workspace_flow(project: KnowledgeBaseCodeModule | None = None) -> tuple[WorkspaceScenario, ...]:
     resolved = _resolve_project(project)
     lead_document = resolved.documents[0]
     lead_section = lead_document.sections[1]
@@ -99,7 +99,7 @@ def compose_workspace_flow(project: KnowledgeBaseProject | None = None) -> tuple
     )
 
 
-def verify_workspace_flow(project: KnowledgeBaseProject | None = None) -> VerificationResult:
+def verify_workspace_flow(project: KnowledgeBaseCodeModule | None = None) -> VerificationResult:
     resolved = _resolve_project(project)
     boundary = _module_boundary(resolved)
     boundary_valid, boundary_errors = boundary.validate()
@@ -112,7 +112,7 @@ def verify_workspace_flow(project: KnowledgeBaseProject | None = None) -> Verifi
                 "citations expose return paths back to drawer and document detail views",
             ],
             evidence={
-                "project": resolved.public_summary(),
+                "project": resolved.public_summary,
                 "capabilities": [item.to_dict() for item in _module_capabilities(resolved)],
                 "boundary": boundary.to_dict(),
                 "bases": [item.to_dict() for item in _module_bases(resolved)],
@@ -120,7 +120,11 @@ def verify_workspace_flow(project: KnowledgeBaseProject | None = None) -> Verifi
                 "ui_spec": resolved.ui_spec,
                 "backend_spec": resolved.backend_spec,
                 "workspace_flow": [item.to_dict() for item in compose_workspace_flow(resolved)],
-                "rule_validation": resolved.validation_reports.get("knowledge_base", {}),
+                "rule_validation": (
+                    resolved.validation_reports.knowledge_base.to_dict()
+                    if resolved.validation_reports.knowledge_base is not None
+                    else {}
+                ),
             },
         )
     )

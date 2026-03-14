@@ -7,41 +7,43 @@ import re
 from fastapi import APIRouter, HTTPException, Query, status
 from framework_core import Base, BoundaryDefinition, BoundaryItem, Capability, VerificationInput, VerificationResult, verify
 from project_runtime.knowledge_base import (
-    KnowledgeBaseProject,
+    KnowledgeBaseCodeModule,
     KnowledgeDocument,
     KnowledgeDocumentSection,
     SeedDocumentSource,
     compile_knowledge_document_source,
-    load_knowledge_base_project,
+    load_knowledge_base_code_module,
 )
 from pydantic import BaseModel, Field
 
 
-def _resolve_project(project: KnowledgeBaseProject | None) -> KnowledgeBaseProject:
-    return project or load_knowledge_base_project()
+def _resolve_project(project: KnowledgeBaseCodeModule | None) -> KnowledgeBaseCodeModule:
+    return project or load_knowledge_base_code_module()
 
 
-def _require_backend_renderer(project: KnowledgeBaseProject) -> str:
+def _require_backend_renderer(project: KnowledgeBaseCodeModule) -> str:
     implementation = project.backend_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("backend_spec.implementation is required for backend renderer selection")
     value = implementation.get("backend_renderer")
-    if value != "knowledge_chat_backend_v1":
+    if not isinstance(value, str):
+        raise ValueError("backend_spec.implementation.backend_renderer must be a string")
+    if value not in project.template_contract.supported_backend_renderers:
         raise ValueError(f"unsupported backend renderer: {value}")
     return value
 
 
-def _module_capabilities(project: KnowledgeBaseProject) -> tuple[Capability, ...]:
+def _module_capabilities(project: KnowledgeBaseCodeModule) -> tuple[Capability, ...]:
     return tuple(Capability(item.capability_id, item.statement) for item in project.backend_ir.capabilities)
 
 
-def _module_boundary(project: KnowledgeBaseProject) -> BoundaryDefinition:
+def _module_boundary(project: KnowledgeBaseCodeModule) -> BoundaryDefinition:
     return BoundaryDefinition(
         items=tuple(BoundaryItem(item.boundary_id, item.statement) for item in project.backend_ir.boundaries)
     )
 
 
-def _module_bases(project: KnowledgeBaseProject) -> tuple[Base, ...]:
+def _module_bases(project: KnowledgeBaseCodeModule) -> tuple[Base, ...]:
     return tuple(Base(item.base_id, item.name, item.inline_expr or item.statement) for item in project.backend_ir.bases)
 
 
@@ -158,12 +160,20 @@ class RankedSection:
     score: int
 
 
+@dataclass(frozen=True)
+class AnswerDraft:
+    answer: str
+    citations: list[KnowledgeCitationResponse]
+    context_document_id: str | None
+    context_section_id: str | None
+
+
 def _make_document_id(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "knowledge-document"
 
 
-def _document_detail_path(project: KnowledgeBaseProject, document_id: str, section_id: str | None = None) -> str:
+def _document_detail_path(project: KnowledgeBaseCodeModule, document_id: str, section_id: str | None = None) -> str:
     base = project.backend_spec["return_policy"]["document_detail_path"].replace("{document_id}", document_id)
     if section_id:
         return f"{base}?section={section_id}"
@@ -171,7 +181,7 @@ def _document_detail_path(project: KnowledgeBaseProject, document_id: str, secti
 
 
 class KnowledgeRepository:
-    def __init__(self, project: KnowledgeBaseProject | None = None) -> None:
+    def __init__(self, project: KnowledgeBaseCodeModule | None = None) -> None:
         self.project = _resolve_project(project)
         _require_backend_renderer(self.project)
         self.backend_spec = self.project.backend_spec
@@ -270,58 +280,21 @@ class KnowledgeRepository:
         document_id: str | None = None,
         section_id: str | None = None,
     ) -> KnowledgeChatTurnResponse:
-        answer_policy = self.backend_spec["answer_policy"]
         retrieval = self.backend_spec["retrieval"]
-        return_policy = self.backend_spec["return_policy"]
         ranked = self._rank_sections(message, document_id=document_id, section_id=section_id)
-        citations = [
-            KnowledgeCitationResponse(
-                citation_id=str(index),
-                document_id=item.document.document_id,
-                document_title=item.document.title,
-                section_id=item.section.section_id,
-                section_title=item.section.title,
-                snippet=item.section.plain_text[:220],
-                return_path=(
-                    f"{return_policy['chat_path']}?document={item.document.document_id}"
-                    f"&section={item.section.section_id}&citation={index}"
-                ),
-                document_path=_document_detail_path(self.project, item.document.document_id, item.section.section_id),
-            )
-            for index, item in enumerate(ranked[: retrieval["max_citations"]], start=1)
-        ]
-        if not citations:
-            answer = answer_policy["no_match_text"]
-            context_document_id = document_id
-            context_section_id = section_id
-        else:
-            lead = citations[0]
-            answer_parts = [
-                answer_policy["lead_template"].format(
-                    document_title=lead.document_title,
-                    section_title=lead.section_title,
-                    citation_index=1,
-                ),
-                answer_policy["lead_snippet_template"].format(snippet=lead.snippet),
-            ]
-            for index, citation in enumerate(citations[1:], start=2):
-                answer_parts.append(
-                    answer_policy["followup_template"].format(
-                        document_title=citation.document_title,
-                        section_title=citation.section_title,
-                        citation_index=index,
-                        snippet=citation.snippet,
-                    )
-                )
-            answer_parts.append(answer_policy["closing_text"])
-            answer = "\n\n".join(answer_parts)
-            context_document_id = lead.document_id
-            context_section_id = lead.section_id
+        citations = self._build_citations(
+            ranked[: retrieval["max_citations"]],
+        )
+        answer_draft = self._build_answer_draft(
+            citations,
+            fallback_document_id=document_id,
+            fallback_section_id=section_id,
+        )
         return KnowledgeChatTurnResponse(
-            answer=answer,
-            citations=citations,
-            context_document_id=context_document_id,
-            context_section_id=context_section_id,
+            answer=answer_draft.answer,
+            citations=answer_draft.citations,
+            context_document_id=answer_draft.context_document_id,
+            context_section_id=answer_draft.context_section_id,
         )
 
     def _rank_sections(
@@ -332,7 +305,7 @@ class KnowledgeRepository:
     ) -> list[RankedSection]:
         retrieval = self.backend_spec["retrieval"]
         strategy = retrieval["strategy"]
-        if strategy == "retrieval_stub":
+        if strategy == self.project.template_contract.required_chat_mode:
             return self._rank_sections_stub(message, document_id=document_id, section_id=section_id)
         raise ValueError(f"unsupported backend retrieval strategy: {strategy}")
 
@@ -349,28 +322,116 @@ class KnowledgeRepository:
         if not query_tokens:
             return []
 
-        documents = tuple(self._documents[item] for item in self._document_order)
-        if document_id:
-            focused = self.get_document(document_id)
-            if focused is None:
-                return []
-            documents = (focused,)
+        documents = self._rankable_documents(document_id)
+        if not documents:
+            return []
 
         ranked: list[RankedSection] = []
         for document in documents:
             for section in document.sections[: retrieval["max_preview_sections"]]:
-                score = 0
-                if section_id and document.document_id == document_id and section.section_id == section_id:
-                    score += retrieval["focus_section_bonus"]
-                haystack = f"{document.title} {document.summary} {section.search_text}".lower()
-                for token in query_tokens:
-                    if token in haystack:
-                        score += retrieval["token_match_bonus"]
+                score = self._section_match_score(
+                    document,
+                    section,
+                    query_tokens=query_tokens,
+                    document_id=document_id,
+                    section_id=section_id,
+                )
                 if score == 0:
                     continue
                 ranked.append(RankedSection(document=document, section=section, score=score))
         ranked.sort(key=lambda item: (-item.score, item.document.title, item.section.title))
         return ranked
+
+    def _build_citations(self, ranked_sections: list[RankedSection]) -> list[KnowledgeCitationResponse]:
+        return [
+            KnowledgeCitationResponse(
+                citation_id=str(index),
+                document_id=item.document.document_id,
+                document_title=item.document.title,
+                section_id=item.section.section_id,
+                section_title=item.section.title,
+                snippet=item.section.plain_text[:220],
+                return_path=(
+                    f"{self.backend_spec['return_policy']['chat_path']}?document={item.document.document_id}"
+                    f"&section={item.section.section_id}&citation={index}"
+                ),
+                document_path=_document_detail_path(
+                    self.project,
+                    item.document.document_id,
+                    item.section.section_id,
+                ),
+            )
+            for index, item in enumerate(ranked_sections, start=1)
+        ]
+
+    def _build_answer_draft(
+        self,
+        citations: list[KnowledgeCitationResponse],
+        *,
+        fallback_document_id: str | None,
+        fallback_section_id: str | None,
+    ) -> AnswerDraft:
+        answer_policy = self.backend_spec["answer_policy"]
+        if not citations:
+            return AnswerDraft(
+                answer=answer_policy["no_match_text"],
+                citations=citations,
+                context_document_id=fallback_document_id,
+                context_section_id=fallback_section_id,
+            )
+
+        lead = citations[0]
+        answer_parts = [
+            answer_policy["lead_template"].format(
+                document_title=lead.document_title,
+                section_title=lead.section_title,
+                citation_index=1,
+            ),
+            answer_policy["lead_snippet_template"].format(snippet=lead.snippet),
+        ]
+        for index, citation in enumerate(citations[1:], start=2):
+            answer_parts.append(
+                answer_policy["followup_template"].format(
+                    document_title=citation.document_title,
+                    section_title=citation.section_title,
+                    citation_index=index,
+                    snippet=citation.snippet,
+                )
+            )
+        answer_parts.append(answer_policy["closing_text"])
+        return AnswerDraft(
+            answer="\n\n".join(answer_parts),
+            citations=citations,
+            context_document_id=lead.document_id,
+            context_section_id=lead.section_id,
+        )
+
+    def _rankable_documents(self, document_id: str | None) -> tuple[KnowledgeDocument, ...]:
+        if document_id is None:
+            return tuple(self._documents[item] for item in self._document_order)
+        focused = self.get_document(document_id)
+        if focused is None:
+            return ()
+        return (focused,)
+
+    def _section_match_score(
+        self,
+        document: KnowledgeDocument,
+        section: KnowledgeDocumentSection,
+        *,
+        query_tokens: set[str],
+        document_id: str | None,
+        section_id: str | None,
+    ) -> int:
+        retrieval = self.backend_spec["retrieval"]
+        score = 0
+        if section_id and document.document_id == document_id and section.section_id == section_id:
+            score += retrieval["focus_section_bonus"]
+        haystack = f"{document.title} {document.summary} {section.search_text}".lower()
+        for token in query_tokens:
+            if token in haystack:
+                score += retrieval["token_match_bonus"]
+        return score
 
 
 def _to_document_summary(document: KnowledgeDocument) -> KnowledgeDocumentSummaryResponse:
@@ -401,7 +462,7 @@ def _to_document_detail(document: KnowledgeDocument) -> KnowledgeDocumentDetailR
     )
 
 
-def verify_knowledge_base_backend(project: KnowledgeBaseProject | None = None) -> VerificationResult:
+def verify_knowledge_base_backend(project: KnowledgeBaseCodeModule | None = None) -> VerificationResult:
     resolved = _resolve_project(project)
     boundary = _module_boundary(resolved)
     boundary_valid, boundary_errors = boundary.validate()
@@ -414,7 +475,7 @@ def verify_knowledge_base_backend(project: KnowledgeBaseProject | None = None) -
                 "product spec endpoint exposes compiled product truth",
             ],
             evidence={
-                "project": resolved.public_summary(),
+                "project": resolved.public_summary,
                 "capabilities": [item.to_dict() for item in _module_capabilities(resolved)],
                 "boundary": boundary.to_dict(),
                 "bases": [item.to_dict() for item in _module_bases(resolved)],
@@ -432,7 +493,7 @@ def verify_knowledge_base_backend(project: KnowledgeBaseProject | None = None) -
 
 
 def build_knowledge_base_router(
-    project: KnowledgeBaseProject | None = None,
+    project: KnowledgeBaseCodeModule | None = None,
     repository: KnowledgeRepository | None = None,
 ) -> APIRouter:
     resolved = _resolve_project(project)

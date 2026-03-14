@@ -6,13 +6,13 @@
 
 当前关键证据：
 
-- 工作区治理树：[shelf_governance_tree.html](/home/xue/code/shelf/docs/hierarchy/shelf_governance_tree.html)
-- 项目发现审计 JSON：[project_discovery_audit.json](/home/xue/code/shelf/docs/hierarchy/project_discovery_audit.json)
-- 项目发现审计说明：[project_discovery_audit.md](/home/xue/code/shelf/docs/project_discovery_audit.md)
-- 主链路与覆盖说明：[框架到代码映射与反查覆盖说明.md](/home/xue/code/shelf/docs/框架到代码映射与反查覆盖说明.md)
-- strict zone 报告：[strict_zone_report.json](/home/xue/code/shelf/projects/knowledge_base_basic/generated/strict_zone_report.json)
-- 对象覆盖报告：[object_coverage_report.json](/home/xue/code/shelf/projects/knowledge_base_basic/generated/object_coverage_report.json)
-- scanner 规则文档：[python_candidate_scanner_rules.md](/home/xue/code/shelf/docs/python_candidate_scanner_rules.md)
+- 工作区治理树：[shelf_governance_tree.html](hierarchy/shelf_governance_tree.html)
+- 项目发现审计 JSON：[project_discovery_audit.json](hierarchy/project_discovery_audit.json)
+- 项目发现审计说明：[project_discovery_audit.md](project_discovery_audit.md)
+- 主链路与覆盖说明：[框架到代码映射与反查覆盖说明.md](框架到代码映射与反查覆盖说明.md)
+- strict zone 报告：[strict_zone_report.json](../projects/knowledge_base_basic/generated/strict_zone_report.json)
+- 对象覆盖报告：[object_coverage_report.json](../projects/knowledge_base_basic/generated/object_coverage_report.json)
+- scanner 规则文档：[python_candidate_scanner_rules.md](python_candidate_scanner_rules.md)
 
 ## 2. 当前闭环图
 
@@ -132,7 +132,7 @@ pie title knowledge_base_basic object coverage
 
 对应测试：
 
-- [test_governance_counterexamples.py](/home/xue/code/shelf/tests/test_governance_counterexamples.py)
+- [test_governance_counterexamples.py](../tests/test_governance_counterexamples.py)
 
 ## 7. scanner 规则透明度
 

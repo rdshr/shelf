@@ -7,7 +7,7 @@ from pathlib import Path
 import tomllib
 from typing import Any
 
-from framework_ir import FrameworkModuleIR, load_framework_registry, parse_framework_module
+from framework_ir import FrameworkModule as FrameworkModuleIR, load_framework_registry, parse_framework_module
 from project_runtime.config_layout import config_layout
 from project_runtime.project_governance import (
     FrameworkDrivenProjectRecord,

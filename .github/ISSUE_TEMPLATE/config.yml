@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Shelf Launch Kit
-    url: https://github.com/xueyu888/framework/blob/main/docs/github-launch-kit.md
+    url: https://github.com/xueyu888/shelf/blob/main/docs/github-launch-kit.md
     about: Use this if you need the public positioning and launch material for the repository.
   - name: Contributing Guide
-    url: https://github.com/xueyu888/framework/blob/main/CONTRIBUTING.md
+    url: https://github.com/xueyu888/shelf/blob/main/CONTRIBUTING.md
     about: Read the contribution and validation rules before opening a larger change.

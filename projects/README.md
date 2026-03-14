@@ -45,8 +45,14 @@
   - Product Spec：[product_spec.toml](./knowledge_base_basic/product_spec.toml)
   - Implementation Config：[implementation_config.toml](./knowledge_base_basic/implementation_config.toml)
   - 严格映射基线：[框架严格映射基线.md](./knowledge_base_basic/框架严格映射基线.md)
-  - 生成产物：
+  - 机器真相源：
+    - `generated/canonical_graph.json`
+  - 派生视图：
     - `generated/framework_ir.json`
     - `generated/product_spec.json`
     - `generated/implementation_bundle.py`
     - `generated/generation_manifest.json`
+    - `generated/governance_manifest.json`
+    - `generated/governance_tree.json`
+    - `generated/strict_zone_report.json`
+    - `generated/object_coverage_report.json`

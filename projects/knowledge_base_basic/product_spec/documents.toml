@@ -1,0 +1,51 @@
+# [[documents]] 记录种子产品内容。
+[[documents]]
+document_id = "chat-client-principles"
+title = "Chat Client Principles"
+summary = "The primary product shape should feel like ChatGPT first and a knowledge platform second."
+tags = ["chat", "ux", "frontend"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Chat First
+The primary shell should stay close to ChatGPT: a conversation sidebar, one centered message stream, and one bottom composer.
+
+## Citation Second
+Citations should appear inline and stay lightweight by default. Source detail only expands when the user asks for it.
+
+## Auxiliary Pages
+Knowledge base list, knowledge base detail, and document detail pages exist as secondary pages. They support trust and traceability without replacing the main chat surface.
+"""
+
+[[documents]]
+document_id = "framework-compilation-chain"
+title = "Framework Compilation Chain"
+summary = "Framework markdown, product spec, implementation config, generated contracts, and runtime code form one deterministic compile path."
+tags = ["framework", "generator", "traceability"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Framework To Product Spec
+Framework markdown defines structure, boundary, base, rule, and verification statements. Product spec fixes the concrete product truth inside those boundaries.
+
+## Product Spec To Implementation Config
+Implementation config refines the product spec into one technical realization path without changing the product truth.
+
+## Generated Runtime
+The final application surface, API contract, verification reports, and generated bundle all derive from the same framework plus product spec and implementation config inputs.
+"""
+
+[[documents]]
+document_id = "knowledge-citation-loop"
+title = "Knowledge Citation Loop"
+summary = "A knowledge answer is complete only when the user can inspect citations, reopen source context, and continue the same conversation."
+tags = ["knowledge-base", "citation", "return-path"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Inline References
+Assistant answers should attach numbered inline references such as [1] and [2] instead of heavy source cards in the main reading flow.
+
+## Citation Drawer
+Clicking a citation opens a right-side drawer with document name, section name, snippet, and source navigation actions.
+
+## Document Detail
+From the drawer, the user can open a dedicated document detail page and continue tracing the original section in full context.
+"""

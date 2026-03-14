@@ -5,14 +5,15 @@ import re
 from typing import Iterable
 
 from framework_ir.models import (
-    FrameworkBaseIR,
-    FrameworkBoundaryIR,
-    FrameworkCapabilityIR,
-    FrameworkModuleIR,
-    FrameworkRegistryIR,
-    FrameworkRuleIR,
-    FrameworkUpstreamRef,
-    FrameworkVerificationIR,
+    FrameworkBase,
+    FrameworkBoundary,
+    FrameworkCapability,
+    FrameworkModule,
+    FrameworkNonResponsibility,
+    FrameworkRegistry,
+    FrameworkRule,
+    FrameworkUpstreamLink,
+    FrameworkVerification,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -21,6 +22,7 @@ FRAMEWORK_ROOT = REPO_ROOT / "framework"
 FRAMEWORK_FILE_PATTERN = re.compile(r"^L(?P<level>\d+)-M(?P<module>\d+)-.+\.md$")
 TITLE_PATTERN = re.compile(r"^#\s+(?P<cn>[^:]+):(?P<en>.+)$", re.MULTILINE)
 CAPABILITY_LINE_PATTERN = re.compile(r"^-\s+`(?P<id>C\d+)`\s+(?P<name>[^：:]+)[：:]\s*(?P<body>.+)$")
+NON_RESPONSIBILITY_LINE_PATTERN = re.compile(r"^-\s+`(?P<id>N\d+)`\s+(?P<name>[^：:]+)[：:]\s*(?P<body>.+)$")
 BOUNDARY_LINE_PATTERN = re.compile(r"^-\s+`(?P<id>[A-Z0-9_]+)`\s+(?P<name>[^：:]+)[：:]\s*(?P<body>.+)$")
 BASE_LINE_PATTERN = re.compile(r"^-\s+`(?P<id>B\d+)`\s+(?P<name>[^：:]+)[：:]\s*(?P<body>.+)$")
 VERIFY_LINE_PATTERN = re.compile(r"^-\s+`(?P<id>V\d+)`\s+(?P<name>[^：:]+)[：:]\s*(?P<body>.+)$")
@@ -78,8 +80,8 @@ def _extract_inline_expr(line: str) -> str:
     return body.strip().rstrip("。")
 
 
-def _parse_inline_refs(inline_expr: str, default_framework: str) -> tuple[FrameworkUpstreamRef, ...]:
-    refs: list[FrameworkUpstreamRef] = []
+def _parse_inline_refs(inline_expr: str, default_framework: str) -> tuple[FrameworkUpstreamLink, ...]:
+    refs: list[FrameworkUpstreamLink] = []
     for part in inline_expr.split("+"):
         term = part.strip()
         match = INLINE_REF_PATTERN.fullmatch(term)
@@ -88,7 +90,7 @@ def _parse_inline_refs(inline_expr: str, default_framework: str) -> tuple[Framew
         rules_text = (match.group("rules") or "").strip()
         rules = tuple(item.strip() for item in rules_text.split(",") if item.strip())
         refs.append(
-            FrameworkUpstreamRef(
+            FrameworkUpstreamLink(
                 framework=(match.group("framework") or default_framework).strip(),
                 level=int(match.group("level")),
                 module=int(match.group("module")),
@@ -98,14 +100,14 @@ def _parse_inline_refs(inline_expr: str, default_framework: str) -> tuple[Framew
     return tuple(refs)
 
 
-def _parse_capabilities(lines: list[str]) -> tuple[FrameworkCapabilityIR, ...]:
-    items: list[FrameworkCapabilityIR] = []
+def _parse_capabilities(lines: list[str]) -> tuple[FrameworkCapability, ...]:
+    items: list[FrameworkCapability] = []
     for line in _clean_lines(lines):
         match = CAPABILITY_LINE_PATTERN.match(line)
         if match is None:
             continue
         items.append(
-            FrameworkCapabilityIR(
+            FrameworkCapability(
                 capability_id=match.group("id"),
                 name=match.group("name").strip(),
                 statement=match.group("body").strip().rstrip("。"),
@@ -114,8 +116,24 @@ def _parse_capabilities(lines: list[str]) -> tuple[FrameworkCapabilityIR, ...]:
     return tuple(items)
 
 
-def _parse_boundaries(lines: list[str]) -> tuple[FrameworkBoundaryIR, ...]:
-    items: list[FrameworkBoundaryIR] = []
+def _parse_non_responsibilities(lines: list[str]) -> tuple[FrameworkNonResponsibility, ...]:
+    items: list[FrameworkNonResponsibility] = []
+    for line in _clean_lines(lines):
+        match = NON_RESPONSIBILITY_LINE_PATTERN.match(line)
+        if match is None:
+            continue
+        items.append(
+            FrameworkNonResponsibility(
+                responsibility_id=match.group("id"),
+                name=match.group("name").strip(),
+                statement=match.group("body").strip().rstrip("。"),
+            )
+        )
+    return tuple(items)
+
+
+def _parse_boundaries(lines: list[str]) -> tuple[FrameworkBoundary, ...]:
+    items: list[FrameworkBoundary] = []
     for line in _clean_lines(lines):
         match = BOUNDARY_LINE_PATTERN.match(line)
         if match is None:
@@ -123,7 +141,7 @@ def _parse_boundaries(lines: list[str]) -> tuple[FrameworkBoundaryIR, ...]:
         body = match.group("body").strip()
         statement = re.split(r"来源[：:]", body, maxsplit=1)[0].strip().rstrip("。")
         items.append(
-            FrameworkBoundaryIR(
+            FrameworkBoundary(
                 boundary_id=match.group("id"),
                 name=match.group("name").strip(),
                 statement=statement,
@@ -133,8 +151,8 @@ def _parse_boundaries(lines: list[str]) -> tuple[FrameworkBoundaryIR, ...]:
     return tuple(items)
 
 
-def _parse_bases(lines: list[str], framework: str) -> tuple[FrameworkBaseIR, ...]:
-    items: list[FrameworkBaseIR] = []
+def _parse_bases(lines: list[str], framework: str) -> tuple[FrameworkBase, ...]:
+    items: list[FrameworkBase] = []
     for line in _clean_lines(lines):
         match = BASE_LINE_PATTERN.match(line)
         if match is None:
@@ -143,38 +161,40 @@ def _parse_bases(lines: list[str], framework: str) -> tuple[FrameworkBaseIR, ...
         statement = re.split(r"来源[：:]", body, maxsplit=1)[0].strip().rstrip("。")
         inline_expr = _extract_inline_expr(line)
         items.append(
-            FrameworkBaseIR(
+            FrameworkBase(
                 base_id=match.group("id"),
                 name=match.group("name").strip(),
                 statement=statement,
                 inline_expr=inline_expr,
                 source_tokens=_extract_source_tokens(line),
-                upstream_refs=_parse_inline_refs(inline_expr, framework),
+                upstream_links=_parse_inline_refs(inline_expr, framework),
             )
         )
     return tuple(items)
 
 
-def _parse_rules(lines: list[str]) -> tuple[FrameworkRuleIR, ...]:
+def _parse_rules(lines: list[str]) -> tuple[FrameworkRule, ...]:
     current_id: str | None = None
     current_name = ""
     participants: tuple[str, ...] = tuple()
     combination = ""
     outputs: tuple[str, ...] = tuple()
+    invalids: tuple[str, ...] = tuple()
     bindings: tuple[str, ...] = tuple()
-    items: list[FrameworkRuleIR] = []
+    items: list[FrameworkRule] = []
 
     def flush() -> None:
-        nonlocal current_id, current_name, participants, combination, outputs, bindings
+        nonlocal current_id, current_name, participants, combination, outputs, invalids, bindings
         if current_id is None:
             return
         items.append(
-            FrameworkRuleIR(
+            FrameworkRule(
                 rule_id=current_id,
                 name=current_name,
                 participant_bases=participants,
                 combination=combination,
                 output_capabilities=outputs,
+                invalid_conclusions=invalids,
                 boundary_bindings=bindings,
             )
         )
@@ -183,6 +203,7 @@ def _parse_rules(lines: list[str]) -> tuple[FrameworkRuleIR, ...]:
         participants = tuple()
         combination = ""
         outputs = tuple()
+        invalids = tuple()
         bindings = tuple()
 
     for line in lines:
@@ -205,20 +226,22 @@ def _parse_rules(lines: list[str]) -> tuple[FrameworkRuleIR, ...]:
             combination = body.split("：", 1)[1].strip()
         elif body.startswith("输出能力："):
             outputs = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
+        elif body.startswith("失效结论："):
+            invalids = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
         elif body.startswith("边界绑定："):
-            bindings = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("/"))
+            bindings = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
     flush()
     return tuple(items)
 
 
-def _parse_verifications(lines: list[str]) -> tuple[FrameworkVerificationIR, ...]:
-    items: list[FrameworkVerificationIR] = []
+def _parse_verifications(lines: list[str]) -> tuple[FrameworkVerification, ...]:
+    items: list[FrameworkVerification] = []
     for line in _clean_lines(lines):
         match = VERIFY_LINE_PATTERN.match(line)
         if match is None:
             continue
         items.append(
-            FrameworkVerificationIR(
+            FrameworkVerification(
                 verification_id=match.group("id"),
                 name=match.group("name").strip(),
                 statement=match.group("body").strip().rstrip("。"),
@@ -227,7 +250,7 @@ def _parse_verifications(lines: list[str]) -> tuple[FrameworkVerificationIR, ...
     return tuple(items)
 
 
-def parse_framework_module(path: str | Path) -> FrameworkModuleIR:
+def parse_framework_module(path: str | Path) -> FrameworkModule:
     file_path = Path(path)
     if not file_path.is_absolute():
         file_path = (REPO_ROOT / file_path).resolve()
@@ -240,7 +263,7 @@ def parse_framework_module(path: str | Path) -> FrameworkModuleIR:
         raise ValueError(f"framework filename is invalid: {file_path}")
     framework = file_path.parent.name
     sections = _split_sections(text)
-    return FrameworkModuleIR(
+    return FrameworkModule(
         framework=framework,
         level=int(file_match.group("level")),
         module=int(file_match.group("module")),
@@ -249,6 +272,9 @@ def parse_framework_module(path: str | Path) -> FrameworkModuleIR:
         title_en=title_match.group("en").strip(),
         intro=_extract_intro(text),
         capabilities=_parse_capabilities(sections.get("## 1. 能力声明（Capability Statement）", [])),
+        non_responsibilities=_parse_non_responsibilities(
+            sections.get("## 1. 能力声明（Capability Statement）", [])
+        ),
         boundaries=_parse_boundaries(sections.get("## 2. 边界定义（Boundary / 参数）", [])),
         bases=_parse_bases(sections.get("## 3. 最小可行基（Minimum Viable Bases）", []), framework),
         rules=_parse_rules(sections.get("## 4. 基组合原则（Base Combination Principles）", [])),
@@ -256,11 +282,11 @@ def parse_framework_module(path: str | Path) -> FrameworkModuleIR:
     )
 
 
-def load_framework_registry(root: Path = FRAMEWORK_ROOT) -> FrameworkRegistryIR:
-    modules: list[FrameworkModuleIR] = []
+def load_framework_registry(root: Path = FRAMEWORK_ROOT) -> FrameworkRegistry:
+    modules: list[FrameworkModule] = []
     for framework_dir in sorted(root.iterdir()):
         if not framework_dir.is_dir():
             continue
         for markdown_file in sorted(framework_dir.glob("L*-M*-*.md")):
             modules.append(parse_framework_module(markdown_file))
-    return FrameworkRegistryIR(modules=tuple(modules))
+    return FrameworkRegistry(modules=tuple(modules))

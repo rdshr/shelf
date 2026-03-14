@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Any, Iterable
@@ -16,31 +17,91 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = ROOT / "docs" / "presentations"
 OUTPUT_PATH = OUTPUT_DIR / "shelf-ai-plugin-architecture-cn.pptx"
 
-PACKAGE_JSON_PATH = ROOT / "tools" / "vscode" / "shelf-ai" / "package.json"
-HERO_IMAGE = ROOT / "docs" / "github-social-preview.png"
-WORKBENCH_IMAGE = ROOT / "docs" / "verification" / "knowledge-base-workbench.png"
-CHAT_IMAGE = ROOT / "docs" / "verification" / "knowledge-base-chat-first.png"
-BRANDING_IMAGE = ROOT / "docs" / "branding" / "shelf-rainbow-lockup-options.png"
 
-SLIDE_WIDTH = Inches(13.333)
-SLIDE_HEIGHT = Inches(7.5)
+@dataclass(frozen=True)
+class PresentationAssets:
+    package_json_path: Path
+    hero_image: Path
+    workbench_image: Path
+    chat_image: Path
+    branding_image: Path
 
-BG = RGBColor(247, 244, 238)
-PAPER = RGBColor(255, 255, 255)
-INK = RGBColor(34, 38, 46)
-MUTED = RGBColor(91, 96, 107)
-ACCENT = RGBColor(239, 92, 58)
-ACCENT_ALT = RGBColor(27, 117, 119)
-ACCENT_DARK = RGBColor(42, 60, 66)
-GOLD = RGBColor(234, 178, 74)
-SOFT = RGBColor(240, 235, 226)
-OK = RGBColor(63, 133, 113)
-WARN = RGBColor(212, 125, 34)
-CODE_BG = RGBColor(34, 38, 46)
 
-TITLE_FONT = "Aptos Display"
-BODY_FONT = "Aptos"
-MONO_FONT = "Cascadia Code"
+@dataclass(frozen=True)
+class PresentationTheme:
+    slide_width: Any
+    slide_height: Any
+    bg: RGBColor
+    paper: RGBColor
+    ink: RGBColor
+    muted: RGBColor
+    accent: RGBColor
+    accent_alt: RGBColor
+    accent_dark: RGBColor
+    gold: RGBColor
+    soft: RGBColor
+    ok: RGBColor
+    warn: RGBColor
+    code_bg: RGBColor
+    title_font: str
+    body_font: str
+    mono_font: str
+
+
+@dataclass(frozen=True)
+class PluginStats:
+    version: str
+    command_count: int
+    config_count: int
+
+
+ASSETS = PresentationAssets(
+    package_json_path=ROOT / "tools" / "vscode" / "shelf-ai" / "package.json",
+    hero_image=ROOT / "docs" / "github-social-preview.png",
+    workbench_image=ROOT / "docs" / "verification" / "knowledge-base-workbench.png",
+    chat_image=ROOT / "docs" / "verification" / "knowledge-base-chat-first.png",
+    branding_image=ROOT / "docs" / "branding" / "shelf-rainbow-lockup-options.png",
+)
+
+THEME = PresentationTheme(
+    slide_width=Inches(13.333),
+    slide_height=Inches(7.5),
+    bg=RGBColor(247, 244, 238),
+    paper=RGBColor(255, 255, 255),
+    ink=RGBColor(34, 38, 46),
+    muted=RGBColor(91, 96, 107),
+    accent=RGBColor(239, 92, 58),
+    accent_alt=RGBColor(27, 117, 119),
+    accent_dark=RGBColor(42, 60, 66),
+    gold=RGBColor(234, 178, 74),
+    soft=RGBColor(240, 235, 226),
+    ok=RGBColor(63, 133, 113),
+    warn=RGBColor(212, 125, 34),
+    code_bg=RGBColor(34, 38, 46),
+    title_font="Aptos Display",
+    body_font="Aptos",
+    mono_font="Cascadia Code",
+)
+
+SLIDE_WIDTH = THEME.slide_width
+SLIDE_HEIGHT = THEME.slide_height
+
+BG = THEME.bg
+PAPER = THEME.paper
+INK = THEME.ink
+MUTED = THEME.muted
+ACCENT = THEME.accent
+ACCENT_ALT = THEME.accent_alt
+ACCENT_DARK = THEME.accent_dark
+GOLD = THEME.gold
+SOFT = THEME.soft
+OK = THEME.ok
+WARN = THEME.warn
+CODE_BG = THEME.code_bg
+
+TITLE_FONT = THEME.title_font
+BODY_FONT = THEME.body_font
+MONO_FONT = THEME.mono_font
 
 
 def rgb_to_str(color: RGBColor) -> str:
@@ -48,7 +109,15 @@ def rgb_to_str(color: RGBColor) -> str:
 
 
 def load_package_json() -> dict[str, Any]:
-    return json.loads(PACKAGE_JSON_PATH.read_text(encoding="utf-8"))
+    return json.loads(ASSETS.package_json_path.read_text(encoding="utf-8"))
+
+
+def build_plugin_stats(package_json: dict[str, Any]) -> PluginStats:
+    return PluginStats(
+        version=str(package_json.get("version", "unknown")),
+        command_count=len(package_json.get("contributes", {}).get("commands", [])),
+        config_count=len(package_json.get("contributes", {}).get("configuration", {}).get("properties", {})),
+    )
 
 
 def set_background(slide, color: RGBColor) -> None:
@@ -272,17 +341,15 @@ def build_cover(prs: Any, package_json: dict[str, Any]) -> None:
         color=RGBColor(233, 233, 233),
     )
 
-    commands = len(package_json.get("contributes", {}).get("commands", []))
-    configs = len(package_json.get("contributes", {}).get("configuration", {}).get("properties", {}))
-    version = str(package_json.get("version", "unknown"))
+    stats = build_plugin_stats(package_json)
 
-    add_stat_chip(slide, Inches(0.6), Inches(5.45), Inches(1.3), "版本", version, ACCENT)
-    add_stat_chip(slide, Inches(2.05), Inches(5.45), Inches(1.35), "命令", str(commands), ACCENT_ALT)
-    add_stat_chip(slide, Inches(3.55), Inches(5.45), Inches(1.35), "配置", str(configs), GOLD)
+    add_stat_chip(slide, Inches(0.6), Inches(5.45), Inches(1.3), "版本", stats.version, ACCENT)
+    add_stat_chip(slide, Inches(2.05), Inches(5.45), Inches(1.35), "命令", str(stats.command_count), ACCENT_ALT)
+    add_stat_chip(slide, Inches(3.55), Inches(5.45), Inches(1.35), "配置", str(stats.config_count), GOLD)
     add_text(slide, Inches(0.6), Inches(6.45), Inches(4.2), Inches(0.25), "2026-03-10 · 针对当前仓库实现自动生成", 10, RGBColor(210, 214, 219))
 
     add_outline_rect(slide, Inches(5.65), Inches(0.6), Inches(7.1), Inches(3.75), RGBColor(222, 214, 199), PAPER)
-    add_picture_contain(slide, HERO_IMAGE, Inches(5.8), Inches(0.78), Inches(6.8), Inches(3.4))
+    add_picture_contain(slide, ASSETS.hero_image, Inches(5.8), Inches(0.78), Inches(6.8), Inches(3.4))
 
     add_card(
         slide,
@@ -559,7 +626,7 @@ def build_capability_slide(prs: Any, package_json: dict[str, Any]) -> None:
     )
 
     add_outline_rect(slide, Inches(4.1), Inches(1.75), Inches(8.55), Inches(4.95), RGBColor(223, 214, 201))
-    add_picture_contain(slide, WORKBENCH_IMAGE, Inches(4.28), Inches(1.92), Inches(8.2), Inches(4.58))
+    add_picture_contain(slide, ASSETS.workbench_image, Inches(4.28), Inches(1.92), Inches(8.2), Inches(4.58))
     add_text(
         slide,
         Inches(4.28),
@@ -571,10 +638,9 @@ def build_capability_slide(prs: Any, package_json: dict[str, Any]) -> None:
         MUTED,
     )
 
-    commands = len(package_json.get("contributes", {}).get("commands", []))
-    configs = len(package_json.get("contributes", {}).get("configuration", {}).get("properties", {}))
-    add_stat_chip(slide, Inches(9.2), Inches(0.65), Inches(1.0), "命令", str(commands), ACCENT)
-    add_stat_chip(slide, Inches(10.35), Inches(0.65), Inches(1.0), "配置", str(configs), ACCENT_ALT)
+    stats = build_plugin_stats(package_json)
+    add_stat_chip(slide, Inches(9.2), Inches(0.65), Inches(1.0), "命令", str(stats.command_count), ACCENT)
+    add_stat_chip(slide, Inches(10.35), Inches(0.65), Inches(1.0), "配置", str(stats.config_count), ACCENT_ALT)
     add_stat_chip(slide, Inches(11.5), Inches(0.65), Inches(1.0), "激活", "7", GOLD)
     add_footer(slide, "能力面：framework_navigation.js、framework_completion.js、extension.js、package.json")
 
@@ -685,7 +751,7 @@ def build_modes_slide(prs: Any, package_json: dict[str, Any]) -> None:
         add_text(slide, Inches(3.95), row_top, Inches(2.2), Inches(0.42), strict_text, 12, INK)
         row_top += int(Inches(0.78))
 
-    config_keys = list(package_json.get("contributes", {}).get("configuration", {}).get("properties", {}).keys())
+    stats = build_plugin_stats(package_json)
     add_code_box(
         slide,
         Inches(6.95),
@@ -709,7 +775,7 @@ def build_modes_slide(prs: Any, package_json: dict[str, Any]) -> None:
         Inches(4.18),
         Inches(5.65),
         Inches(2.15),
-        f"当前配置面（共 {len(config_keys)} 项）",
+        f"当前配置面（共 {stats.config_count} 项）",
         [
             "行为开关：save / auto fail / guard mode / auto materialize / mypy / generated protect / hooks prompt。",
             "命令覆盖：change validation、full validation、framework tree generate、materialize、type check。",
@@ -836,7 +902,7 @@ def build_codex_slide(prs: Any) -> None:
             add_connector(slide, left + width, base_y + Inches(0.67), left + Inches(1.02), base_y + Inches(0.67))
 
     add_outline_rect(slide, Inches(6.2), Inches(1.72), Inches(6.2), Inches(4.95), RGBColor(222, 214, 201))
-    add_picture_contain(slide, CHAT_IMAGE, Inches(6.35), Inches(1.9), Inches(5.9), Inches(3.8))
+    add_picture_contain(slide, ASSETS.chat_image, Inches(6.35), Inches(1.9), Inches(5.9), Inches(3.8))
     add_text(
         slide,
         Inches(6.35),
@@ -919,7 +985,7 @@ def build_boundary_slide(prs: Any) -> None:
         INK,
         True,
     )
-    add_picture_contain(slide, BRANDING_IMAGE, Inches(10.45), Inches(0.35), Inches(2.2), Inches(1.1))
+    add_picture_contain(slide, ASSETS.branding_image, Inches(10.45), Inches(0.35), Inches(2.2), Inches(1.1))
     add_footer(slide, "此 PPT 由 scripts/build_shelf_ai_plugin_presentation.py 基于当前仓库实现生成。")
 
 

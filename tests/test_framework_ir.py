@@ -10,7 +10,8 @@ class FrameworkIrTest(unittest.TestCase):
     def test_parse_framework_module_extracts_structured_sections(self) -> None:
         module = parse_framework_module("framework/knowledge_base/L2-M0-知识库工作台场景模块.md")
         self.assertEqual(module.module_id, "knowledge_base.L2.M0")
-        self.assertGreaterEqual(len(module.capabilities), 4)
+        self.assertGreaterEqual(len(module.capabilities), 3)
+        self.assertGreaterEqual(len(module.non_responsibilities), 1)
         self.assertEqual(module.boundaries[0].boundary_id, "SURFACE")
         self.assertEqual(module.bases[0].base_id, "B1")
         self.assertEqual(module.rules[0].rule_id, "R1")

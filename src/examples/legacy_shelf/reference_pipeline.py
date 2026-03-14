@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from domain import (
@@ -29,59 +29,69 @@ from visualization import render_structure
 LEGACY_DOCS_DIR = Path("docs/legacy_shelf")
 
 
+@dataclass(frozen=True)
+class LegacyAssumption:
+    assumption_id: str
+    statement: str
+    config_key: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "id": self.assumption_id,
+            "statement": self.statement,
+            "config_key": self.config_key,
+        }
+
+
+@dataclass(frozen=True)
+class LegacyValidExample:
+    canonical_key: str
+    panel_count: int
+    passed: bool
+    target_utilization: float
+    reasons: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "canonical_key": self.canonical_key,
+            "panel_count": self.panel_count,
+            "passed": self.passed,
+            "target_utilization": self.target_utilization,
+            "reasons": list(self.reasons),
+        }
+
+
+@dataclass(frozen=True)
+class LegacyInvalidExample:
+    case: str
+    passed: bool
+    reasons: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "case": self.case,
+            "passed": self.passed,
+            "reasons": list(self.reasons),
+        }
+
+
 def _write_text(path: str | Path, content: str) -> None:
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(content, encoding="utf-8")
 
 
-def build_assumptions() -> list[dict[str, str]]:
+def build_assumptions() -> list[LegacyAssumption]:
     return [
-        {
-            "id": "A1",
-            "statement": "连续尺寸先离散化到有限网格，先解可计算穷举，再讨论连续优化。",
-            "config_key": "DiscreteGrid(x_cells, y_cells, layers_n)",
-        },
-        {
-            "id": "A2",
-            "statement": "默认支持同层多块矩形板分割（占用模式与分割方式分离计数）。",
-            "config_key": "partition_into_rectangles",
-        },
-        {
-            "id": "A3",
-            "statement": "冗余杆件/连接件不枚举，采用板诱导的最小必需支撑构造。",
-            "config_key": "build_geometry(topology, grid)",
-        },
-        {
-            "id": "A4",
-            "statement": "默认重力沿 -Z，层板法向沿 +Z（水平层板语义）。",
-            "config_key": "check_r4_board_parallel",
-        },
-        {
-            "id": "A5",
-            "statement": "opening_o 映射为 access_factor（宽高比均值，裁剪到 [0,1]）。",
-            "config_key": "metrics.efficiency::_access_factor",
-        },
-        {
-            "id": "A6",
-            "statement": "baseline_utilization 默认由实验输入给定，可替换为任意基准结构。",
-            "config_key": "baseline_utilization",
-        },
-        {
-            "id": "A7",
-            "statement": "未提供材料/截面/连接强度时，不声称完成真实工程安全验证，仅给简化载荷检查接口。",
-            "config_key": "simplified_load_check",
-        },
-        {
-            "id": "A8",
-            "statement": "FRAME 结构采用 V1“腔体诱导骨架”：枚举 6-邻接连通单元子集 U，并诱导最小外边界骨架。",
-            "config_key": "enumerate_connected_non_empty_cell_subsets + derive_boundary_skeleton_edges",
-        },
-        {
-            "id": "A9",
-            "statement": "FRAME 的 R4/R5/R6 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。",
-            "config_key": "evaluate_structural_rules(frame path)",
-        },
+        LegacyAssumption("A1", "连续尺寸先离散化到有限网格，先解可计算穷举，再讨论连续优化。", "DiscreteGrid(x_cells, y_cells, layers_n)"),
+        LegacyAssumption("A2", "默认支持同层多块矩形板分割（占用模式与分割方式分离计数）。", "partition_into_rectangles"),
+        LegacyAssumption("A3", "冗余杆件/连接件不枚举，采用板诱导的最小必需支撑构造。", "build_geometry(topology, grid)"),
+        LegacyAssumption("A4", "默认重力沿 -Z，层板法向沿 +Z（水平层板语义）。", "check_r4_board_parallel"),
+        LegacyAssumption("A5", "opening_o 映射为 access_factor（宽高比均值，裁剪到 [0,1]）。", "metrics.efficiency::_access_factor"),
+        LegacyAssumption("A6", "baseline_utilization 默认由实验输入给定，可替换为任意基准结构。", "baseline_utilization"),
+        LegacyAssumption("A7", "未提供材料/截面/连接强度时，不声称完成真实工程安全验证，仅给简化载荷检查接口。", "simplified_load_check"),
+        LegacyAssumption("A8", "FRAME 结构采用 V1“腔体诱导骨架”：枚举 6-邻接连通单元子集 U，并诱导最小外边界骨架。", "enumerate_connected_non_empty_cell_subsets + derive_boundary_skeleton_edges"),
+        LegacyAssumption("A9", "FRAME 的 R4/R5/R6 视为 not applicable/pass；新增 connected、ground_contact、minimal_under_deletability 规则。", "evaluate_structural_rules(frame path)"),
     ]
 
 
@@ -180,12 +190,12 @@ FRAME：
     )
 
 
-def write_assumptions_doc(assumptions: list[dict[str, str]]) -> None:
+def write_assumptions_doc(assumptions: list[LegacyAssumption]) -> None:
     lines = ["# 默认假设\n", "以下假设全部显式参数化，可替换。\n"]
     for item in assumptions:
-        lines.append(f"## {item['id']}\n")
-        lines.append(f"- 假设：{item['statement']}\n")
-        lines.append(f"- 配置位置：`{item['config_key']}`\n")
+        lines.append(f"## {item.assumption_id}\n")
+        lines.append(f"- 假设：{item.statement}\n")
+        lines.append(f"- 配置位置：`{item.config_key}`\n")
     _write_text(LEGACY_DOCS_DIR / "assumptions.md", "\n".join(lines) + "\n")
 
 
@@ -235,30 +245,30 @@ def write_slides_outline_doc() -> None:
 
 
 def write_examples_doc(
-    valid_examples: list[dict[str, object]],
-    invalid_examples: list[dict[str, object]],
+    valid_examples: list[LegacyValidExample],
+    invalid_examples: list[LegacyInvalidExample],
 ) -> None:
     lines = ["# 示例判定\n"]
     lines.append("## 有效结构示例\n")
-    for idx, item in enumerate(valid_examples[:3], start=1):
+    for idx, valid_example in enumerate(valid_examples[:3], start=1):
         lines.append(f"### V{idx}\n")
-        lines.append(f"- canonical_key: `{item['canonical_key']}`\n")
-        lines.append(f"- panel_count: {item['panel_count']}\n")
-        lines.append(f"- target_utilization: {item['target_utilization']:.6f}\n")
-        lines.append(f"- 结论: {item['passed']}\n")
+        lines.append(f"- canonical_key: `{valid_example.canonical_key}`\n")
+        lines.append(f"- panel_count: {valid_example.panel_count}\n")
+        lines.append(f"- target_utilization: {valid_example.target_utilization:.6f}\n")
+        lines.append(f"- 结论: {valid_example.passed}\n")
 
     lines.append("## 无效结构示例\n")
-    for idx, item in enumerate(invalid_examples[:3], start=1):
+    for idx, invalid_example in enumerate(invalid_examples[:3], start=1):
         lines.append(f"### I{idx}\n")
-        lines.append(f"- case: {item['case']}\n")
-        lines.append(f"- 结论: {item['passed']}\n")
-        lines.append(f"- 原因: {item['reasons']}\n")
+        lines.append(f"- case: {invalid_example.case}\n")
+        lines.append(f"- 结论: {invalid_example.passed}\n")
+        lines.append(f"- 原因: {list(invalid_example.reasons)}\n")
 
     _write_text(LEGACY_DOCS_DIR / "examples.md", "\n".join(lines) + "\n")
 
 
 def build_run_summary(
-    assumptions: list[dict[str, str]],
+    assumptions: list[LegacyAssumption],
     combo_sets: dict[str, list[list[str]]],
     enumeration_summary: dict[str, object],
     valid_count: int,
@@ -277,7 +287,7 @@ def build_run_summary(
             "3D 可视化",
             "证据输出",
         ],
-        "assumptions": assumptions,
+        "assumptions": [item.to_dict() for item in assumptions],
         "module_combinations": combo_sets,
         "enumeration_summary": enumeration_summary,
         "examples": {
@@ -298,7 +308,6 @@ def run_reference_pipeline() -> None:
         Capability("C1", "Construct stable load-bearing paths and preserve structural integrity"),
         Capability("C2", "Generate reusable storage units and access channels"),
         Capability("C3", "Remain extensible and maintainable under scene constraints"),
-        Capability("C4", "Exclude material ornament, color style, and decorative preference"),
     ]
 
     boundary = BoundaryDefinition(
@@ -354,7 +363,7 @@ def run_reference_pipeline() -> None:
     valid_candidates = enum_result.valid_candidates()
     invalid_candidates = enum_result.invalid_candidates()
 
-    valid_reports: list[dict[str, object]] = []
+    valid_reports: list[LegacyValidExample] = []
     for candidate in valid_candidates[:6]:
         report = verify_structure(
             topology=candidate.topology,
@@ -363,16 +372,16 @@ def run_reference_pipeline() -> None:
             baseline_efficiency=baseline_efficiency,
         )
         valid_reports.append(
-            {
-                "canonical_key": candidate.canonical_key,
-                "panel_count": candidate.topology.panel_count(),
-                "passed": report.passed,
-                "target_utilization": report.target_utilization,
-                "reasons": report.reasons,
-            }
+            LegacyValidExample(
+                canonical_key=candidate.canonical_key,
+                panel_count=candidate.topology.panel_count(),
+                passed=report.passed,
+                target_utilization=report.target_utilization,
+                reasons=tuple(report.reasons),
+            )
         )
 
-    manual_invalid_cases: list[dict[str, object]] = []
+    manual_invalid_cases: list[LegacyInvalidExample] = []
 
     bad_boundary = BoundaryDefinition(
         layers_n=0,
@@ -388,11 +397,11 @@ def run_reference_pipeline() -> None:
         baseline_efficiency=baseline_efficiency,
     )
     manual_invalid_cases.append(
-        {
-            "case": "边界非法",
-            "passed": bad_boundary_report.passed,
-            "reasons": bad_boundary_report.reasons,
-        }
+        LegacyInvalidExample(
+            case="边界非法",
+            passed=bad_boundary_report.passed,
+            reasons=tuple(bad_boundary_report.reasons),
+        )
     )
 
     not_improved_report = verify_structure(
@@ -402,11 +411,11 @@ def run_reference_pipeline() -> None:
         baseline_efficiency=9999.0,
     )
     manual_invalid_cases.append(
-        {
-            "case": "空间利用度未超过 baseline",
-            "passed": not_improved_report.passed,
-            "reasons": not_improved_report.reasons,
-        }
+        LegacyInvalidExample(
+            case="空间利用度未超过 baseline",
+            passed=not_improved_report.passed,
+            reasons=tuple(not_improved_report.reasons),
+        )
     )
 
     combo_invalid_result = verify(
@@ -419,11 +428,11 @@ def run_reference_pipeline() -> None:
         )
     )
     manual_invalid_cases.append(
-        {
-            "case": "{C,P} 组合被 R5 几何可实现性淘汰",
-            "passed": combo_invalid_result.passed,
-            "reasons": combo_invalid_result.reasons,
-        }
+        LegacyInvalidExample(
+            case="{C,P} 组合被 R5 几何可实现性淘汰",
+            passed=combo_invalid_result.passed,
+            reasons=tuple(combo_invalid_result.reasons),
+        )
     )
 
     visualization_artifacts: list[dict[str, str]] = []
@@ -474,8 +483,8 @@ def run_reference_pipeline() -> None:
             ["E"],
             evidence={
                 "seed_verification_passed": verification_result.passed,
-                "valid_examples": valid_reports[:3],
-                "invalid_examples": manual_invalid_cases[:3],
+                "valid_examples": [item.to_dict() for item in valid_reports[:3]],
+                "invalid_examples": [item.to_dict() for item in manual_invalid_cases[:3]],
             },
         ),
         LogicStep("C", "conclusion", ["V"], evidence={"adopt_now": bool(valid_reports)}),
@@ -525,8 +534,8 @@ def run_reference_pipeline() -> None:
                     "FRAME.minimal_under_deletability",
                 ],
             },
-            "ambiguities": [item["statement"] for item in assumptions],
-            "default_assumptions": assumptions,
+            "ambiguities": [item.statement for item in assumptions],
+            "default_assumptions": [item.to_dict() for item in assumptions],
             "math_model": counting_summary,
             "codebase_design": [
                 "src/domain",
@@ -542,8 +551,8 @@ def run_reference_pipeline() -> None:
             "enumeration_stats": asdict(enum_result.stats),
             "valid_type_count": len(valid_candidates),
             "invalid_type_count": len(invalid_candidates),
-            "valid_examples": valid_reports[:3],
-            "invalid_examples": manual_invalid_cases[:3],
+            "valid_examples": [item.to_dict() for item in valid_reports[:3]],
+            "invalid_examples": [item.to_dict() for item in manual_invalid_cases[:3]],
         },
         "artifacts": {
             "logic_record": str(LEGACY_DOCS_DIR / "logic_record.json"),

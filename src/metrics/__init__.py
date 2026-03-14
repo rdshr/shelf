@@ -1,4 +1,4 @@
-from metrics.efficiency import (
+from .efficiency import (
     EfficiencyResult,
     FrameBayEfficiencyTerm,
     FrameBayUtilizationTerm,
@@ -12,7 +12,7 @@ from metrics.efficiency import (
     calculate_shelf_utilization,
     calculate_utilization,
 )
-from metrics.load_check import LoadCheckInput, LoadCheckResult, simplified_load_check
+from .load_check import LoadCheckInput, LoadCheckResult, simplified_load_check
 
 __all__ = [
     "EfficiencyResult",

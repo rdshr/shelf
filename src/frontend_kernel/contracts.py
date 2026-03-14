@@ -8,24 +8,19 @@ if TYPE_CHECKING:
 
 # @governed_symbol id=kb.frontend.surface_contract owner=framework kind=surface_contract risk=high
 def build_frontend_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
-    interaction_actions = [
-        {"action_id": "start_new_chat", "boundary": "INTERACT"},
-        {"action_id": "select_session", "boundary": "INTERACT"},
-        {"action_id": "open_knowledge_switch", "boundary": "INTERACT"},
-        {"action_id": "search_documents", "boundary": "INTERACT"},
-        {"action_id": "select_document", "boundary": "INTERACT"},
-        {"action_id": "submit_chat", "boundary": "INTERACT"},
-        {"action_id": "open_citation_drawer", "boundary": "INTERACT"},
-        {"action_id": "browse_knowledge_bases", "boundary": "ROUTE"},
-        {"action_id": "open_basketball_showcase", "boundary": "ROUTE"},
-        {"action_id": "open_knowledge_base_detail", "boundary": "ROUTE"},
-        {"action_id": "open_document_detail", "boundary": "ROUTE"},
-        {"action_id": "return_from_citation", "boundary": "ROUTE"},
-    ]
-    if project.library.allow_create:
-        interaction_actions.append({"action_id": "create_document", "boundary": "INTERACT"})
-    if project.library.allow_delete:
-        interaction_actions.append({"action_id": "delete_document", "boundary": "INTERACT"})
+    contract = project.template_contract
+    interaction_actions = list(
+        contract.frontend_interaction_actions(
+            allow_create=project.library.allow_create,
+            allow_delete=project.library.allow_delete,
+        )
+    )
+    surface_region_titles = {
+        "conversation_sidebar": "Conversation Sidebar",
+        "chat_main": project.copy["chat_title"],
+        "citation_drawer": project.copy["preview_title"],
+        "knowledge_pages": project.copy["library_title"],
+    }
 
     return {
         "module_id": project.frontend_ir.module_id,
@@ -39,9 +34,9 @@ def build_frontend_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
         },
         "visual_config": project.visual.to_dict(),
         "surface_composition": {
-            "sidebar": ["conversation_sidebar"],
-            "main": ["chat_header", "message_stream", "chat_composer"],
-            "overlay": ["citation_drawer", "knowledge_switch_dialog"],
+            "sidebar": list(contract.surface_composition_sidebar),
+            "main": list(contract.surface_composition_main),
+            "overlay": list(contract.surface_composition_overlay),
             "secondary_pages": [
                 "basketball_showcase_page",
                 "knowledge_list_page",
@@ -50,20 +45,11 @@ def build_frontend_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
             ],
         },
         "surface_regions": [
-            {"region_id": "conversation_sidebar", "title": "Conversation Sidebar", "boundary": "SURFACE"},
-            {"region_id": "chat_main", "title": project.copy["chat_title"], "boundary": "SURFACE"},
-            {"region_id": "citation_drawer", "title": project.copy["preview_title"], "boundary": "SURFACE"},
-            {"region_id": "knowledge_pages", "title": project.copy["library_title"], "boundary": "SURFACE"},
+            {"region_id": region_id, "title": surface_region_titles[region_id], "boundary": "SURFACE"}
+            for region_id in contract.required_surface_region_ids
         ],
         "interaction_actions": interaction_actions,
-        "state_channels": [
-            {"state_id": "current_conversation", "sticky": True},
-            {"state_id": "current_knowledge_base", "sticky": True},
-            {"state_id": "current_document", "sticky": project.context.sticky_document},
-            {"state_id": "current_section", "sticky": True},
-            {"state_id": "citation_drawer_state", "sticky": True},
-            {"state_id": "streaming_reply", "sticky": False},
-        ],
+        "state_channels": list(contract.resolve_state_channels(sticky_document=project.context.sticky_document)),
         "extend_slots": [
             {"slot_id": "domain_workbench", "module_id": project.domain_ir.module_id},
             {"slot_id": "backend_contract", "module_id": project.backend_ir.module_id},

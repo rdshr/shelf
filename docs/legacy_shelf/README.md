@@ -8,7 +8,7 @@
 - 作为仓库方法论来源之一
 - 不再代表当前仓库默认主线
 
-当前仓库默认主线见 [architecture.md](/home/xue/code/shelf/docs/architecture.md#L1)。
+当前仓库默认主线见 [architecture.md](../architecture.md#L1)。
 
 legacy 样本运行方式：
 

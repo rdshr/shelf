@@ -1,4 +1,4 @@
-from rules.combination_rules import (
+from .combination_rules import (
     all_module_subsets,
     build_extended_rules,
     classify_combo_sets,
@@ -6,7 +6,7 @@ from rules.combination_rules import (
     geometric_type_combinations,
     module_type_combinations,
 )
-from rules.structural_rules import (
+from .structural_rules import (
     StructuralCheck,
     check_frame_connected,
     check_frame_forbid_dangling_rods,

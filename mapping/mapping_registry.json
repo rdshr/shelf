@@ -164,6 +164,13 @@
                 "children": []
               },
               {
+                "id": "NODE-L2-FRONTEND-L2-M1",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/frontend/L2-M1-前端运行时与技术栈标准模块.md",
+                "children": []
+              },
+              {
                 "id": "NODE-L2-KNOWLEDGE-BASE-L2-M0",
                 "kind": "file",
                 "level": "L2",

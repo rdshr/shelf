@@ -30,9 +30,12 @@ retrieval_strategy = "retrieval_stub"
 product_spec_endpoint = "/api/knowledge/product-spec"
 
 # [artifacts] 约定本实现路径会产出哪些生成文件。
+# 其中 canonical_graph.json 是唯一机器真相源；
+# 其它 json / py 产物都只是围绕它展开的派生视图，供 GUI、校验和审查使用。
 # 这里记录的是生成物命名与落点，方便代码、脚本和工具协作，
 # 不应被误当作产品层字段。
 [artifacts]
+canonical_graph_json = "canonical_graph.json"
 framework_ir_json = "framework_ir.json"
 product_spec_json = "product_spec.json"
 implementation_bundle_py = "implementation_bundle.py"

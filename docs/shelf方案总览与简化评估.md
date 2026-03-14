@@ -186,6 +186,7 @@
 
 因此，生成：
 
+- `canonical_graph.json`
 - `framework_ir.json`
 - `product_spec.json`
 - `implementation_bundle.py`
@@ -193,6 +194,11 @@
 - 治理清单和治理树
 
 这件事本身是合理的。
+
+其中更合理的最终状态是：
+
+- `canonical_graph.json` 作为唯一机器真相源
+- 其它文件全部降级为围绕它展开的派生视图
 
 ### 6.4 治理与可追溯能力
 
@@ -392,7 +398,7 @@
 
 - 新增总览文档，明确当前主线和 legacy 样本的关系。
 - 把默认入口文档改成“项目编译链优先”的叙述。
-- 明确 `reference-shelf` 是样本，不是默认主产品。
+- 明确 `legacy-reference-shelf` 是样本命令，不是默认主产品。
 
 这一阶段收益最高，风险最低。
 
