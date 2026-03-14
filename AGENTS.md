@@ -9,6 +9,28 @@
 - `selection` 负责模块树选择；`truth` 负责产品真相；`refinement` 负责实现细化；`narrative` 只负责解释，不得替代机器判定字段。
 - 面向 `framework/*.md` 的标准模板起手能力属于仓库基本作者入口，不得移除。当前保底入口为 Shelf AI 的 `@framework` 模板与显式插入命令；若未来重构，必须提供同等直接、默认可用、可测试的替代能力。
 
+## 核心规则
+1. `framework/*.md` 是作者源。不要把 framework 真相源改成 schema、config 或生成物。
+2. 一个 framework 文件对应一个 code package。一个 package 只允许有一个入口 class。
+3. 每个入口 class 都必须实现统一的 `Framework Package Contract`，并注册到显式 `registry`。
+4. `registry` 是 framework 文件与代码实现的一一绑定真相。未注册的是悬空包；未绑定实现的 framework 文件是未实现模块；冲突注册必须报错。
+5. 架构关系只允许用组合，不允许用继承。上层通过 import 子 package、分发配置、调用 `compile / export` 来装配下层。
+6. 项目由三部分决定：framework tree、统一 project config、registered packages。不要把项目做成手写特化分支。
+7. `product truth` 和 `implementation refinement` 属于统一 project config，但逻辑上必须分区。配置必须按模块树逐层切片分发；package 只能消费自己声明的配置。
+8. 自然语言说明只能做补充；机器判定必须依赖结构化字段。不要让 narrative 变成可执行真相。
+9. `generated/canonical_graph.json` 是唯一机器真相源。其他 manifest、tree、report、governance view 都只能是它的派生视图。
+10. 不要恢复旧的核心架构。不要保留并行真相源，不要保留旧的 project-wide aggregate core model，不要把旧系统换个名字继续跑。
+
+## 默认工作顺序
+1. 读相关 `framework/*.md`
+2. 找对应 package
+3. 校验 entry class 与 `registry`
+4. 校验 `config contract`
+5. 修改 package composition 或 package internals
+6. 更新 `generated/canonical_graph.json`
+7. 更新所有 derived views 和 validation outputs
+8. 始终保持架构单一，不要创建 side channel
+
 ## 工程执行规范（强制）
 
 ### 1. 环境与依赖
