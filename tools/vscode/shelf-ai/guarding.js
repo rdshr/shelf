@@ -4,7 +4,6 @@ const path = require("path");
 const WATCH_PREFIXES = [
   "framework/",
   "specs/",
-  "mapping/",
   "src/",
   "projects/",
   "scripts/",
@@ -16,14 +15,13 @@ const WATCH_PREFIXES = [
 
 const WATCH_FILES = new Set([
   "AGENTS.md",
+  "CONTRIBUTING.md",
   "README.md",
   "pyproject.toml",
   "uv.lock",
 ]);
 
-const PRODUCT_SPEC_PATTERN = /^projects\/([^/]+)\/product_spec\.toml$/;
-const PRODUCT_SPEC_SECTION_PATTERN = /^projects\/([^/]+)\/product_spec\/[^/]+\.toml$/;
-const IMPLEMENTATION_CONFIG_PATTERN = /^projects\/([^/]+)\/implementation_config\.toml$/;
+const PROJECT_FILE_PATTERN = /^projects\/([^/]+)\/project\.toml$/;
 const GENERATED_PATTERN = /^projects\/([^/]+)\/generated(?:\/(.+))?$/;
 const WORKSPACE_GOVERNANCE_ARTIFACTS = new Set([
   "docs/hierarchy/shelf_governance_tree.json",
@@ -60,15 +58,14 @@ function isWatchedUri(uri, workspaceRoot) {
   if (!uri || !workspaceRoot) {
     return false;
   }
-  const relPath = path.relative(workspaceRoot, uri.fsPath);
-  return isWatchedPath(relPath);
+  return isWatchedPath(path.relative(workspaceRoot, uri.fsPath));
 }
 
 function anyWatchedUris(uris, workspaceRoot) {
   return uris.some((uri) => isWatchedUri(uri, workspaceRoot));
 }
 
-function discoverProductSpecFiles(repoRoot) {
+function discoverProjectFiles(repoRoot) {
   const projectsDir = path.join(repoRoot, "projects");
   if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
     return [];
@@ -76,25 +73,25 @@ function discoverProductSpecFiles(repoRoot) {
 
   const files = [];
   for (const entry of fs.readdirSync(projectsDir)) {
-    const productSpecFile = path.join(projectsDir, entry, "product_spec.toml");
-    if (fs.existsSync(productSpecFile) && fs.statSync(productSpecFile).isFile()) {
-      files.push(productSpecFile);
+    const projectFile = path.join(projectsDir, entry, "project.toml");
+    if (fs.existsSync(projectFile) && fs.statSync(projectFile).isFile()) {
+      files.push(projectFile);
     }
   }
   return files.sort();
 }
 
-function inferConfiguredFrameworks(productSpecText) {
+function inferConfiguredFrameworks(projectConfigText) {
   const frameworks = new Set();
-  const lines = String(productSpecText).split(/\r?\n/);
-  let inFrameworkSection = false;
+  const lines = String(projectConfigText).split(/\r?\n/);
+  let inRootModuleSection = false;
   for (const lineText of lines) {
     const sectionMatch = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/.exec(lineText);
     if (sectionMatch) {
-      inFrameworkSection = sectionMatch[1] === "framework";
+      inRootModuleSection = sectionMatch[1] === "selection.root_modules";
       continue;
     }
-    if (!inFrameworkSection) {
+    if (!inRootModuleSection) {
       continue;
     }
     const valueMatch = /^\s*[A-Za-z0-9_-]+\s*=\s*"framework\/([^/]+)\//.exec(lineText);
@@ -105,26 +102,16 @@ function inferConfiguredFrameworks(productSpecText) {
   return frameworks;
 }
 
-function resolveProjectProductSpecPath(repoRoot, relPath) {
+function resolveProjectFilePath(repoRoot, relPath) {
   const normalized = normalizeRelPath(relPath);
-  let match = normalized.match(PRODUCT_SPEC_PATTERN);
+  let match = normalized.match(PROJECT_FILE_PATTERN);
   if (match) {
-    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
-  }
-
-  match = normalized.match(IMPLEMENTATION_CONFIG_PATTERN);
-  if (match) {
-    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
-  }
-
-  match = normalized.match(PRODUCT_SPEC_SECTION_PATTERN);
-  if (match) {
-    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
+    return path.join(repoRoot, "projects", match[1], "project.toml");
   }
 
   match = normalized.match(GENERATED_PATTERN);
   if (match) {
-    return path.join(repoRoot, "projects", match[1], "product_spec.toml");
+    return path.join(repoRoot, "projects", match[1], "project.toml");
   }
 
   return null;
@@ -160,18 +147,18 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
   const watchedRelPaths = uniqueRelPaths.filter(isWatchedPath);
   const materializeProjects = new Set();
   const protectedGeneratedPaths = [];
-  const protectedProjectSpecs = new Set();
+  const protectedProjectFiles = new Set();
   const protectedWorkspaceArtifacts = [];
   const protectedGovernanceArtifacts = [];
   const protectedFrameworkArtifacts = [];
   let shouldRunMypy = false;
-  let discoveredProductSpecFiles = null;
+  let discoveredProjectFiles = null;
 
-  const getProductSpecFiles = () => {
-    if (!discoveredProductSpecFiles) {
-      discoveredProductSpecFiles = discoverProductSpecFiles(repoRoot);
+  const getProjectFiles = () => {
+    if (!discoveredProjectFiles) {
+      discoveredProjectFiles = discoverProjectFiles(repoRoot);
     }
-    return discoveredProductSpecFiles;
+    return discoveredProjectFiles;
   };
 
   for (const relPath of watchedRelPaths) {
@@ -190,21 +177,17 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
       if (WORKSPACE_FRAMEWORK_ARTIFACTS.has(relPath)) {
         protectedFrameworkArtifacts.push(relPath);
       }
-      const protectedSpec = resolveProjectProductSpecPath(repoRoot, relPath);
-      if (protectedSpec) {
-        protectedProjectSpecs.add(protectedSpec);
+      const protectedProjectFile = resolveProjectFilePath(repoRoot, relPath);
+      if (protectedProjectFile) {
+        protectedProjectFiles.add(protectedProjectFile);
       }
       continue;
     }
 
-    if (
-      PRODUCT_SPEC_PATTERN.test(relPath) ||
-      PRODUCT_SPEC_SECTION_PATTERN.test(relPath) ||
-      IMPLEMENTATION_CONFIG_PATTERN.test(relPath)
-    ) {
-      const productSpecFile = resolveProjectProductSpecPath(repoRoot, relPath);
-      if (productSpecFile) {
-        materializeProjects.add(productSpecFile);
+    if (PROJECT_FILE_PATTERN.test(relPath)) {
+      const projectFile = resolveProjectFilePath(repoRoot, relPath);
+      if (projectFile) {
+        materializeProjects.add(projectFile);
       }
       continue;
     }
@@ -212,21 +195,21 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     if (relPath.startsWith("framework/")) {
       const frameworkName = relPath.split("/")[1];
       if (!frameworkName) {
-        for (const productSpecFile of getProductSpecFiles()) {
-          materializeProjects.add(productSpecFile);
+        for (const projectFile of getProjectFiles()) {
+          materializeProjects.add(projectFile);
         }
         continue;
       }
 
-      for (const productSpecFile of getProductSpecFiles()) {
+      for (const projectFile of getProjectFiles()) {
         try {
-          const productSpecText = fs.readFileSync(productSpecFile, "utf8");
-          const configuredFrameworks = inferConfiguredFrameworks(productSpecText);
+          const projectText = fs.readFileSync(projectFile, "utf8");
+          const configuredFrameworks = inferConfiguredFrameworks(projectText);
           if (configuredFrameworks.has(frameworkName)) {
-            materializeProjects.add(productSpecFile);
+            materializeProjects.add(projectFile);
           }
         } catch {
-          materializeProjects.add(productSpecFile);
+          materializeProjects.add(projectFile);
         }
       }
     }
@@ -241,7 +224,7 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     protectedWorkspaceArtifacts,
     protectedGovernanceArtifacts,
     protectedFrameworkArtifacts,
-    protectedProjectSpecs: [...protectedProjectSpecs].sort(),
+    protectedProjectFiles: [...protectedProjectFiles].sort(),
   };
 }
 
@@ -250,7 +233,7 @@ module.exports = {
   WATCH_PREFIXES,
   anyWatchedUris,
   classifyWorkspaceChanges,
-  discoverProductSpecFiles,
+  discoverProjectFiles,
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
   isWorkspaceFrameworkArtifact,
@@ -258,6 +241,6 @@ module.exports = {
   isWatchedPath,
   isWatchedUri,
   normalizeRelPath,
-  resolveProjectProductSpecPath,
+  resolveProjectFilePath,
   shouldRunMypyForRelPath,
 };

@@ -1,46 +1,24 @@
 {
-  "audit_version": "project-discovery-audit/v1",
-  "projects_dir": "projects",
-  "entries": [
+  "schema_version": "project-discovery-audit/v2",
+  "project_count": 1,
+  "projects": [
     {
       "project_id": "knowledge_base_basic",
       "directory": "projects/knowledge_base_basic",
-      "framework_driven": true,
-      "template_id": "knowledge_base_workbench",
-      "classification": "recognized",
+      "classification": "framework-package-project",
       "reasons": [
-        "product_spec.toml and implementation_config.toml both exist",
-        "registered template resolved: knowledge_base_workbench",
-        "project loads through the registered framework-driven materialization chain",
-        "framework selections resolve to concrete framework modules",
-        "implementation config exposes generated artifact contract"
+        "contains project.toml",
+        "declares root framework modules",
+        "declares canonical-derived artifact contract"
       ],
-      "product_spec_file": "projects/knowledge_base_basic/product_spec.toml",
-      "implementation_config_file": "projects/knowledge_base_basic/implementation_config.toml",
-      "generated_dir": "projects/knowledge_base_basic/generated",
-      "framework_refs": [
-        "framework/backend/L2-M0-知识库接口框架标准模块.md",
-        "framework/frontend/L2-M0-前端框架标准模块.md",
-        "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
-      ],
-      "artifact_contract": [
-        "canonical_graph.json",
-        "framework_ir.json",
-        "product_spec.json",
-        "implementation_bundle.py",
-        "generation_manifest.json",
-        "governance_manifest.json",
-        "governance_tree.json",
-        "strict_zone_report.json",
-        "object_coverage_report.json"
-      ]
+      "project_file": "projects/knowledge_base_basic/project.toml",
+      "runtime_scene": "knowledge_base_workbench",
+      "root_modules": {
+        "frontend": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "knowledge_base": "framework/knowledge_base/L2-M0-知识库工作台场景模块.md",
+        "backend": "framework/backend/L2-M0-知识库接口框架标准模块.md"
+      },
+      "generated_dir": "projects/knowledge_base_basic/generated"
     }
-  ],
-  "summary": {
-    "recognized_count": 1,
-    "excluded_count": 0,
-    "classification_counts": {
-      "recognized": 1
-    }
-  }
+  ]
 }

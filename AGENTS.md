@@ -2,11 +2,11 @@
 
 ## 仓库认知前提（强制）
 - 框架不是某个项目的模板，而是 AI 编程时代的人和 AI 之间的共同结构语言。
-- 仓库主分层应保持 `Framework -> Product Spec -> Implementation Config -> Code -> Evidence` 的单向收敛。
-- 当前若尚未把 `Product Spec` 与 `Implementation Config` 拆成独立文件，则临时合并承载文件也必须能被解释为“产品真相”与“实现细化”的组合，不得反向修改框架边界、规则与基定义。
-- `projects/<project_id>/product_spec.toml` 与 `projects/<project_id>/implementation_config.toml` 默认应使用中文注释，作为人与 AI 协作讨论的主入口。
+- 仓库主分层应保持 `Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence` 的单向收敛。
+- `projects/<project_id>/project.toml` 是项目配置唯一入口；配置物理上统一，逻辑上必须明确区分 `selection / truth / refinement / narrative`。
+- `project.toml` 默认应使用中文注释，作为人与 AI 协作讨论的主入口。
 - 上述 TOML 文件在篇幅可控时，应优先提供详细注释而不是极简标签；至少在文件头和每个主 section 前说明职责边界、讨论重点与与相邻层的分界。
-- `Product Spec` 注释必须解释产品真相，不得混入仅属于实现层的技巧；`Implementation Config` 注释必须解释实现细化，不得伪装成产品真相。
+- `selection` 负责模块树选择；`truth` 负责产品真相；`refinement` 负责实现细化；`narrative` 只负责解释，不得替代机器判定字段。
 - 面向 `framework/*.md` 的标准模板起手能力属于仓库基本作者入口，不得移除。当前保底入口为 Shelf AI 的 `@framework` 模板与显式插入命令；若未来重构，必须提供同等直接、默认可用、可测试的替代能力。
 
 ## 工程执行规范（强制）
@@ -27,7 +27,7 @@
 ### 3. 变更执行要求
 - 修改标准或代码后，必须执行对应验证命令。
 - Python 代码变更后，必须通过静态类型检查（`uv run mypy`）。
-- 项目行为变更必须先改 `framework/*.md`、`projects/<project_id>/product_spec.toml` 或 `projects/<project_id>/implementation_config.toml`，再执行 `uv run python scripts/materialize_project.py` 生成产物；禁止直接手改 `projects/<project_id>/generated/*`。
+- 项目行为变更必须先改 `framework/*.md` 或 `projects/<project_id>/project.toml`，再执行 `uv run python scripts/materialize_project.py` 生成产物；禁止直接手改 `projects/<project_id>/generated/*`。
 - 禁止在仓库规范文档中引入 `pip install` 作为标准流程。
 - 必须启用仓库 `pre-push` hook：`bash scripts/install_git_hooks.sh`。
 - 若严格映射验证不通过，禁止推送。

@@ -1,7 +1,0 @@
-# [preview] 定义来源预览从用户视角应如何工作。
-[preview]
-enabled = true
-renderers = ["markdown"]
-anchor_mode = "heading"
-show_toc = true
-preview_variant = "citation_drawer"

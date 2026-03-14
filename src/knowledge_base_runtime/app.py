@@ -12,32 +12,32 @@ from knowledge_base_runtime.frontend import (
     compose_knowledge_base_list_page,
     compose_knowledge_base_page,
 )
-from project_runtime.knowledge_base import KnowledgeBaseCodeModule, materialize_knowledge_base_code_module
+from project_runtime.knowledge_base import KnowledgeBaseProject, materialize_knowledge_base_project
 
 
 @dataclass(frozen=True)
 class BackendTransportContract:
     mode: str
-    product_spec_endpoint: str
+    project_config_endpoint: str
 
 
-def _require_backend_transport(code_module: KnowledgeBaseCodeModule) -> BackendTransportContract:
-    transport = code_module.backend_spec.get("transport")
+def _require_backend_transport(project: KnowledgeBaseProject) -> BackendTransportContract:
+    transport = project.backend_spec.get("transport")
     if not isinstance(transport, dict):
         raise ValueError("backend_spec.transport is required for runtime app construction")
     mode = transport.get("mode")
     if not isinstance(mode, str):
         raise ValueError("backend_spec.transport.mode must be a string")
-    if mode not in code_module.template_contract.supported_backend_transports:
+    if mode not in project.template_contract.supported_backend_transports:
         raise ValueError(f"unsupported backend transport: {mode}")
-    product_spec_endpoint = transport.get("product_spec_endpoint")
-    if not isinstance(product_spec_endpoint, str) or not product_spec_endpoint.startswith(code_module.route.api_prefix):
-        raise ValueError("backend_spec.transport.product_spec_endpoint must stay under route.api_prefix")
-    return BackendTransportContract(mode=mode, product_spec_endpoint=product_spec_endpoint)
+    project_config_endpoint = transport.get("project_config_endpoint")
+    if not isinstance(project_config_endpoint, str) or not project_config_endpoint.startswith(project.route.api_prefix):
+        raise ValueError("backend_spec.transport.project_config_endpoint must stay under route.api_prefix")
+    return BackendTransportContract(mode=mode, project_config_endpoint=project_config_endpoint)
 
 
-def build_knowledge_base_runtime_app(project: KnowledgeBaseCodeModule | None = None) -> FastAPI:
-    resolved = project or materialize_knowledge_base_code_module()
+def build_knowledge_base_runtime_app(project: KnowledgeBaseProject | None = None) -> FastAPI:
+    resolved = project or materialize_knowledge_base_project()
     transport = _require_backend_transport(resolved)
     repository = KnowledgeRepository(resolved)
     app = FastAPI(
@@ -53,7 +53,7 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseCodeModule | None = N
         return {
             "project": resolved.public_summary,
             "frontend": resolved.route.workbench,
-            "product_spec": transport.product_spec_endpoint,
+            "project_config": transport.project_config_endpoint,
         }
 
     # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
@@ -92,8 +92,8 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseCodeModule | None = N
         return compose_document_detail_page(resolved, document, active_section_id=section)
 
     # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
-    @app.get(transport.product_spec_endpoint)
-    def product_spec() -> dict[str, object]:
-        return resolved.product_view
+    @app.get(transport.project_config_endpoint)
+    def project_config() -> dict[str, object]:
+        return resolved.project_config_view
 
     return app

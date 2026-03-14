@@ -69,7 +69,7 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[RuleValida
             r2_reasons.append(f"missing ui_spec page: {page_id}")
 
     r3_reasons: list[str] = []
-    if project.metadata.template != contract_spec.template_id:
+    if project.metadata.runtime_scene != contract_spec.template_id:
         r3_reasons.append(f"frontend extend slot must target {contract_spec.template_id}")
     if contract["extend_slots"][0]["module_id"] != project.domain_ir.module_id:
         r3_reasons.append("domain workbench slot must point to the selected domain framework module")
@@ -123,7 +123,7 @@ def validate_frontend_rules(project: "KnowledgeBaseProject") -> tuple[RuleValida
             r3_reasons,
             {
                 "extend_slots": contract["extend_slots"],
-                "template": project.metadata.template,
+                "runtime_scene": project.metadata.runtime_scene,
             },
         ),
         _outcome(

@@ -1,89 +1,68 @@
 # 架构说明
 
-## 当前主线
+## 当前唯一主线
 
-`shelf` 当前的默认主线已经固定为一条五层收敛链：
+仓库已经切换到下面这条主线：
 
-> `Framework -> Product -> Implementation -> Code -> Evidence`
+```text
+Framework Markdown
+  -> Framework IR
+    -> Framework Package Registry
+      -> Package Entry Classes
+        -> Unified Project Config
+          -> Package Compile
+            -> Runtime Assembly
+              -> Canonical Graph
+                -> Derived Governance Views
+```
 
-这不是概念口号，而是当前知识库主链的真实工程结构。
+这里没有并行旧主链：
 
-如果你要看完整的文件级落地路径、逐层跳转方式和 code 反查逻辑，直接看：
+- 没有旧模板分发主路径
+- 没有旧双轨配置主模型
+- 没有旧项目级聚合模块作为编译核心
 
-- [全链实现框架与跳转逻辑详解.md](./全链实现框架与跳转逻辑详解.md)
+## 分层
 
-- `Framework`
-  - 人类作者源，位于 `framework/*/*.md`
-  - 先写 Markdown，再编译为模块对象
-- `Product`
-  - 产品真相，位于 `projects/<project_id>/product_spec.toml`
-- `Implementation`
-  - 实现细化，位于 `projects/<project_id>/implementation_config.toml`
-- `Code`
-  - 只消费实现层导出，绑定到 contract / spec / runtime symbol
-- `Evidence`
-  - 只消费代码层导出，生成 canonical 图和其派生视图
+- Framework
+  - `framework/*.md`
+  - 作者源
+- Package
+  - `src/framework_packages/modules/*`
+  - 每个 framework 文件一个 package，一个入口 class
+- Config
+  - `projects/<project_id>/project.toml`
+  - 分成 `selection / truth / refinement / narrative`
+- Code
+  - `src/project_runtime/knowledge_base.py`
+  - 用 registry 和 config slicing 编译 package
+- Evidence
+  - `projects/<project_id>/generated/canonical_graph.json`
+  - 以及所有 derived views
 
 ## 机器真相源
 
-知识库主链当前唯一机器真相源是：
+唯一机器真相源：
 
 - `projects/<project_id>/generated/canonical_graph.json`
 
-它明确分成五层：
+它稳定记录四层：
 
 - `layers.framework`
-- `layers.product`
-- `layers.implementation`
+- `layers.config`
 - `layers.code`
 - `layers.evidence`
 
-其它生成文件都只是派生视图，例如：
+其它文件如果存在，全部都必须在内容里声明自己 `derived_from canonical_graph.json`。
 
-- `framework_ir.json`
-- `product_spec.json`
-- `implementation_bundle.py`
-- `generation_manifest.json`
-- `governance_manifest.json`
-- `governance_tree.json`
-- `strict_zone_report.json`
-- `object_coverage_report.json`
+## 默认项目
 
-这些文件仍然保留，是为了 GUI、治理、调试和审查方便；但它们不再被叙述为平行真相源。
+当前默认项目：
 
-## 主要代码入口
+- [projects/knowledge_base_basic/project.toml](../projects/knowledge_base_basic/project.toml)
 
-- `src/framework_ir/`
-  - 把 `framework/*.md` 解析成 `FrameworkModule`、`FrameworkBase`、`FrameworkRule`
-- `src/project_runtime/knowledge_base.py`
-  - 把 Framework / Product / Implementation 编译成分层模块与 canonical graph
-- `src/knowledge_base_runtime/`
-  - 只消费 Code 层导出，承载当前知识库主链的运行时代码
-- `src/project_runtime/governance.py`
-  - 从编译结果构造治理闭包和治理派生视图
-- `scripts/validate_strict_mapping.py`
-  - 对框架、项目配置、生成物和治理派生视图做严格校验
+默认运行入口：
 
-## 当前默认项目
-
-当前默认项目是：
-
-- `projects/knowledge_base_basic/`
-
-它展示的是：
-
-- Framework Markdown 如何变成 Framework module
-- Product / Implementation 如何逐层收敛
-- Code 如何只消费 Implementation 的稳定导出
-- Evidence 如何把整条链固化成 canonical graph 与治理视图
-
-## Legacy 样本
-
-历史上的置物架样本仍保留，但它已经不是仓库默认主线。
-
-位置：
-
-- `src/examples/legacy_shelf/`
-- `docs/legacy_shelf/`
-
-它现在只是方法论样本，不再承担当前仓库的默认架构叙事。
+- [src/main.py](../src/main.py)
+- [src/project_runtime/app_factory.py](../src/project_runtime/app_factory.py)
+- [src/knowledge_base_runtime/app.py](../src/knowledge_base_runtime/app.py)

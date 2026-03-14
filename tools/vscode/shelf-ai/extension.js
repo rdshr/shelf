@@ -8,7 +8,7 @@ const workspaceGuard = require("./guarding");
 const validationRuntime = require("./validation_runtime");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
-const REGISTRY_FILE = path.join("mapping", "mapping_registry.json");
+const DEFAULT_VALIDATION_FALLBACK_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
 const DEFAULT_FRAMEWORK_TREE_JSON = path.join("docs", "hierarchy", "shelf_framework_tree.json");
 const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framework_tree.html");
 const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
@@ -19,7 +19,6 @@ const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
 const DEFAULT_GOVERNANCE_TREE_GENERATE_COMMAND =
   "uv run python scripts/generate_governance_tree_hierarchy.py --output-json docs/hierarchy/shelf_governance_tree.json --output-html docs/hierarchy/shelf_governance_tree.html";
 const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
-const DEFAULT_SCAFFOLD_PROJECT_COMMAND = "uv run python scripts/scaffold_project.py";
 const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
 const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
 const DEFAULT_INSTALL_GIT_HOOKS_COMMAND = "bash scripts/install_git_hooks.sh";
@@ -333,10 +332,10 @@ function activate(context) {
     return suppressedArtifactPaths.has(normalized);
   };
 
-  const suppressGeneratedEventsForProjectSpecs = (repoRoot, productSpecFiles) => {
+  const suppressGeneratedEventsForProjects = (repoRoot, projectFiles) => {
     const expiresAt = Date.now() + GENERATED_EVENT_SUPPRESSION_MS;
-    for (const productSpecFile of productSpecFiles) {
-      const generatedDir = path.join(path.dirname(productSpecFile), "generated");
+    for (const projectFile of projectFiles) {
+      const generatedDir = path.join(path.dirname(projectFile), "generated");
       const generatedRel = workspaceGuard.normalizeRelPath(path.relative(repoRoot, generatedDir));
       if (generatedRel) {
         suppressedGeneratedDirectories.set(generatedRel, expiresAt);
@@ -409,22 +408,6 @@ function activate(context) {
     };
   };
 
-  const buildScaffoldProjectCommand = (projectId, templateId, displayName, modularProductSpec) => {
-    const args = [
-      DEFAULT_SCAFFOLD_PROJECT_COMMAND,
-      "--project-dir",
-      shellQuote(path.join("projects", projectId)),
-      "--template",
-      shellQuote(templateId),
-      "--product-spec-style",
-      modularProductSpec ? "modular" : "single",
-    ];
-    if (displayName) {
-      args.push("--display-name", shellQuote(displayName));
-    }
-    return args.join(" ");
-  };
-
   const buildPublishFrameworkDraftCommand = (draftRelPath) => (
     `${DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND} --draft ${shellQuote(draftRelPath)}`
   );
@@ -475,10 +458,10 @@ function activate(context) {
     }
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("shelf");
-    const productSpecFiles = workspaceGuard.discoverProductSpecFiles(repoRoot);
+    const projectFiles = workspaceGuard.discoverProjectFiles(repoRoot);
     const materializeCommand = buildMaterializeCommand(
       String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
-      productSpecFiles
+      projectFiles
     );
 
     output.clear();
@@ -520,13 +503,13 @@ function activate(context) {
       return;
     }
 
-    if (productSpecFiles.length) {
-      suppressGeneratedEventsForProjectSpecs(repoRoot, productSpecFiles);
+    if (projectFiles.length) {
+      suppressGeneratedEventsForProjects(repoRoot, projectFiles);
     }
     await runValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
     if (lastValidationPassed) {
       vscode.window.showInformationMessage(
-        "Shelf codegen preflight passed. Framework -> Product Spec -> Implementation Config -> Code chain is consistent."
+        "Shelf codegen preflight passed. Framework -> Registry -> Project Config -> Code chain is consistent."
       );
     }
   };
@@ -593,9 +576,9 @@ function activate(context) {
     frameworkTreeSettings,
   }) => {
     const issues = [];
-    const materializedProjectSpecs = new Set();
+    const materializedProjects = new Set();
     if (!config.get("protectGeneratedFiles") || !changePlan.protectedGeneratedPaths.length) {
-      return { issues, materializedProjectSpecs };
+      return { issues, materializedProjects };
     }
 
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
@@ -604,10 +587,10 @@ function activate(context) {
     const protectedFrameworkArtifacts = changePlan.protectedFrameworkArtifacts || [];
 
     if (guardMode === "strict") {
-      if (changePlan.protectedProjectSpecs.length) {
+      if (changePlan.protectedProjectFiles.length) {
         const restoreCommand = buildMaterializeCommand(
           String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
-          changePlan.protectedProjectSpecs
+          changePlan.protectedProjectFiles
         );
         const restoreResult = await runParsedCommand(
           "materialize",
@@ -622,10 +605,10 @@ function activate(context) {
           )
         );
         if (restoreResult.passed) {
-          for (const productSpecFile of changePlan.protectedProjectSpecs) {
-            materializedProjectSpecs.add(productSpecFile);
+          for (const projectFile of changePlan.protectedProjectFiles) {
+            materializedProjects.add(projectFile);
           }
-          suppressGeneratedEventsForProjectSpecs(repoRoot, changePlan.protectedProjectSpecs);
+          suppressGeneratedEventsForProjects(repoRoot, changePlan.protectedProjectFiles);
         } else {
           issues.push(...restoreResult.errors);
         }
@@ -670,7 +653,7 @@ function activate(context) {
       }
       const unresolvedProtectedPaths = changePlan.protectedGeneratedPaths.filter(
         (relPath) => !protectedWorkspaceArtifacts.includes(relPath)
-          && !workspaceGuard.resolveProjectProductSpecPath(repoRoot, relPath)
+          && !workspaceGuard.resolveProjectFilePath(repoRoot, relPath)
       );
       for (const relPath of unresolvedProtectedPaths) {
         issues.push(normalizeIssue({
@@ -681,7 +664,7 @@ function activate(context) {
           code: "SHELF_GENERATED_PROTECT",
         }));
       }
-      return { issues, materializedProjectSpecs };
+      return { issues, materializedProjects };
     }
 
     for (const relPath of changePlan.protectedGeneratedPaths) {
@@ -693,7 +676,7 @@ function activate(context) {
           : (
             isFrameworkArtifact
               ? "Workspace framework tree artifacts are derived evidence. Refresh the framework tree instead of editing them directly."
-              : "Direct edits under projects/*/generated/* are forbidden. Change framework/product spec/implementation config and re-materialize instead."
+              : "Direct edits under projects/*/generated/* are forbidden. Change framework markdown or project.toml and re-materialize instead."
           ),
         file: relPath,
         line: 1,
@@ -703,21 +686,21 @@ function activate(context) {
           : (isFrameworkArtifact ? "SHELF_FRAMEWORK_TREE_EDIT" : "SHELF_GENERATED_EDIT"),
       }));
     }
-    return { issues, materializedProjectSpecs };
+    return { issues, materializedProjects };
   };
 
   const autoMaterializePendingProjects = async ({
     repoRoot,
     config,
     changePlan,
-    materializedProjectSpecs,
+    materializedProjects,
   }) => {
     const issues = [];
     const pendingMaterializeProjects = changePlan.materializeProjects
-      .filter((productSpecFile) => !materializedProjectSpecs.has(productSpecFile));
+      .filter((projectFile) => !materializedProjects.has(projectFile));
 
     if (!config.get("autoMaterialize") || !pendingMaterializeProjects.length) {
-      return { issues, materializedProjectSpecs };
+      return { issues, materializedProjects };
     }
 
     const materializeCommand = buildMaterializeCommand(
@@ -737,14 +720,14 @@ function activate(context) {
       )
     );
     if (materializeResult.passed) {
-      for (const productSpecFile of pendingMaterializeProjects) {
-        materializedProjectSpecs.add(productSpecFile);
+      for (const projectFile of pendingMaterializeProjects) {
+        materializedProjects.add(projectFile);
       }
-      suppressGeneratedEventsForProjectSpecs(repoRoot, pendingMaterializeProjects);
+      suppressGeneratedEventsForProjects(repoRoot, pendingMaterializeProjects);
     } else {
       issues.push(...materializeResult.errors);
     }
-    return { issues, materializedProjectSpecs };
+    return { issues, materializedProjects };
   };
 
   const runValidation = async (options = { mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" }) => {
@@ -1076,19 +1059,13 @@ function activate(context) {
       {
         action: "validate",
         label: "执行严格校验",
-        description: "运行完整 strict mapping validation。",
+        description: "运行完整 strict validation。",
         tone: "ghost"
       },
       {
         action: "codegenPreflight",
         label: "生成前预检",
         description: "先物化再跑完整校验，确认框架链路闭合后再继续生成代码。",
-        tone: "ghost"
-      },
-      {
-        action: "scaffoldProject",
-        label: "创建项目规格脚手架",
-        description: "按注册模板生成 product spec / implementation config 正式入口。",
         tone: "ghost"
       },
       {
@@ -1206,7 +1183,7 @@ function activate(context) {
         index,
         code: recognizedCode || String(issue.code || "ARCHSYNC"),
         hint: recognizedCode ? frameworkRuleHint(recognizedCode) : "",
-        message: issue.message || "Shelf mapping issue",
+        message: issue.message || "Shelf validation issue",
         location: issue.file
           ? `${issue.file}:${Number(issue.line || 1)}`
           : `line ${Number(issue.line || 1)}`
@@ -1472,10 +1449,6 @@ function activate(context) {
           await vscode.commands.executeCommand("shelf.codegenPreflight");
           return;
         }
-        if (message.type === "shelf.sidebar.scaffoldProject") {
-          await vscode.commands.executeCommand("shelf.scaffoldProject");
-          return;
-        }
         if (message.type === "shelf.sidebar.publishDraft") {
           await vscode.commands.executeCommand("shelf.publishFrameworkDraft");
           return;
@@ -1670,68 +1643,6 @@ function activate(context) {
     await runCodegenPreflight();
   });
 
-  const scaffoldProjectDisposable = vscode.commands.registerCommand("shelf.scaffoldProject", async () => {
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
-      return;
-    }
-
-    const projectId = await vscode.window.showInputBox({
-      title: "Shelf: Scaffold Project",
-      prompt: "Project id (will be created under projects/<project_id>)",
-      placeHolder: "knowledge_base_demo",
-      validateInput(value) {
-        if (!value || !/^[A-Za-z0-9_-]+$/.test(value.trim())) {
-          return "Project id must use letters, numbers, _ or -.";
-        }
-        return null;
-      }
-    });
-    if (!projectId) {
-      return;
-    }
-
-    const displayName = await vscode.window.showInputBox({
-      title: "Shelf: Scaffold Project",
-      prompt: "Optional product display name",
-      placeHolder: "Knowledge Base Demo"
-    });
-    const command = buildScaffoldProjectCommand(
-      projectId.trim(),
-      "knowledge_base_workbench",
-      displayName?.trim() || "",
-      true
-    );
-    const result = await runParsedCommand(
-      "scaffold-project",
-      command,
-      folder.uri.fsPath,
-      (stdout, stderr, code) => parseStageFailure(
-        "SHELF_SCAFFOLD_PROJECT",
-        "Shelf failed to scaffold a framework-driven project.",
-        stdout,
-        stderr,
-        code
-      )
-    );
-    if (!result.passed) {
-      const action = await vscode.window.showErrorMessage(
-        "Shelf: failed to scaffold project files.",
-        "Open Log"
-      );
-      if (action === "Open Log") {
-        output.show(true);
-      }
-      return;
-    }
-
-    const productSpecPath = path.join(folder.uri.fsPath, "projects", projectId.trim(), "product_spec.toml");
-    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(productSpecPath));
-    await vscode.window.showTextDocument(doc, { preview: false });
-    vscode.window.showInformationMessage(`Shelf: scaffolded projects/${projectId.trim()}.`);
-  });
-
   const publishFrameworkDraftDisposable = vscode.commands.registerCommand(
     "shelf.publishFrameworkDraft",
     async () => {
@@ -1852,7 +1763,7 @@ function activate(context) {
   const showIssuesDisposable = vscode.commands.registerCommand("shelf.showIssues", async () => {
     if (!mappingValidationActive && lastRepoRoot) {
       vscode.window.showInformationMessage(
-        `Shelf mapping guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+        `Shelf validation guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
       );
       return;
     }
@@ -2082,7 +1993,6 @@ function activate(context) {
     insertFrameworkTemplateDisposable,
     validateNowDisposable,
     codegenPreflightDisposable,
-    scaffoldProjectDisposable,
     publishFrameworkDraftDisposable,
     installGitHooksDisposable,
     showIssuesDisposable,
@@ -2129,13 +2039,13 @@ function shellQuote(value) {
   return `'${text.replace(/'/g, `'\"'\"'`)}'`;
 }
 
-function buildMaterializeCommand(baseCommand, productSpecFiles) {
-  const files = [...new Set((productSpecFiles || []).filter(Boolean))];
+function buildMaterializeCommand(baseCommand, projectFiles) {
+  const files = [...new Set((projectFiles || []).filter(Boolean))];
   if (!files.length) {
     return String(baseCommand || DEFAULT_MATERIALIZE_COMMAND);
   }
   const projectArgs = files
-    .map((productSpecFile) => `--project ${shellQuote(productSpecFile)}`)
+    .map((projectFile) => `--project ${shellQuote(projectFile)}`)
     .join(" ");
   return `${String(baseCommand || DEFAULT_MATERIALIZE_COMMAND)} ${projectArgs}`.trim();
 }
@@ -2275,7 +2185,7 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
       ? candidateTarget
       : (triggerUri
         ? triggerUri.fsPath
-        : path.join(repoRoot, REGISTRY_FILE));
+        : path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE));
 
     if (!grouped.has(target)) {
       grouped.set(target, []);
@@ -3115,7 +3025,7 @@ async function revealIssue(issue, repoRoot) {
   const candidate = resolveIssueFile(issue.file, repoRoot);
   const target = (candidate && fs.existsSync(candidate))
     ? candidate
-    : path.join(repoRoot, REGISTRY_FILE);
+    : path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE);
   const uri = vscode.Uri.file(target);
   const doc = await vscode.workspace.openTextDocument(uri);
   const line = Math.max(0, Number(issue.line || 1) - 1);
@@ -3153,7 +3063,7 @@ function normalizeIssue(item) {
   }
 
   return {
-    message: String(item.message || "Shelf mapping issue"),
+    message: String(item.message || "Shelf validation issue"),
     file: item.file || null,
     line: Number(item.line || 1),
     column: Number(item.column || 1),
@@ -3206,7 +3116,7 @@ function hasStandardsTree(repoRoot) {
 
 function setStatusDisabled(status, repoRoot) {
   status.text = "$(circle-slash) Shelf";
-  status.tooltip = `Shelf mapping guard disabled: ${toWorkspaceRelative(
+  status.tooltip = `Shelf validation guard disabled: ${toWorkspaceRelative(
     path.join(repoRoot, STANDARDS_TREE_FILE),
     repoRoot
   )} not found`;

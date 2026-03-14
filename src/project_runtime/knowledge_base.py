@@ -6,85 +6,42 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import tomllib
 from typing import Any, Callable
 
-from framework_ir import FrameworkModule, load_framework_registry, parse_framework_module
-from project_runtime.config_layout import config_layout
+from framework_ir import FrameworkModule, FrameworkRegistry, load_framework_registry
+from framework_packages import FrameworkPackageRegistry, PackageCompileInput, PackageCompileResult, load_builtin_package_registry
+from project_runtime.governance import build_derived_view_payloads
 from project_runtime.knowledge_base_contract import (
     KnowledgeBaseTemplateContract,
     load_knowledge_base_template_contract,
 )
-from project_runtime.knowledge_base_scaffold import scaffold_knowledge_base_project
-from project_runtime.layered_models import (
-    CanonicalLayeredProjectGraph,
-    KnowledgeBaseCodeModule,
-    KnowledgeBaseEvidenceModule,
-    KnowledgeBaseFrameworkLayer,
-    KnowledgeBaseImplementationModule,
-    KnowledgeBaseProductModule,
-    LayeredTraceRef,
-)
-from project_runtime.project_config_source import load_product_spec_document
-from project_runtime.governance import (
-    build_governance_closure,
-    build_governance_manifest,
-    build_object_coverage_report,
-    build_strict_zone_report,
-    build_governance_tree,
-)
-from project_runtime.template_registry import (
-    ProjectTemplateRegistration,
-    detect_project_template_id as detect_registered_project_template_id,
-    register_project_template,
-)
+from project_runtime.project_config_source import ComposedTomlDocument, load_project_config_document
 from rule_validation_models import ValidationReports
 
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE = REPO_ROOT / "projects/knowledge_base_basic/product_spec.toml"
-DEFAULT_KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_FILE = (
-    REPO_ROOT / "projects/knowledge_base_basic/implementation_config.toml"
-)
-KNOWLEDGE_BASE_TEMPLATE_ID = "knowledge_base_workbench"
-KNOWLEDGE_BASE_PRODUCT_SPEC_LAYOUT = config_layout(
+DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE = REPO_ROOT / "projects/knowledge_base_basic/project.toml"
+KNOWLEDGE_BASE_RUNTIME_SCENE = "knowledge_base_workbench"
+KNOWLEDGE_BASE_CANONICAL_SCHEMA_VERSION = "framework-package-canonical/v1"
+LEGACY_GENERATED_ARTIFACT_NAMES = frozenset(
     {
-        "project",
-        "framework",
-        "surface",
-        "visual",
-        "route",
-        "showcase_page",
-        "a11y",
-        "library",
-        "preview",
-        "chat",
-        "context",
-        "return",
-        "documents",
-    },
-    {
-        "surface": {"copy"},
-        "library": {"copy"},
-        "chat": {"copy"},
-    },
+        "framework_ir.json",
+        "product_spec.json",
+        "implementation_bundle.py",
+        "project_bundle.py",
+        "workbench_spec.json",
+    }
 )
-KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT = config_layout(
-    {"frontend", "backend", "evidence", "artifacts"},
-    {},
-)
-KNOWLEDGE_BASE_CANONICAL_SCHEMA_VERSION = "knowledge-base-layered-canonical/v1"
-LEGACY_GENERATED_ARTIFACT_NAMES = frozenset({"project_bundle.py", "workbench_spec.json"})
 
 
-def detect_project_template_id(product_spec_file: str | Path) -> str:
-    return detect_registered_project_template_id(product_spec_file)
-
-
-def assert_supported_project_template(product_spec_file: str | Path) -> str:
-    template_id = detect_project_template_id(product_spec_file)
-    if template_id != KNOWLEDGE_BASE_TEMPLATE_ID:
-        raise ValueError(f"unsupported project template: {template_id}")
-    return template_id
+def _jsonable(value: Any) -> Any:
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _jsonable(value.to_dict())
+    if isinstance(value, dict):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    return value
 
 
 def _relative_path(path: Path) -> str:
@@ -92,6 +49,13 @@ def _relative_path(path: Path) -> str:
         return path.relative_to(REPO_ROOT).as_posix()
     except ValueError:
         return str(path)
+
+
+def _normalize_project_path(project_file: str | Path) -> Path:
+    candidate = Path(project_file)
+    if not candidate.is_absolute():
+        candidate = (REPO_ROOT / candidate).resolve()
+    return candidate
 
 
 def _slugify(value: str) -> str:
@@ -107,30 +71,7 @@ def _tokenize(text: str) -> tuple[str, ...]:
     return tuple(token for token in re.findall(r"[a-z0-9]{3,}", text.lower()) if token)
 
 
-def _read_toml_file(project_path: Path) -> dict[str, Any]:
-    if not project_path.exists():
-        raise FileNotFoundError(f"missing project config: {project_path}")
-    with project_path.open("rb") as fh:
-        data = tomllib.load(fh)
-    if not isinstance(data, dict):
-        raise ValueError(f"project config must decode into object: {project_path}")
-    return data
-
-
-def _normalize_project_path(project_file: str | Path) -> Path:
-    project_path = Path(project_file)
-    if not project_path.is_absolute():
-        project_path = (REPO_ROOT / project_path).resolve()
-    return project_path
-
-
-def _implementation_config_path_for(product_spec_path: Path) -> Path:
-    return product_spec_path.parent / "implementation_config.toml"
-
-
 def _cleanup_generated_output_dir(output_path: Path, expected_file_names: set[str]) -> None:
-    # generated/ is a compiler-owned evidence directory. Remove stale top-level files so
-    # old artifact names cannot coexist with the current artifact contract.
     removable_names = expected_file_names | LEGACY_GENERATED_ARTIFACT_NAMES
     for child in output_path.iterdir():
         if not child.is_file():
@@ -164,15 +105,6 @@ def _require_string(parent: dict[str, Any], key: str) -> str:
     return value.strip()
 
 
-def _optional_string(parent: dict[str, Any], key: str) -> str | None:
-    value = parent.get(key)
-    if value is None:
-        return None
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"optional string must be non-empty when provided: {key}")
-    return value.strip()
-
-
 def _require_bool(parent: dict[str, Any], key: str) -> bool:
     value = parent.get(key)
     if not isinstance(value, bool):
@@ -199,10 +131,19 @@ def _require_string_tuple(parent: dict[str, Any], key: str) -> tuple[str, ...]:
     return tuple(items)
 
 
+def _lookup_dotted_path(payload: dict[str, Any], dotted_path: str) -> Any:
+    current: Any = payload
+    for part in dotted_path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            raise KeyError(dotted_path)
+        current = current[part]
+    return current
+
+
 @dataclass(frozen=True)
 class ProjectMetadata:
     project_id: str
-    template: str
+    runtime_scene: str
     display_name: str
     description: str
     version: str
@@ -212,14 +153,25 @@ class ProjectMetadata:
 
 
 @dataclass(frozen=True)
-class FrameworkSelection:
+class RootModuleSelection:
     frontend: str
-    domain: str
+    knowledge_base: str
     backend: str
+
+    def to_dict(self) -> dict[str, str]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class ModuleSelection:
     preset: str
+    root_modules: RootModuleSelection
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "preset": self.preset,
+            "root_modules": self.root_modules.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -420,7 +372,7 @@ class ReturnConfig:
 
 
 @dataclass(frozen=True)
-class FrontendImplementationConfig:
+class FrontendRefinementConfig:
     renderer: str
     style_profile: str
     script_profile: str
@@ -430,7 +382,7 @@ class FrontendImplementationConfig:
 
 
 @dataclass(frozen=True)
-class BackendImplementationConfig:
+class BackendRefinementConfig:
     renderer: str
     transport: str
     retrieval_strategy: str
@@ -440,8 +392,8 @@ class BackendImplementationConfig:
 
 
 @dataclass(frozen=True)
-class EvidenceConfig:
-    product_spec_endpoint: str
+class EvidenceRefinementConfig:
+    project_config_endpoint: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -450,9 +402,7 @@ class EvidenceConfig:
 @dataclass(frozen=True)
 class ArtifactConfig:
     canonical_graph_json: str
-    framework_ir_json: str
-    product_spec_json: str
-    implementation_bundle_py: str
+    runtime_bundle_py: str
     generation_manifest_json: str
     governance_manifest_json: str
     governance_tree_json: str
@@ -465,9 +415,7 @@ class ArtifactConfig:
     def file_names(self) -> tuple[str, ...]:
         return (
             self.canonical_graph_json,
-            self.framework_ir_json,
-            self.product_spec_json,
-            self.implementation_bundle_py,
+            self.runtime_bundle_py,
             self.generation_manifest_json,
             self.governance_manifest_json,
             self.governance_tree_json,
@@ -477,10 +425,10 @@ class ArtifactConfig:
 
 
 @dataclass(frozen=True)
-class KnowledgeBaseImplementationConfig:
-    frontend: FrontendImplementationConfig
-    backend: BackendImplementationConfig
-    evidence: EvidenceConfig
+class RefinementConfig:
+    frontend: FrontendRefinementConfig
+    backend: BackendRefinementConfig
+    evidence: EvidenceRefinementConfig
     artifacts: ArtifactConfig
 
     def to_dict(self) -> dict[str, Any]:
@@ -503,31 +451,6 @@ class SeedDocumentSource:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
-
-@dataclass(frozen=True)
-class KnowledgeBaseProductSpec:
-    product_spec_file: str
-    section_sources: dict[str, str]
-    metadata: ProjectMetadata
-    framework: FrameworkSelection
-    surface: SurfaceConfig
-    visual: VisualConfig
-    features: FeatureConfig
-    route: RouteConfig
-    showcase_page: ShowcasePageConfig
-    a11y: A11yConfig
-    library: LibraryConfig
-    preview: PreviewConfig
-    chat: ChatConfig
-    context: ContextConfig
-    return_config: ReturnConfig
-    documents: tuple[SeedDocumentSource, ...]
-
-    def to_dict(self) -> dict[str, Any]:
-        payload = asdict(self)
-        payload["section_sources"] = dict(self.section_sources)
-        return payload
 
 
 @dataclass(frozen=True)
@@ -572,30 +495,15 @@ class KnowledgeDocument:
 class GeneratedArtifactPaths:
     directory: str
     canonical_graph_json: str
-    framework_ir_json: str
-    product_spec_json: str
-    implementation_bundle_py: str
+    runtime_bundle_py: str
     generation_manifest_json: str
     governance_manifest_json: str
     governance_tree_json: str
     strict_zone_report_json: str
     object_coverage_report_json: str
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, str]:
         return asdict(self)
-
-    def file_payload(self) -> dict[str, str]:
-        return {
-            "canonical_graph_json": self.canonical_graph_json,
-            "framework_ir_json": self.framework_ir_json,
-            "product_spec_json": self.product_spec_json,
-            "implementation_bundle_py": self.implementation_bundle_py,
-            "generation_manifest_json": self.generation_manifest_json,
-            "governance_manifest_json": self.governance_manifest_json,
-            "governance_tree_json": self.governance_tree_json,
-            "strict_zone_report_json": self.strict_zone_report_json,
-            "object_coverage_report_json": self.object_coverage_report_json,
-        }
 
     @classmethod
     def from_artifact_config(
@@ -608,9 +516,7 @@ class GeneratedArtifactPaths:
         return cls(
             directory=path_renderer(directory),
             canonical_graph_json=path_renderer(directory / artifact_names.canonical_graph_json),
-            framework_ir_json=path_renderer(directory / artifact_names.framework_ir_json),
-            product_spec_json=path_renderer(directory / artifact_names.product_spec_json),
-            implementation_bundle_py=path_renderer(directory / artifact_names.implementation_bundle_py),
+            runtime_bundle_py=path_renderer(directory / artifact_names.runtime_bundle_py),
             generation_manifest_json=path_renderer(directory / artifact_names.generation_manifest_json),
             governance_manifest_json=path_renderer(directory / artifact_names.governance_manifest_json),
             governance_tree_json=path_renderer(directory / artifact_names.governance_tree_json),
@@ -622,9 +528,7 @@ class GeneratedArtifactPaths:
 @dataclass(frozen=True)
 class GeneratedArtifactOutputPaths:
     canonical_graph_json: Path
-    framework_ir_json: Path
-    product_spec_json: Path
-    implementation_bundle_py: Path
+    runtime_bundle_py: Path
     generation_manifest_json: Path
     governance_manifest_json: Path
     governance_tree_json: Path
@@ -632,17 +536,10 @@ class GeneratedArtifactOutputPaths:
     object_coverage_report_json: Path
 
     @classmethod
-    def from_artifact_config(
-        cls,
-        artifact_names: ArtifactConfig,
-        *,
-        output_dir: Path,
-    ) -> "GeneratedArtifactOutputPaths":
+    def from_artifact_config(cls, artifact_names: ArtifactConfig, *, output_dir: Path) -> "GeneratedArtifactOutputPaths":
         return cls(
             canonical_graph_json=output_dir / artifact_names.canonical_graph_json,
-            framework_ir_json=output_dir / artifact_names.framework_ir_json,
-            product_spec_json=output_dir / artifact_names.product_spec_json,
-            implementation_bundle_py=output_dir / artifact_names.implementation_bundle_py,
+            runtime_bundle_py=output_dir / artifact_names.runtime_bundle_py,
             generation_manifest_json=output_dir / artifact_names.generation_manifest_json,
             governance_manifest_json=output_dir / artifact_names.governance_manifest_json,
             governance_tree_json=output_dir / artifact_names.governance_tree_json,
@@ -652,275 +549,164 @@ class GeneratedArtifactOutputPaths:
 
 
 @dataclass(frozen=True)
-class GeneratedArtifactPayloads:
-    canonical_graph_json: str
-    framework_ir_json: str
-    product_spec_json: str
-    implementation_bundle_py: str
-    generation_manifest_json: str
-    governance_manifest_json: str
-    governance_tree_json: str
-    strict_zone_report_json: str
-    object_coverage_report_json: str
+class UnifiedProjectConfig:
+    project_file: str
+    section_sources: dict[str, str]
+    metadata: ProjectMetadata
+    selection: ModuleSelection
+    surface: SurfaceConfig
+    visual: VisualConfig
+    features: FeatureConfig
+    route: RouteConfig
+    showcase_page: ShowcasePageConfig
+    a11y: A11yConfig
+    library: LibraryConfig
+    preview: PreviewConfig
+    chat: ChatConfig
+    context: ContextConfig
+    return_config: ReturnConfig
+    documents: tuple[SeedDocumentSource, ...]
+    refinement: RefinementConfig
+    narrative: dict[str, Any]
 
-    def to_dict(self) -> dict[str, str]:
+    def truth_payload(self) -> dict[str, Any]:
         return {
-            "canonical_graph_json": self.canonical_graph_json,
-            "framework_ir_json": self.framework_ir_json,
-            "product_spec_json": self.product_spec_json,
-            "implementation_bundle_py": self.implementation_bundle_py,
-            "generation_manifest_json": self.generation_manifest_json,
-            "governance_manifest_json": self.governance_manifest_json,
-            "governance_tree_json": self.governance_tree_json,
-            "strict_zone_report_json": self.strict_zone_report_json,
-            "object_coverage_report_json": self.object_coverage_report_json,
+            "surface": self.surface.to_dict(),
+            "visual": self.visual.to_dict(),
+            "features": self.features.to_dict(),
+            "route": self.route.to_dict(),
+            "showcase_page": self.showcase_page.to_dict(),
+            "a11y": self.a11y.to_dict(),
+            "library": self.library.to_dict(),
+            "preview": self.preview.to_dict(),
+            "chat": self.chat.to_dict(),
+            "context": self.context.to_dict(),
+            "return": self.return_config.to_dict(),
+            "documents": [item.to_dict() for item in self.documents],
         }
 
-    def content_sha256(self) -> dict[str, str]:
+    def root_payload(self) -> dict[str, Any]:
         return {
-            field_name: _sha256_text(field_value)
-            for field_name, field_value in self.to_dict().items()
-            if field_name != "generation_manifest_json"
+            "project": self.metadata.to_dict(),
+            "selection": self.selection.to_dict(),
+            "truth": self.truth_payload(),
+            "refinement": self.refinement.to_dict(),
+            "narrative": _jsonable(self.narrative),
         }
-
-    def write_to(self, output_paths: GeneratedArtifactOutputPaths) -> None:
-        output_paths.canonical_graph_json.write_text(self.canonical_graph_json, encoding="utf-8")
-        output_paths.framework_ir_json.write_text(self.framework_ir_json, encoding="utf-8")
-        output_paths.product_spec_json.write_text(self.product_spec_json, encoding="utf-8")
-        output_paths.implementation_bundle_py.write_text(self.implementation_bundle_py, encoding="utf-8")
-        output_paths.generation_manifest_json.write_text(self.generation_manifest_json, encoding="utf-8")
-        output_paths.governance_manifest_json.write_text(self.governance_manifest_json, encoding="utf-8")
-        output_paths.governance_tree_json.write_text(self.governance_tree_json, encoding="utf-8")
-        output_paths.strict_zone_report_json.write_text(self.strict_zone_report_json, encoding="utf-8")
-        output_paths.object_coverage_report_json.write_text(
-            self.object_coverage_report_json,
-            encoding="utf-8",
-        )
 
 
 @dataclass(frozen=True)
-class GovernanceArtifactPayloads:
-    closure: Any
-    manifest_payload: dict[str, Any]
-    tree_payload: dict[str, Any]
-    strict_zone_report_payload: dict[str, Any]
-    object_coverage_report_payload: dict[str, Any]
+class UiSpecPaths:
+    knowledge_base_detail_path: str
+    document_detail_path: str
+    basketball_showcase_path: str
 
     @classmethod
-    def from_project(cls, project: "KnowledgeBaseProject") -> "GovernanceArtifactPayloads":
-        closure = build_governance_closure(project)
+    def from_project(cls, project: "KnowledgeBaseProject") -> "UiSpecPaths":
         return cls(
-            closure=closure,
-            manifest_payload=build_governance_manifest(project),
-            tree_payload=build_governance_tree(project),
-            strict_zone_report_payload=build_strict_zone_report(closure),
-            object_coverage_report_payload=build_object_coverage_report(closure),
+            knowledge_base_detail_path=f"{project.route.knowledge_detail}/{{knowledge_base_id}}",
+            document_detail_path=f"{project.route.document_detail_prefix}/{{document_id}}",
+            basketball_showcase_path=project.route.basketball_showcase,
         )
-
-    def governance_manifest_text(self) -> str:
-        return json.dumps(self.manifest_payload, ensure_ascii=False, indent=2)
-
-    def governance_tree_text(self) -> str:
-        return json.dumps(self.tree_payload, ensure_ascii=False, indent=2)
-
-    def strict_zone_report_text(self) -> str:
-        return json.dumps(self.strict_zone_report_payload, ensure_ascii=False, indent=2)
-
-    def object_coverage_report_text(self) -> str:
-        return json.dumps(self.object_coverage_report_payload, ensure_ascii=False, indent=2)
-
-
-@dataclass(frozen=True)
-class GeneratedArtifactBuildContext:
-    product_spec: dict[str, Any]
-    runtime_bundle: dict[str, Any]
-    configuration_effect_payload: dict[str, dict[str, Any]]
-    canonical_graph_text: str
-    framework_ir_text: str
-    product_spec_text: str
-    implementation_bundle_text: str
-    governance: GovernanceArtifactPayloads
-
-    @classmethod
-    def from_project(cls, project: "KnowledgeBaseProject") -> "GeneratedArtifactBuildContext":
-        product_spec = project.to_product_spec_dict()
-        runtime_bundle = project.to_runtime_bundle_dict()
-        return cls(
-            product_spec=product_spec,
-            runtime_bundle=runtime_bundle,
-            configuration_effect_payload=_implementation_effect_payload(project),
-            canonical_graph_text=json.dumps(project.to_canonical_graph_dict(), ensure_ascii=False, indent=2),
-            framework_ir_text=_build_framework_ir_text(project),
-            product_spec_text=json.dumps(product_spec, ensure_ascii=False, indent=2),
-            implementation_bundle_text=_build_implementation_bundle_text(
-                project,
-                product_spec=product_spec,
-                runtime_bundle=runtime_bundle,
-            ),
-            governance=GovernanceArtifactPayloads.from_project(project),
-        )
-
-    def to_artifact_payloads(self) -> GeneratedArtifactPayloads:
-        return GeneratedArtifactPayloads(
-            canonical_graph_json=self.canonical_graph_text,
-            framework_ir_json=self.framework_ir_text,
-            product_spec_json=self.product_spec_text,
-            implementation_bundle_py=self.implementation_bundle_text,
-            generation_manifest_json="",
-            governance_manifest_json=self.governance.governance_manifest_text(),
-            governance_tree_json=self.governance.governance_tree_text(),
-            strict_zone_report_json=self.governance.strict_zone_report_text(),
-            object_coverage_report_json=self.governance.object_coverage_report_text(),
-        )
-
-
-@dataclass(frozen=True)
-class ImplementationEffectEntry:
-    value: Any
-    relation: str
-    targets: tuple[str, ...]
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "value": self.value,
-            "relation": self.relation,
-            "targets": list(self.targets),
-        }
 
 
 @dataclass(frozen=True)
 class KnowledgeBaseProject:
-    product_spec_file: str
-    implementation_config_file: str
-    framework_layer: KnowledgeBaseFrameworkLayer
-    product_module: KnowledgeBaseProductModule
-    implementation_module: KnowledgeBaseImplementationModule
-    code_module: KnowledgeBaseCodeModule
-    evidence_module: KnowledgeBaseEvidenceModule | None = None
-
-    @property
-    def routes(self) -> RouteConfig:
-        return self.route
-
-    @property
-    def theme(self) -> VisualConfig:
-        return self.visual
-
-    @property
-    def theme_tokens(self) -> dict[str, str]:
-        return self.visual_tokens
+    project_file: str
+    config: UnifiedProjectConfig
+    scene_contract: KnowledgeBaseTemplateContract
+    package_registry: FrameworkPackageRegistry
+    frontend_ir: FrameworkModule
+    domain_ir: FrameworkModule
+    backend_ir: FrameworkModule
+    resolved_modules: tuple[FrameworkModule, ...]
+    package_results: dict[str, PackageCompileResult]
+    visual_tokens: dict[str, str]
+    documents: tuple[KnowledgeDocument, ...]
+    derived_copy: dict[str, str]
+    frontend_contract: dict[str, Any]
+    workbench_contract: dict[str, Any]
+    ui_spec: dict[str, Any]
+    backend_spec: dict[str, Any]
+    validation_reports: ValidationReports
+    generated_artifacts: GeneratedArtifactPaths | None = None
+    derived_views: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @property
     def metadata(self) -> ProjectMetadata:
-        return self.product_module.metadata
+        return self.config.metadata
 
     @property
     def template_contract(self) -> KnowledgeBaseTemplateContract:
-        return self.implementation_module.template_contract
+        return self.scene_contract
 
     @property
-    def framework(self) -> FrameworkSelection:
-        return self.product_module.framework_selection
+    def selection(self) -> ModuleSelection:
+        return self.config.selection
 
     @property
-    def implementation(self) -> KnowledgeBaseImplementationConfig:
-        return self.implementation_module.export["implementation_config"]
+    def framework(self) -> ModuleSelection:
+        return self.selection
 
     @property
     def surface(self) -> SurfaceConfig:
-        return self.product_module.surface
+        return self.config.surface
 
     @property
     def visual(self) -> VisualConfig:
-        return self.product_module.visual
-
-    @property
-    def visual_tokens(self) -> dict[str, str]:
-        return self.code_module.visual_tokens if "visual_tokens" in self.code_module.export else self.implementation_module.visual_tokens
+        return self.config.visual
 
     @property
     def features(self) -> FeatureConfig:
-        return self.product_module.features
+        return self.config.features
 
     @property
     def route(self) -> RouteConfig:
-        return self.product_module.route
+        return self.config.route
 
     @property
     def showcase_page(self) -> ShowcasePageConfig:
-        return self.product_module.showcase_page
+        return self.config.showcase_page
 
     @property
     def a11y(self) -> A11yConfig:
-        return self.product_module.a11y
+        return self.config.a11y
 
     @property
     def library(self) -> LibraryConfig:
-        return self.product_module.library
+        return self.config.library
 
     @property
     def preview(self) -> PreviewConfig:
-        return self.product_module.preview
+        return self.config.preview
 
     @property
     def chat(self) -> ChatConfig:
-        return self.product_module.chat
+        return self.config.chat
 
     @property
     def context(self) -> ContextConfig:
-        return self.product_module.context
+        return self.config.context
 
     @property
     def return_config(self) -> ReturnConfig:
-        return self.product_module.return_config
+        return self.config.return_config
+
+    @property
+    def refinement(self) -> RefinementConfig:
+        return self.config.refinement
 
     @property
     def copy(self) -> dict[str, str]:
-        return self.code_module.copy if "copy" in self.code_module.export else self.implementation_module.copy
+        return dict(self.derived_copy)
 
     @property
-    def frontend_ir(self) -> FrameworkModule:
-        return self.implementation_module.frontend_module
+    def public_summary(self) -> dict[str, Any]:
+        return _build_public_summary(self)
 
     @property
-    def domain_ir(self) -> FrameworkModule:
-        return self.implementation_module.domain_module
-
-    @property
-    def backend_ir(self) -> FrameworkModule:
-        return self.implementation_module.backend_module
-
-    @property
-    def resolved_modules(self) -> tuple[FrameworkModule, ...]:
-        return self.framework_layer.resolved_modules
-
-    @property
-    def documents(self) -> tuple[KnowledgeDocument, ...]:
-        return self.code_module.documents if "documents" in self.code_module.export else self.implementation_module.documents
-
-    @property
-    def frontend_contract(self) -> dict[str, Any]:
-        return self.code_module.frontend_contract
-
-    @property
-    def workbench_contract(self) -> dict[str, Any]:
-        return self.code_module.workbench_contract
-
-    @property
-    def ui_spec(self) -> dict[str, Any]:
-        return self.code_module.ui_spec
-
-    @property
-    def backend_spec(self) -> dict[str, Any]:
-        return self.code_module.backend_spec
-
-    @property
-    def validation_reports(self) -> ValidationReports:
-        return self.code_module.validation_reports
-
-    @property
-    def generated_artifacts(self) -> GeneratedArtifactPaths | None:
-        return self.code_module.generated_artifacts
+    def project_config_view(self) -> dict[str, Any]:
+        return _build_project_config_view(self)
 
     def _resolved_page_routes(self) -> dict[str, str]:
         return {
@@ -943,41 +729,15 @@ class KnowledgeBaseProject:
             "section_detail": f"{self.route.api_prefix}/documents/{{document_id}}/sections/{{section_id}}",
             "tags": f"{self.route.api_prefix}/tags",
             "chat_turns": f"{self.route.api_prefix}/chat/turns",
+            "project_config": self.refinement.evidence.project_config_endpoint,
         }
-
-    def to_product_spec_dict(self) -> dict[str, Any]:
-        return self.code_module.product_view
-
-    def to_canonical_graph_dict(self) -> dict[str, Any]:
-        if self.evidence_module is not None:
-            evidence_module = self.evidence_module
-        else:
-            evidence_module = KnowledgeBaseEvidenceModule(
-                module_id=f"{self.metadata.project_id}.evidence",
-                derived_from=(),
-                validation_reports=self.validation_reports,
-                export={"derived_views": {}},
-            )
-        return CanonicalLayeredProjectGraph(
-            schema_version=KNOWLEDGE_BASE_CANONICAL_SCHEMA_VERSION,
-            project_id=self.metadata.project_id,
-            product_spec_file=self.product_spec_file,
-            implementation_config_file=self.implementation_config_file,
-            framework=self.framework_layer,
-            product=self.product_module,
-            implementation=self.implementation_module,
-            code=self.code_module,
-            evidence=evidence_module,
-        ).to_dict()
 
     def to_runtime_bundle_dict(self) -> dict[str, Any]:
         return {
-            "product_spec_file": self.product_spec_file,
-            "implementation_config_file": self.implementation_config_file,
-            "product_spec": self.to_product_spec_dict(),
-            "framework": self.framework_layer.to_dict(),
-            "implementation_config": self.implementation.to_dict(),
-            "visual_tokens": self.visual_tokens,
+            "project_file": self.project_file,
+            "project": self.metadata.to_dict(),
+            "selection": self.selection.to_dict(),
+            "project_config": self.project_config_view,
             "routes": {
                 **self.route.to_dict(),
                 "pages": self._resolved_page_routes(),
@@ -996,122 +756,80 @@ class KnowledgeBaseProject:
     def to_spec_dict(self) -> dict[str, Any]:
         return self.to_runtime_bundle_dict()
 
-    def public_summary(self) -> dict[str, Any]:
-        return self.code_module.public_summary
-
-
-@dataclass(frozen=True)
-class UiSpecPaths:
-    knowledge_base_detail_path: str
-    document_detail_path: str
-    basketball_showcase_path: str
-
-    @classmethod
-    def from_project(cls, project: KnowledgeBaseProject) -> "UiSpecPaths":
-        return cls(
-            knowledge_base_detail_path=f"{project.route.knowledge_detail}/{{knowledge_base_id}}",
-            document_detail_path=f"{project.route.document_detail_prefix}/{{document_id}}",
-            basketball_showcase_path=project.route.basketball_showcase,
-        )
-
-
-def _effective_generated_artifacts(project: KnowledgeBaseProject) -> GeneratedArtifactPaths:
-    if project.generated_artifacts is not None:
-        return project.generated_artifacts
-
-    product_spec_path = _normalize_project_path(project.product_spec_file)
-    artifact_directory = product_spec_path.parent / "generated"
-    return GeneratedArtifactPaths.from_artifact_config(
-        project.implementation.artifacts,
-        directory=artifact_directory,
-        path_renderer=_relative_path,
-    )
-
-
-def build_implementation_effect_manifest(project: KnowledgeBaseProject) -> dict[str, ImplementationEffectEntry]:
-    generated_artifacts = _effective_generated_artifacts(project)
-    return {
-        "artifacts.canonical_graph_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.canonical_graph_json,
-            relation="basename",
-            targets=("generated_artifacts.canonical_graph_json",),
-        ),
-        "frontend.renderer": ImplementationEffectEntry(
-            value=project.implementation.frontend.renderer,
-            relation="equals",
-            targets=("ui_spec.implementation.frontend_renderer",),
-        ),
-        "frontend.style_profile": ImplementationEffectEntry(
-            value=project.implementation.frontend.style_profile,
-            relation="equals",
-            targets=("ui_spec.implementation.style_profile",),
-        ),
-        "frontend.script_profile": ImplementationEffectEntry(
-            value=project.implementation.frontend.script_profile,
-            relation="equals",
-            targets=("ui_spec.implementation.script_profile",),
-        ),
-        "backend.renderer": ImplementationEffectEntry(
-            value=project.implementation.backend.renderer,
-            relation="equals",
-            targets=("backend_spec.implementation.backend_renderer",),
-        ),
-        "backend.transport": ImplementationEffectEntry(
-            value=project.implementation.backend.transport,
-            relation="equals",
-            targets=("backend_spec.transport.mode",),
-        ),
-        "backend.retrieval_strategy": ImplementationEffectEntry(
-            value=project.implementation.backend.retrieval_strategy,
-            relation="equals",
-            targets=("backend_spec.retrieval.strategy",),
-        ),
-        "evidence.product_spec_endpoint": ImplementationEffectEntry(
-            value=project.implementation.evidence.product_spec_endpoint,
-            relation="equals",
-            targets=("backend_spec.transport.product_spec_endpoint",),
-        ),
-        "artifacts.framework_ir_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.framework_ir_json,
-            relation="basename",
-            targets=("generated_artifacts.framework_ir_json",),
-        ),
-        "artifacts.product_spec_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.product_spec_json,
-            relation="basename",
-            targets=("generated_artifacts.product_spec_json",),
-        ),
-        "artifacts.implementation_bundle_py": ImplementationEffectEntry(
-            value=project.implementation.artifacts.implementation_bundle_py,
-            relation="basename",
-            targets=("generated_artifacts.implementation_bundle_py",),
-        ),
-        "artifacts.generation_manifest_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.generation_manifest_json,
-            relation="basename",
-            targets=("generated_artifacts.generation_manifest_json",),
-        ),
-        "artifacts.governance_manifest_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.governance_manifest_json,
-            relation="basename",
-            targets=("generated_artifacts.governance_manifest_json",),
-        ),
-        "artifacts.governance_tree_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.governance_tree_json,
-            relation="basename",
-            targets=("generated_artifacts.governance_tree_json",),
-        ),
-        "artifacts.strict_zone_report_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.strict_zone_report_json,
-            relation="basename",
-            targets=("generated_artifacts.strict_zone_report_json",),
-        ),
-        "artifacts.object_coverage_report_json": ImplementationEffectEntry(
-            value=project.implementation.artifacts.object_coverage_report_json,
-            relation="basename",
-            targets=("generated_artifacts.object_coverage_report_json",),
-        ),
-    }
+    def to_canonical_graph_dict(self) -> dict[str, Any]:
+        generated_artifacts = _effective_generated_artifacts(self).to_dict()
+        return {
+            "schema_version": KNOWLEDGE_BASE_CANONICAL_SCHEMA_VERSION,
+            "project": self.metadata.to_dict(),
+            "layers": {
+                "framework": {
+                    "author_source": "framework/*.md",
+                    "selection": self.selection.to_dict(),
+                    "module_tree": {
+                        "root_module_ids": [
+                            self.frontend_ir.module_id,
+                            self.domain_ir.module_id,
+                            self.backend_ir.module_id,
+                        ],
+                        "modules": [
+                            {
+                                "module_id": item.module_id,
+                                "framework_file": item.path,
+                                "title_cn": item.title_cn,
+                                "title_en": item.title_en,
+                                "intro": item.intro,
+                                "upstream_module_ids": list(item.export_surface().upstream_module_ids),
+                            }
+                            for item in self.resolved_modules
+                        ],
+                    },
+                    "registry_binding": [item.to_dict() for item in self.package_registry.iter_registrations()],
+                },
+                "config": {
+                    "project_file": self.project_file,
+                    "section_sources": dict(self.config.section_sources),
+                    "selection": self.selection.to_dict(),
+                    "truth": self.config.truth_payload(),
+                    "refinement": self.refinement.to_dict(),
+                    "narrative": _jsonable(self.config.narrative),
+                    "projection": {
+                        module_id: {
+                            "config_contract": result.config_contract.to_dict(),
+                            "config_slice": _jsonable(result.config_slice),
+                        }
+                        for module_id, result in sorted(self.package_results.items())
+                    },
+                },
+                "code": {
+                    "package_compile_order": [item.module_id for item in self.resolved_modules],
+                    "root_packages": {
+                        "frontend": self.frontend_ir.module_id,
+                        "knowledge_base": self.domain_ir.module_id,
+                        "backend": self.backend_ir.module_id,
+                    },
+                    "package_results": {
+                        module_id: result.to_dict()
+                        for module_id, result in sorted(self.package_results.items())
+                    },
+                    "runtime_projection": {
+                        "frontend_contract": self.frontend_contract,
+                        "workbench_contract": self.workbench_contract,
+                        "ui_spec": self.ui_spec,
+                        "backend_spec": self.backend_spec,
+                        "public_summary": self.public_summary,
+                    },
+                },
+                "evidence": {
+                    "validation_reports": self.validation_reports.to_dict(),
+                    "document_digests": {
+                        item.document_id: _sha256_text(item.body_markdown)
+                        for item in self.documents
+                    },
+                    "generated_artifacts": generated_artifacts,
+                    "derived_views": dict(self.derived_views),
+                },
+            },
+        }
 
 
 def _render_markdown(markdown: str) -> str:
@@ -1251,12 +969,12 @@ def compile_knowledge_document_source(source: SeedDocumentSource) -> KnowledgeDo
 def _require_documents(data: dict[str, Any]) -> tuple[SeedDocumentSource, ...]:
     value = data.get("documents")
     if not isinstance(value, list) or not value:
-        raise ValueError("project config must define non-empty [[documents]]")
+        raise ValueError("truth must define non-empty [[truth.documents]]")
     seen_ids: set[str] = set()
     items: list[SeedDocumentSource] = []
     for raw_document in value:
         if not isinstance(raw_document, dict):
-            raise ValueError("each [[documents]] entry must be a table")
+            raise ValueError("each [[truth.documents]] entry must be a table")
         document = SeedDocumentSource(
             document_id=_require_string(raw_document, "document_id"),
             title=_require_string(raw_document, "title"),
@@ -1272,24 +990,31 @@ def _require_documents(data: dict[str, Any]) -> tuple[SeedDocumentSource, ...]:
     return tuple(items)
 
 
-def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
-    document = load_product_spec_document(product_spec_path)
+def _load_project_config(project_file: Path) -> UnifiedProjectConfig:
+    document: ComposedTomlDocument = load_project_config_document(project_file)
     raw = document.merged_data
     project_table = _require_table(raw, "project")
-    framework_table = _require_table(raw, "framework")
-    surface_table = _require_table(raw, "surface")
+    selection_table = _require_table(raw, "selection")
+    root_modules_table = _require_table(selection_table, "root_modules")
+    truth_table = _require_table(raw, "truth")
+    surface_table = _require_table(truth_table, "surface")
     surface_copy_table = _require_table(surface_table, "copy")
-    visual_table = _require_table(raw, "visual")
-    route_table = _require_table(raw, "route")
-    showcase_page_table = _require_table(raw, "showcase_page")
-    a11y_table = _require_table(raw, "a11y")
-    library_table = _require_table(raw, "library")
+    visual_table = _require_table(truth_table, "visual")
+    route_table = _require_table(truth_table, "route")
+    showcase_page_table = _require_table(truth_table, "showcase_page")
+    a11y_table = _require_table(truth_table, "a11y")
+    library_table = _require_table(truth_table, "library")
     library_copy_table = _require_table(library_table, "copy")
-    preview_table = _require_table(raw, "preview")
-    chat_table = _require_table(raw, "chat")
+    preview_table = _require_table(truth_table, "preview")
+    chat_table = _require_table(truth_table, "chat")
     chat_copy_table = _require_table(chat_table, "copy")
-    context_table = _require_table(raw, "context")
-    return_table = _require_table(raw, "return")
+    context_table = _require_table(truth_table, "context")
+    return_table = _require_table(truth_table, "return")
+    refinement_table = _require_table(raw, "refinement")
+    frontend_table = _require_table(refinement_table, "frontend")
+    backend_table = _require_table(refinement_table, "backend")
+    evidence_table = _require_table(refinement_table, "evidence")
+    artifacts_table = _require_table(refinement_table, "artifacts")
 
     library_enabled = _require_bool(library_table, "enabled")
     preview_enabled = _require_bool(preview_table, "enabled")
@@ -1299,24 +1024,26 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     allow_create = _require_bool(library_table, "allow_create")
     allow_delete = _require_bool(library_table, "allow_delete")
 
-    return KnowledgeBaseProductSpec(
-        product_spec_file=_relative_path(product_spec_path),
+    return UnifiedProjectConfig(
+        project_file=_relative_path(project_file),
         section_sources={
             section_name: _relative_path(document.source_file_for_section(section_name))
             for section_name in raw
         },
         metadata=ProjectMetadata(
             project_id=_require_string(project_table, "project_id"),
-            template=_require_string(project_table, "template"),
+            runtime_scene=_require_string(project_table, "runtime_scene"),
             display_name=_require_string(project_table, "display_name"),
             description=_require_string(project_table, "description"),
             version=_require_string(project_table, "version"),
         ),
-        framework=FrameworkSelection(
-            frontend=_require_string(framework_table, "frontend"),
-            domain=_require_string(framework_table, "domain"),
-            backend=_require_string(framework_table, "backend"),
-            preset=_require_string(framework_table, "preset"),
+        selection=ModuleSelection(
+            preset=_require_string(selection_table, "preset"),
+            root_modules=RootModuleSelection(
+                frontend=_require_string(root_modules_table, "frontend"),
+                knowledge_base=_require_string(root_modules_table, "knowledge_base"),
+                backend=_require_string(root_modules_table, "backend"),
+            ),
         ),
         surface=SurfaceConfig(
             shell=_require_string(surface_table, "shell"),
@@ -1418,53 +1145,43 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
             anchor_restore=_require_bool(return_table, "anchor_restore"),
             citation_card_variant=_require_string(return_table, "citation_card_variant"),
         ),
-        documents=_require_documents(raw),
+        documents=_require_documents(truth_table),
+        refinement=RefinementConfig(
+            frontend=FrontendRefinementConfig(
+                renderer=_require_string(frontend_table, "renderer"),
+                style_profile=_require_string(frontend_table, "style_profile"),
+                script_profile=_require_string(frontend_table, "script_profile"),
+            ),
+            backend=BackendRefinementConfig(
+                renderer=_require_string(backend_table, "renderer"),
+                transport=_require_string(backend_table, "transport"),
+                retrieval_strategy=_require_string(backend_table, "retrieval_strategy"),
+            ),
+            evidence=EvidenceRefinementConfig(
+                project_config_endpoint=_require_string(evidence_table, "project_config_endpoint"),
+            ),
+            artifacts=ArtifactConfig(
+                canonical_graph_json=_require_string(artifacts_table, "canonical_graph_json"),
+                runtime_bundle_py=_require_string(artifacts_table, "runtime_bundle_py"),
+                generation_manifest_json=_require_string(artifacts_table, "generation_manifest_json"),
+                governance_manifest_json=_require_string(artifacts_table, "governance_manifest_json"),
+                governance_tree_json=_require_string(artifacts_table, "governance_tree_json"),
+                strict_zone_report_json=_require_string(artifacts_table, "strict_zone_report_json"),
+                object_coverage_report_json=_require_string(artifacts_table, "object_coverage_report_json"),
+            ),
+        ),
+        narrative=_optional_table(raw, "narrative"),
     )
 
 
-def _load_implementation_config(implementation_config_path: Path) -> KnowledgeBaseImplementationConfig:
-    raw = _read_toml_file(implementation_config_path)
-    frontend_table = _require_table(raw, "frontend")
-    backend_table = _require_table(raw, "backend")
-    evidence_table = _require_table(raw, "evidence")
-    artifacts_table = _require_table(raw, "artifacts")
-    return KnowledgeBaseImplementationConfig(
-        frontend=FrontendImplementationConfig(
-            renderer=_require_string(frontend_table, "renderer"),
-            style_profile=_require_string(frontend_table, "style_profile"),
-            script_profile=_require_string(frontend_table, "script_profile"),
-        ),
-        backend=BackendImplementationConfig(
-            renderer=_require_string(backend_table, "renderer"),
-            transport=_require_string(backend_table, "transport"),
-            retrieval_strategy=_require_string(backend_table, "retrieval_strategy"),
-        ),
-        evidence=EvidenceConfig(
-            product_spec_endpoint=_require_string(evidence_table, "product_spec_endpoint"),
-        ),
-        artifacts=ArtifactConfig(
-            canonical_graph_json=_require_string(artifacts_table, "canonical_graph_json"),
-            framework_ir_json=_require_string(artifacts_table, "framework_ir_json"),
-            product_spec_json=_require_string(artifacts_table, "product_spec_json"),
-            implementation_bundle_py=_require_string(artifacts_table, "implementation_bundle_py"),
-            generation_manifest_json=_require_string(artifacts_table, "generation_manifest_json"),
-            governance_manifest_json=_require_string(artifacts_table, "governance_manifest_json"),
-            governance_tree_json=_require_string(artifacts_table, "governance_tree_json"),
-            strict_zone_report_json=_require_string(artifacts_table, "strict_zone_report_json"),
-            object_coverage_report_json=_require_string(artifacts_table, "object_coverage_report_json"),
-        ),
-    )
+def _resolve_framework_module(registry: FrameworkRegistry, ref: str) -> FrameworkModule:
+    for module in registry.modules:
+        if module.path == ref:
+            return module
+    raise ValueError(f"framework ref does not exist: {ref}")
 
 
-def _resolve_framework_module(ref: str) -> FrameworkModule:
-    framework_path = REPO_ROOT / ref
-    if not framework_path.exists():
-        raise ValueError(f"framework ref does not exist: {ref}")
-    return parse_framework_module(framework_path)
-
-
-def _collect_framework_closure(*roots: FrameworkModule) -> tuple[FrameworkModule, ...]:
-    registry = load_framework_registry()
+def _collect_framework_closure(registry: FrameworkRegistry, *roots: FrameworkModule) -> tuple[FrameworkModule, ...]:
     ordered: list[FrameworkModule] = []
     seen: set[str] = set()
 
@@ -1472,11 +1189,10 @@ def _collect_framework_closure(*roots: FrameworkModule) -> tuple[FrameworkModule
         if module.module_id in seen:
             return
         seen.add(module.module_id)
-        ordered.append(module)
         for base in module.bases:
             for ref in base.upstream_refs:
-                upstream = registry.get_module(ref.framework, ref.level, ref.module)
-                visit(upstream)
+                visit(registry.get_module(ref.framework, ref.level, ref.module))
+        ordered.append(module)
 
     for root in roots:
         visit(root)
@@ -1484,8 +1200,8 @@ def _collect_framework_closure(*roots: FrameworkModule) -> tuple[FrameworkModule
 
 
 def _build_visual_tokens(visual: VisualConfig, surface: SurfaceConfig, preview: PreviewConfig) -> dict[str, str]:
-    template_contract = load_knowledge_base_template_contract()
-    return template_contract.style_profiles.resolve_visual_tokens(
+    scene_contract = load_knowledge_base_template_contract()
+    return scene_contract.style_profiles.resolve_visual_tokens(
         surface_preset=visual.surface_preset,
         radius_scale=visual.radius_scale,
         shadow_level=visual.shadow_level,
@@ -1507,7 +1223,7 @@ def _pick_boundary_name(module: FrameworkModule, boundary_id: str, fallback: str
 
 
 def _derive_copy(
-    product_spec: KnowledgeBaseProductSpec,
+    config: UnifiedProjectConfig,
     frontend_ir: FrameworkModule,
     domain_ir: FrameworkModule,
     backend_ir: FrameworkModule,
@@ -1521,14 +1237,14 @@ def _derive_copy(
     ).strip()
     base_labels = " / ".join(item.name for item in domain_ir.bases)
     boundary_labels = ", ".join(item.boundary_id for item in domain_ir.boundaries)
-    surface_copy = product_spec.surface.copy
+    surface_copy = config.surface.copy
     return {
-        "hero_kicker": surface_copy.hero_kicker or product_spec.visual.brand,
-        "hero_title": surface_copy.hero_title or product_spec.metadata.display_name,
+        "hero_kicker": surface_copy.hero_kicker or config.visual.brand,
+        "hero_title": surface_copy.hero_title or config.metadata.display_name,
         "hero_copy": surface_copy.hero_copy or hero_copy,
         "mode_label": "知识问答",
-        "knowledge_base_name": product_spec.library.knowledge_base_name,
-        "knowledge_base_description": product_spec.library.knowledge_base_description,
+        "knowledge_base_name": config.library.knowledge_base_name,
+        "knowledge_base_description": config.library.knowledge_base_description,
         "contract_title": "Framework Contract",
         "contract_value": base_labels,
         "contract_meta": f"Boundaries: {boundary_labels}",
@@ -1536,43 +1252,152 @@ def _derive_copy(
         "preview_title": surface_copy.preview_title or _pick_boundary_name(domain_ir, "PREVIEW", "Preview"),
         "toc_title": surface_copy.toc_title or "TOC",
         "chat_title": surface_copy.chat_title or _pick_boundary_name(domain_ir, "CHAT", "Chat"),
-        "search_placeholder": product_spec.library.search_placeholder,
-        "chat_placeholder": product_spec.chat.placeholder,
-        "chat_welcome": product_spec.chat.welcome,
+        "search_placeholder": config.library.search_placeholder,
+        "chat_placeholder": config.chat.placeholder,
+        "chat_welcome": config.chat.welcome,
         "empty_state_title": surface_copy.empty_state_title,
         "empty_state_copy": surface_copy.empty_state_copy,
     }
+
+
+def _validate_project_config(
+    config: UnifiedProjectConfig,
+    frontend_ir: FrameworkModule,
+    domain_ir: FrameworkModule,
+    backend_ir: FrameworkModule,
+    scene_contract: KnowledgeBaseTemplateContract,
+) -> None:
+    if config.metadata.runtime_scene != KNOWLEDGE_BASE_RUNTIME_SCENE:
+        raise ValueError(f"unsupported runtime_scene: {config.metadata.runtime_scene}")
+    if config.surface.shell != scene_contract.required_surface_shell:
+        raise ValueError(f"truth.surface.shell must be {scene_contract.required_surface_shell}")
+    if config.surface.layout_variant != scene_contract.required_layout_variant:
+        raise ValueError(f"truth.surface.layout_variant must be {scene_contract.required_layout_variant}")
+    if config.surface.preview_mode != scene_contract.required_preview_mode:
+        raise ValueError(f"truth.surface.preview_mode must be {scene_contract.required_preview_mode}")
+    if not all(
+        (
+            config.library.enabled,
+            config.preview.enabled,
+            config.chat.enabled,
+            config.chat.citations_enabled,
+            config.return_config.enabled,
+        )
+    ):
+        raise ValueError("knowledge_base_workbench requires library, preview, chat, citations, and return")
+    if not config.route.home.startswith("/") or not config.route.workbench.startswith("/"):
+        raise ValueError("truth.route.home and truth.route.workbench must start with '/'")
+    if not config.route.api_prefix.startswith("/api"):
+        raise ValueError("truth.route.api_prefix must start with '/api'")
+    if not config.route.knowledge_detail.startswith(config.route.knowledge_list):
+        raise ValueError("truth.route.knowledge_detail must stay under truth.route.knowledge_list")
+    if not config.route.document_detail_prefix.startswith(config.route.knowledge_detail):
+        raise ValueError("truth.route.document_detail_prefix must stay under truth.route.knowledge_detail")
+    if not config.route.basketball_showcase.startswith(config.route.workbench):
+        raise ValueError("truth.route.basketball_showcase must stay under truth.route.workbench")
+    if config.library.default_focus != scene_contract.required_library_default_focus:
+        raise ValueError(f"truth.library.default_focus must be {scene_contract.required_library_default_focus}")
+    if config.preview.anchor_mode != scene_contract.required_preview_anchor_mode:
+        raise ValueError(f"truth.preview.anchor_mode must be {scene_contract.required_preview_anchor_mode}")
+    if config.preview.preview_variant != scene_contract.required_preview_variant:
+        raise ValueError(f"truth.preview.preview_variant must be {scene_contract.required_preview_variant}")
+    if config.chat.mode != scene_contract.required_chat_mode:
+        raise ValueError(f"truth.chat.mode must be {scene_contract.required_chat_mode}")
+    if config.chat.citation_style != scene_contract.required_chat_citation_style:
+        raise ValueError(f"truth.chat.citation_style must be {scene_contract.required_chat_citation_style}")
+    if tuple(config.a11y.reading_order) != scene_contract.required_reading_order:
+        raise ValueError("truth.a11y.reading_order does not match scene contract")
+    missing_return_targets = scene_contract.required_return_target_set() - set(config.return_config.targets)
+    if missing_return_targets:
+        raise ValueError(f"truth.return.targets missing required values: {', '.join(sorted(missing_return_targets))}")
+    if config.refinement.frontend.renderer not in scene_contract.supported_frontend_renderers:
+        raise ValueError(f"unsupported refinement.frontend.renderer: {config.refinement.frontend.renderer}")
+    if config.refinement.frontend.style_profile not in scene_contract.supported_frontend_style_profiles:
+        raise ValueError(f"unsupported refinement.frontend.style_profile: {config.refinement.frontend.style_profile}")
+    if config.refinement.frontend.script_profile not in scene_contract.supported_frontend_script_profiles:
+        raise ValueError(f"unsupported refinement.frontend.script_profile: {config.refinement.frontend.script_profile}")
+    if config.refinement.backend.renderer not in scene_contract.supported_backend_renderers:
+        raise ValueError(f"unsupported refinement.backend.renderer: {config.refinement.backend.renderer}")
+    if config.refinement.backend.transport not in scene_contract.supported_backend_transports:
+        raise ValueError(f"unsupported refinement.backend.transport: {config.refinement.backend.transport}")
+    if config.refinement.backend.retrieval_strategy not in scene_contract.supported_backend_retrieval_strategies:
+        raise ValueError(
+            f"unsupported refinement.backend.retrieval_strategy: {config.refinement.backend.retrieval_strategy}"
+        )
+    if config.refinement.backend.retrieval_strategy != config.chat.mode:
+        raise ValueError("refinement.backend.retrieval_strategy must match truth.chat.mode")
+    if not config.refinement.evidence.project_config_endpoint.startswith(config.route.api_prefix):
+        raise ValueError("refinement.evidence.project_config_endpoint must stay under truth.route.api_prefix")
+    if not frontend_ir.bases or not domain_ir.bases or not backend_ir.bases:
+        raise ValueError("selected framework modules must define bases")
+    for document in config.documents:
+        if len(_tokenize(document.summary)) < 3:
+            raise ValueError(f"document summary is too short for retrieval: {document.document_id}")
+        if "## " not in document.body_markdown:
+            raise ValueError(f"document body must contain level-2 headings: {document.document_id}")
+
+
+def _config_slice(root_payload: dict[str, Any], result: PackageCompileResult | None, *, entry: Any) -> dict[str, Any]:
+    contract = entry.config_contract()
+    resolved: dict[str, Any] = {}
+    for dotted_path in contract.required_paths:
+        try:
+            resolved[dotted_path] = _jsonable(_lookup_dotted_path(root_payload, dotted_path))
+        except KeyError as exc:
+            raise ValueError(f"missing required config path for {entry.module_id()}: {dotted_path}") from exc
+    for dotted_path in contract.optional_paths:
+        try:
+            resolved[dotted_path] = _jsonable(_lookup_dotted_path(root_payload, dotted_path))
+        except KeyError:
+            continue
+    return resolved
+
+
+def _compile_package_results(
+    config: UnifiedProjectConfig,
+    package_registry: FrameworkPackageRegistry,
+    resolved_modules: tuple[FrameworkModule, ...],
+) -> dict[str, PackageCompileResult]:
+    root_payload = config.root_payload()
+    results: dict[str, PackageCompileResult] = {}
+    for module in resolved_modules:
+        registration = package_registry.get_by_module_id(module.module_id)
+        entry = registration.entry_class()
+        child_slots = entry.child_slots(module)
+        child_exports: dict[str, dict[str, Any]] = {}
+        for slot in child_slots:
+            child_result = results.get(slot.child_module_id)
+            if child_result is None and slot.required:
+                raise ValueError(f"missing compiled child package: {slot.child_module_id}")
+            if child_result is not None:
+                child_exports[slot.child_module_id] = child_result.export
+        config_slice = _config_slice(root_payload, None, entry=entry)
+        compiled = entry.compile(
+            PackageCompileInput(
+                framework_module=module,
+                config_slice=config_slice,
+                child_exports=child_exports,
+            )
+        )
+        results[module.module_id] = compiled
+    return results
 
 
 def _ui_derived_from(project: KnowledgeBaseProject) -> dict[str, Any]:
     return {
         "framework_modules": {
             "frontend": project.frontend_ir.module_id,
-            "domain": project.domain_ir.module_id,
+            "knowledge_base": project.domain_ir.module_id,
         },
-        "boundary_sections": {
-            "SURFACE": "surface",
-            "VISUAL": "visual",
-            "ROUTE": "route",
-            "A11Y": "a11y",
-            "LIBRARY": "library",
-            "PREVIEW": "preview",
-            "CHAT": "chat",
-            "CONTEXT": "context",
-            "RETURN": "return",
-        },
-        "rule_drivers": {
-            "frontend": [item.rule_id for item in project.frontend_ir.rules],
-            "domain": [item.rule_id for item in project.domain_ir.rules],
+        "selection": project.selection.to_dict(),
+        "registry_binding": {
+            module_id: project.package_results[module_id].entry_class
+            for module_id in (project.frontend_ir.module_id, project.domain_ir.module_id)
         },
     }
 
 
-def _ui_pages(
-    project: KnowledgeBaseProject,
-    paths: UiSpecPaths,
-    contract: KnowledgeBaseTemplateContract,
-) -> dict[str, Any]:
+def _ui_pages(project: KnowledgeBaseProject, paths: UiSpecPaths, contract: KnowledgeBaseTemplateContract) -> dict[str, Any]:
     return {
         "chat_home": {
             "path": project.route.workbench,
@@ -1623,10 +1448,7 @@ def _ui_pages(
     }
 
 
-def _ui_components(
-    project: KnowledgeBaseProject,
-    contract: KnowledgeBaseTemplateContract,
-) -> dict[str, Any]:
+def _ui_components(project: KnowledgeBaseProject, contract: KnowledgeBaseTemplateContract) -> dict[str, Any]:
     return {
         "conversation_sidebar": {
             "title": "历史会话",
@@ -1713,11 +1535,7 @@ def _ui_conversation(project: KnowledgeBaseProject) -> dict[str, Any]:
     }
 
 
-def _ui_citation(
-    project: KnowledgeBaseProject,
-    paths: UiSpecPaths,
-    contract: KnowledgeBaseTemplateContract,
-) -> dict[str, Any]:
+def _ui_citation(project: KnowledgeBaseProject, paths: UiSpecPaths, contract: KnowledgeBaseTemplateContract) -> dict[str, Any]:
     return {
         "style": project.chat.citation_style,
         "summary_variant": project.return_config.citation_card_variant,
@@ -1726,16 +1544,15 @@ def _ui_citation(
     }
 
 
-# @governed_symbol id=kb.ui.surface_spec owner=framework kind=ui_surface risk=high
 def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
     contract = project.template_contract
     paths = UiSpecPaths.from_project(project)
     return {
         "derived_from": _ui_derived_from(project),
         "implementation": {
-            "frontend_renderer": project.implementation.frontend.renderer,
-            "style_profile": project.implementation.frontend.style_profile,
-            "script_profile": project.implementation.frontend.script_profile,
+            "frontend_renderer": project.refinement.frontend.renderer,
+            "style_profile": project.refinement.frontend.style_profile,
+            "script_profile": project.refinement.frontend.script_profile,
         },
         "shell": {
             "id": project.surface.shell,
@@ -1756,22 +1573,17 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
         "citation": _ui_citation(project, paths, contract),
     }
 
+
 def _backend_derived_from(project: KnowledgeBaseProject) -> dict[str, Any]:
     return {
         "framework_modules": {
-            "domain": project.domain_ir.module_id,
+            "knowledge_base": project.domain_ir.module_id,
             "backend": project.backend_ir.module_id,
         },
-        "boundary_sections": {
-            "LIBRARY": "library",
-            "PREVIEW": "preview",
-            "CHAT": "chat",
-            "CONTEXT": "context",
-            "RETURN": "return",
-        },
-        "rule_drivers": {
-            "domain": [item.rule_id for item in project.domain_ir.rules],
-            "backend": [item.rule_id for item in project.backend_ir.rules],
+        "selection": project.selection.to_dict(),
+        "registry_binding": {
+            module_id: project.package_results[module_id].entry_class
+            for module_id in (project.domain_ir.module_id, project.backend_ir.module_id)
         },
     }
 
@@ -1799,14 +1611,13 @@ def _backend_return_policy(project: KnowledgeBaseProject, paths: UiSpecPaths) ->
     }
 
 
-# @governed_symbol id=kb.backend.surface_spec owner=implementation_config kind=backend_surface risk=high
 def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
     contract = project.template_contract
     paths = UiSpecPaths.from_project(project)
     return {
         "derived_from": _backend_derived_from(project),
         "implementation": {
-            "backend_renderer": project.implementation.backend.renderer,
+            "backend_renderer": project.refinement.backend.renderer,
         },
         "knowledge_base": {
             "knowledge_base_id": project.library.knowledge_base_id,
@@ -1816,12 +1627,12 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "metadata_fields": list(project.library.metadata_fields),
         },
         "transport": {
-            "mode": project.implementation.backend.transport,
+            "mode": project.refinement.backend.transport,
             "api_prefix": project.route.api_prefix,
-            "product_spec_endpoint": project.implementation.evidence.product_spec_endpoint,
+            "project_config_endpoint": project.refinement.evidence.project_config_endpoint,
         },
         "retrieval": {
-            "strategy": project.implementation.backend.retrieval_strategy,
+            "strategy": project.refinement.backend.retrieval_strategy,
             "query_token_min_length": 3,
             "focus_section_bonus": 4,
             "token_match_bonus": 3,
@@ -1843,136 +1654,21 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
     }
 
 
-def _validate_product_spec(
-    product_spec: KnowledgeBaseProductSpec,
-    frontend_ir: FrameworkModule,
-    domain_ir: FrameworkModule,
-    backend_ir: FrameworkModule,
-    template_contract: KnowledgeBaseTemplateContract,
-) -> None:
-    if product_spec.metadata.template != KNOWLEDGE_BASE_TEMPLATE_ID:
-        raise ValueError(f"unsupported project template: {product_spec.metadata.template}")
-    if product_spec.surface.shell != template_contract.required_surface_shell:
-        raise ValueError(f"surface.shell must be {template_contract.required_surface_shell}")
-    if product_spec.surface.layout_variant != template_contract.required_layout_variant:
-        raise ValueError(f"surface.layout_variant must be {template_contract.required_layout_variant}")
-    if product_spec.surface.preview_mode != template_contract.required_preview_mode:
-        raise ValueError(f"surface.preview_mode must be {template_contract.required_preview_mode}")
-    if not all(
-        (
-            product_spec.library.enabled,
-            product_spec.preview.enabled,
-            product_spec.chat.enabled,
-            product_spec.chat.citations_enabled,
-            product_spec.return_config.enabled,
-        )
-    ):
-        raise ValueError("knowledge_base_workbench requires library, preview, chat, citations, and return")
-    if not product_spec.route.home.startswith("/") or not product_spec.route.workbench.startswith("/"):
-        raise ValueError("route.home and route.workbench must start with '/'")
-    if not product_spec.route.basketball_showcase.startswith("/"):
-        raise ValueError("route.basketball_showcase must start with '/'")
-    if not product_spec.route.knowledge_list.startswith("/") or not product_spec.route.knowledge_detail.startswith("/"):
-        raise ValueError("route.knowledge_list and route.knowledge_detail must start with '/'")
-    if not product_spec.route.document_detail_prefix.startswith("/"):
-        raise ValueError("route.document_detail_prefix must start with '/'")
-    if not product_spec.route.api_prefix.startswith("/api"):
-        raise ValueError("route.api_prefix must start with '/api'")
-    if not product_spec.route.knowledge_detail.startswith(product_spec.route.knowledge_list):
-        raise ValueError("route.knowledge_detail must stay under route.knowledge_list")
-    if not product_spec.route.document_detail_prefix.startswith(product_spec.route.knowledge_detail):
-        raise ValueError("route.document_detail_prefix must stay under route.knowledge_detail")
-    if not product_spec.route.basketball_showcase.startswith(product_spec.route.workbench):
-        raise ValueError("route.basketball_showcase must stay under route.workbench")
-    if not product_spec.library.knowledge_base_id.strip():
-        raise ValueError("library.knowledge_base_id must be non-empty")
-    if not template_contract.required_library_source_types.issubset(set(product_spec.library.source_types)):
-        missing_source_types = sorted(template_contract.required_library_source_types - set(product_spec.library.source_types))
-        raise ValueError(f"library.source_types missing required values: {', '.join(missing_source_types)}")
-    if not template_contract.required_library_metadata_fields.issubset(set(product_spec.library.metadata_fields)):
-        missing_metadata_fields = sorted(
-            template_contract.required_library_metadata_fields - set(product_spec.library.metadata_fields)
-        )
-        raise ValueError(f"library.metadata_fields missing required values: {', '.join(missing_metadata_fields)}")
-    if not product_spec.library.allow_create and product_spec.library.allow_delete:
-        raise ValueError("library.allow_delete cannot be true when library.allow_create is false")
-    if product_spec.library.default_focus != template_contract.required_library_default_focus:
-        raise ValueError(f"library.default_focus must be {template_contract.required_library_default_focus}")
-    if product_spec.preview.anchor_mode != template_contract.required_preview_anchor_mode:
-        raise ValueError(f"preview.anchor_mode must be {template_contract.required_preview_anchor_mode}")
-    if template_contract.preview_show_toc_required and not product_spec.preview.show_toc:
-        raise ValueError("preview.show_toc must stay enabled for the knowledge-base workbench")
-    if product_spec.preview.preview_variant != template_contract.required_preview_variant:
-        raise ValueError(f"preview.preview_variant must be {template_contract.required_preview_variant}")
-    if product_spec.chat.mode != template_contract.required_chat_mode:
-        raise ValueError(f"chat.mode must be {template_contract.required_chat_mode}")
-    if product_spec.chat.citation_style != template_contract.required_chat_citation_style:
-        raise ValueError(f"chat.citation_style must be {template_contract.required_chat_citation_style}")
-    if not product_spec.chat.welcome_prompts:
-        raise ValueError("chat.welcome_prompts must not be empty")
-    if product_spec.context.max_citations <= 0 or product_spec.context.max_preview_sections <= 0:
-        raise ValueError("context max values must be positive")
-    if template_contract.return_anchor_restore_required and not product_spec.return_config.anchor_restore:
-        raise ValueError("return.anchor_restore must stay enabled")
-    missing_return_targets = template_contract.required_return_target_set() - set(product_spec.return_config.targets)
-    if missing_return_targets:
-        raise ValueError(f"return.targets missing required values: {', '.join(sorted(missing_return_targets))}")
-    if tuple(product_spec.a11y.reading_order) != template_contract.required_reading_order:
-        raise ValueError(
-            "a11y.reading_order must stay "
-            + " -> ".join(template_contract.required_reading_order)
-        )
-    if len(product_spec.documents) < 1:
-        raise ValueError("at least one document is required")
-    if not frontend_ir.bases or not domain_ir.bases or not backend_ir.bases:
-        raise ValueError("selected framework modules must define bases")
-    for document in product_spec.documents:
-        if len(_tokenize(document.summary)) < 3:
-            raise ValueError(f"document summary is too short for retrieval: {document.document_id}")
-        if "## " not in document.body_markdown:
-            raise ValueError(f"document body must contain level-2 headings for anchor navigation: {document.document_id}")
-
-
-def _validate_implementation_config(
-    implementation: KnowledgeBaseImplementationConfig,
-    product_spec: KnowledgeBaseProductSpec,
-    template_contract: KnowledgeBaseTemplateContract,
-) -> None:
-    if implementation.frontend.renderer not in template_contract.supported_frontend_renderers:
-        raise ValueError(f"unsupported frontend.renderer: {implementation.frontend.renderer}")
-    if implementation.frontend.style_profile not in template_contract.supported_frontend_style_profiles:
-        raise ValueError(f"unsupported frontend.style_profile: {implementation.frontend.style_profile}")
-    if implementation.frontend.script_profile not in template_contract.supported_frontend_script_profiles:
-        raise ValueError(f"unsupported frontend.script_profile: {implementation.frontend.script_profile}")
-    if implementation.backend.renderer not in template_contract.supported_backend_renderers:
-        raise ValueError(f"unsupported backend.renderer: {implementation.backend.renderer}")
-    if implementation.backend.transport not in template_contract.supported_backend_transports:
-        raise ValueError(f"unsupported backend.transport: {implementation.backend.transport}")
-    if implementation.backend.retrieval_strategy not in template_contract.supported_backend_retrieval_strategies:
-        raise ValueError(f"unsupported backend.retrieval_strategy: {implementation.backend.retrieval_strategy}")
-    if not implementation.evidence.product_spec_endpoint.startswith(product_spec.route.api_prefix):
-        raise ValueError("evidence.product_spec_endpoint must stay under route.api_prefix")
-    if implementation.backend.retrieval_strategy != product_spec.chat.mode:
-        raise ValueError("backend.retrieval_strategy must match chat.mode")
-
-
 def _collect_validation_reports(project: KnowledgeBaseProject) -> ValidationReports:
     from frontend_kernel import summarize_frontend_rules, validate_frontend_rules
     from knowledge_base_framework import summarize_workbench_rules, validate_workbench_rules
 
     frontend_results = validate_frontend_rules(project)
     workbench_results = validate_workbench_rules(project)
-    frontend_summary = summarize_frontend_rules(frontend_results)
-    workbench_summary = summarize_workbench_rules(workbench_results)
-    return ValidationReports(frontend=frontend_summary, knowledge_base=workbench_summary)
+    return ValidationReports(
+        frontend=summarize_frontend_rules(frontend_results),
+        knowledge_base=summarize_workbench_rules(workbench_results),
+    )
 
 
 def _raise_on_validation_failures(reports: ValidationReports) -> None:
     errors: list[str] = []
-    for scope, report in (
-        ("frontend", reports.frontend),
-        ("knowledge_base", reports.knowledge_base),
-    ):
+    for scope, report in (("frontend", reports.frontend), ("knowledge_base", reports.knowledge_base)):
         if report is None:
             continue
         for item in report.rules:
@@ -1984,254 +1680,27 @@ def _raise_on_validation_failures(reports: ValidationReports) -> None:
         raise ValueError("framework rule validation failed: " + " | ".join(errors))
 
 
-def _build_framework_ir_text(project: KnowledgeBaseProject) -> str:
-    return json.dumps(
-        {
-            "primary_modules": [
-                project.frontend_ir.to_dict(),
-                project.domain_ir.to_dict(),
-                project.backend_ir.to_dict(),
-            ],
-            "resolved_modules": [item.to_dict() for item in project.resolved_modules],
-        },
-        ensure_ascii=False,
-        indent=2,
-    )
-
-
-def _build_implementation_bundle_text(
-    project: KnowledgeBaseProject,
-    *,
-    product_spec: dict[str, Any],
-    runtime_bundle: dict[str, Any],
-) -> str:
-    return "\n".join(
-        [
-            "from __future__ import annotations",
-            "",
-            "# GENERATED FILE. DO NOT EDIT.",
-            "# Change framework markdown, product_spec.toml, or implementation_config.toml, then re-materialize.",
-            "",
-            "import json",
-            "",
-            f"PRODUCT_SPEC = json.loads(r'''{json.dumps(product_spec, ensure_ascii=False)}''')",
-            f"IMPLEMENTATION_CONFIG = json.loads(r'''{json.dumps(project.implementation.to_dict(), ensure_ascii=False)}''')",
-            f"RUNTIME_BUNDLE = json.loads(r'''{json.dumps(runtime_bundle, ensure_ascii=False)}''')",
-            "",
-        ]
-    )
-
-
-def _build_generation_manifest_payload(
-    project: KnowledgeBaseProject,
-    *,
-    generated_artifacts: GeneratedArtifactPaths,
-    configuration_effect_payload: dict[str, dict[str, Any]],
-    artifact_payloads: GeneratedArtifactPayloads,
-) -> dict[str, Any]:
+def _build_project_config_view(project: KnowledgeBaseProject) -> dict[str, Any]:
     return {
-        "project_id": project.metadata.project_id,
-        "template": project.metadata.template,
-        "product_spec_file": project.product_spec_file,
-        "implementation_config_file": project.implementation_config_file,
-        "generator": {
-            "entry": "project_runtime.knowledge_base.materialize_knowledge_base_project",
-            "discipline": (
-                "canonical_graph_json is the only machine source of truth; all other generated files are "
-                "derived views materialized from the layered compilation chain."
-            ),
-        },
-        "canonical_source": generated_artifacts.canonical_graph_json,
-        "framework_inputs": {
-            "frontend": project.frontend_ir.path,
-            "domain": project.domain_ir.path,
-            "backend": project.backend_ir.path,
-            "resolved_modules": [item.path for item in project.resolved_modules],
-        },
-        "configuration_effects": configuration_effect_payload,
-        "generated_files": generated_artifacts.file_payload(),
-        "content_sha256": artifact_payloads.content_sha256(),
-    }
-
-
-def _implementation_effect_payload(project: KnowledgeBaseProject) -> dict[str, dict[str, Any]]:
-    return {
-        field_path: effect_entry.to_dict()
-        for field_path, effect_entry in build_implementation_effect_manifest(project).items()
-    }
-
-
-def _build_generated_artifact_payloads(project: KnowledgeBaseProject) -> GeneratedArtifactPayloads:
-    generated_artifacts = project.generated_artifacts
-    if generated_artifacts is None:
-        raise ValueError("generated_artifacts must be populated before payload generation")
-
-    context = GeneratedArtifactBuildContext.from_project(project)
-    artifact_payloads = context.to_artifact_payloads()
-    generation_manifest_text = json.dumps(
-        _build_generation_manifest_payload(
-            project,
-            generated_artifacts=generated_artifacts,
-            configuration_effect_payload=context.configuration_effect_payload,
-            artifact_payloads=artifact_payloads,
-        ),
-        ensure_ascii=False,
-        indent=2,
-    )
-    return replace(artifact_payloads, generation_manifest_json=generation_manifest_text)
-
-
-def _build_framework_layer(
-    product_spec: KnowledgeBaseProductSpec,
-    frontend_ir: FrameworkModule,
-    domain_ir: FrameworkModule,
-    backend_ir: FrameworkModule,
-) -> KnowledgeBaseFrameworkLayer:
-    return KnowledgeBaseFrameworkLayer(
-        selection={
-            "frontend": product_spec.framework.frontend,
-            "domain": product_spec.framework.domain,
-            "backend": product_spec.framework.backend,
-            "preset": product_spec.framework.preset,
-        },
-        primary_modules=(frontend_ir, domain_ir, backend_ir),
-        resolved_modules=_collect_framework_closure(frontend_ir, domain_ir, backend_ir),
-    )
-
-
-def _build_product_module(
-    product_spec: KnowledgeBaseProductSpec,
-    *,
-    frontend_ir: FrameworkModule,
-    domain_ir: FrameworkModule,
-    backend_ir: FrameworkModule,
-    derived_copy: dict[str, str],
-) -> KnowledgeBaseProductModule:
-    project_id = product_spec.metadata.project_id
-    return KnowledgeBaseProductModule(
-        module_id=f"{project_id}.product",
-        source_file=product_spec.product_spec_file,
-        section_sources=dict(product_spec.section_sources),
-        derived_from=(
-            LayeredTraceRef("framework", frontend_ir.module_id, frontend_ir.title_cn, frontend_ir.path),
-            LayeredTraceRef("framework", domain_ir.module_id, domain_ir.title_cn, domain_ir.path),
-            LayeredTraceRef("framework", backend_ir.module_id, backend_ir.title_cn, backend_ir.path),
-        ),
-        export={
-            "metadata": product_spec.metadata,
-            "framework_selection": product_spec.framework,
-            "surface": product_spec.surface,
-            "visual": product_spec.visual,
-            "features": product_spec.features,
-            "route": product_spec.route,
-            "showcase_page": product_spec.showcase_page,
-            "a11y": product_spec.a11y,
-            "library": product_spec.library,
-            "preview": product_spec.preview,
-            "chat": product_spec.chat,
-            "context": product_spec.context,
-            "return_config": product_spec.return_config,
-            "documents": tuple(product_spec.documents),
-            "copy": dict(derived_copy),
-            "product_truth": {
-                "product": product_spec.metadata.to_dict(),
-                "surface": product_spec.surface.to_dict(),
-                "visual": product_spec.visual.to_dict(),
-                "features": product_spec.features.to_dict(),
-                "route": product_spec.route.to_dict(),
-                "showcase_page": product_spec.showcase_page.to_dict(),
-                "a11y": product_spec.a11y.to_dict(),
-                "library": product_spec.library.to_dict(),
-                "preview": product_spec.preview.to_dict(),
-                "chat": product_spec.chat.to_dict(),
-                "context": product_spec.context.to_dict(),
-                "return": product_spec.return_config.to_dict(),
-                "documents": [item.to_dict() for item in product_spec.documents],
-            },
-        },
-    )
-
-
-def _build_implementation_module(
-    product_module: KnowledgeBaseProductModule,
-    implementation: KnowledgeBaseImplementationConfig,
-    *,
-    template_contract: KnowledgeBaseTemplateContract,
-    visual_tokens: dict[str, str],
-    documents: tuple[KnowledgeDocument, ...],
-    frontend_ir: FrameworkModule,
-    domain_ir: FrameworkModule,
-    backend_ir: FrameworkModule,
-) -> KnowledgeBaseImplementationModule:
-    project_id = product_module.metadata.project_id
-    return KnowledgeBaseImplementationModule(
-        module_id=f"{project_id}.implementation",
-        source_file=_relative_path(
-            _implementation_config_path_for(_normalize_project_path(product_module.source_file))
-        ),
-        derived_from=(
-            LayeredTraceRef("product", product_module.module_id, product_module.metadata.display_name, product_module.source_file),
-        ),
-        export={
-            "product_module_id": product_module.module_id,
-            "implementation_config": implementation,
-            "frontend": implementation.frontend,
-            "backend": implementation.backend,
-            "evidence": implementation.evidence,
-            "artifacts": implementation.artifacts,
-            "template_contract": template_contract,
-            "visual_tokens": dict(visual_tokens),
-            "copy": dict(product_module.copy),
-            "documents": tuple(documents),
-            "frontend_module": frontend_ir,
-            "domain_module": domain_ir,
-            "backend_module": backend_ir,
-        },
-    )
-
-
-def _build_product_view(project: KnowledgeBaseProject) -> dict[str, Any]:
-    return {
-        "product": project.metadata.to_dict(),
-        "surface": project.surface.to_dict(),
-        "visual": project.visual.to_dict(),
-        "navigation": {
-            "pages": project._resolved_page_routes(),
-            "return_targets": list(project.return_config.targets),
-            "anchor_restore": project.return_config.anchor_restore,
-        },
-        "features": project.features.to_dict(),
-        "route": project.route.to_dict(),
-        "showcase_page": project.showcase_page.to_dict(),
-        "a11y": project.a11y.to_dict(),
-        "library": project.library.to_dict(),
-        "preview": project.preview.to_dict(),
-        "chat": project.chat.to_dict(),
-        "context": project.context.to_dict(),
-        "return": project.return_config.to_dict(),
-        "content": {
-            "surface_copy": project.surface.copy.to_dict(),
-            "derived_copy": project.copy,
-        },
+        "project": project.metadata.to_dict(),
+        "selection": project.selection.to_dict(),
+        "truth": project.config.truth_payload(),
+        "refinement": project.refinement.to_dict(),
+        "narrative": _jsonable(project.config.narrative),
         "interaction_model": {
             "workspace_flow": project.workbench_contract.get("flow", []),
             "citation_return": project.workbench_contract.get("citation_return_contract", {}),
             "surface_regions": project.frontend_contract.get("surface_regions", []),
             "interaction_actions": project.frontend_contract.get("interaction_actions", []),
         },
-        "documents": [item.to_dict() for item in project.documents],
     }
 
 
 def _build_public_summary(project: KnowledgeBaseProject) -> dict[str, Any]:
     return {
-        "product_spec_file": project.product_spec_file,
-        "implementation_config_file": project.implementation_config_file,
+        "project_file": project.project_file,
         "project": project.metadata.to_dict(),
-        "framework": dict(project.framework_layer.selection),
-        "implementation": project.implementation.to_dict(),
-        "surface": project.surface.to_dict(),
-        "visual": project.visual.to_dict(),
+        "selection": project.selection.to_dict(),
         "route": project.route.to_dict(),
         "a11y": project.a11y.to_dict(),
         "routes": {
@@ -2241,6 +1710,7 @@ def _build_public_summary(project: KnowledgeBaseProject) -> dict[str, Any]:
         },
         "document_count": len(project.documents),
         "resolved_module_ids": [item.module_id for item in project.resolved_modules],
+        "package_compile_order": [item.module_id for item in project.resolved_modules],
         "ui_spec_summary": {
             "page_ids": list(project.ui_spec.get("pages", {}).keys()),
             "component_ids": list(project.ui_spec.get("components", {}).keys()),
@@ -2252,294 +1722,186 @@ def _build_public_summary(project: KnowledgeBaseProject) -> dict[str, Any]:
             },
         },
         "validation_reports": project.validation_reports.to_dict(),
-        "validation_summary": project.validation_reports.summary_by_scope(),
         "generated_artifacts": project.generated_artifacts.to_dict() if project.generated_artifacts else None,
     }
 
 
-def _build_code_module(project: KnowledgeBaseProject) -> KnowledgeBaseCodeModule:
-    project_id = project.metadata.project_id
-    return KnowledgeBaseCodeModule(
-        module_id=f"{project_id}.code",
-        derived_from=(
-            LayeredTraceRef("implementation", project.implementation_module.module_id, "Implementation Module", project.implementation_config_file),
-        ),
-        export={
-            "metadata": project.metadata,
-            "template_contract": project.template_contract,
-            "framework_selection": project.framework,
-            "framework_refs": dict(project.framework_layer.selection),
-            "layer_trace": {
-                "framework_module_ids": [item.module_id for item in project.framework_layer.resolved_modules],
-                "product_module_id": project.product_module.module_id,
-                "implementation_module_id": project.implementation_module.module_id,
-            },
-            "surface": project.surface,
-            "visual": project.visual,
-            "visual_tokens": dict(project.visual_tokens),
-            "features": project.features,
-            "route": project.route,
-            "showcase_page": project.showcase_page,
-            "a11y": project.a11y,
-            "library": project.library,
-            "preview": project.preview,
-            "chat": project.chat,
-            "context": project.context,
-            "return_config": project.return_config,
-            "copy": dict(project.copy),
-            "documents": tuple(project.documents),
-            "frontend_module": project.frontend_ir,
-            "domain_module": project.domain_ir,
-            "backend_module": project.backend_ir,
-            "frontend_contract": dict(project.frontend_contract),
-            "workbench_contract": dict(project.workbench_contract),
-            "ui_spec": dict(project.ui_spec),
-            "backend_spec": dict(project.backend_spec),
-            "product_view": _build_product_view(project),
-            "public_summary": _build_public_summary(project),
-            "implementation_effects": {
-                key: item.to_dict() for key, item in build_implementation_effect_manifest(project).items()
-            },
-            "validation_reports": project.validation_reports,
-            "generated_artifacts": project.generated_artifacts,
-        },
+def _effective_generated_artifacts(project: KnowledgeBaseProject) -> GeneratedArtifactPaths:
+    if project.generated_artifacts is not None:
+        return project.generated_artifacts
+    project_path = _normalize_project_path(project.project_file)
+    return GeneratedArtifactPaths.from_artifact_config(
+        project.refinement.artifacts,
+        directory=project_path.parent / "generated",
+        path_renderer=_relative_path,
     )
 
 
-def _build_evidence_module(
-    project: KnowledgeBaseProject,
-) -> tuple[KnowledgeBaseEvidenceModule, GovernanceArtifactPayloads]:
-    generated_artifacts = _effective_generated_artifacts(project)
-    governance = GovernanceArtifactPayloads.from_project(project)
-    evidence_module = KnowledgeBaseEvidenceModule(
-        module_id=f"{project.metadata.project_id}.evidence",
-        derived_from=(
-            LayeredTraceRef("code", project.code_module.module_id, "Code Module"),
-        ),
-        validation_reports=project.validation_reports,
-        export={
-            "generated_artifacts": generated_artifacts.to_dict(),
-            "validation_summary": project.validation_reports.summary_by_scope(),
-            "derived_views": {
-                "framework_ir_json": generated_artifacts.framework_ir_json,
-                "product_spec_json": generated_artifacts.product_spec_json,
-                "implementation_bundle_py": generated_artifacts.implementation_bundle_py,
-                "generation_manifest_json": generated_artifacts.generation_manifest_json,
-                "governance_manifest_json": generated_artifacts.governance_manifest_json,
-                "governance_tree_json": generated_artifacts.governance_tree_json,
-                "strict_zone_report_json": generated_artifacts.strict_zone_report_json,
-                "object_coverage_report_json": generated_artifacts.object_coverage_report_json,
-            },
-            "derived_payloads": {
-                "governance_manifest": governance.manifest_payload,
-                "governance_tree": governance.tree_payload,
-                "strict_zone_report": governance.strict_zone_report_payload,
-                "object_coverage_report": governance.object_coverage_report_payload,
-            },
-            "governance_summary": {
-                "structural_object_count": len(governance.manifest_payload.get("structural_objects", [])),
-                "strict_zone_count": len(governance.strict_zone_report_payload.get("files", [])),
-                "tree_node_count": len(governance.tree_payload.get("nodes", [])),
-            },
-        },
+def _build_runtime_bundle_text(project: KnowledgeBaseProject, canonical_graph: dict[str, Any]) -> str:
+    runtime_bundle = project.to_runtime_bundle_dict()
+    return "\n".join(
+        [
+            "from __future__ import annotations",
+            "",
+            "# GENERATED FILE. DO NOT EDIT.",
+            "# Change framework markdown or projects/*/project.toml, then re-materialize.",
+            "",
+            "import json",
+            "",
+            f"CANONICAL_GRAPH = json.loads(r'''{json.dumps(canonical_graph, ensure_ascii=False)}''')",
+            f"RUNTIME_BUNDLE = json.loads(r'''{json.dumps(runtime_bundle, ensure_ascii=False)}''')",
+            "PROJECT_CONFIG = RUNTIME_BUNDLE['project_config']",
+            "",
+        ]
     )
-    return evidence_module, governance
 
 
-def _compile_project(
-    product_spec: KnowledgeBaseProductSpec,
-    implementation: KnowledgeBaseImplementationConfig,
-) -> KnowledgeBaseProject:
+def _compile_project(config: UnifiedProjectConfig) -> KnowledgeBaseProject:
     from frontend_kernel import build_frontend_contract
     from knowledge_base_framework import build_workbench_contract
 
-    template_contract = load_knowledge_base_template_contract()
-    frontend_ir = _resolve_framework_module(product_spec.framework.frontend)
-    domain_ir = _resolve_framework_module(product_spec.framework.domain)
-    backend_ir = _resolve_framework_module(product_spec.framework.backend)
-    _validate_product_spec(product_spec, frontend_ir, domain_ir, backend_ir, template_contract)
-    _validate_implementation_config(implementation, product_spec, template_contract)
-    documents = tuple(_compile_document(item) for item in product_spec.documents)
-    framework_layer = _build_framework_layer(product_spec, frontend_ir, domain_ir, backend_ir)
-    product_module = _build_product_module(
-        product_spec,
-        frontend_ir=frontend_ir,
-        domain_ir=domain_ir,
-        backend_ir=backend_ir,
-        derived_copy=_derive_copy(product_spec, frontend_ir, domain_ir, backend_ir),
-    )
-    implementation_module = _build_implementation_module(
-        product_module,
-        implementation,
-        template_contract=template_contract,
-        visual_tokens=_build_visual_tokens(product_spec.visual, product_spec.surface, product_spec.preview),
-        documents=documents,
-        frontend_ir=frontend_ir,
-        domain_ir=domain_ir,
-        backend_ir=backend_ir,
-    )
-    placeholder_code = KnowledgeBaseCodeModule(
-        module_id=f"{product_spec.metadata.project_id}.code",
-        derived_from=(),
-        export={},
-    )
+    scene_contract = load_knowledge_base_template_contract()
+    framework_registry = load_framework_registry()
+    package_registry = load_builtin_package_registry()
+    package_registry.validate_against_framework(framework_registry)
+
+    frontend_ir = _resolve_framework_module(framework_registry, config.selection.root_modules.frontend)
+    domain_ir = _resolve_framework_module(framework_registry, config.selection.root_modules.knowledge_base)
+    backend_ir = _resolve_framework_module(framework_registry, config.selection.root_modules.backend)
+    _validate_project_config(config, frontend_ir, domain_ir, backend_ir, scene_contract)
+
+    resolved_modules = _collect_framework_closure(framework_registry, frontend_ir, domain_ir, backend_ir)
+    package_results = _compile_package_results(config, package_registry, resolved_modules)
+    documents = tuple(_compile_document(item) for item in config.documents)
     project = KnowledgeBaseProject(
-        product_spec_file=product_spec.product_spec_file,
-        implementation_config_file=_relative_path(_implementation_config_path_for(_normalize_project_path(product_spec.product_spec_file))),
-        framework_layer=framework_layer,
-        product_module=product_module,
-        implementation_module=implementation_module,
-        code_module=placeholder_code,
-        evidence_module=None,
+        project_file=config.project_file,
+        config=config,
+        scene_contract=scene_contract,
+        package_registry=package_registry,
+        frontend_ir=frontend_ir,
+        domain_ir=domain_ir,
+        backend_ir=backend_ir,
+        resolved_modules=resolved_modules,
+        package_results=package_results,
+        visual_tokens=_build_visual_tokens(config.visual, config.surface, config.preview),
+        documents=documents,
+        derived_copy=_derive_copy(config, frontend_ir, domain_ir, backend_ir),
+        frontend_contract={},
+        workbench_contract={},
+        ui_spec={},
+        backend_spec={},
+        validation_reports=ValidationReports.empty(),
     )
     backend_spec = _build_backend_spec(project)
-    project = replace(
-        project,
-        code_module=KnowledgeBaseCodeModule(
-            module_id=placeholder_code.module_id,
-            derived_from=(),
-            export={"backend_spec": backend_spec},
-        ),
-    )
+    project = replace(project, backend_spec=backend_spec)
     frontend_contract = build_frontend_contract(project)
+    project = replace(project, frontend_contract=frontend_contract)
     workbench_contract = build_workbench_contract(project)
-    project = replace(
-        project,
-        code_module=KnowledgeBaseCodeModule(
-            module_id=placeholder_code.module_id,
-            derived_from=(),
-            export={
-                "backend_spec": backend_spec,
-                "frontend_contract": frontend_contract,
-                "workbench_contract": workbench_contract,
-            },
-        ),
-    )
+    project = replace(project, workbench_contract=workbench_contract)
     ui_spec = _build_ui_spec(project)
-    project = replace(
-        project,
-        code_module=KnowledgeBaseCodeModule(
-            module_id=placeholder_code.module_id,
-            derived_from=(),
-            export={
-                "backend_spec": backend_spec,
-                "frontend_contract": frontend_contract,
-                "workbench_contract": workbench_contract,
-                "ui_spec": ui_spec,
-            },
-        ),
-    )
+    project = replace(project, ui_spec=ui_spec)
     validation_reports = _collect_validation_reports(project)
     _raise_on_validation_failures(validation_reports)
-    project = replace(
-        project,
-        code_module=KnowledgeBaseCodeModule(
-            module_id=placeholder_code.module_id,
-            derived_from=(),
-            export={
-                "backend_spec": backend_spec,
-                "frontend_contract": frontend_contract,
-                "workbench_contract": workbench_contract,
-                "ui_spec": ui_spec,
-                "validation_reports": validation_reports,
-            },
-        ),
-    )
-    final_code_module = _build_code_module(project)
-    return replace(project, code_module=final_code_module)
+    return replace(project, validation_reports=validation_reports)
 
 
 def load_knowledge_base_project(
-    product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
+    project_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE,
 ) -> KnowledgeBaseProject:
-    product_spec_path = _normalize_project_path(product_spec_file)
-    assert_supported_project_template(product_spec_path)
-    implementation_config_path = _implementation_config_path_for(product_spec_path)
-    product_spec = _load_product_spec(product_spec_path)
-    implementation = _load_implementation_config(implementation_config_path)
-    return _compile_project(product_spec, implementation)
-
-
-def load_knowledge_base_code_module(
-    product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
-) -> KnowledgeBaseCodeModule:
-    return load_knowledge_base_project(product_spec_file).code_module
+    project_path = _normalize_project_path(project_file)
+    return _compile_project(_load_project_config(project_path))
 
 
 def materialize_knowledge_base_project(
-    product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
+    project_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE,
     output_dir: str | Path | None = None,
 ) -> KnowledgeBaseProject:
-    product_spec_path = _normalize_project_path(product_spec_file)
-    assert_supported_project_template(product_spec_path)
-    project = load_knowledge_base_project(product_spec_path)
-    generated_dir = product_spec_path.parent / "generated"
+    project_path = _normalize_project_path(project_file)
+    project = load_knowledge_base_project(project_path)
+    generated_dir = project_path.parent / "generated"
     output_path = _normalize_project_path(output_dir) if output_dir is not None else generated_dir
     output_path.mkdir(parents=True, exist_ok=True)
 
-    artifact_names = project.implementation.artifacts
+    artifact_names = project.refinement.artifacts
     expected_file_names = set(artifact_names.file_names())
     _cleanup_generated_output_dir(output_path, expected_file_names)
-    output_paths = GeneratedArtifactOutputPaths.from_artifact_config(
-        artifact_names,
-        output_dir=output_path,
-    )
-    # Keep generated evidence stable even when callers materialize into a temp directory.
-    # The output path controls where files are written, but the manifest and runtime bundle
-    # should continue to point at the project's canonical generated directory.
-    artifact_directory = generated_dir
+    output_paths = GeneratedArtifactOutputPaths.from_artifact_config(artifact_names, output_dir=output_path)
     generated_artifacts = GeneratedArtifactPaths.from_artifact_config(
         artifact_names,
-        directory=artifact_directory,
+        directory=generated_dir,
         path_renderer=_relative_path,
+    )
+    project = replace(project, generated_artifacts=generated_artifacts)
+    derived_view_payloads = build_derived_view_payloads(
+        project.to_canonical_graph_dict(),
+        generated_artifacts=generated_artifacts.to_dict(),
     )
     project = replace(
         project,
-        code_module=replace(
-            project.code_module,
-            export={
-                **project.code_module.export,
-                "generated_artifacts": generated_artifacts,
-            },
-        ),
+        derived_views=derived_view_payloads.generation_manifest["derived_views"],
     )
-    project = replace(project, code_module=_build_code_module(project))
-    evidence_module, _governance = _build_evidence_module(project)
-    project = replace(project, evidence_module=evidence_module)
-    payloads = _build_generated_artifact_payloads(project)
-    payloads.write_to(output_paths)
+    canonical_graph = project.to_canonical_graph_dict()
+    runtime_bundle_text = _build_runtime_bundle_text(project, canonical_graph)
 
+    output_paths.canonical_graph_json.write_text(json.dumps(canonical_graph, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_paths.runtime_bundle_py.write_text(runtime_bundle_text, encoding="utf-8")
+    output_paths.generation_manifest_json.write_text(
+        json.dumps(derived_view_payloads.generation_manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    output_paths.governance_manifest_json.write_text(
+        json.dumps(derived_view_payloads.governance_manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    output_paths.governance_tree_json.write_text(
+        json.dumps(derived_view_payloads.governance_tree, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    output_paths.strict_zone_report_json.write_text(
+        json.dumps(derived_view_payloads.strict_zone_report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    output_paths.object_coverage_report_json.write_text(
+        json.dumps(derived_view_payloads.object_coverage_report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     return project
 
 
-def materialize_knowledge_base_code_module(
-    product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
-    output_dir: str | Path | None = None,
-) -> KnowledgeBaseCodeModule:
-    return materialize_knowledge_base_project(product_spec_file, output_dir=output_dir).code_module
-
-
 def build_knowledge_base_runtime_app_from_spec(
-    product_spec_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
+    project_file: str | Path = DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE,
 ) -> Any:
     from knowledge_base_runtime.app import build_knowledge_base_runtime_app
 
-    project = materialize_knowledge_base_project(product_spec_file)
-    return build_knowledge_base_runtime_app(project.code_module)
+    return build_knowledge_base_runtime_app(materialize_knowledge_base_project(project_file))
 
 
-register_project_template(
-    ProjectTemplateRegistration(
-        template_id=KNOWLEDGE_BASE_TEMPLATE_ID,
-        default_product_spec_file=DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE,
-        product_spec_layout=KNOWLEDGE_BASE_PRODUCT_SPEC_LAYOUT,
-        implementation_config_layout=KNOWLEDGE_BASE_IMPLEMENTATION_CONFIG_LAYOUT,
-        load_project=load_knowledge_base_project,
-        materialize_project=materialize_knowledge_base_project,
-        build_runtime_app_from_spec=build_knowledge_base_runtime_app_from_spec,
-        build_governance_closure=build_governance_closure,
-        build_implementation_effect_manifest=build_implementation_effect_manifest,
-        scaffold_project=scaffold_knowledge_base_project,
-        default=True,
-    )
-)
+__all__ = [
+    "DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE",
+    "DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE",
+    "ArtifactConfig",
+    "ChatConfig",
+    "ContextConfig",
+    "FeatureConfig",
+    "FrontendRefinementConfig",
+    "GeneratedArtifactPaths",
+    "KnowledgeBaseProject",
+    "KnowledgeDocument",
+    "KnowledgeDocumentSection",
+    "LibraryConfig",
+    "ModuleSelection",
+    "PreviewConfig",
+    "ProjectMetadata",
+    "RefinementConfig",
+    "ReturnConfig",
+    "RouteConfig",
+    "SeedDocumentSource",
+    "ShowcasePageConfig",
+    "SurfaceConfig",
+    "UnifiedProjectConfig",
+    "VisualConfig",
+    "build_knowledge_base_runtime_app_from_spec",
+    "compile_knowledge_document_source",
+    "load_knowledge_base_project",
+    "materialize_knowledge_base_project",
+]

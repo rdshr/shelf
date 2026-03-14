@@ -6,21 +6,21 @@ import re
 
 from fastapi import APIRouter, HTTPException, Query, status
 from project_runtime.knowledge_base import (
-    KnowledgeBaseCodeModule,
+    KnowledgeBaseProject,
     KnowledgeDocument,
     KnowledgeDocumentSection,
     SeedDocumentSource,
     compile_knowledge_document_source,
-    load_knowledge_base_code_module,
+    load_knowledge_base_project,
 )
 from pydantic import BaseModel, Field
 
 
-def _resolve_project(project: KnowledgeBaseCodeModule | None) -> KnowledgeBaseCodeModule:
-    return project or load_knowledge_base_code_module()
+def _resolve_project(project: KnowledgeBaseProject | None) -> KnowledgeBaseProject:
+    return project or load_knowledge_base_project()
 
 
-def _require_backend_renderer(project: KnowledgeBaseCodeModule) -> str:
+def _require_backend_renderer(project: KnowledgeBaseProject) -> str:
     implementation = project.backend_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("backend_spec.implementation is required for backend renderer selection")
@@ -134,7 +134,7 @@ def _make_document_id(value: str) -> str:
     return slug or "knowledge-document"
 
 
-def _document_detail_path(project: KnowledgeBaseCodeModule, document_id: str, section_id: str | None = None) -> str:
+def _document_detail_path(project: KnowledgeBaseProject, document_id: str, section_id: str | None = None) -> str:
     base = project.backend_spec["return_policy"]["document_detail_path"].replace("{document_id}", document_id)
     if section_id:
         return f"{base}?section={section_id}"
@@ -142,7 +142,7 @@ def _document_detail_path(project: KnowledgeBaseCodeModule, document_id: str, se
 
 
 class KnowledgeRepository:
-    def __init__(self, project: KnowledgeBaseCodeModule | None = None) -> None:
+    def __init__(self, project: KnowledgeBaseProject | None = None) -> None:
         self.project = _resolve_project(project)
         _require_backend_renderer(self.project)
         self.backend_spec = self.project.backend_spec
@@ -234,7 +234,6 @@ class KnowledgeRepository:
         del self._documents[document_id]
         self._document_order = [item for item in self._document_order if item != document_id]
 
-    # @governed_symbol id=kb.answer.behavior owner=product_spec kind=answer_behavior risk=high
     def answer_question(
         self,
         message: str,
@@ -424,7 +423,7 @@ def _to_document_detail(document: KnowledgeDocument) -> KnowledgeDocumentDetailR
 
 
 def build_knowledge_base_router(
-    project: KnowledgeBaseCodeModule | None = None,
+    project: KnowledgeBaseProject | None = None,
     repository: KnowledgeRepository | None = None,
 ) -> APIRouter:
     resolved = _resolve_project(project)

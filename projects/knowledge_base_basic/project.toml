@@ -1,0 +1,201 @@
+# 统一项目配置同时承载四类信息：
+# 1. [selection] 选择本项目实际装配的 framework 根模块；
+# 2. [truth] 固定产品真相和用户应看到的结构；
+# 3. [refinement] 细化实现偏好、技术落点和生成物命名；
+# 4. [narrative] 保留人与 AI 协作时需要的解释性说明。
+#
+# 编译器只读取这一份配置，不再保留旧双轨配置主模型。
+
+[project]
+project_id = "knowledge_base_basic"
+runtime_scene = "knowledge_base_workbench"
+display_name = "Shelf AI Knowledge Chat"
+description = "A ChatGPT-style knowledge chat client compiled through framework packages and one unified project config."
+version = "0.4.0"
+
+[selection]
+preset = "document_chat_workbench"
+
+[selection.root_modules]
+frontend = "framework/frontend/L2-M0-前端框架标准模块.md"
+knowledge_base = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
+backend = "framework/backend/L2-M0-知识库接口框架标准模块.md"
+
+[truth.surface]
+shell = "conversation_sidebar_shell"
+layout_variant = "chatgpt_knowledge_client"
+sidebar_width = "md"
+preview_mode = "drawer"
+density = "comfortable"
+
+[truth.surface.copy]
+hero_kicker = "Framework-Compiled Product"
+hero_title = "Shelf AI Knowledge Chat"
+hero_copy = "A ChatGPT-style knowledge chat client with inline citations, on-demand source drawers, and secondary knowledge pages."
+library_title = "Knowledge Bases"
+preview_title = "Citation Sources"
+toc_title = "Source Sections"
+chat_title = "Knowledge Chat"
+empty_state_title = "Start a knowledge conversation"
+empty_state_copy = "Ask directly in the composer. Sources stay quiet until you open a citation."
+
+[truth.visual]
+brand = "Shelf"
+accent = "#2563eb"
+surface_preset = "light"
+radius_scale = "xl"
+shadow_level = "md"
+font_scale = "md"
+
+[truth.route]
+home = "/"
+workbench = "/knowledge-base"
+basketball_showcase = "/knowledge-base/cxk-basketball"
+knowledge_list = "/knowledge-bases"
+knowledge_detail = "/knowledge-bases/details"
+document_detail_prefix = "/knowledge-bases/details/documents"
+api_prefix = "/api/knowledge"
+
+[truth.showcase_page]
+title = "蔡徐坤打球特别页"
+kicker = "Chat-First Special Page"
+headline = "蔡徐坤打球 · 轻量前端专题页"
+intro = "这个页面把聚光灯、节奏和打球动作收成一个轻量专题体验，用来展示前端扩展页也可以挂在知识库产品的治理树里。"
+back_to_chat_label = "返回知识聊天"
+browse_knowledge_label = "去知识库列表"
+
+[truth.a11y]
+reading_order = ["conversation_sidebar", "chat_header", "message_stream", "chat_composer", "citation_drawer"]
+keyboard_nav = ["new-chat", "conversation-item", "chat-input", "citation-ref", "citation-drawer-close"]
+announcements = ["current knowledge base", "active conversation", "citation source opened"]
+
+[truth.library]
+knowledge_base_id = "research-and-standards"
+knowledge_base_name = "研发规范知识库"
+knowledge_base_description = "Framework standards, implementation rules, and generated project discipline for the shelf repository."
+enabled = true
+source_types = ["markdown"]
+metadata_fields = ["title", "tags", "updated_at"]
+default_focus = "current_knowledge_base"
+list_variant = "conversation_companion"
+allow_create = true
+allow_delete = true
+
+[truth.library.copy]
+search_placeholder = "Search knowledge files and snippets"
+
+[truth.preview]
+enabled = true
+renderers = ["markdown"]
+anchor_mode = "heading"
+show_toc = true
+preview_variant = "citation_drawer"
+
+[truth.chat]
+enabled = true
+citations_enabled = true
+mode = "retrieval_stub"
+citation_style = "inline_refs"
+bubble_variant = "assistant_soft"
+composer_variant = "chatgpt_compact"
+system_prompt = "Answer with concise structure-first guidance grounded in the selected knowledge base and cite concrete sections."
+welcome_prompts = [
+  "总结框架文档到生成代码的编译链",
+  "解释引用抽屉和文档详情页如何形成来源回路",
+  "说明哪些改动属于框架变更，哪些改动属于实现细化",
+  "基于知识库概括 ChatGPT 风格知识问答客户端的结构",
+]
+
+[truth.chat.copy]
+placeholder = "询问制度、方案、文档内容，系统会结合知识库回答…"
+welcome = "像用 ChatGPT 一样直接提问。回答会嵌入知识库引用，点开后可查看来源片段和文档详情。"
+
+[truth.context]
+selection_mode = "knowledge_base_default"
+max_citations = 3
+max_preview_sections = 10
+sticky_document = false
+
+[truth.return]
+enabled = true
+targets = ["citation_drawer", "document_detail"]
+anchor_restore = true
+citation_card_variant = "chips"
+
+[[truth.documents]]
+document_id = "chat-client-principles"
+title = "Chat Client Principles"
+summary = "The primary product shape should feel like ChatGPT first and a knowledge platform second."
+tags = ["chat", "ux", "frontend"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Chat First
+The primary shell should stay close to ChatGPT: a conversation sidebar, one centered message stream, and one bottom composer.
+
+## Citation Second
+Citations should appear inline and stay lightweight by default. Source detail only expands when the user asks for it.
+
+## Auxiliary Pages
+Knowledge base list, knowledge base detail, and document detail pages exist as secondary pages. They support trust and traceability without replacing the main chat surface.
+"""
+
+[[truth.documents]]
+document_id = "framework-compilation-chain"
+title = "Framework Compilation Chain"
+summary = "Framework markdown, unified project config, framework package compile results, and runtime code form one deterministic compile path."
+tags = ["framework", "generator", "traceability"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Framework To Config
+Framework markdown defines structure, boundary, base, rule, and verification statements. The unified project config fixes the concrete product truth and implementation refinements inside those boundaries.
+
+## Config To Package Compile
+Selection chooses root modules, refinement declares technical preferences, and the package registry resolves each framework file to one package entry class.
+
+## Canonical Runtime
+The final application surface, API contract, validation reports, and governance views all derive from the same canonical graph.
+"""
+
+[[truth.documents]]
+document_id = "knowledge-citation-loop"
+title = "Knowledge Citation Loop"
+summary = "A knowledge answer is complete only when the user can inspect citations, reopen source context, and continue the same conversation."
+tags = ["knowledge-base", "citation", "return-path"]
+updated_at = "2026-03-09"
+body_markdown = """
+## Inline References
+Assistant answers should attach numbered inline references such as [1] and [2] instead of heavy source cards in the main reading flow.
+
+## Citation Drawer
+Clicking a citation opens a right-side drawer with document name, section name, snippet, and source navigation actions.
+
+## Document Detail
+From the drawer, the user can open a dedicated document detail page and continue tracing the original section in full context.
+"""
+
+[refinement.frontend]
+renderer = "knowledge_chat_client_v1"
+style_profile = "knowledge_chat_web_v1"
+script_profile = "knowledge_chat_browser_v1"
+
+[refinement.backend]
+renderer = "knowledge_chat_backend_v1"
+transport = "http_json"
+retrieval_strategy = "retrieval_stub"
+
+[refinement.evidence]
+project_config_endpoint = "/api/knowledge/project-config"
+
+[refinement.artifacts]
+canonical_graph_json = "canonical_graph.json"
+runtime_bundle_py = "runtime_bundle.py"
+generation_manifest_json = "generation_manifest.json"
+governance_manifest_json = "governance_manifest.json"
+governance_tree_json = "governance_tree.json"
+strict_zone_report_json = "strict_zone_report.json"
+object_coverage_report_json = "object_coverage_report.json"
+
+[narrative]
+authoring_mode = "markdown-first"
+compiler_shape = "framework tree + registry + config slicing + package compile"
+machine_truth = "generated/canonical_graph.json"

@@ -4,10 +4,10 @@ from dataclasses import dataclass
 import json
 from textwrap import dedent
 
-from project_runtime.knowledge_base import KnowledgeBaseCodeModule
+from project_runtime.knowledge_base import KnowledgeBaseProject
 
 
-def _require_script_profile(project: KnowledgeBaseCodeModule) -> str:
+def _require_script_profile(project: KnowledgeBaseProject) -> str:
     implementation = project.ui_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend script selection")
@@ -42,7 +42,7 @@ def _chat_script_bootstrap(project_spec_json: str) -> str:
     return dedent(
         f"""
       const runtimeBundle = {project_spec_json};
-      const productSpec = runtimeBundle.product_spec;
+      const projectConfig = runtimeBundle.project_config;
       const uiSpec = runtimeBundle.ui_spec;
       const backendSpec = runtimeBundle.backend_spec;
       const messageStreamSpec = uiSpec.components.message_stream;
@@ -50,7 +50,7 @@ def _chat_script_bootstrap(project_spec_json: str) -> str:
       const drawerSpec = uiSpec.components.citation_drawer;
       const switchDialogSpec = uiSpec.components.knowledge_switch_dialog;
       const conversationSpec = uiSpec.conversation;
-      const storageKey = `shelf-kb-conversations:${{productSpec.product.project_id}}`;
+      const storageKey = `shelf-kb-conversations:${{projectConfig.project.project_id}}`;
       const state = {{
         knowledgeBases: [],
         documents: [],
@@ -247,7 +247,7 @@ def _chat_script_rendering_section() -> str:
       }
 
       function renderHeader(conversation) {
-        elements.headerTitle.textContent = conversation ? conversation.title : productSpec.product.display_name;
+        elements.headerTitle.textContent = conversation ? conversation.title : projectConfig.project.display_name;
         elements.headerSubtitle.textContent = uiSpec.components.chat_header.subtitle_template.replace("{knowledge_base_name}", currentKnowledgeBaseName());
         elements.knowledgeBadge.textContent = uiSpec.components.conversation_sidebar.knowledge_entry_label.replace(
           backendSpec.knowledge_base.knowledge_base_name,
@@ -616,7 +616,7 @@ def _chat_script_init_section() -> str:
     )
 
 
-def build_chat_script(project: KnowledgeBaseCodeModule) -> str:
+def build_chat_script(project: KnowledgeBaseProject) -> str:
     _require_script_profile(project)
     context = ChatScriptTemplateContext(
         project_spec_json=json.dumps(project.to_spec_dict(), ensure_ascii=False),

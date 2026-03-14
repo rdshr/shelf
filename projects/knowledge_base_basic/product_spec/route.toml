@@ -1,9 +1,0 @@
-# [route] 记录产品导航真相。
-[route]
-home = "/"
-workbench = "/knowledge-base"
-basketball_showcase = "/knowledge-base/cxk-basketball"
-knowledge_list = "/knowledge-bases"
-knowledge_detail = "/knowledge-bases/details"
-document_detail_prefix = "/knowledge-bases/details/documents"
-api_prefix = "/api/knowledge"

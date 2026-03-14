@@ -1,6 +1,0 @@
-# [return] 定义来源回路和返回语义。
-[return]
-enabled = true
-targets = ["citation_drawer", "document_detail"]
-anchor_restore = true
-citation_card_variant = "chips"

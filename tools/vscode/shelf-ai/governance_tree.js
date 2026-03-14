@@ -11,25 +11,72 @@ function readGovernanceTree(repoRoot, relativeJsonPath) {
   if (!raw.root || typeof raw.root !== "object") {
     throw new Error("governance tree JSON is missing root");
   }
-  if (!raw.governance || typeof raw.governance !== "object") {
-    throw new Error("governance tree JSON is missing governance metadata");
+  if (!Array.isArray(raw.root.nodes) || !Array.isArray(raw.root.edges)) {
+    throw new Error("governance tree JSON is missing nodes or edges");
   }
   return raw;
 }
 
-function resolveChangeContext(payload, relPaths) {
-  const governance = payload.governance || {};
-  const fileIndex = governance.file_index || {};
-  const parentIndex = governance.parent_index || {};
-  const childrenIndex = governance.children_index || {};
-  const derivedIndex = governance.derived_index || {};
-  const reverseDerivedIndex = governance.reverse_derived_index || {};
-  const projectIndex = governance.project_index || {};
+function buildIndexes(payload) {
+  const nodes = Array.isArray(payload?.root?.nodes) ? payload.root.nodes : [];
+  const edges = Array.isArray(payload?.root?.edges) ? payload.root.edges : [];
+  const nodeLookup = new Map();
+  const fileIndex = new Map();
+  const parentIndex = new Map();
+  const childrenIndex = new Map();
 
+  for (const node of nodes) {
+    if (!node || typeof node !== "object" || typeof node.id !== "string") {
+      continue;
+    }
+    nodeLookup.set(node.id, node);
+    const sourceFile = typeof node.source_file === "string" ? workspaceGuard.normalizeRelPath(node.source_file) : "";
+    if (sourceFile) {
+      if (!fileIndex.has(sourceFile)) {
+        fileIndex.set(sourceFile, []);
+      }
+      fileIndex.get(sourceFile).push(node.id);
+    }
+  }
+
+  for (const edge of edges) {
+    if (!edge || edge.relation !== "tree_child") {
+      continue;
+    }
+    const from = String(edge.from || "");
+    const to = String(edge.to || "");
+    if (!from || !to) {
+      continue;
+    }
+    parentIndex.set(to, from);
+    if (!childrenIndex.has(from)) {
+      childrenIndex.set(from, []);
+    }
+    childrenIndex.get(from).push(to);
+  }
+
+  return {
+    nodeLookup,
+    fileIndex,
+    parentIndex,
+    childrenIndex,
+  };
+}
+
+function resolveChangeContext(repoRoot, payload, relPaths, baselinePlan = null) {
   const normalizedRelPaths = [...new Set((relPaths || []).map(workspaceGuard.normalizeRelPath).filter(Boolean))];
+  const indexes = buildIndexes(payload);
   const touchedNodes = new Set();
+
   for (const relPath of normalizedRelPaths) {
-    for (const nodeId of fileIndex[relPath] || []) {
+    for (const nodeId of indexes.fileIndex.get(relPath) || []) {
+      touchedNodes.add(String(nodeId));
+    }
+  }
+
+  for (const projectFile of baselinePlan?.materializeProjects || []) {
+    const relProjectFile = workspaceGuard.normalizeRelPath(path.relative(repoRoot, projectFile));
+    for (const nodeId of indexes.fileIndex.get(relProjectFile) || []) {
       touchedNodes.add(String(nodeId));
     }
   }
@@ -38,105 +85,29 @@ function resolveChangeContext(payload, relPaths) {
   const queue = [...touchedNodes];
   while (queue.length) {
     const nodeId = queue.pop();
-    const parent = parentIndex[nodeId];
-    if (typeof parent === "string" && parent && !affectedNodes.has(parent)) {
+
+    const parent = indexes.parentIndex.get(nodeId);
+    if (parent && !affectedNodes.has(parent)) {
       affectedNodes.add(parent);
       queue.push(parent);
     }
-    for (const childId of childrenIndex[nodeId] || []) {
-      const normalizedChild = String(childId);
-      if (!affectedNodes.has(normalizedChild)) {
-        affectedNodes.add(normalizedChild);
-        queue.push(normalizedChild);
+
+    for (const childId of indexes.childrenIndex.get(nodeId) || []) {
+      if (!affectedNodes.has(childId)) {
+        affectedNodes.add(childId);
+        queue.push(childId);
       }
-    }
-    for (const upstreamId of derivedIndex[nodeId] || []) {
-      const normalizedUpstream = String(upstreamId);
-      if (!affectedNodes.has(normalizedUpstream)) {
-        affectedNodes.add(normalizedUpstream);
-        queue.push(normalizedUpstream);
-      }
-    }
-    for (const dependentId of reverseDerivedIndex[nodeId] || []) {
-      const normalizedDependent = String(dependentId);
-      if (!affectedNodes.has(normalizedDependent)) {
-        affectedNodes.add(normalizedDependent);
-        queue.push(normalizedDependent);
-      }
-    }
-  }
-
-  const rootNodes = Array.isArray(payload.root?.nodes) ? payload.root.nodes : [];
-  const nodeLookup = new Map(
-    rootNodes
-      .filter((node) => node && typeof node === "object" && typeof node.id === "string")
-      .map((node) => [node.id, node])
-  );
-
-  const affectedProjects = new Map();
-  const materializeProjects = new Map();
-  let runStandardChecks = false;
-  let runProjectChecks = false;
-
-  for (const nodeId of affectedNodes) {
-    const node = nodeLookup.get(nodeId);
-    if (!node) {
-      continue;
-    }
-    const projectId = typeof node.project_id === "string" ? node.project_id : "";
-    if (projectId && projectIndex[projectId] && typeof projectIndex[projectId].product_spec_file === "string") {
-      affectedProjects.set(projectId, projectIndex[projectId].product_spec_file);
-      runProjectChecks = true;
-    }
-    if (node.layer === "Standards") {
-      runStandardChecks = true;
-    }
-  }
-
-  for (const nodeId of touchedNodes) {
-    const node = nodeLookup.get(nodeId);
-    if (!node) {
-      continue;
-    }
-    const projectId = typeof node.project_id === "string" ? node.project_id : "";
-    if (!projectId || !projectIndex[projectId]) {
-      continue;
-    }
-    if (node.layer === "Framework" || node.layer === "Product Spec" || node.layer === "Implementation Config") {
-      const productSpecFile = projectIndex[projectId].product_spec_file;
-      if (typeof productSpecFile === "string" && productSpecFile) {
-        materializeProjects.set(projectId, productSpecFile);
-      }
-    }
-  }
-
-  for (const relPath of normalizedRelPaths) {
-    if (
-      relPath.startsWith("framework/") ||
-      relPath.startsWith("specs/") ||
-      relPath.startsWith("mapping/")
-    ) {
-      runStandardChecks = true;
     }
   }
 
   return {
     touchedNodes: [...touchedNodes].sort(),
     affectedNodes: [...affectedNodes].sort(),
-    affectedProjectSpecFiles: [...affectedProjects.values()].sort(),
-    materializeProjectSpecFiles: [...materializeProjects.values()].sort(),
-    runStandardChecks,
-    runProjectChecks,
   };
 }
 
 function summarizeChangeContext(payload, changeContext, limit = 4) {
-  const rootNodes = Array.isArray(payload?.root?.nodes) ? payload.root.nodes : [];
-  const nodeLookup = new Map(
-    rootNodes
-      .filter((node) => node && typeof node === "object" && typeof node.id === "string")
-      .map((node) => [node.id, node])
-  );
+  const { nodeLookup } = buildIndexes(payload);
 
   const summarizeNodeIds = (nodeIds) =>
     (Array.isArray(nodeIds) ? nodeIds : [])
@@ -153,7 +124,7 @@ function summarizeChangeContext(payload, changeContext, limit = 4) {
         return {
           id: String(node.id),
           label: typeof node.label === "string" && node.label ? node.label : String(node.id),
-          layer: typeof node.layer === "string" ? node.layer : "",
+          layer: typeof node.node_kind === "string" ? node.node_kind : "",
           file: typeof node.source_file === "string" ? node.source_file : "",
         };
       })
@@ -168,39 +139,28 @@ function summarizeChangeContext(payload, changeContext, limit = 4) {
 }
 
 function classifyWorkspaceChanges(repoRoot, relPaths, payload) {
-  const normalizedRelPaths = [...new Set((relPaths || []).map(workspaceGuard.normalizeRelPath).filter(Boolean))];
-  const watchedRelPaths = normalizedRelPaths.filter(workspaceGuard.isWatchedPath);
-  const protectedGeneratedPaths = watchedRelPaths.filter(workspaceGuard.isProtectedGeneratedPath);
-  const protectedWorkspaceArtifacts = protectedGeneratedPaths.filter((relPath) =>
-    workspaceGuard.isWorkspaceGovernanceArtifact(relPath) || workspaceGuard.isWorkspaceFrameworkArtifact(relPath)
-  );
-  const protectedGovernanceArtifacts = protectedGeneratedPaths.filter(
-    workspaceGuard.isWorkspaceGovernanceArtifact
-  );
-  const protectedFrameworkArtifacts = protectedGeneratedPaths.filter(
-    workspaceGuard.isWorkspaceFrameworkArtifact
-  );
-  const protectedProjectSpecs = protectedGeneratedPaths
+  const baselinePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
+  const protectedProjectFiles = baselinePlan.protectedGeneratedPaths
     .filter(
       (relPath) =>
         !workspaceGuard.isWorkspaceGovernanceArtifact(relPath)
         && !workspaceGuard.isWorkspaceFrameworkArtifact(relPath)
     )
-    .map((relPath) => workspaceGuard.resolveProjectProductSpecPath(repoRoot, relPath))
+    .map((relPath) => workspaceGuard.resolveProjectFilePath(repoRoot, relPath))
     .filter(Boolean)
     .sort();
-  const changeContext = resolveChangeContext(payload, watchedRelPaths);
+  const changeContext = resolveChangeContext(repoRoot, payload, baselinePlan.relPaths, baselinePlan);
 
   return {
-    relPaths: watchedRelPaths,
-    shouldRunMypy: watchedRelPaths.some(workspaceGuard.shouldRunMypyForRelPath),
-    shouldMaterialize: changeContext.materializeProjectSpecFiles.length > 0,
-    materializeProjects: changeContext.materializeProjectSpecFiles,
-    protectedGeneratedPaths,
-    protectedWorkspaceArtifacts,
-    protectedGovernanceArtifacts,
-    protectedFrameworkArtifacts,
-    protectedProjectSpecs,
+    relPaths: baselinePlan.relPaths,
+    shouldRunMypy: baselinePlan.shouldRunMypy,
+    shouldMaterialize: baselinePlan.shouldMaterialize,
+    materializeProjects: baselinePlan.materializeProjects,
+    protectedGeneratedPaths: baselinePlan.protectedGeneratedPaths,
+    protectedWorkspaceArtifacts: baselinePlan.protectedWorkspaceArtifacts,
+    protectedGovernanceArtifacts: baselinePlan.protectedGovernanceArtifacts,
+    protectedFrameworkArtifacts: baselinePlan.protectedFrameworkArtifacts,
+    protectedProjectFiles,
     changeContext,
   };
 }

@@ -7,8 +7,8 @@ from typing import Any
 
 
 SECTION_HEADER_PREFIXES = ("[", "[[")
-PRODUCT_SPEC_SPLIT_DIR = "product_spec"
-PRODUCT_SPEC_ROOT_ONLY_SECTIONS = frozenset({"project", "framework"})
+PROJECT_CONFIG_SPLIT_DIR = "project_config"
+PROJECT_CONFIG_ROOT_ONLY_SECTIONS = frozenset({"project", "selection", "narrative"})
 
 
 class ProjectConfigLoadError(ValueError):
@@ -54,9 +54,7 @@ class ComposedTomlDocument:
     file_texts: dict[Path, str]
 
     def source_file_for_section(self, section_name: str) -> Path:
-        if section_name in self.section_files:
-            return self.section_files[section_name]
-        return self.entry_file
+        return self.section_files.get(section_name, self.entry_file)
 
     def line_for_section(self, section_name: str) -> int:
         source_file = self.source_file_for_section(section_name)
@@ -113,14 +111,9 @@ def load_composed_toml_document(
                         f"section {section_name} must stay in {entry_path.name}",
                         section_file,
                     )
-                if section_name in entry_data:
-                    raise ProjectConfigLoadError(
-                        f"duplicate top-level section across {entry_path.name} and split section file: {section_name}",
-                        section_file,
-                    )
                 if section_name in merged_data:
                     raise ProjectConfigLoadError(
-                        f"duplicate top-level section across split section files: {section_name}",
+                        f"duplicate top-level section across project config files: {section_name}",
                         section_file,
                     )
                 merged_data[section_name] = section_data[section_name]
@@ -136,14 +129,10 @@ def load_composed_toml_document(
     )
 
 
-def load_product_spec_document(product_spec_file: Path) -> ComposedTomlDocument:
+def load_project_config_document(project_file: Path) -> ComposedTomlDocument:
     return load_composed_toml_document(
-        product_spec_file,
-        split_dir_name=PRODUCT_SPEC_SPLIT_DIR,
-        root_only_sections=PRODUCT_SPEC_ROOT_ONLY_SECTIONS,
+        project_file,
+        split_dir_name=PROJECT_CONFIG_SPLIT_DIR,
+        root_only_sections=PROJECT_CONFIG_ROOT_ONLY_SECTIONS,
     )
 
-
-def product_spec_section_file(product_spec_file: Path, section_name: str) -> Path:
-    document = load_product_spec_document(product_spec_file)
-    return document.source_file_for_section(section_name)

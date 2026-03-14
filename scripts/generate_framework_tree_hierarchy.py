@@ -16,9 +16,8 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from hierarchy_models import HierarchyEdge, HierarchyFrameworkGroup, HierarchyGraph, HierarchyNode
-from standards_tree import build_standards_tree
 
-DEFAULT_REGISTRY = REPO_ROOT / "mapping/mapping_registry.json"
+DEFAULT_REGISTRY = REPO_ROOT / "mapping-removed.json"
 DEFAULT_FRAMEWORK_DIR = REPO_ROOT / "framework"
 DEFAULT_OUTPUT_JSON = REPO_ROOT / "docs/hierarchy/shelf_framework_tree.json"
 DEFAULT_OUTPUT_HTML = REPO_ROOT / "docs/hierarchy/shelf_framework_tree.html"
@@ -124,86 +123,13 @@ def find_first_h1_text(file_text: str, fallback: str) -> str:
     return fallback
 
 
-def build_payload_from_registry(registry_path: Path) -> dict[str, Any]:
-    _ = json.loads(registry_path.read_text(encoding="utf-8"))
-    tree = build_standards_tree()
-
-    seen_ids: set[str] = set()
-    level_order_counter: dict[int, int] = {}
-    nodes: list[HierarchyNode] = []
-    edges: list[HierarchyEdge] = []
-
-    def walk(node_obj: dict[str, Any], parent_id: str | None) -> None:
-        node_id = node_obj.get("id")
-        if not isinstance(node_id, str) or not node_id.strip():
-            raise ValueError("tree node must have non-empty string id")
-        if node_id in seen_ids:
-            raise ValueError(f"duplicate tree node id: {node_id}")
-        seen_ids.add(node_id)
-
-        kind = node_obj.get("kind")
-        if kind not in {"layer", "file"}:
-            raise ValueError(f"{node_id}: kind must be 'layer' or 'file'")
-
-        level_num = parse_level(node_obj.get("level"), node_id=node_id)
-        file_name = node_obj.get("file")
-        if kind == "file":
-            if not isinstance(file_name, str) or not file_name.strip():
-                raise ValueError(f"{node_id}: file node must include non-empty file")
-        else:
-            file_name = None
-
-        level_order_counter[level_num] = level_order_counter.get(level_num, 0) + 1
-        order = level_order_counter[level_num]
-
-        description_parts = [f"id={node_id}", f"kind={kind}", f"level=L{level_num}"]
-        source_line = 1
-        if file_name:
-            description_parts.append(f"file={file_name}")
-            source_line = find_first_h1_line(REPO_ROOT / file_name)
-
-        nodes.append(
-            HierarchyNode(
-                node_id=node_id,
-                label=node_label(kind, level_num, file_name),
-                level=level_num,
-                order=order,
-                description=" | ".join(description_parts),
-                metadata={
-                    "source_file": file_name,
-                    "source_line": source_line,
-                },
-            )
-        )
-
-        if parent_id is not None:
-            edges.append(
-                HierarchyEdge(
-                    source=parent_id,
-                    target=node_id,
-                    relation="tree_child",
-                    metadata={},
-                )
-            )
-
-        children = node_obj.get("children", [])
-        if not isinstance(children, list):
-            raise ValueError(f"{node_id}: children must be a list")
-        for child in children:
-            if not isinstance(child, dict):
-                raise ValueError(f"{node_id}: each child must be an object")
-            walk(child, node_id)
-
-    walk(tree, None)
-
-    levels = sorted({node.level for node in nodes})
-    level_labels = {str(level): f"L{level} 标准层" for level in levels}
+def build_payload_from_registry(_registry_path: Path) -> dict[str, Any]:
     graph = HierarchyGraph(
         title="框架标准树结构图",
-        description="从仓库规范标准集自动生成，展示框架标准树父子关系。",
-        level_labels={int(level): label for level, label in level_labels.items()},
-        nodes=nodes,
-        edges=edges,
+        description="旧 registry 入口已移除，当前仅保留 framework markdown hierarchy。",
+        level_labels={0: "Registry Removed"},
+        nodes=[HierarchyNode("registry:removed", "registry_removed", 0, "mapping registry no longer exists")],
+        edges=[],
     )
     return graph.to_payload_dict()
 

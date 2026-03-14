@@ -1,8 +1,0 @@
-# [visual] 定义视觉语义，而不是实现 token。
-[visual]
-brand = "Shelf"
-accent = "#2563eb"
-surface_preset = "light"
-radius_scale = "xl"
-shadow_level = "md"
-font_scale = "md"

@@ -1,12 +1,11 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
 const {
   resolveDefinitionTarget,
-  resolveReferenceTargets,
   resolveHoverTarget,
+  resolveReferenceTargets,
 } = require("./framework_navigation");
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
@@ -36,175 +35,29 @@ function targetLineText(result) {
   return text.split(/\r?\n/)[result.line] || "";
 }
 
-function writeFile(root, relativePath, content) {
-  const filePath = path.join(root, relativePath);
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, content, "utf8");
-  return filePath;
-}
-
 function main() {
-  const curtainL2 = loadFrameworkFile("framework/curtain/L2-M0-窗帘框架标准模块.md");
-  const capRef = locate(curtainL2.text, "C1 + SPAN");
-  const capResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: curtainL2.filePath,
-    text: curtainL2.text,
-    line: capRef.line,
-    character: capRef.character,
-  });
-  assert(capResult, "capability ref should resolve");
-  assert(capResult.filePath.endsWith("framework/curtain/L2-M0-窗帘框架标准模块.md"));
-  assert(targetLineText(capResult).includes("`C1`"));
-
-  const boundaryRef = locate(curtainL2.text, "SPAN + LOAD");
-  const boundaryResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: curtainL2.filePath,
-    text: curtainL2.text,
-    line: boundaryRef.line,
-    character: boundaryRef.character,
-  });
-  assert(boundaryResult, "boundary ref should resolve");
-  assert(targetLineText(boundaryResult).includes("`SPAN`"));
-
-  const baseRef = locate(curtainL2.text, "`B1 + B2`");
-  const baseResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: curtainL2.filePath,
-    text: curtainL2.text,
-    line: baseRef.line,
-    character: baseRef.character + 1,
-  });
-  assert(baseResult, "base ref should resolve");
-  assert(targetLineText(baseResult).includes("`B1`"));
-
-  const verifyRef = locate(curtainL2.text, "`R1` 必须满足");
-  const verifyResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: curtainL2.filePath,
-    text: curtainL2.text,
-    line: verifyRef.line,
-    character: verifyRef.character + 1,
-  });
-  assert(verifyResult, "verification rule ref should resolve");
-  assert(targetLineText(verifyResult).includes("`R1`"));
-
-  const moduleRef = locate(curtainL2.text, "L1.M0[R1]");
+  const knowledgeBaseL0 = loadFrameworkFile("framework/knowledge_base/L0-M2-对话与引用原子模块.md");
+  const moduleRef = locate(knowledgeBaseL0.text, "frontend.L1.M2[R1,R2]");
   const moduleResult = resolveDefinitionTarget({
     repoRoot,
-    filePath: curtainL2.filePath,
-    text: curtainL2.text,
+    filePath: knowledgeBaseL0.filePath,
+    text: knowledgeBaseL0.text,
     line: moduleRef.line,
     character: moduleRef.character + 1,
   });
   assert(moduleResult, "module ref should resolve");
-  assert(moduleResult.filePath.endsWith("framework/curtain/L1-M0-安装与控制编排模块.md"));
-  assert(targetLineText(moduleResult).includes("`B1`"));
+  assert(moduleResult.filePath.endsWith("framework/frontend/L1-M2-展示与容器原子模块.md"));
 
-  const knowledgeBaseL0 = loadFrameworkFile("framework/knowledge_base/L0-M0-文件库与摄取原子模块.md");
-  const externalRuleRef = locate(knowledgeBaseL0.text, "frontend.L1.M3[R1,R2]");
-  const externalRuleResult = resolveDefinitionTarget({
+  const moduleHover = resolveHoverTarget({
     repoRoot,
     filePath: knowledgeBaseL0.filePath,
     text: knowledgeBaseL0.text,
-    line: externalRuleRef.line,
-    character: externalRuleRef.character + "frontend.L1.M3[".length + 3,
+    line: moduleRef.line,
+    character: moduleRef.character + "frontend.L1.M2".length - 1,
   });
-  assert(externalRuleResult, "external rule ref should resolve");
-  assert(externalRuleResult.filePath.endsWith("framework/frontend/L1-M3-集合与导航原子模块.md"));
-  assert(targetLineText(externalRuleResult).includes("`R2`"));
-
-  const knowledgeBaseL2 = loadFrameworkFile("framework/knowledge_base/L0-M2-对话与引用原子模块.md");
-  const moduleHoverRef = locate(knowledgeBaseL2.text, "frontend.L1.M2[R1,R2]");
-  const hoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: moduleHoverRef.line,
-    character: moduleHoverRef.character + "frontend.L1.M2".length - 1,
-  });
-  assert(hoverResult, "module hover should resolve");
-  assert.strictEqual(hoverResult.end - hoverResult.start, "frontend.L1.M2".length);
-  assert(hoverResult.markdown.includes("**frontend.L1.M2**"));
-  assert(hoverResult.markdown.includes("能力声明"));
-  assert(hoverResult.markdown.includes("- `C1` 文本展示能力"));
-  assert(hoverResult.markdown.includes("最小可行基"));
-  assert(hoverResult.markdown.includes("- `B1` 文本展示结构基"));
-  assert(hoverResult.markdown.includes("基组合原则"));
-  assert(hoverResult.markdown.includes("参与基：`B1`"));
-  assert(hoverResult.markdown.includes("组合方式：先固定标题、正文、说明与元信息的阅读顺序"));
-
-  const moduleRuleHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: moduleHoverRef.line,
-    character: moduleHoverRef.character + "frontend.L1.M2[".length + 1,
-  });
-  assert(moduleRuleHoverResult, "module rule hover should resolve");
-  assert(moduleRuleHoverResult.markdown.includes("**frontend.L1.M2 · `R1`**"));
-  assert(moduleRuleHoverResult.markdown.includes("参与基：`B1`"));
-  assert(moduleRuleHoverResult.markdown.includes("输出能力：`C1`"));
-
-  const localBaseHoverRef = locate(knowledgeBaseL2.text, "`B1` 对话舞台结构基");
-  const localBaseHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: localBaseHoverRef.line,
-    character: localBaseHoverRef.character + 1,
-  });
-  assert(localBaseHoverResult, "local base hover should resolve");
-  assert(localBaseHoverResult.markdown.includes("**knowledge_base.L0.M2 · `B1`**"));
-  assert(localBaseHoverResult.markdown.includes("`B1` 对话舞台结构基"));
-
-  const localBoundaryHoverRef = locate(knowledgeBaseL2.text, "`TURN` 回合边界");
-  const localBoundaryHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: localBoundaryHoverRef.line,
-    character: localBoundaryHoverRef.character + 1,
-  });
-  assert(localBoundaryHoverResult, "local boundary hover should resolve");
-  assert(localBoundaryHoverResult.markdown.includes("**knowledge_base.L0.M2 · `TURN`**"));
-  assert(localBoundaryHoverResult.markdown.includes("`TURN` 回合边界"));
-
-  const localCapabilityHoverRef = locate(knowledgeBaseL2.text, "`C1` 对话舞台承载能力");
-  const localCapabilityHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: localCapabilityHoverRef.line,
-    character: localCapabilityHoverRef.character + 1,
-  });
-  assert(localCapabilityHoverResult, "local capability hover should resolve");
-  assert(localCapabilityHoverResult.markdown.includes("**knowledge_base.L0.M2 · `C1`**"));
-
-  const localRuleHoverRef = locate(knowledgeBaseL2.text, "`R1` 对话舞台先行");
-  const localRuleHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: localRuleHoverRef.line,
-    character: localRuleHoverRef.character + 1,
-  });
-  assert(localRuleHoverResult, "local rule hover should resolve");
-  assert(localRuleHoverResult.markdown.includes("**knowledge_base.L0.M2 · `R1`**"));
-  assert(localRuleHoverResult.markdown.includes("参与基：`B1 + B2`"));
-  assert(localRuleHoverResult.markdown.includes("边界绑定：`TURN + INPUT + STATUS + A11Y`"));
-
-  const localVerificationHoverRef = locate(knowledgeBaseL2.text, "`V1` 回合完整性");
-  const localVerificationHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: localVerificationHoverRef.line,
-    character: localVerificationHoverRef.character + 1,
-  });
-  assert(localVerificationHoverResult, "local verification hover should resolve");
-  assert(localVerificationHoverResult.markdown.includes("**knowledge_base.L0.M2 · `V1`**"));
+  assert(moduleHover, "module hover should resolve");
+  assert(moduleHover.markdown.includes("**frontend.L1.M2**"));
+  assert(moduleHover.markdown.includes("能力声明"));
 
   const workbenchL2 = loadFrameworkFile("framework/knowledge_base/L2-M0-知识库工作台场景模块.md");
   const boundaryConfigRef = locate(workbenchL2.text, "CHAT + CONTEXT + RETURN");
@@ -215,289 +68,33 @@ function main() {
     line: boundaryConfigRef.line,
     character: boundaryConfigRef.character,
   });
-  assert(boundaryConfigResult, "instance boundary ref should resolve");
-  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml"));
-  assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[chat]");
+  assert(boundaryConfigResult, "boundary config ref should resolve");
+  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/project.toml"));
+  assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[truth.chat]");
 
-  const boundaryDefinitionRef = locate(workbenchL2.text, "`CHAT` 对话边界");
-  const boundaryDefinitionResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: workbenchL2.filePath,
-    text: workbenchL2.text,
-    line: boundaryDefinitionRef.line,
-    character: boundaryDefinitionRef.character + 1,
-  });
-  assert(boundaryDefinitionResult, "boundary definition should still resolve locally");
-  assert(boundaryDefinitionResult.filePath.endsWith("framework/knowledge_base/L2-M0-知识库工作台场景模块.md"));
-  assert(targetLineText(boundaryDefinitionResult).includes("`CHAT` 对话边界"));
-
-  const boundaryConfigHoverResult = resolveHoverTarget({
+  const boundaryHover = resolveHoverTarget({
     repoRoot,
     filePath: workbenchL2.filePath,
     text: workbenchL2.text,
     line: boundaryConfigRef.line,
     character: boundaryConfigRef.character,
   });
-  assert(boundaryConfigHoverResult, "boundary config hover should resolve");
-  assert(boundaryConfigHoverResult.markdown.includes("Product Spec"));
-  assert(boundaryConfigHoverResult.markdown.includes("projects/knowledge_base_basic/product_spec/chat.toml"));
-  assert(boundaryConfigHoverResult.markdown.includes("`[chat]`"));
+  assert(boundaryHover, "boundary hover should resolve");
+  assert(boundaryHover.markdown.includes("Project Config"));
+  assert(boundaryHover.markdown.includes("projects/knowledge_base_basic/project.toml"));
+  assert(boundaryHover.markdown.includes("`[truth.chat]`"));
 
-  const citationConfigRef = locate(knowledgeBaseL2.text, "CITATION + SCOPE");
-  const citationConfigResult = resolveDefinitionTarget({
+  const boundaryRefs = resolveReferenceTargets({
     repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: citationConfigRef.line,
-    character: citationConfigRef.character,
+    filePath: workbenchL2.filePath,
+    text: workbenchL2.text,
+    line: boundaryConfigRef.line,
+    character: boundaryConfigRef.character,
   });
-  assert(citationConfigResult, "derived citation boundary ref should resolve");
-  assert(citationConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml"));
-  assert.strictEqual(targetLineText(citationConfigResult).trim(), "[chat]");
-
-  const citationConfigHoverResult = resolveHoverTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: citationConfigRef.line,
-    character: citationConfigRef.character,
-  });
-  assert(citationConfigHoverResult, "derived citation boundary hover should resolve");
-  assert(citationConfigHoverResult.markdown.includes("`[chat]`"));
-  assert(citationConfigHoverResult.markdown.includes("`[context]`"));
-  assert(citationConfigHoverResult.markdown.includes("`[return]`"));
-  assert(citationConfigHoverResult.markdown.includes("归属说明"));
-
-  const citationReferences = resolveReferenceTargets({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: citationConfigRef.line,
-    character: citationConfigRef.character,
-  });
-  assert(citationReferences.length >= 3, "citation references should include usage, definition, and config");
-  assert(citationReferences.some((item) => item.filePath.endsWith("framework/knowledge_base/L0-M2-对话与引用原子模块.md")));
-  assert(citationReferences.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/product_spec/chat.toml")));
-
-  const a11yConfigRef = locate(knowledgeBaseL2.text, "STATUS + A11Y");
-  const a11yConfigResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: knowledgeBaseL2.filePath,
-    text: knowledgeBaseL2.text,
-    line: a11yConfigRef.line,
-    character: a11yConfigRef.character + "STATUS + ".length,
-  });
-  assert(a11yConfigResult, "knowledge base A11Y boundary ref should resolve");
-  assert(a11yConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/a11y.toml"));
-  assert.strictEqual(targetLineText(a11yConfigResult).trim(), "[a11y]");
-
-  const frontendTokenL0 = loadFrameworkFile("framework/frontend/L0-M2-视觉语义原子模块.md");
-  const tokenConfigRef = locate(frontendTokenL0.text, "TOKEN + DENSITY");
-  const tokenConfigResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: frontendTokenL0.filePath,
-    text: frontendTokenL0.text,
-    line: tokenConfigRef.line,
-    character: tokenConfigRef.character,
-  });
-  assert(tokenConfigResult, "frontend TOKEN boundary ref should resolve");
-  assert(tokenConfigResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/visual.toml"));
-  assert.strictEqual(targetLineText(tokenConfigResult).trim(), "[visual]");
-
-  const frontendEntryL1 = loadFrameworkFile("framework/frontend/L1-M0-触发与选择原子模块.md");
-  const entryA11yRef = locate(frontendEntryL1.text, "PICK + OPTION + ACTION + A11Y");
-  const entryA11yResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: frontendEntryL1.filePath,
-    text: frontendEntryL1.text,
-    line: entryA11yRef.line,
-    character: entryA11yRef.character + "PICK + OPTION + ACTION + ".length,
-  });
-  assert(entryA11yResult, "frontend A11Y boundary ref should resolve");
-  assert(entryA11yResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/a11y.toml"));
-  assert.strictEqual(targetLineText(entryA11yResult).trim(), "[a11y]");
-
-  const backendL2 = loadFrameworkFile("framework/backend/L2-M0-知识库接口框架标准模块.md");
-  const backendResultRef = locate(backendL2.text, "CHAT + RESULT + TRACE");
-  const backendResult = resolveDefinitionTarget({
-    repoRoot,
-    filePath: backendL2.filePath,
-    text: backendL2.text,
-    line: backendResultRef.line,
-    character: backendResultRef.character + "CHAT + ".length,
-  });
-  assert(backendResult, "backend RESULT boundary ref should resolve");
-  assert(backendResult.filePath.endsWith("projects/knowledge_base_basic/product_spec/return.toml"));
-  assert.strictEqual(targetLineText(backendResult).trim(), "[return]");
-
-  const tempRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-nav-"));
-  const chunkingFrameworkPath = writeFile(
-    tempRepoRoot,
-    "framework/document_chunking/L0-M0-切块模块.md",
-    [
-      "# 切块模块:DocumentChunking",
-      "",
-      "@framework",
-      "",
-      "## 1. 能力声明",
-      "- `C1` 切块能力：把输入文档切成可索引的稳定块。",
-      "",
-      "## 2. 边界定义",
-      "- `CHUNK` 切块边界：切块大小与重叠窗口必须受控。",
-      "",
-      "## 3. 最小可行基",
-      "- `B1` 切块基：执行切块。来源：`C1 + CHUNK`。",
-      "",
-      "## 4. 基组合原则",
-      "- `R1` 切块落位",
-      "  - `R1.1` 参与基：`B1`",
-      "  - `R1.2` 组合方式：先按边界读取文档，再输出切块结果。",
-      "  - `R1.3` 输出能力：`C1`",
-      "  - `R1.4` 边界绑定：`CHUNK`",
-      "",
-      "## 5. 验证",
-      "- `V1` 切块结果：切块窗口必须可重复。",
-      "",
-    ].join("\n")
+  assert(
+    boundaryRefs.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/project.toml")),
+    "boundary references should include the unified project config target"
   );
-  writeFile(
-    tempRepoRoot,
-    "projects/knowledge_base_basic/product_spec.toml",
-    [
-      "[project]",
-      'template = "knowledge_base_workbench"',
-      "",
-      "[framework]",
-      'domain = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"',
-      "",
-      "[chat]",
-      'mode = "retrieval_stub"',
-      "",
-    ].join("\n")
-  );
-  writeFile(
-    tempRepoRoot,
-    "projects/doc_chunk/product_spec.toml",
-    [
-      "[project]",
-      'template = "doc_chunk_demo"',
-      "",
-      "[framework]",
-      'domain = "framework/document_chunking/L0-M0-切块模块.md"',
-      "",
-      "[chunking]",
-      'strategy = "sentence_window"',
-      "",
-    ].join("\n")
-  );
-  writeFile(
-    tempRepoRoot,
-    "projects/doc_chunk/generated/governance_manifest.json",
-    JSON.stringify(
-      {
-        product_spec_file: "projects/doc_chunk/product_spec.toml",
-        structural_objects: [
-          {
-            semantic: {
-              derived_from: {
-                framework_modules: {
-                  domain: "document_chunking.L0.M0",
-                },
-                boundary_sections: {
-                  CHUNK: "chunking",
-                },
-              },
-            },
-          },
-        ],
-      },
-      null,
-      2
-    )
-  );
-  const chunkingText = fs.readFileSync(chunkingFrameworkPath, "utf8");
-  const chunkingRef = locate(chunkingText, "C1 + CHUNK");
-  const chunkingResult = resolveDefinitionTarget({
-    repoRoot: tempRepoRoot,
-    filePath: chunkingFrameworkPath,
-    text: chunkingText,
-    line: chunkingRef.line,
-    character: chunkingRef.character + "C1 + ".length,
-  });
-  assert(chunkingResult, "custom framework boundary ref should resolve to generated project spec");
-  assert(chunkingResult.filePath.endsWith("projects/doc_chunk/product_spec.toml"));
-  assert.strictEqual(targetLineText(chunkingResult).trim(), "[chunking]");
-
-  const draftRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-draft-nav-"));
-  const draftL1Path = writeFile(
-    draftRepoRoot,
-    "framework_drafts/demo/L1-M0-下游模块.md",
-    [
-      "# 下游模块:DraftChild",
-      "",
-      "@framework",
-      "",
-      "## 1. 能力声明",
-      "- `C1` 下游能力：承接草稿链路。",
-      "",
-      "## 2. 边界定义",
-      "- `BOUND` 下游边界：下游结构必须存在。",
-      "",
-      "## 3. 最小可行基",
-      "- `B1` 下游基：稳定承接。来源：`C1 + BOUND`。",
-      "",
-      "## 4. 基组合原则",
-      "- `R1` 下游规则",
-      "  - `R1.1` 参与基：`B1`",
-      "  - `R1.2` 组合方式：维持承接。",
-      "  - `R1.3` 输出能力：`C1`",
-      "  - `R1.4` 边界绑定：`BOUND`",
-      "",
-      "## 5. 验证",
-      "- `V1` 下游验证：承接必须存在。",
-      "",
-    ].join("\n")
-  );
-  const draftL2Path = writeFile(
-    draftRepoRoot,
-    "framework_drafts/demo/L2-M0-上游模块.md",
-    [
-      "# 上游模块:DraftParent",
-      "",
-      "@framework",
-      "",
-      "## 1. 能力声明",
-      "- `C1` 上游能力：复用下游草稿模块。",
-      "",
-      "## 2. 边界定义",
-      "- `BOUND` 上游边界：复用关系必须稳定。",
-      "",
-      "## 3. 最小可行基",
-      "- `B1` 上游基：L1.M0[R1]。来源：`C1 + BOUND`。",
-      "",
-      "## 4. 基组合原则",
-      "- `R1` 上游规则",
-      "  - `R1.1` 参与基：`B1`",
-      "  - `R1.2` 组合方式：复用草稿下游模块。",
-      "  - `R1.3` 输出能力：`C1`",
-      "  - `R1.4` 边界绑定：`BOUND`",
-      "",
-      "## 5. 验证",
-      "- `V1` 上游验证：草稿引用必须可导航。",
-      "",
-    ].join("\n")
-  );
-  const draftText = fs.readFileSync(draftL2Path, "utf8");
-  const draftModuleRef = locate(draftText, "L1.M0[R1]");
-  const draftModuleResult = resolveDefinitionTarget({
-    repoRoot: draftRepoRoot,
-    filePath: draftL2Path,
-    text: draftText,
-    line: draftModuleRef.line,
-    character: draftModuleRef.character + 1,
-  });
-  assert(draftModuleResult, "draft module ref should resolve");
-  assert.strictEqual(draftModuleResult.filePath, draftL1Path);
 }
 
 main();

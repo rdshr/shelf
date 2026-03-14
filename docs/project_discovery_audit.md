@@ -1,10 +1,17 @@
-# 项目发现审计
+# Project Discovery Audit
 
-- 审计版本：`project-discovery-audit/v1`
-- 扫描目录：`projects`
-- 识别为框架驱动项目：`1`
-- 排除项目：`0`
+- schema_version: `project-discovery-audit/v2`
+- project_count: `1`
 
-| 项目目录 | 结果 | 分类 | 模板 | 原因 |
-| --- | --- | --- | --- | --- |
-| projects/knowledge_base_basic | 识别 | `recognized` | `knowledge_base_workbench` | product_spec.toml and implementation_config.toml both exist<br>registered template resolved: knowledge_base_workbench<br>project loads through the registered framework-driven materialization chain<br>framework selections resolve to concrete framework modules<br>implementation config exposes generated artifact contract |
+## knowledge_base_basic
+
+- project_file: `projects/knowledge_base_basic/project.toml`
+- runtime_scene: `knowledge_base_workbench`
+- generated_dir: `projects/knowledge_base_basic/generated`
+- classification: `framework-package-project`
+- frontend_root: `framework/frontend/L2-M0-前端框架标准模块.md`
+- knowledge_base_root: `framework/knowledge_base/L2-M0-知识库工作台场景模块.md`
+- backend_root: `framework/backend/L2-M0-知识库接口框架标准模块.md`
+- reason: contains project.toml
+- reason: declares root framework modules
+- reason: declares canonical-derived artifact contract

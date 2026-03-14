@@ -8,37 +8,37 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..");
 function main() {
   const payload = readGovernanceTree(repoRoot, path.join("docs", "hierarchy", "shelf_governance_tree.json"));
 
-  const frameworkPlan = classifyWorkspaceChanges(
+  const projectPlan = classifyWorkspaceChanges(
     repoRoot,
-    ["framework/knowledge_base/L2-M0-知识库工作台场景模块.md"],
+    ["projects/knowledge_base_basic/project.toml"],
     payload
   );
-  assert(frameworkPlan.shouldMaterialize, "framework governance node changes should trigger materialization");
+  assert(projectPlan.shouldMaterialize, "project config changes should trigger materialization");
   assert(
-    frameworkPlan.materializeProjects.some((item) => item.endsWith("projects/knowledge_base_basic/product_spec.toml")),
-    "framework governance nodes should map to the knowledge base project"
+    projectPlan.materializeProjects.some((item) => item.endsWith("projects/knowledge_base_basic/project.toml")),
+    "project config should map back to the owning project"
   );
   assert(
-    frameworkPlan.changeContext.affectedNodes.some((item) => item.includes("kb.answer.behavior")),
-    "framework change should propagate to affected code symbols"
+    projectPlan.changeContext.touchedNodes.some((item) => item === "project:knowledge_base_basic"),
+    "project config change should touch the project node"
+  );
+  assert(
+    projectPlan.changeContext.affectedNodes.some((item) => item === "project:knowledge_base_basic:canonical"),
+    "project config change should affect the canonical node"
   );
 
-  const codePlan = classifyWorkspaceChanges(
+  const generatedPlan = classifyWorkspaceChanges(
     repoRoot,
-    ["src/knowledge_base_runtime/backend.py"],
+    ["projects/knowledge_base_basic/generated/canonical_graph.json"],
     payload
   );
-  assert.strictEqual(codePlan.shouldMaterialize, false, "code-only governed changes should not auto-materialize");
+  assert.strictEqual(generatedPlan.shouldMaterialize, false, "generated canonical edits should not auto-materialize");
   assert(
-    codePlan.changeContext.touchedNodes.some((item) => item.includes("src/knowledge_base_runtime/backend.py")),
-    "code change should resolve touched strict-zone code carriers"
-  );
-  assert(
-    codePlan.changeContext.affectedNodes.some((item) => item.includes("kb.answer.behavior")),
-    "code change should still propagate to affected structural objects"
+    generatedPlan.changeContext.touchedNodes.some((item) => item === "project:knowledge_base_basic:canonical"),
+    "generated canonical edits should touch the canonical node"
   );
 
-  const summary = summarizeChangeContext(payload, frameworkPlan.changeContext, 2);
+  const summary = summarizeChangeContext(payload, projectPlan.changeContext, 2);
   assert(summary.touchedCount >= 1, "change summary should expose touched-node count");
   assert(summary.affectedCount >= summary.touchedCount, "change summary should expose affected-node count");
 }
