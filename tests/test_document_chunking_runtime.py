@@ -35,6 +35,12 @@ class DocumentChunkingRuntimeTest(unittest.TestCase):
         self.assertEqual(project.product.output.body_block_id_set_field, "body_block_id_set")
         self.assertTrue(project.product.output.include_paragraph_blocks)
         self.assertTrue(project.product.output.include_trace_meta)
+        self.assertTrue(project.product.validation.require_stable_segmentation)
+        self.assertTrue(project.product.validation.require_stable_role_labeling)
+        self.assertTrue(project.product.validation.require_effective_chunk_composition)
+        self.assertTrue(project.product.validation.require_effective_output_packaging)
+        self.assertTrue(project.product.validation.require_output_traceability)
+        self.assertTrue(project.product.validation.require_rule_conclusion_report)
         self.assertEqual(project.implementation.runtime.app_builder, "document_chunking_api_v1")
         self.assertEqual(project.implementation.runtime.api_prefix, "/api/document-chunking")
         self.assertTrue(project.implementation.runtime.write_auxiliary_output_files)
@@ -66,6 +72,10 @@ class DocumentChunkingRuntimeTest(unittest.TestCase):
             )
 
             self.assertTrue(payload["validation"]["passed"])
+            self.assertEqual([item["check_id"] for item in payload["validation"]["checks"]], ["V1", "V2", "V3", "V4", "V5"])
+            self.assertEqual(payload["validation"]["checks"][0]["rule_id"], "R1")
+            self.assertEqual(payload["validation"]["checks"][0]["boundary"], "NORMDOC/CUTRELY/BLOCKNUM")
+            self.assertIn("R1 -> 通过 / NORMDOC/CUTRELY/BLOCKNUM /", payload["validation"]["checks"][0]["conclusion"])
             self.assertEqual(payload["output"]["document_format"], "markdown")
             self.assertGreaterEqual(len(payload["output"]["ordered_chunk_item_set"]), 1)
             first_item = payload["output"]["ordered_chunk_item_set"][0]

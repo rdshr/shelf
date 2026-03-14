@@ -291,9 +291,12 @@ class OutputConfig:
 
 @dataclass(frozen=True)
 class ValidationConfig:
-    require_non_empty_blocks: bool
-    require_unique_order_index: bool
+    require_stable_segmentation: bool
+    require_stable_role_labeling: bool
+    require_effective_chunk_composition: bool
+    require_effective_output_packaging: bool
     require_output_traceability: bool
+    require_rule_conclusion_report: bool
     max_chunk_items: int
 
     def to_dict(self) -> dict[str, Any]:
@@ -577,9 +580,12 @@ def _load_product_spec(product_spec_path: Path) -> tuple[ProjectMetadata, Framew
             include_trace_meta=_require_bool(output_table, "include_trace_meta"),
         ),
         validation=ValidationConfig(
-            require_non_empty_blocks=_require_bool(validation_table, "require_non_empty_blocks"),
-            require_unique_order_index=_require_bool(validation_table, "require_unique_order_index"),
+            require_stable_segmentation=_require_bool(validation_table, "require_stable_segmentation"),
+            require_stable_role_labeling=_require_bool(validation_table, "require_stable_role_labeling"),
+            require_effective_chunk_composition=_require_bool(validation_table, "require_effective_chunk_composition"),
+            require_effective_output_packaging=_require_bool(validation_table, "require_effective_output_packaging"),
             require_output_traceability=_require_bool(validation_table, "require_output_traceability"),
+            require_rule_conclusion_report=_require_bool(validation_table, "require_rule_conclusion_report"),
             max_chunk_items=_require_int(validation_table, "max_chunk_items"),
         ),
     )
@@ -681,6 +687,18 @@ def _validate_product_spec(
         raise ValueError("output.include_paragraph_blocks must be true")
     if not product.output.include_trace_meta:
         raise ValueError("output.include_trace_meta must be true")
+    if not product.validation.require_stable_segmentation:
+        raise ValueError("validation.require_stable_segmentation must be true")
+    if not product.validation.require_stable_role_labeling:
+        raise ValueError("validation.require_stable_role_labeling must be true")
+    if not product.validation.require_effective_chunk_composition:
+        raise ValueError("validation.require_effective_chunk_composition must be true")
+    if not product.validation.require_effective_output_packaging:
+        raise ValueError("validation.require_effective_output_packaging must be true")
+    if not product.validation.require_output_traceability:
+        raise ValueError("validation.require_output_traceability must be true")
+    if not product.validation.require_rule_conclusion_report:
+        raise ValueError("validation.require_rule_conclusion_report must be true")
     if product.validation.max_chunk_items < 1:
         raise ValueError("validation.max_chunk_items must be positive")
     if not framework.preset:

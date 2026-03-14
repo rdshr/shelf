@@ -98,11 +98,15 @@ include_paragraph_blocks = true
 include_trace_meta = true
 
 # [validation] 定义这个产品必须满足的验证门槛。
-# 它表达的是结果层不变量：段落块不能为空、顺序索引必须唯一、输出必须可回溯、
-# 单次结果最多允许多少文本块。
-# 这仍属于产品层承诺，而不是某个 pytest 断言或实现层脚本配置。
+# 这里不再只描述“某些字段不能空”这种静态结果条件，
+# 而是要求验证直接回答：R1/R2/R3/R4 这些组合方式是否真的兑现了各自能力。
+# 因此本节约束的是“稳定性 / 组合有效性 / 输出回溯性 / 结论表达方式”，
+# 仍然属于产品承诺，而不是测试代码内部怎么写断言。
 [validation]
-require_non_empty_blocks = true
-require_unique_order_index = true
+require_stable_segmentation = true
+require_stable_role_labeling = true
+require_effective_chunk_composition = true
+require_effective_output_packaging = true
 require_output_traceability = true
+require_rule_conclusion_report = true
 max_chunk_items = 2000
