@@ -5,12 +5,12 @@ from .models import (
     FrameworkModule,
     FrameworkModuleExport,
     FrameworkNonResponsibility,
-    FrameworkRegistry,
+    FrameworkCatalog,
     FrameworkRule,
     FrameworkUpstreamLink,
     FrameworkVerification,
 )
-from .parser import FRAMEWORK_ROOT, load_framework_registry, parse_framework_module
+from .parser import FRAMEWORK_ROOT, load_framework_catalog, parse_framework_module
 
 __all__ = [
     "FRAMEWORK_ROOT",
@@ -20,10 +20,10 @@ __all__ = [
     "FrameworkModule",
     "FrameworkModuleExport",
     "FrameworkNonResponsibility",
-    "FrameworkRegistry",
+    "FrameworkCatalog",
     "FrameworkRule",
     "FrameworkUpstreamLink",
     "FrameworkVerification",
-    "load_framework_registry",
+    "load_framework_catalog",
     "parse_framework_module",
 ]

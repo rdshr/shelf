@@ -43,12 +43,12 @@ function testTrackerRestartsOnlyWhenStale() {
 
 function testNormalizeValidationCommand() {
   assert.strictEqual(
-    normalizeValidationCommand("uv run python scripts/validate_strict_mapping.py --check-changes --json"),
-    "uv run python scripts/validate_strict_mapping.py --check-changes"
+    normalizeValidationCommand("uv run python scripts/validate_canonical.py --check-changes --json"),
+    "uv run python scripts/validate_canonical.py --check-changes"
   );
   assert.strictEqual(
-    normalizeValidationCommand("uv run python scripts/validate_strict_mapping.py --json"),
-    "uv run python scripts/validate_strict_mapping.py"
+    normalizeValidationCommand("uv run python scripts/validate_canonical.py --json"),
+    "uv run python scripts/validate_canonical.py"
   );
   assert.strictEqual(
     normalizeValidationCommand("uv run python scripts/other.py --json"),

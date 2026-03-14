@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from project_runtime import KnowledgeDocument, ProjectRuntimeAssembly
+from project_runtime.models import KnowledgeDocument, ProjectRuntimeAssembly
 
 
 def resolve_runtime_blueprint(project: ProjectRuntimeAssembly) -> dict[str, Any]:
@@ -90,16 +90,17 @@ def project_runtime_public_summary(project: ProjectRuntimeAssembly) -> dict[str,
     documents = resolve_runtime_documents(project)
     blueprint = resolve_runtime_blueprint(project)
     ui = frontend_spec.get("ui", {})
+    framework_modules = [item.to_dict() for item in project.config.framework_modules]
     return {
         "project_file": project.project_file,
         "project": project.metadata.to_dict(),
-        "selection": project.selection.to_dict(),
+        "framework": framework_modules,
         "route": frontend_spec.get("contract", {}).get("route_contract", {}),
         "a11y": frontend_spec.get("contract", {}).get("a11y", {}),
         "routes": project_runtime_routes(project),
         "document_count": len(documents),
-        "resolved_module_ids": list(project.package_compile_order),
-        "package_compile_order": list(project.package_compile_order),
+        "resolved_module_ids": sorted(project.root_module_ids.values()),
+        "module_chain": ["framework", "config", "code", "evidence"],
         "frontend_summary": {
             "page_ids": list(ui.get("pages", {}).keys()) if isinstance(ui.get("pages"), dict) else [],
             "component_ids": list(ui.get("components", {}).keys()) if isinstance(ui.get("components"), dict) else [],

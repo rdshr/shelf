@@ -10,7 +10,7 @@ from framework_ir.models import (
     FrameworkCapability,
     FrameworkModule,
     FrameworkNonResponsibility,
-    FrameworkRegistry,
+    FrameworkCatalog,
     FrameworkRule,
     FrameworkUpstreamLink,
     FrameworkVerification,
@@ -282,11 +282,11 @@ def parse_framework_module(path: str | Path) -> FrameworkModule:
     )
 
 
-def load_framework_registry(root: Path = FRAMEWORK_ROOT) -> FrameworkRegistry:
+def load_framework_catalog(root: Path = FRAMEWORK_ROOT) -> FrameworkCatalog:
     modules: list[FrameworkModule] = []
     for framework_dir in sorted(root.iterdir()):
         if not framework_dir.is_dir():
             continue
         for markdown_file in sorted(framework_dir.glob("L*-M*-*.md")):
             modules.append(parse_framework_module(markdown_file))
-    return FrameworkRegistry(modules=tuple(modules))
+    return FrameworkCatalog(modules=tuple(modules))

@@ -1,7 +1,7 @@
 {
   "name": "shelf-ai",
   "displayName": "Shelf AI",
-  "description": "Shelf AI: framework-tree-first navigation for registry-bound packages and canonical-derived evidence.",
+  "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
   "version": "0.1.4",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
@@ -22,7 +22,7 @@
     "README.md",
     "extension.js",
     "guarding.js",
-    "governance_tree.js",
+    "evidence_tree.js",
     "framework_completion.js",
     "framework_navigation.js",
     "validation_runtime.js",
@@ -43,8 +43,8 @@
     "onCommand:shelf.publishFrameworkDraft",
     "onCommand:shelf.openFrameworkTree",
     "onCommand:shelf.refreshFrameworkTree",
-    "onCommand:shelf.openGovernanceTree",
-    "onCommand:shelf.refreshGovernanceTree"
+    "onCommand:shelf.openEvidenceTree",
+    "onCommand:shelf.refreshEvidenceTree"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -61,7 +61,7 @@
       },
       {
         "command": "shelf.validateNow",
-        "title": "Shelf: Validate Registry Chain Now"
+        "title": "Shelf: Validate Canonical Now"
       },
       {
         "command": "shelf.codegenPreflight",
@@ -88,12 +88,12 @@
         "title": "Shelf: Refresh Framework Tree"
       },
       {
-        "command": "shelf.openGovernanceTree",
-        "title": "Shelf: Open Governance Tree"
+        "command": "shelf.openEvidenceTree",
+        "title": "Shelf: Open Evidence Tree"
       },
       {
-        "command": "shelf.refreshGovernanceTree",
-        "title": "Shelf: Refresh Governance Tree"
+        "command": "shelf.refreshEvidenceTree",
+        "title": "Shelf: Refresh Evidence Tree"
       }
     ],
     "icons": {
@@ -136,12 +136,12 @@
           "group": "navigation@2"
         },
         {
-          "command": "shelf.openGovernanceTree",
+          "command": "shelf.openEvidenceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@3"
         },
         {
-          "command": "shelf.refreshGovernanceTree",
+          "command": "shelf.refreshEvidenceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@4"
         },
@@ -173,7 +173,7 @@
         "shelf.enableOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Run strict validation when a relevant file is saved."
+          "description": "Run canonical validation when a relevant file is saved."
         },
         "shelf.validationTriggerMode": {
           "type": "string",
@@ -188,7 +188,7 @@
         "shelf.notifyOnAutoFail": {
           "type": "boolean",
           "default": true,
-          "description": "Show notification when auto validation detects registry or canonical issues."
+          "description": "Show notification when auto validation detects canonical issues."
         },
         "shelf.guardMode": {
           "type": "string",
@@ -221,12 +221,12 @@
         },
         "shelf.changeValidationCommand": {
           "type": "string",
-          "default": "uv run python scripts/validate_strict_mapping.py --check-changes",
+          "default": "uv run python scripts/validate_canonical.py --check-changes",
           "description": "Command used for save-triggered validation."
         },
         "shelf.fullValidationCommand": {
           "type": "string",
-          "default": "uv run python scripts/validate_strict_mapping.py",
+          "default": "uv run python scripts/validate_canonical.py",
           "description": "Command used for manual full validation."
         },
         "shelf.frameworkTreeJsonPath": {
@@ -244,25 +244,25 @@
           "default": "uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
           "description": "Command used by 'Refresh Framework Tree'."
         },
-        "shelf.governanceTreeJsonPath": {
+        "shelf.evidenceTreeJsonPath": {
           "type": "string",
-          "default": "docs/hierarchy/shelf_governance_tree.json",
-          "description": "Workspace-relative path of generated governance tree JSON."
+          "default": "docs/hierarchy/shelf_evidence_tree.json",
+          "description": "Workspace-relative path of generated evidence tree JSON."
         },
-        "shelf.governanceTreeHtmlPath": {
+        "shelf.evidenceTreeHtmlPath": {
           "type": "string",
-          "default": "docs/hierarchy/shelf_governance_tree.html",
-          "description": "Workspace-relative path of generated governance tree HTML."
+          "default": "docs/hierarchy/shelf_evidence_tree.html",
+          "description": "Workspace-relative path of generated evidence tree HTML."
         },
-        "shelf.governanceTreeGenerateCommand": {
+        "shelf.evidenceTreeGenerateCommand": {
           "type": "string",
-          "default": "uv run python scripts/generate_governance_tree_hierarchy.py --output-json docs/hierarchy/shelf_governance_tree.json --output-html docs/hierarchy/shelf_governance_tree.html",
-          "description": "Command used by 'Refresh Governance Tree'."
+          "default": "uv run python scripts/generate_evidence_tree_hierarchy.py --output-json docs/hierarchy/shelf_evidence_tree.json --output-html docs/hierarchy/shelf_evidence_tree.html",
+          "description": "Command used by 'Refresh Evidence Tree'."
         },
         "shelf.materializeCommand": {
           "type": "string",
           "default": "uv run python scripts/materialize_project.py",
-          "description": "Base command used for Shelf auto-materialization. Shelf appends --project arguments for affected project.toml files."
+          "description": "Base command used for Shelf auto-materialization. Shelf appends --project-file arguments for affected project.toml files."
         },
         "shelf.typeCheckCommand": {
           "type": "string",

@@ -7,8 +7,8 @@ from typing import Any, Callable
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from project_runtime import ProjectRuntimeAssembly
-from project_runtime.pipeline import load_project_runtime
+from project_runtime.compiler import load_project_runtime
+from project_runtime.models import ProjectRuntimeAssembly
 
 
 @dataclass(frozen=True)
@@ -76,6 +76,10 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
     return app
 
 
+def build_project_app_from_project_file(project_file: str) -> FastAPI:
+    return build_project_runtime_app(load_project_runtime(project_file))
+
+
 def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint:
     value = project.require_runtime_export("runtime_blueprint")
     if not isinstance(value, dict):
@@ -83,59 +87,35 @@ def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint
     transport = value.get("transport")
     if not isinstance(transport, dict):
         raise ValueError("runtime_blueprint.transport is required for runtime app construction")
-    mode = transport.get("mode")
-    if not isinstance(mode, str):
-        raise ValueError("runtime_blueprint.transport.mode must be a string")
-    project_config_endpoint = transport.get("project_config_endpoint")
-    if not isinstance(project_config_endpoint, str) or not project_config_endpoint.startswith("/"):
-        raise ValueError("runtime_blueprint.transport.project_config_endpoint must be a routable path")
-    landing_path = value.get("landing_path")
-    if not isinstance(landing_path, str) or not landing_path.startswith("/"):
-        raise ValueError("runtime_blueprint.landing_path must be a routable path")
-    summary_factory_path = value.get("summary_factory")
-    if not isinstance(summary_factory_path, str):
-        raise ValueError("runtime_blueprint.summary_factory must be a callable path")
-    repository_factory_path = value.get("repository_factory")
-    if repository_factory_path is not None and not isinstance(repository_factory_path, str):
-        raise ValueError("runtime_blueprint.repository_factory must be a callable path when provided")
-    api_router_factory_path = value.get("api_router_factory")
-    if api_router_factory_path is not None and not isinstance(api_router_factory_path, str):
-        raise ValueError("runtime_blueprint.api_router_factory must be a callable path when provided")
     raw_page_routes = value.get("page_routes")
     if not isinstance(raw_page_routes, list) or not raw_page_routes:
         raise ValueError("runtime_blueprint.page_routes must be a non-empty list")
-    page_routes: list[RuntimeRouteSpec] = []
-    for item in raw_page_routes:
-        if not isinstance(item, dict):
-            raise ValueError("runtime_blueprint.page_routes entries must be objects")
-        route_id = item.get("route_id")
-        path = item.get("path")
-        handler_factory = item.get("handler_factory")
-        response_class = item.get("response_class")
-        if not isinstance(route_id, str) or not route_id:
-            raise ValueError("runtime_blueprint.page_routes.route_id must be a string")
-        if not isinstance(path, str) or not path.startswith("/"):
-            raise ValueError("runtime_blueprint.page_routes.path must be a routable path")
-        if not isinstance(handler_factory, str):
-            raise ValueError("runtime_blueprint.page_routes.handler_factory must be a callable path")
-        if response_class is not None and not isinstance(response_class, str):
-            raise ValueError("runtime_blueprint.page_routes.response_class must be a string when provided")
-        page_routes.append(
-            RuntimeRouteSpec(
-                route_id=route_id,
-                path=path,
-                handler_factory_path=handler_factory,
-                response_class=response_class,
-            )
+    page_routes = tuple(
+        RuntimeRouteSpec(
+            route_id=str(item["route_id"]),
+            path=str(item["path"]),
+            handler_factory_path=str(item["handler_factory"]),
+            response_class=str(item["response_class"]) if item.get("response_class") is not None else None,
         )
+        for item in raw_page_routes
+        if isinstance(item, dict)
+    )
     return RuntimeBlueprint(
-        mode=mode,
-        project_config_endpoint=project_config_endpoint,
-        landing_path=landing_path,
-        summary_factory_path=summary_factory_path,
-        repository_factory_path=repository_factory_path,
-        api_router_factory_path=api_router_factory_path,
-        page_routes=tuple(page_routes),
+        mode=str(transport["mode"]),
+        project_config_endpoint=str(transport["project_config_endpoint"]),
+        landing_path=str(value["landing_path"]),
+        summary_factory_path=str(value["summary_factory"]),
+        repository_factory_path=(
+            str(value["repository_factory"])
+            if value.get("repository_factory") is not None
+            else None
+        ),
+        api_router_factory_path=(
+            str(value["api_router_factory"])
+            if value.get("api_router_factory") is not None
+            else None
+        ),
+        page_routes=page_routes,
     )
 
 

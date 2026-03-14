@@ -3,7 +3,7 @@ const path = require("path");
 const vscode = require("vscode");
 const frameworkNavigation = require("./framework_navigation");
 const frameworkCompletion = require("./framework_completion");
-const governanceTree = require("./governance_tree");
+const evidenceTree = require("./evidence_tree");
 const workspaceGuard = require("./guarding");
 const validationRuntime = require("./validation_runtime");
 
@@ -13,11 +13,11 @@ const DEFAULT_FRAMEWORK_TREE_JSON = path.join("docs", "hierarchy", "shelf_framew
 const DEFAULT_FRAMEWORK_TREE_HTML = path.join("docs", "hierarchy", "shelf_framework_tree.html");
 const DEFAULT_FRAMEWORK_TREE_GENERATE_COMMAND =
   "uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html";
-const DEFAULT_GOVERNANCE_TREE_JSON = path.join("docs", "hierarchy", "shelf_governance_tree.json");
-const DEFAULT_GOVERNANCE_TREE_HTML = path.join("docs", "hierarchy", "shelf_governance_tree.html");
+const DEFAULT_EVIDENCE_TREE_JSON = path.join("docs", "hierarchy", "shelf_evidence_tree.json");
+const DEFAULT_EVIDENCE_TREE_HTML = path.join("docs", "hierarchy", "shelf_evidence_tree.html");
 const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
-const DEFAULT_GOVERNANCE_TREE_GENERATE_COMMAND =
-  "uv run python scripts/generate_governance_tree_hierarchy.py --output-json docs/hierarchy/shelf_governance_tree.json --output-html docs/hierarchy/shelf_governance_tree.html";
+const DEFAULT_EVIDENCE_TREE_GENERATE_COMMAND =
+  "uv run python scripts/generate_evidence_tree_hierarchy.py --output-json docs/hierarchy/shelf_evidence_tree.json --output-html docs/hierarchy/shelf_evidence_tree.html";
 const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
 const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
 const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
@@ -193,7 +193,7 @@ function createWorkspaceValidationWatchers({
 
 function activate(context) {
   const output = vscode.window.createOutputChannel("Shelf");
-  const diagnostics = vscode.languages.createDiagnosticCollection("shelf-mapping");
+  const diagnostics = vscode.languages.createDiagnosticCollection("shelf-validation");
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   resetStatusToIdle(status);
   status.command = "shelf.showIssues";
@@ -207,7 +207,7 @@ function activate(context) {
   let lastFailureSignature = "";
   let lastRunIssues = [];
   let lastRepoRoot = "";
-  let mappingValidationActive = true;
+  let validationActive = true;
   let treePanel = null;
   let treePanelRepoRoot = "";
   let frameworkSidebarView = null;
@@ -248,7 +248,7 @@ function activate(context) {
   const statusController = createStatusController({
     status,
     getValidationTriggerMode,
-    getMappingValidationActive: () => mappingValidationActive,
+    getMappingValidationActive: () => validationActive,
     getLastRepoRoot: () => lastRepoRoot,
     getLastRunIssues: () => lastRunIssues,
     getDirtyWatchedFileCount: () => dirtyWatchedFiles.size,
@@ -509,38 +509,38 @@ function activate(context) {
     await runValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
     if (lastValidationPassed) {
       vscode.window.showInformationMessage(
-        "Shelf codegen preflight passed. Framework -> Registry -> Project Config -> Code chain is consistent."
+        "Shelf codegen preflight passed. Framework -> Config -> Code -> Evidence chain is consistent."
       );
     }
   };
 
-  const loadGovernanceChangePlan = async ({
+  const loadEvidenceChangePlan = async ({
     repoRoot,
     relPaths,
-    governanceTreeSettings,
+    evidenceTreeSettings,
   }) => {
     const issues = [];
-    let governancePayload = null;
+    let evidencePayload = null;
     let changePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
     try {
-      governancePayload = governanceTree.readGovernanceTree(
+      evidencePayload = evidenceTree.readEvidenceTree(
         repoRoot,
-        path.relative(repoRoot, governanceTreeSettings.jsonPath)
+        path.relative(repoRoot, evidenceTreeSettings.jsonPath)
       );
-      changePlan = governanceTree.classifyWorkspaceChanges(repoRoot, relPaths, governancePayload);
+      changePlan = evidenceTree.classifyWorkspaceChanges(repoRoot, relPaths, evidencePayload);
     } catch (error) {
       issues.push(normalizeIssue({
-        message: `Shelf could not load governance tree: ${String(error)}`,
-        file: path.relative(repoRoot, governanceTreeSettings.jsonPath),
+        message: `Shelf could not load evidence tree: ${String(error)}`,
+        file: path.relative(repoRoot, evidenceTreeSettings.jsonPath),
         line: 1,
         column: 1,
-        code: "SHELF_GOVERNANCE_TREE",
+        code: "SHELF_EVIDENCE_TREE",
       }));
     }
 
     let changeSummary = null;
-    if (changePlan.changeContext && governancePayload) {
-      changeSummary = governanceTree.summarizeChangeContext(governancePayload, changePlan.changeContext, 4);
+    if (changePlan.changeContext && evidencePayload) {
+      changeSummary = evidenceTree.summarizeChangeContext(evidencePayload, changePlan.changeContext, 4);
     } else if (changePlan.changeContext) {
       changeSummary = {
         touchedCount: Array.isArray(changePlan.changeContext.touchedNodes) ? changePlan.changeContext.touchedNodes.length : 0,
@@ -562,7 +562,7 @@ function activate(context) {
 
     return {
       issues,
-      governancePayload,
+      evidencePayload,
       changePlan,
       changeSummary,
     };
@@ -572,7 +572,7 @@ function activate(context) {
     repoRoot,
     config,
     changePlan,
-    governanceTreeSettings,
+    evidenceTreeSettings,
     frameworkTreeSettings,
   }) => {
     const issues = [];
@@ -583,7 +583,7 @@ function activate(context) {
 
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
     const protectedWorkspaceArtifacts = changePlan.protectedWorkspaceArtifacts || [];
-    const protectedGovernanceArtifacts = changePlan.protectedGovernanceArtifacts || [];
+    const protectedEvidenceArtifacts = changePlan.protectedEvidenceArtifacts || [];
     const protectedFrameworkArtifacts = changePlan.protectedFrameworkArtifacts || [];
 
     if (guardMode === "strict") {
@@ -613,14 +613,14 @@ function activate(context) {
           issues.push(...restoreResult.errors);
         }
       }
-      if (protectedGovernanceArtifacts.length) {
+      if (protectedEvidenceArtifacts.length) {
         const restoreResult = await runParsedCommand(
-          "governance-tree",
-          governanceTreeSettings.generateCommand,
+          "evidence-tree",
+          evidenceTreeSettings.generateCommand,
           repoRoot,
           (stdout, stderr, code) => parseStageFailure(
-            "SHELF_GOVERNANCE_TREE_PROTECT",
-            "Workspace governance tree artifacts were edited directly and Shelf could not restore them.",
+            "SHELF_EVIDENCE_TREE_PROTECT",
+            "Workspace evidence tree artifacts were edited directly and Shelf could not restore them.",
             stdout,
             stderr,
             code
@@ -629,7 +629,7 @@ function activate(context) {
         if (!restoreResult.passed) {
           issues.push(...restoreResult.errors);
         } else {
-          suppressArtifactEvents(protectedGovernanceArtifacts);
+          suppressArtifactEvents(protectedEvidenceArtifacts);
         }
       }
       if (protectedFrameworkArtifacts.length) {
@@ -668,11 +668,11 @@ function activate(context) {
     }
 
     for (const relPath of changePlan.protectedGeneratedPaths) {
-      const isGovernanceArtifact = workspaceGuard.isWorkspaceGovernanceArtifact(relPath);
+      const isEvidenceArtifact = workspaceGuard.isWorkspaceEvidenceArtifact(relPath);
       const isFrameworkArtifact = workspaceGuard.isWorkspaceFrameworkArtifact(relPath);
       issues.push(normalizeIssue({
-        message: isGovernanceArtifact
-          ? "Workspace governance tree artifacts are derived evidence. Refresh the governance tree instead of editing them directly."
+        message: isEvidenceArtifact
+          ? "Workspace evidence tree artifacts are derived evidence. Refresh the evidence tree instead of editing them directly."
           : (
             isFrameworkArtifact
               ? "Workspace framework tree artifacts are derived evidence. Refresh the framework tree instead of editing them directly."
@@ -681,8 +681,8 @@ function activate(context) {
         file: relPath,
         line: 1,
         column: 1,
-        code: isGovernanceArtifact
-          ? "SHELF_GOVERNANCE_TREE_EDIT"
+        code: isEvidenceArtifact
+          ? "SHELF_EVIDENCE_TREE_EDIT"
           : (isFrameworkArtifact ? "SHELF_FRAMEWORK_TREE_EDIT" : "SHELF_GENERATED_EDIT"),
       }));
     }
@@ -739,7 +739,7 @@ function activate(context) {
     const repoRoot = folder.uri.fsPath;
 
     if (!hasStandardsTree(repoRoot)) {
-      mappingValidationActive = false;
+      validationActive = false;
       lastRepoRoot = repoRoot;
       lastRunIssues = [];
       lastFailureSignature = "";
@@ -751,7 +751,7 @@ function activate(context) {
       refreshSidebarHome();
       return;
     }
-    mappingValidationActive = true;
+    validationActive = true;
 
     const config = vscode.workspace.getConfiguration("shelf");
     const command = task.mode === "full"
@@ -764,7 +764,7 @@ function activate(context) {
     const normalizedValidationCommand = validationRuntime.normalizeValidationCommand(command);
     if (normalizedValidationCommand !== String(command).trim()) {
       output.appendLine(
-        `[validate] removed unsupported --json flag from validate_strict_mapping.py command: ${normalizedValidationCommand}`
+        `[validate] removed unsupported --json flag from canonical validation command: ${normalizedValidationCommand}`
       );
     }
 
@@ -781,33 +781,33 @@ function activate(context) {
       .map((uri) => workspaceGuard.normalizeRelPath(path.relative(repoRoot, uri.fsPath)))
       .filter(Boolean)
       .filter((relPath) => !isSuppressedGeneratedPath(relPath));
-    const governanceTreeSettings = getGovernanceTreeSettings(repoRoot, config);
+    const evidenceTreeSettings = getEvidenceTreeSettings(repoRoot, config);
     const frameworkTreeSettings = getFrameworkTreeSettings(repoRoot, config);
-    if (!fs.existsSync(governanceTreeSettings.jsonPath)) {
+    if (!fs.existsSync(evidenceTreeSettings.jsonPath)) {
       await generateTreeArtifacts(
         repoRoot,
-        governanceTreeSettings.generateCommand,
+        evidenceTreeSettings.generateCommand,
         output,
-        "governance-tree"
+        "evidence-tree"
       );
     }
 
     const combinedIssues = [];
-    const governancePlan = await loadGovernanceChangePlan({
+    const evidencePlan = await loadEvidenceChangePlan({
       repoRoot,
       relPaths,
-      governanceTreeSettings,
+      evidenceTreeSettings,
     });
-    combinedIssues.push(...governancePlan.issues);
-    const governancePayload = governancePlan.governancePayload;
-    const changePlan = governancePlan.changePlan;
-    const changeSummary = governancePlan.changeSummary;
+    combinedIssues.push(...evidencePlan.issues);
+    const evidencePayload = evidencePlan.evidencePayload;
+    const changePlan = evidencePlan.changePlan;
+    const changeSummary = evidencePlan.changeSummary;
 
     const protectionResult = await protectGeneratedArtifacts({
       repoRoot,
       config,
       changePlan,
-      governanceTreeSettings,
+      evidenceTreeSettings,
       frameworkTreeSettings,
     });
     combinedIssues.push(...protectionResult.issues);
@@ -844,8 +844,8 @@ function activate(context) {
     applyDiagnostics(combined, diagnostics, repoRoot, task.triggerUris[0] || null);
     output.appendLine(`[result] passed=${combined.passed} errors=${combined.errors.length}`);
     if (lastChangeContext && lastChangeContext.touchedNodes?.length) {
-      output.appendLine(`[governance] touched=${lastChangeContext.touchedNodes.join(", ")}`);
-      output.appendLine(`[governance] affected=${(lastChangeContext.affectedNodes || []).join(", ")}`);
+      output.appendLine(`[evidence] touched=${lastChangeContext.touchedNodes.join(", ")}`);
+      output.appendLine(`[evidence] affected=${(lastChangeContext.affectedNodes || []).join(", ")}`);
     }
 
     if (combined.passed) {
@@ -921,8 +921,8 @@ function activate(context) {
     editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
   };
 
-  const treeTitleForKind = (kind) => kind === "governance"
-    ? "Shelf · Governance Tree"
+  const treeTitleForKind = (kind) => kind === "evidence"
+    ? "Shelf · Evidence Tree"
     : "Shelf · Framework Tree";
 
   const ensureTreePanel = (kind) => {
@@ -968,9 +968,9 @@ function activate(context) {
     treePanelRepoRoot = repoRoot;
     const config = vscode.workspace.getConfiguration("shelf");
     const treeSettings = getTreeSettings(repoRoot, config, kind);
-    const treeLabel = kind === "governance" ? "governance tree" : "framework tree";
-    const refreshCommandLabel = kind === "governance"
-      ? "Shelf: Refresh Governance Tree"
+    const treeLabel = kind === "evidence" ? "evidence tree" : "framework tree";
+    const refreshCommandLabel = kind === "evidence"
+      ? "Shelf: Refresh Evidence Tree"
       : "Shelf: Refresh Framework Tree";
 
     if (options.regenerateIfMissing && !fs.existsSync(treeSettings.htmlPath)) {
@@ -986,7 +986,7 @@ function activate(context) {
 
     if (!fs.existsSync(treeSettings.htmlPath)) {
       panel.webview.html = buildTreeFallbackHtml(
-        `${kind === "governance" ? "Governance" : "Framework"} tree HTML not found: ${toWorkspaceRelative(treeSettings.htmlPath, repoRoot)}`,
+        `${kind === "evidence" ? "Evidence" : "Framework"} tree HTML not found: ${toWorkspaceRelative(treeSettings.htmlPath, repoRoot)}`,
         refreshCommandLabel,
         treeTitleForKind(kind)
       );
@@ -1008,8 +1008,8 @@ function activate(context) {
     await openTreeView("framework", options);
   };
 
-  const openGovernanceTree = async (options = { regenerateIfMissing: false }) => {
-    await openTreeView("governance", options);
+  const openEvidenceTree = async (options = { regenerateIfMissing: false }) => {
+    await openTreeView("evidence", options);
   };
 
   const clearShelfDiagnosticsForUri = (uri) => {
@@ -1051,21 +1051,21 @@ function activate(context) {
         tone: "ghost"
       },
       {
-        action: "openGovernanceTree",
-        label: "打开治理树",
-        description: "需要排障或看受影响闭包时，再打开工作区治理树。",
+        action: "openEvidenceTree",
+        label: "打开证据树",
+        description: "需要排障或看受影响闭包时，再打开工作区证据树。",
         tone: "ghost"
       },
       {
-        action: "refreshGovernanceTree",
-        label: "刷新治理树产物",
-        description: "重新生成工作区治理树 HTML / JSON。",
+        action: "refreshEvidenceTree",
+        label: "刷新证据树产物",
+        description: "重新生成工作区证据树 HTML / JSON。",
         tone: "ghost"
       },
       {
         action: "validate",
-        label: "执行严格校验",
-        description: "运行完整 strict validation。",
+        label: "执行 canonical 校验",
+        description: "运行完整 canonical validation。",
         tone: "ghost"
       },
       {
@@ -1100,9 +1100,9 @@ function activate(context) {
         workspace: "No workspace",
         heroTone: "unknown",
         heroStatus: "等待工作区",
-        heroSummary: "打开仓库后，这里会优先显示框架树入口，同时保留治理树守卫和问题跳转。",
+        heroSummary: "打开仓库后，这里会优先显示框架树入口，同时保留证据树守卫和问题跳转。",
         treePath: DEFAULT_FRAMEWORK_TREE_HTML,
-        mappingStatus: "Unavailable",
+        validationStatus: "Unavailable",
         issueSummary: "No workspace",
         treeStatus: "Unknown",
         standardsStatus: "Unknown",
@@ -1122,10 +1122,10 @@ function activate(context) {
             note: DEFAULT_FRAMEWORK_TREE_HTML
           },
           {
-            label: "治理树产物",
+            label: "证据树产物",
             value: "未知",
             tone: "unknown",
-            note: DEFAULT_GOVERNANCE_TREE_HTML
+            note: DEFAULT_EVIDENCE_TREE_HTML
           },
           {
             label: "守卫模式",
@@ -1156,7 +1156,7 @@ function activate(context) {
         issueEmptyText: "打开工作区后，这里会显示校验问题预览和快速跳转入口。",
         issueOverflow: 0,
         changeItems: [],
-        changeEmptyText: "打开工作区后，这里会显示最近一次变更命中的治理树节点闭包。",
+        changeEmptyText: "打开工作区后，这里会显示最近一次变更命中的证据树节点闭包。",
         changeOverflow: 0,
         calloutTone: "unknown",
         calloutTitle: "从工作区开始",
@@ -1167,14 +1167,14 @@ function activate(context) {
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("shelf");
     const frameworkTreeSettings = getFrameworkTreeSettings(repoRoot, config);
-    const governanceTreeSettings = getGovernanceTreeSettings(repoRoot, config);
+    const evidenceTreeSettings = getEvidenceTreeSettings(repoRoot, config);
     const frameworkTreePath = frameworkTreeSettings.htmlPath;
-    const governanceTreePath = governanceTreeSettings.htmlPath;
+    const evidenceTreePath = evidenceTreeSettings.htmlPath;
     const validationTriggerMode = getValidationTriggerMode();
     const standardsExists = hasStandardsTree(repoRoot);
-    const validationEnabled = standardsExists && mappingValidationActive;
+    const validationEnabled = standardsExists && validationActive;
     const frameworkTreeExists = fs.existsSync(frameworkTreePath);
-    const governanceTreeExists = fs.existsSync(governanceTreePath);
+    const evidenceTreeExists = fs.existsSync(evidenceTreePath);
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
     const issueCount = lastRunIssues.length;
     const issueSummary = validationEnabled
@@ -1221,7 +1221,7 @@ function activate(context) {
     let heroSummary = "先执行一次完整校验，把树图状态和问题列表都热起来。";
     let calloutTone = "unknown";
     let calloutTitle = "建议先跑一次完整校验";
-    let calloutBody = "这样能立即得到最新问题摘要，并确认严格映射守卫是否正常工作。";
+    let calloutBody = "这样能立即得到最新问题摘要，并确认 canonical 守卫是否正常工作。";
     let calloutAction = {
       action: "validate",
       label: "现在执行校验"
@@ -1230,10 +1230,10 @@ function activate(context) {
     if (!standardsExists) {
       heroTone = "error";
       heroStatus = "严格守卫未启用";
-      heroSummary = `当前工作区缺少 ${STANDARDS_TREE_FILE}，Shelf 会停用治理树守卫，但仍可打开框架树。`;
+      heroSummary = `当前工作区缺少 ${STANDARDS_TREE_FILE}，Shelf 会停用证据树守卫，但仍可打开框架树。`;
       calloutTone = "error";
       calloutTitle = "先补齐规范入口";
-      calloutBody = "没有规范总纲时，侧边栏仍可作为框架树入口，但严格映射问题不会自动汇总。";
+      calloutBody = "没有规范总纲时，侧边栏仍可作为框架树入口，但 canonical 校验问题不会自动汇总。";
       calloutAction = {
         action: "openStandards",
         label: "打开规范总纲路径"
@@ -1252,7 +1252,7 @@ function activate(context) {
       heroStatus = `${issueCount} 个问题待处理`;
       heroSummary = "侧边栏现在会直接预览问题，并支持点进具体文件和行号。";
       calloutTone = "error";
-      calloutTitle = "先处理映射问题";
+      calloutTitle = "先处理校验问题";
       calloutBody = "修复这些问题前，不适合继续推送或发布。可以先点下面的问题卡片，或打开完整问题列表。";
       calloutAction = {
         action: "showIssues",
@@ -1261,10 +1261,10 @@ function activate(context) {
     } else if (lastValidationPassed === true) {
       heroTone = "ok";
       heroStatus = "工作区状态正常";
-      heroSummary = "框架树入口和治理树守卫都已接通，侧边栏现在就是你的快速入口。";
+      heroSummary = "框架树入口和证据树守卫都已接通，侧边栏现在就是你的快速入口。";
       calloutTone = "ok";
       calloutTitle = "继续查看框架树";
-      calloutBody = "一般先打开框架文档树；只有需要追踪代码影响闭包时，再切到治理树。";
+      calloutBody = "一般先打开框架文档树；只有需要追踪代码影响闭包时，再切到证据树。";
       calloutAction = {
         action: "openTree",
         label: "打开框架树"
@@ -1297,12 +1297,12 @@ function activate(context) {
           : `等待生成 ${toWorkspaceRelative(frameworkTreePath, repoRoot)}`
       },
       {
-        label: "治理树产物",
-        value: governanceTreeExists ? "就绪" : "缺失",
-        tone: governanceTreeExists ? "ok" : "error",
-        note: governanceTreeExists
-          ? toWorkspaceRelative(governanceTreePath, repoRoot)
-          : `等待生成 ${toWorkspaceRelative(governanceTreePath, repoRoot)}`
+        label: "证据树产物",
+        value: evidenceTreeExists ? "就绪" : "缺失",
+        tone: evidenceTreeExists ? "ok" : "error",
+        note: evidenceTreeExists
+          ? toWorkspaceRelative(evidenceTreePath, repoRoot)
+          : `等待生成 ${toWorkspaceRelative(evidenceTreePath, repoRoot)}`
       },
       {
         label: "守卫模式",
@@ -1368,11 +1368,11 @@ function activate(context) {
 
     let issueEmptyText = "当前没有可展示的问题。";
     if (!validationEnabled) {
-      issueEmptyText = "当前工作区的严格映射守卫已停用，所以这里不会自动汇总问题。";
+      issueEmptyText = "当前工作区的 canonical 守卫已停用，所以这里不会自动汇总问题。";
     } else if (lastValidationPassed === null) {
       issueEmptyText = "本会话尚未执行校验。先跑一次完整校验，侧边栏才能显示最新问题摘要。";
     } else if (lastValidationPassed === true) {
-      issueEmptyText = "当前没有可展示的问题，Shelf 严格映射守卫状态正常。";
+      issueEmptyText = "当前没有可展示的问题，Shelf canonical 守卫状态正常。";
     }
 
     return buildSidebarHomeHtml({
@@ -1381,7 +1381,7 @@ function activate(context) {
       heroStatus,
       heroSummary,
       treePath: toWorkspaceRelative(frameworkTreePath, repoRoot),
-      mappingStatus: validationEnabled ? "Enabled" : "Disabled",
+      validationStatus: validationEnabled ? "Enabled" : "Disabled",
       issueSummary,
       treeStatus: frameworkTreeExists ? "Ready" : "Missing",
       standardsStatus: standardsExists ? "Ready" : "Missing",
@@ -1392,7 +1392,7 @@ function activate(context) {
       issueEmptyText,
       issueOverflow: Math.max(0, lastRunIssues.length - issueItems.length),
       changeItems,
-      changeEmptyText: "本会话还没有可展示的节点闭包。执行一次校验后，这里会显示最近变更命中的治理树节点。",
+      changeEmptyText: "本会话还没有可展示的节点闭包。执行一次校验后，这里会显示最近变更命中的证据树节点。",
       changeOverflow,
       changeSummary,
       calloutTone,
@@ -1439,12 +1439,12 @@ function activate(context) {
           await vscode.commands.executeCommand("shelf.refreshFrameworkTree");
           return;
         }
-        if (message.type === "shelf.sidebar.openGovernanceTree") {
-          await openGovernanceTree({ regenerateIfMissing: true });
+        if (message.type === "shelf.sidebar.openEvidenceTree") {
+          await openEvidenceTree({ regenerateIfMissing: true });
           return;
         }
-        if (message.type === "shelf.sidebar.refreshGovernanceTree") {
-          await vscode.commands.executeCommand("shelf.refreshGovernanceTree");
+        if (message.type === "shelf.sidebar.refreshEvidenceTree") {
+          await vscode.commands.executeCommand("shelf.refreshEvidenceTree");
           return;
         }
         if (message.type === "shelf.sidebar.validate") {
@@ -1767,7 +1767,7 @@ function activate(context) {
   );
 
   const showIssuesDisposable = vscode.commands.registerCommand("shelf.showIssues", async () => {
-    if (!mappingValidationActive && lastRepoRoot) {
+    if (!validationActive && lastRepoRoot) {
       vscode.window.showInformationMessage(
         `Shelf validation guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
       );
@@ -1844,11 +1844,11 @@ function activate(context) {
     await openFrameworkTree({ regenerateIfMissing: false });
   });
 
-  const openGovernanceTreeDisposable = vscode.commands.registerCommand("shelf.openGovernanceTree", async () => {
-    await openGovernanceTree({ regenerateIfMissing: true });
+  const openEvidenceTreeDisposable = vscode.commands.registerCommand("shelf.openEvidenceTree", async () => {
+    await openEvidenceTree({ regenerateIfMissing: true });
   });
 
-  const refreshGovernanceTreeDisposable = vscode.commands.registerCommand("shelf.refreshGovernanceTree", async () => {
+  const refreshEvidenceTreeDisposable = vscode.commands.registerCommand("shelf.refreshEvidenceTree", async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       vscode.window.showWarningMessage("Shelf: no workspace is open.");
@@ -1857,16 +1857,16 @@ function activate(context) {
 
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("shelf");
-    const governanceTreeSettings = getGovernanceTreeSettings(repoRoot, config);
+    const evidenceTreeSettings = getEvidenceTreeSettings(repoRoot, config);
 
     const ok = await generateTreeArtifacts(
       repoRoot,
-      governanceTreeSettings.generateCommand,
+      evidenceTreeSettings.generateCommand,
       output,
-      "governance-tree"
+      "evidence-tree"
     );
     if (!ok) {
-      await vscode.window.showErrorMessage("Shelf: failed to refresh governance tree.", "Open Log").then((action) => {
+      await vscode.window.showErrorMessage("Shelf: failed to refresh evidence tree.", "Open Log").then((action) => {
         if (action === "Open Log") {
           output.show(true);
         }
@@ -1875,10 +1875,10 @@ function activate(context) {
     }
 
     suppressArtifactEvents([
-      path.relative(repoRoot, governanceTreeSettings.jsonPath),
-      path.relative(repoRoot, governanceTreeSettings.htmlPath),
+      path.relative(repoRoot, evidenceTreeSettings.jsonPath),
+      path.relative(repoRoot, evidenceTreeSettings.htmlPath),
     ]);
-    await openGovernanceTree({ regenerateIfMissing: false });
+    await openEvidenceTree({ regenerateIfMissing: false });
   });
 
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
@@ -2004,8 +2004,8 @@ function activate(context) {
     showIssuesDisposable,
     openFrameworkTreeDisposable,
     refreshFrameworkTreeDisposable,
-    openGovernanceTreeDisposable,
-    refreshGovernanceTreeDisposable,
+    openEvidenceTreeDisposable,
+    refreshEvidenceTreeDisposable,
     changeDisposable,
     saveDisposable,
     createDisposable,
@@ -2051,7 +2051,7 @@ function buildMaterializeCommand(baseCommand, projectFiles) {
     return String(baseCommand || DEFAULT_MATERIALIZE_COMMAND);
   }
   const projectArgs = files
-    .map((projectFile) => `--project ${shellQuote(projectFile)}`)
+    .map((projectFile) => `--project-file ${shellQuote(projectFile)}`)
     .join(" ");
   return `${String(baseCommand || DEFAULT_MATERIALIZE_COMMAND)} ${projectArgs}`.trim();
 }
@@ -2276,17 +2276,17 @@ function getFrameworkTreeSettings(repoRoot, config) {
   };
 }
 
-function getGovernanceTreeSettings(repoRoot, config) {
+function getEvidenceTreeSettings(repoRoot, config) {
   return {
-    jsonPath: resolveTreePath(repoRoot, config.get("governanceTreeJsonPath"), DEFAULT_GOVERNANCE_TREE_JSON),
-    htmlPath: resolveTreePath(repoRoot, config.get("governanceTreeHtmlPath"), DEFAULT_GOVERNANCE_TREE_HTML),
-    generateCommand: String(config.get("governanceTreeGenerateCommand") || DEFAULT_GOVERNANCE_TREE_GENERATE_COMMAND),
+    jsonPath: resolveTreePath(repoRoot, config.get("evidenceTreeJsonPath"), DEFAULT_EVIDENCE_TREE_JSON),
+    htmlPath: resolveTreePath(repoRoot, config.get("evidenceTreeHtmlPath"), DEFAULT_EVIDENCE_TREE_HTML),
+    generateCommand: String(config.get("evidenceTreeGenerateCommand") || DEFAULT_EVIDENCE_TREE_GENERATE_COMMAND),
   };
 }
 
 function getTreeSettings(repoRoot, config, kind) {
-  return kind === "governance"
-    ? getGovernanceTreeSettings(repoRoot, config)
+  return kind === "evidence"
+    ? getEvidenceTreeSettings(repoRoot, config)
     : getFrameworkTreeSettings(repoRoot, config);
 }
 
@@ -2410,7 +2410,7 @@ function buildSidebarHomeHtml(model) {
   const heroStatus = escapeHtml(model.heroStatus || "Waiting");
   const heroSummary = escapeHtml(model.heroSummary || "");
   const treePath = escapeHtml(model.treePath);
-  const mappingStatus = escapeHtml(model.mappingStatus);
+  const validationStatus = escapeHtml(model.validationStatus);
   const issueSummary = escapeHtml(model.issueSummary);
   const treeStatus = escapeHtml(model.treeStatus || "Unknown");
   const standardsStatus = escapeHtml(model.standardsStatus || "Unknown");
@@ -2437,7 +2437,7 @@ function buildSidebarHomeHtml(model) {
   const summaryTiles = [
     { label: "规范总纲", value: standardsStatus },
     { label: "框架树", value: treeStatus },
-    { label: "严格校验", value: mappingStatus },
+    { label: "严格校验", value: validationStatus },
     { label: "问题", value: issueSummary }
   ];
   const summaryTilesHtml = summaryTiles.map((item) => `
@@ -2516,7 +2516,7 @@ function buildSidebarHomeHtml(model) {
         </div>`).join("")
     : `<div class="empty-state">${changeEmptyText}</div>`;
   const changeOverflowHtml = changeOverflow > 0
-    ? `<p class="section-note">还有 ${changeOverflow} 个节点未展开，打开治理树可查看完整闭包。</p>`
+    ? `<p class="section-note">还有 ${changeOverflow} 个节点未展开，打开证据树可查看完整闭包。</p>`
     : "";
   const calloutActionHtml = calloutAction && calloutAction.action && calloutAction.label
     ? `<button type="button" class="note-action" data-action="${calloutAction.action}">${calloutAction.label}</button>`

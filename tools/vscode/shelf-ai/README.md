@@ -2,16 +2,16 @@
 
 ## What It Does
 
-- Opens the framework tree and workspace governance tree from the sidebar.
+- Opens the framework tree and workspace evidence tree from the sidebar.
 - Treats the repository mainline as:
-  `Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence`.
-- Treats `projects/*/generated/canonical_graph.json` as the only machine truth.
-- Treats `generation_manifest.json` / `derived_governance_manifest.json` / `derived_governance_tree.json` / reports as canonical-derived views.
+  `Framework -> Config -> Code -> Evidence`.
+- Treats `projects/*/generated/canonical.json` as the only machine truth.
+- Treats framework tree and evidence tree as canonical-derived views.
 - Supports framework-markdown navigation for `B/C/R/V`, boundaries, module refs, and rule refs.
-- Maps framework boundaries back to `projects/*/project.toml` sections such as `[truth.chat]` and `[truth.surface]`.
+- Maps framework boundaries back to `projects/*/project.toml` sections such as `[exact.knowledge_base.chat]` and `[exact.frontend.surface]`.
 - Auto-materializes affected projects when `framework/*.md` or `projects/*/project.toml` changes.
 - Guards `projects/*/generated/*` and workspace tree artifacts from direct edits.
-- Runs strict validation and optionally `mypy` from the extension.
+- Runs canonical validation and optionally `mypy` from the extension.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
 
 ## Install (Local)
@@ -25,27 +25,27 @@
 
 - `Shelf: Insert Framework Module Template`
 - `Shelf: Install Git Hooks`
-- `Shelf: Validate Registry Chain Now`
+- `Shelf: Validate Canonical Now`
 - `Shelf: Run Codegen Preflight`
 - `Shelf: Publish Current Framework Draft`
 - `Shelf: Show Validation Issues`
 - `Shelf: Open Framework Tree`
 - `Shelf: Refresh Framework Tree`
-- `Shelf: Open Governance Tree`
-- `Shelf: Refresh Governance Tree`
+- `Shelf: Open Evidence Tree`
+- `Shelf: Refresh Evidence Tree`
 
 ## Configuration
 
 - `shelf.frameworkTreeJsonPath`
-- `shelf.governanceTreeJsonPath`
+- `shelf.evidenceTreeJsonPath`
 - `shelf.guardMode = strict`
 
 ## Validation
 
 Default commands:
 
-- `uv run python scripts/validate_strict_mapping.py --check-changes`
-- `uv run python scripts/validate_strict_mapping.py`
+- `uv run python scripts/validate_canonical.py --check-changes`
+- `uv run python scripts/validate_canonical.py`
 - `uv run python scripts/materialize_project.py`
 - `uv run mypy`
 
@@ -58,24 +58,23 @@ The `@framework` template entry is a repository-side hard authoring contract and
 - Framework tree:
   `docs/hierarchy/shelf_framework_tree.json`
   `docs/hierarchy/shelf_framework_tree.html`
-- Governance tree:
-  `docs/hierarchy/shelf_governance_tree.json`
-  `docs/hierarchy/shelf_governance_tree.html`
+- Evidence tree:
+  `docs/hierarchy/shelf_evidence_tree.json`
+  `docs/hierarchy/shelf_evidence_tree.html`
 
 The framework tree is the authoring view.
-The governance tree is the canonical-derived workspace evidence view.
+The evidence tree is the canonical-derived workspace evidence view.
 
 ## Project Config Navigation
 
 Boundary jumps now target unified project config sections, for example:
 
-- `[truth.surface]`
-- `[truth.surface.copy]`
-- `[truth.chat]`
-- `[truth.chat.copy]`
-- `[truth.library]`
-- `[truth.preview]`
-- `[truth.return]`
+- `[exact.frontend.surface]`
+- `[exact.frontend.visual]`
+- `[exact.knowledge_base.chat]`
+- `[exact.knowledge_base.library]`
+- `[exact.knowledge_base.preview]`
+- `[exact.knowledge_base.return]`
 
 The extension no longer treats the removed dual-track config files as live authoring entrypoints.
 

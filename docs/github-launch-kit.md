@@ -12,7 +12,7 @@ This file is the shortest path from "the repo is technically solid" to "the repo
 
 Recommended:
 
-`Structure-first AI coding framework that turns framework markdown, registry-bound packages, and unified project config into runnable systems with canonical evidence.`
+`Structure-first AI coding framework that turns framework markdown and structured config into runnable systems with canonical evidence.`
 
 Shorter option:
 
@@ -20,7 +20,7 @@ Shorter option:
 
 More technical option:
 
-`Executable architecture for AI coding: Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence.`
+`Executable architecture for AI coding: Framework -> Config -> Code -> Evidence.`
 
 ## Suggested Topics
 
@@ -42,7 +42,7 @@ Recommended headline:
 
 Recommended subheadline:
 
-- `Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence`
+- `Framework -> Config -> Code -> Evidence`
 
 Recommended support line:
 
@@ -58,9 +58,9 @@ Recommended:
 
 `I have been working on Shelf: a structure-first AI coding framework.`
 
-`Shelf turns framework markdown, registry-bound packages, and unified project config into a verifiable engineering chain:`
+`Shelf turns framework markdown and structured project config into a verifiable engineering chain:`
 
-`Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence`
+`Framework -> Config -> Code -> Evidence`
 
 `It includes strict validation, project materialization, a runnable reference app, and a VS Code companion.`
 

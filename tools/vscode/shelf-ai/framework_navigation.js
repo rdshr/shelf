@@ -38,10 +38,10 @@ function normalizeConfigSection(section) {
   if (!section) {
     return "";
   }
-  if (section.startsWith("truth.") || section.startsWith("refinement.") || section.startsWith("selection.")) {
+  if (section.startsWith("exact.") || section.startsWith("communication.") || section.startsWith("framework.")) {
     return section;
   }
-  return `truth.${section}`;
+  return section;
 }
 
 function createBoundaryConfigMapping(primarySection, relatedSections = [primarySection], options = {}) {
@@ -67,130 +67,133 @@ function derivedConfigMapping(primarySection, relatedSections = [primarySection]
 
 const FRAMEWORK_BOUNDARY_SECTION_MAP = {
   frontend: {
-    SURFACE: directConfigMapping("surface", ["surface.copy"]),
-    VISUAL: directConfigMapping("visual"),
-    ROUTE: directConfigMapping("route"),
-    A11Y: directConfigMapping("a11y"),
+    SURFACE: directConfigMapping("exact.frontend.surface", ["exact.frontend.surface.copy"]),
+    VISUAL: directConfigMapping("exact.frontend.visual"),
+    INTERACT: directConfigMapping("exact.frontend.interact", ["exact.frontend.interact.aux_nav"]),
+    STATE: directConfigMapping("exact.frontend.state", ["exact.frontend.state.role_labels", "exact.frontend.state.relative_groups"]),
+    EXTEND: directConfigMapping("exact.frontend.extend"),
+    ROUTE: directConfigMapping("exact.frontend.route", ["exact.frontend.route.showcase_page"]),
+    A11Y: directConfigMapping("exact.frontend.a11y"),
   },
   knowledge_base: {
-    SURFACE: directConfigMapping("surface", ["surface.copy"]),
-    LIBRARY: directConfigMapping("library", ["library.copy"]),
-    PREVIEW: directConfigMapping("preview"),
-    CHAT: directConfigMapping("chat", ["chat.copy"]),
-    CONTEXT: directConfigMapping("context"),
-    RETURN: directConfigMapping("return"),
-    A11Y: derivedConfigMapping("a11y", ["a11y"], "该边界由工作台项目配置中的可访问切片承接。"),
-    FILESET: derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。"),
-    INGEST: derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。"),
-    CLASSIFY: derivedConfigMapping("library", ["library"], "该边界由知识库项目配置承接。"),
-    LIMIT: derivedConfigMapping("library", ["library"], "该边界由知识库项目配置承接。"),
+    SURFACE: directConfigMapping("exact.frontend.surface", ["exact.frontend.surface.copy"]),
+    LIBRARY: directConfigMapping("exact.knowledge_base.library"),
+    PREVIEW: directConfigMapping("exact.knowledge_base.preview"),
+    CHAT: directConfigMapping("exact.knowledge_base.chat"),
+    CONTEXT: directConfigMapping("exact.knowledge_base.context"),
+    RETURN: directConfigMapping("exact.knowledge_base.return"),
+    A11Y: derivedConfigMapping("exact.frontend.a11y", ["exact.frontend.a11y"], "该边界由工作台可访问切片承接。"),
+    FILESET: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
+    INGEST: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
+    CLASSIFY: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
+    LIMIT: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
     VISIBILITY: derivedConfigMapping(
-      "library",
-      ["library", "preview"],
+      "exact.knowledge_base.library",
+      ["exact.knowledge_base.library", "exact.knowledge_base.preview"],
       "该边界由知识库入口与来源预览配置共同承接。"
     ),
     ENTRY: derivedConfigMapping(
-      "library",
-      ["library", "route"],
+      "exact.knowledge_base.library",
+      ["exact.knowledge_base.library", "exact.frontend.route"],
       "该边界由知识库入口配置与工作台路由共同承接。"
     ),
-    DOCVIEW: derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。"),
-    TOC: derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。"),
-    META: derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。"),
+    DOCVIEW: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
+    TOC: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
+    META: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
     FOCUS: derivedConfigMapping(
-      "preview",
-      ["preview", "a11y"],
+      "exact.knowledge_base.preview",
+      ["exact.knowledge_base.preview", "exact.frontend.a11y"],
       "该边界由来源预览与可访问配置共同承接。"
     ),
     ANCHOR: derivedConfigMapping(
-      "preview",
-      ["preview", "return"],
+      "exact.knowledge_base.preview",
+      ["exact.knowledge_base.preview", "exact.knowledge_base.return"],
       "该边界由来源锚点与返回路径配置共同承接。"
     ),
-    TURN: derivedConfigMapping("chat", ["chat", "chat.copy"], "该边界由对话项目配置承接。"),
-    INPUT: derivedConfigMapping("chat", ["chat", "chat.copy"], "该边界由对话项目配置承接。"),
+    TURN: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
+    INPUT: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
     STATUS: derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "preview"],
+      "exact.knowledge_base.chat",
+      ["exact.knowledge_base.chat", "exact.knowledge_base.preview"],
       "该边界由对话输出与来源状态配置共同承接。"
     ),
     CITATION: derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "context", "return", "preview"],
+      "exact.knowledge_base.chat",
+      ["exact.knowledge_base.chat", "exact.knowledge_base.context", "exact.knowledge_base.return", "exact.knowledge_base.preview"],
       "该边界由对话、上下文、返回与来源预览配置共同承接。"
     ),
     SCOPE: derivedConfigMapping(
-      "context",
-      ["context", "preview"],
+      "exact.knowledge_base.context",
+      ["exact.knowledge_base.context", "exact.knowledge_base.preview"],
       "该边界由上下文选择与来源预览配置共同承接。"
     ),
     TURNLINK: derivedConfigMapping(
-      "return",
-      ["return", "chat", "context"],
+      "exact.knowledge_base.return",
+      ["exact.knowledge_base.return", "exact.knowledge_base.chat", "exact.knowledge_base.context"],
       "该边界由回合返回链路与上下文配置共同承接。"
     ),
     TRACE: derivedConfigMapping(
-      "context",
-      ["context", "preview", "return"],
+      "exact.knowledge_base.context",
+      ["exact.knowledge_base.context", "exact.knowledge_base.preview", "exact.knowledge_base.return"],
       "该边界由上下文、来源追踪与返回链路配置共同承接。"
     ),
     EMPTY: derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "preview", "library"],
+      "exact.knowledge_base.chat",
+      ["exact.knowledge_base.chat", "exact.knowledge_base.preview", "exact.knowledge_base.library"],
       "该边界由聊天、预览与知识库空态配置共同承接。"
     ),
     REGION: derivedConfigMapping(
-      "surface",
-      ["surface", "surface.copy"],
+      "exact.frontend.surface",
+      ["exact.frontend.surface", "exact.frontend.surface.copy"],
       "该边界由工作台界面承载配置承接。"
     ),
     RESPONSIVE: derivedConfigMapping(
-      "surface",
-      ["surface", "visual"],
+      "exact.frontend.surface",
+      ["exact.frontend.surface", "exact.frontend.visual"],
       "该边界由界面承载与视觉配置共同承接。"
     ),
   },
   backend: {
-    LIBRARY: derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。"),
-    LIBAPI: derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。"),
-    FILE: derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。"),
-    PREVIEW: derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。"),
-    PREVIEWAPI: derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。"),
-    CHAT: derivedConfigMapping("chat", ["chat", "chat.copy"], "该边界由对话项目配置承接。"),
-    CHATAPI: derivedConfigMapping("chat", ["chat", "chat.copy"], "该边界由对话项目配置承接。"),
+    LIBRARY: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
+    LIBAPI: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
+    FILE: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
+    PREVIEW: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
+    PREVIEWAPI: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
+    CHAT: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
+    CHATAPI: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
     CITATION: derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "context", "return", "preview"],
+      "exact.knowledge_base.chat",
+      ["exact.knowledge_base.chat", "exact.knowledge_base.context", "exact.knowledge_base.return", "exact.knowledge_base.preview"],
       "该边界由对话、返回与来源预览配置共同承接。"
     ),
     TRACE: derivedConfigMapping(
-      "context",
-      ["context", "return"],
-      "该边界由上下文与返回链路配置共同承接。"
+      "exact.backend.trace",
+      ["exact.backend.trace", "exact.knowledge_base.return"],
+      "该边界由追踪与返回链路配置共同承接。"
     ),
     RESULT: derivedConfigMapping(
-      "return",
-      ["return", "chat", "library", "preview"],
+      "exact.backend.result",
+      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.library", "exact.knowledge_base.preview"],
       "该边界由返回链路与统一结果结构配置共同承接。"
     ),
     AUTH: derivedConfigMapping(
-      "return",
-      ["return", "chat"],
+      "exact.backend.auth",
+      ["exact.backend.auth", "exact.knowledge_base.chat"],
       "该边界由接口返回治理与对话入口配置共同承接。"
     ),
     ERROR: derivedConfigMapping(
-      "return",
-      ["return", "chat", "preview"],
+      "exact.backend.result",
+      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.preview"],
       "该边界由错误返回链路与界面反馈配置共同承接。"
     ),
     VALID: derivedConfigMapping(
-      "return",
-      ["return", "chat"],
+      "exact.backend.auth",
+      ["exact.backend.auth", "exact.knowledge_base.chat"],
       "该边界由返回链路与交互约束配置共同承接。"
     ),
     CONSIST: derivedConfigMapping(
-      "return",
-      ["return", "chat", "library", "preview"],
+      "exact.backend.result",
+      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.library", "exact.knowledge_base.preview"],
       "该边界由统一返回与多接口一致性配置共同承接。"
     ),
   },

@@ -2,9 +2,9 @@
 
 ## 0.1.4 - 2026-03-14
 
-- Removed the last project-wide knowledge-base aggregate assumptions from the runtime app, runtime summaries, validators, and backend/frontend helpers so shipped behavior now resolves from package exports and runtime projection.
-- Added machine-readable `--json` output to `scripts/validate_strict_mapping.py` and re-synced report generators to the current validator contract.
-- Revalidated the repository architecture end-to-end, rebuilt the VSIX, and prepared the extension release notes for the new publishable version.
+- Rebuilt the extension against the final four-layer runtime and canonical output.
+- Switched release-facing validation guidance to `scripts/validate_canonical.py`.
+- Revalidated the repository end-to-end and rebuilt the VSIX from the validated workspace.
 
 ## 0.1.3 - 2026-03-14
 
@@ -14,13 +14,13 @@
 
 ## 0.1.2 - 2026-03-14
 
-- Synced the extension with the final export-driven runtime rewrite so its navigation and governance assumptions match the shipped repository mainline.
-- Updated release-facing documentation to use the current canonical-derived governance artifact names consistently.
+- Synced the extension with the four-layer runtime and canonical-derived tree views.
+- Updated release-facing documentation to use the current canonical naming consistently.
 - Repackaged and reinstalled the VSIX against the current workspace so the publishable asset matches the validated repository state.
 
 ## 0.1.1 - 2026-03-14
 
-- Fixed Shelf validation defaults to use the supported `validate_strict_mapping.py` commands instead of passing the removed `--json` flag.
+- Fixed Shelf validation defaults to use the supported `validate_canonical.py` commands instead of passing stale arguments.
 - Added runtime command normalization so existing user settings with the stale `--json` flag still run successfully.
 - Synced the extension README and tests with the supported validation command contract to prevent the mismatch from reappearing.
 
@@ -28,16 +28,16 @@
 
 - Raised the extension version to `0.1.0` to match the repository-wide architecture rewrite instead of treating it as another `0.0.x` patch.
 - Kept the extension aligned with the rewritten mainline:
-  `Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence`.
+  `Framework -> Config -> Code -> Evidence`.
 - Kept project navigation, auto-materialization, generated-artifact guarding, and validation centered on `projects/*/project.toml` and canonical-derived views.
-- Fixed configured-framework inference for the unified `[[selection.roots]]` layout by reading `framework_file` directly instead of assuming the removed `selection.root_modules` table.
+- Fixed configured-framework inference to read `[[framework.modules]]` directly from the unified config layout.
 - Updated repository docs to point at the current pipeline entrypoint and mark the rewrite execution ledger as complete so extension-facing guidance matches the shipped architecture.
 
 ## 0.0.48 - 2026-03-14
 
 - Rebased Shelf AI on the rewritten repository architecture:
-  `Framework Markdown -> Package Registry -> Project Config -> Code -> Evidence`.
+  `Framework -> Config -> Code -> Evidence`.
 - Switched project navigation from the removed dual-track config path to unified `projects/*/project.toml`.
 - Switched generated-artifact guarding and auto-materialization to discovered `project.toml` files.
-- Dropped extension-side dependence on the removed legacy mapping list and old scaffold-project commands.
-- Clarified that `projects/*/generated/canonical_graph.json` is the sole machine truth and all governance views are derived from it.
+- Dropped extension-side dependence on removed legacy project scaffolding assumptions.
+- Clarified that `projects/*/generated/canonical.json` is the sole machine truth and all evidence views are derived from it.

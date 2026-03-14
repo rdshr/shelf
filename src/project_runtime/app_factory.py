@@ -5,7 +5,8 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from project_runtime import DEFAULT_PROJECT_FILE, build_project_app_from_project_file
+from project_runtime.compiler import DEFAULT_PROJECT_FILE
+from project_runtime.runtime_app import build_project_app_from_project_file
 
 
 PROJECT_FILE_ENV = "SHELF_PROJECT_FILE"
@@ -13,7 +14,7 @@ PROJECT_FILE_ENV = "SHELF_PROJECT_FILE"
 
 def build_project_app(project_file: str | Path | None = None) -> FastAPI:
     resolved_file = project_file or os.environ.get(PROJECT_FILE_ENV) or DEFAULT_PROJECT_FILE
-    return build_project_app_from_project_file(resolved_file)
+    return build_project_app_from_project_file(str(resolved_file))
 
 
 app = build_project_app()

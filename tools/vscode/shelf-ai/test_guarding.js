@@ -15,18 +15,18 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..");
 
 function main() {
   assert(isWatchedPath("projects/knowledge_base_basic/project.toml"));
-  assert(isWatchedPath("scripts/validate_strict_mapping.py"));
+  assert(isWatchedPath("scripts/validate_canonical.py"));
   assert(isWatchedPath("tools/vscode/shelf-ai/extension.js"));
   assert(!isWatchedPath("../outside.txt"));
 
-  assert(isProtectedGeneratedPath("projects/knowledge_base_basic/generated/canonical_graph.json"));
+  assert(isProtectedGeneratedPath("projects/knowledge_base_basic/generated/canonical.json"));
   assert(isProtectedGeneratedPath("docs/hierarchy/shelf_framework_tree.json"));
-  assert(isProtectedGeneratedPath("docs/hierarchy/shelf_governance_tree.json"));
+  assert(isProtectedGeneratedPath("docs/hierarchy/shelf_evidence_tree.json"));
   assert(!isProtectedGeneratedPath("projects/knowledge_base_basic/project.toml"));
 
-  assert(shouldRunMypyForRelPath("src/project_runtime/pipeline.py"));
+  assert(shouldRunMypyForRelPath("src/project_runtime/compiler.py"));
   assert(shouldRunMypyForRelPath("scripts/materialize_project.py"));
-  assert(shouldRunMypyForRelPath("tests/test_project_runtime.py"));
+  assert(shouldRunMypyForRelPath("tests/test_knowledge_base_runtime.py"));
   assert(!shouldRunMypyForRelPath("tools/vscode/shelf-ai/extension.js"));
 
   assert.strictEqual(
@@ -34,7 +34,7 @@ function main() {
     path.join(repoRoot, "projects", "knowledge_base_basic", "project.toml")
   );
   assert.strictEqual(
-    resolveProjectFilePath(repoRoot, "projects/knowledge_base_basic/generated/canonical_graph.json"),
+    resolveProjectFilePath(repoRoot, "projects/knowledge_base_basic/generated/canonical.json"),
     path.join(repoRoot, "projects", "knowledge_base_basic", "project.toml")
   );
 
@@ -42,18 +42,15 @@ function main() {
   assert(projectFiles.some((item) => item.endsWith("projects/knowledge_base_basic/project.toml")));
 
   const frameworks = inferConfiguredFrameworks(`
-[[selection.roots]]
-slot_id = "chat_shell"
+[[framework.modules]]
 role = "frontend"
 framework_file = "framework/frontend/L2-M0-前端框架标准模块.md"
 
-[[selection.roots]]
-slot_id = "knowledge_workbench"
+[[framework.modules]]
 role = "knowledge_base"
 framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
 
-[[selection.roots]]
-slot_id = "knowledge_backend"
+[[framework.modules]]
 role = "backend"
 framework_file = "framework/backend/L2-M0-知识库接口框架标准模块.md"
 `);
@@ -73,7 +70,7 @@ framework_file = "framework/backend/L2-M0-知识库接口框架标准模块.md"
     "knowledge_base framework changes should materialize the matching project"
   );
 
-  const generatedPlan = classifyWorkspaceChanges(repoRoot, ["projects/knowledge_base_basic/generated/canonical_graph.json"]);
+  const generatedPlan = classifyWorkspaceChanges(repoRoot, ["projects/knowledge_base_basic/generated/canonical.json"]);
   assert.strictEqual(generatedPlan.protectedGeneratedPaths.length, 1);
   assert.strictEqual(generatedPlan.materializeProjects.length, 0);
   assert.strictEqual(generatedPlan.protectedProjectFiles.length, 1);

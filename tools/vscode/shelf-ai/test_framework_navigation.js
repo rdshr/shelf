@@ -70,7 +70,7 @@ function main() {
   });
   assert(boundaryConfigResult, "boundary config ref should resolve");
   assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/project.toml"));
-  assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[truth.chat]");
+  assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[exact.knowledge_base.chat]");
 
   const boundaryHover = resolveHoverTarget({
     repoRoot,
@@ -82,7 +82,7 @@ function main() {
   assert(boundaryHover, "boundary hover should resolve");
   assert(boundaryHover.markdown.includes("Project Config"));
   assert(boundaryHover.markdown.includes("projects/knowledge_base_basic/project.toml"));
-  assert(boundaryHover.markdown.includes("`[truth.chat]`"));
+  assert(boundaryHover.markdown.includes("`[exact.knowledge_base.chat]`"));
 
   const boundaryRefs = resolveReferenceTargets({
     repoRoot,

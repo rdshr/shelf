@@ -188,7 +188,7 @@ class FrameworkModule:
 
 
 @dataclass(frozen=True)
-class FrameworkRegistry:
+class FrameworkCatalog:
     modules: tuple[FrameworkModule, ...]
 
     def get_module(self, framework: str, level: int, module: int) -> FrameworkModule:

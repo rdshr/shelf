@@ -2,44 +2,29 @@
 
 Shelf 是一个面向 AI 编程的结构优先仓库。
 
-当前仓库的唯一主路径已经切到下面这条链：
+仓库现在只保留一条主链：
 
 ```text
-framework/*.md
-  -> framework parser / module tree
-    -> framework package registry
-      -> package entry classes
-        -> projects/<project_id>/project.toml
-          -> config slicing + package compile
-            -> child runtime fragments
-              -> root runtime exports
-                -> runtime assembly
-              -> generated/canonical_graph.json
-                -> derived governance / tree / report views
+Framework -> Config -> Code -> Evidence
 ```
 
-## 当前架构
+- `framework/*.md` 是唯一 Framework 作者源
+- `projects/<project_id>/project.toml` 是唯一 Config 入口
+- `Code` 层第一次落地到真实实现
+- `Evidence` 层负责验证、快照、追溯和 GUI 材料
+- `projects/*/generated/canonical.json` 是唯一机器真相源
 
-- `framework/*.md` 仍是作者源。
-- 每个 framework 文件对应一个代码 package。
-- 每个 package 只有一个入口 class，并注册到统一 registry。
-- `projects/<project_id>/project.toml` 是唯一项目配置入口。
-- `generated/canonical_graph.json` 是唯一机器真相源。
-- 其他 manifest / governance / tree / report 都只是 canonical 的派生视图。
-
-## 当前默认项目
+## 默认项目
 
 - [projects/knowledge_base_basic/project.toml](./projects/knowledge_base_basic/project.toml)
 
-它编译出一个知识库工作台示例：
+该项目会物化出一个知识库工作台示例：
 
 - 聊天主界面
 - 引用抽屉
 - 知识库列表与详情页
 - 文档详情页
-- canonical 派生治理视图
-
-该项目仅作为 Shelf AI 的仓库内样例与验证对象保留，不单独对外发布版本。
+- canonical 派生框架树与证据树
 
 ## 快速开始
 
@@ -48,7 +33,7 @@ uv sync
 bash scripts/install_git_hooks.sh
 uv run mypy
 uv run python scripts/materialize_project.py
-uv run python scripts/validate_strict_mapping.py
+uv run python scripts/validate_canonical.py
 uv run python src/main.py
 ```
 
@@ -61,22 +46,18 @@ uv run python src/main.py
 
 - Framework 解析：
   - [src/framework_ir/parser.py](./src/framework_ir/parser.py)
-- Framework package contract / registry：
-  - [src/framework_packages/contract.py](./src/framework_packages/contract.py)
-  - [src/framework_packages/registry.py](./src/framework_packages/registry.py)
-  - [src/framework_packages/builtin_registry.py](./src/framework_packages/builtin_registry.py)
-- 编译器：
-  - [src/project_runtime/pipeline.py](./src/project_runtime/pipeline.py)
+- 四层编译器：
+  - [src/project_runtime/compiler.py](./src/project_runtime/compiler.py)
+  - [src/project_runtime/framework_layer.py](./src/project_runtime/framework_layer.py)
+  - [src/project_runtime/config_layer.py](./src/project_runtime/config_layer.py)
+  - [src/project_runtime/code_layer.py](./src/project_runtime/code_layer.py)
+  - [src/project_runtime/evidence_layer.py](./src/project_runtime/evidence_layer.py)
 - 运行时：
   - [src/project_runtime/runtime_app.py](./src/project_runtime/runtime_app.py)
-- 派生治理：
-  - [src/project_runtime/governance.py](./src/project_runtime/governance.py)
 - 物化与校验：
   - [scripts/materialize_project.py](./scripts/materialize_project.py)
-  - [scripts/validate_strict_mapping.py](./scripts/validate_strict_mapping.py)
+  - [scripts/validate_canonical.py](./scripts/validate_canonical.py)
 
 ## 进一步阅读
 
-- [docs/框架到代码映射与反查覆盖说明.md](./docs/框架到代码映射与反查覆盖说明.md)
-- [docs/全链实现框架与跳转逻辑详解.md](./docs/全链实现框架与跳转逻辑详解.md)
-- [docs/architecture.md](./docs/architecture.md)
+- [docs/four-layer-architecture.md](./docs/four-layer-architecture.md)

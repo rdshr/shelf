@@ -4,7 +4,7 @@ const DEFAULT_COMMAND_TIMEOUT_MS = 120 * 1000;
 
 function normalizeValidationCommand(command) {
   const raw = String(command || "").trim();
-  if (!raw || !/scripts\/validate_strict_mapping\.py\b/.test(raw)) {
+  if (!raw || !/scripts\/validate_canonical\.py\b/.test(raw)) {
     return raw;
   }
   if (!/(^|\s)--json(?=\s|$)/.test(raw)) {

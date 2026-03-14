@@ -2,7 +2,7 @@
 
 ## 0. 定位
 
-本文件定义 framework Markdown 的表达协议，以及它与 package registry、project config、canonical evidence 的对齐约束。
+本文件定义 framework Markdown 的表达协议，以及它与 Config、Code、Evidence 的对齐约束。
 
 ## 1. 适用范围
 
@@ -30,36 +30,37 @@
 - framework 文档只能描述结构语义，不得直接写入项目实例值。
 - 项目配置唯一入口是 `projects/<project_id>/project.toml`。
 - 边界跳转或实例落点必须回到 `project.toml` 的显式 section，例如：
-  - `[selection.root_modules]`
-  - `[truth.surface]`
-  - `[truth.chat]`
-  - `[refinement.backend]`
+  - `[communication.frontend.surface]`
+  - `[communication.knowledge_base.chat]`
+  - `[exact.frontend.surface]`
+  - `[exact.backend.result]`
 - `project.toml` 必须可解析，并能被编译器按 contract 切片分发。
 
-## 4. Registry 与 Contract 对齐
+## 4. 模块编译与 Contract 对齐
 
-- 每个 framework 文件都必须能在 registry 中找到唯一 package 入口类。
-- package 入口类必须实现统一 contract。
-- 未注册实现视为悬空 package。
-- framework 文件没有注册实现视为未实现。
-- 一个 framework 文件被多个 package 冲突注册时，lint 必须失败。
+- 每个 framework 文件都必须被编译成唯一 `FrameworkModule` class。
+- 每个 `B*` 都必须被编译成独立 `Base` class。
+- 每个 `R*` 都必须被编译成独立 `Rule` class。
+- `ConfigModule` 必须只消费对应 `FrameworkModule` export。
+- `CodeModule` 必须只消费对应 `ConfigModule.exact_export`。
+- `EvidenceModule` 必须只消费对应 `CodeModule` export。
 
 ## 5. Canonical 与派生视图
 
-- `projects/*/generated/canonical_graph.json` 是唯一机器真相源。
-- `generation_manifest.json`、`derived_governance_manifest.json`、`derived_governance_tree.json`、`strict_zone_report.json`、`object_coverage_report.json` 必须明确是 canonical 派生视图。
+- `projects/*/generated/canonical.json` 是唯一机器真相源。
+- 层级树、证据树、运行时快照和验证输出都必须明确是 canonical 派生视图。
 - 直接编辑 `projects/*/generated/*` 必须被视为违规。
 
 ## 6. 自动检查必须覆盖的内容
 
 - framework Markdown 结构完整性
-- registry 一一绑定关系
+- Framework / Base / Rule class 物化完整性
 - `project.toml` 可解析性
-- contract 切片与 compile 结果一致性
+- contract 切片与四层 compile 结果一致性
 - canonical 可重新物化
 - derived views 明确回指 canonical
 - `--check-changes` 下的变更传导闭包
 
 ## 7. 与执行器关系
 
-`scripts/validate_strict_mapping.py` 是当前主要自动执行器，但脚本不是第一性事实来源；若 lint 合同要变，必须先改本文，再同步执行器。
+`scripts/validate_canonical.py` 是当前主要自动执行器，但脚本不是第一性事实来源；若 lint 合同要变，必须先改本文，再同步执行器。

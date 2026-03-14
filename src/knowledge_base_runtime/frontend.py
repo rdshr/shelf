@@ -411,7 +411,7 @@ def compose_basketball_showcase_page(project: ProjectRuntimeAssembly) -> str:
               <span>不离开知识库工作台，也能挂一个独立专题页。</span>
             </div>
             <div class="showcase-metric">
-              <strong>治理树可追踪</strong>
+              <strong>证据树可追踪</strong>
               <span>路由、surface contract、ui spec 会一起收敛，不是树外彩蛋。</span>
             </div>
             <div class="showcase-metric">

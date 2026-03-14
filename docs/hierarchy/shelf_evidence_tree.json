@@ -1,239 +1,115 @@
 {
-  "grouped_frameworks": {
-    "backend": [
-      "backend.L0.M0",
-      "backend.L1.M0",
-      "backend.L2.M0"
-    ],
-    "frontend": [
-      "frontend.L0.M0",
-      "frontend.L0.M1",
-      "frontend.L0.M2",
-      "frontend.L1.M0",
-      "frontend.L1.M1",
-      "frontend.L1.M2",
-      "frontend.L1.M3",
-      "frontend.L1.M4",
-      "frontend.L2.M0"
-    ],
-    "knowledge_base": [
-      "knowledge_base.L0.M0",
-      "knowledge_base.L0.M1",
-      "knowledge_base.L0.M2",
-      "knowledge_base.L1.M0",
-      "knowledge_base.L1.M1",
-      "knowledge_base.L2.M0"
-    ]
-  },
   "root": {
     "edges": [
       {
-        "from": "backend.L0.M0",
+        "from": "project:knowledge_base_basic",
+        "relation": "tree_child",
+        "to": "project:knowledge_base_basic:canonical"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "backend.L0.M0"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "backend.L1.M0"
       },
       {
-        "from": "backend.L1.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "backend.L2.M0"
       },
       {
-        "from": "frontend.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "frontend.L0.M0"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "frontend.L0.M1"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "frontend.L0.M2"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L1.M0"
       },
       {
-        "from": "frontend.L0.M1",
-        "relation": "tree_child",
-        "to": "frontend.L1.M0"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "relation": "tree_child",
-        "to": "frontend.L1.M0"
-      },
-      {
-        "from": "frontend.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L1.M1"
       },
       {
-        "from": "frontend.L0.M1",
-        "relation": "tree_child",
-        "to": "frontend.L1.M1"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "relation": "tree_child",
-        "to": "frontend.L1.M1"
-      },
-      {
-        "from": "frontend.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L1.M2"
       },
       {
-        "from": "frontend.L0.M1",
-        "relation": "tree_child",
-        "to": "frontend.L1.M2"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "relation": "tree_child",
-        "to": "frontend.L1.M2"
-      },
-      {
-        "from": "frontend.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L1.M3"
       },
       {
-        "from": "frontend.L0.M1",
-        "relation": "tree_child",
-        "to": "frontend.L1.M3"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "relation": "tree_child",
-        "to": "frontend.L1.M3"
-      },
-      {
-        "from": "frontend.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L1.M4"
       },
       {
-        "from": "frontend.L0.M1",
-        "relation": "tree_child",
-        "to": "frontend.L1.M4"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "relation": "tree_child",
-        "to": "frontend.L1.M4"
-      },
-      {
-        "from": "frontend.L1.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "frontend.L2.M0"
       },
       {
-        "from": "frontend.L1.M1",
-        "relation": "tree_child",
-        "to": "frontend.L2.M0"
-      },
-      {
-        "from": "frontend.L1.M2",
-        "relation": "tree_child",
-        "to": "frontend.L2.M0"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "relation": "tree_child",
-        "to": "frontend.L2.M0"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "relation": "tree_child",
-        "to": "frontend.L2.M0"
-      },
-      {
-        "from": "frontend.L1.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L0.M0"
       },
       {
-        "from": "frontend.L1.M2",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M0"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M0"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M0"
-      },
-      {
-        "from": "frontend.L1.M2",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L0.M1"
       },
       {
-        "from": "frontend.L1.M3",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M1"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M1"
-      },
-      {
-        "from": "frontend.L1.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L0.M2"
       },
       {
-        "from": "frontend.L1.M1",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M2"
-      },
-      {
-        "from": "frontend.L1.M2",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M2"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "relation": "tree_child",
-        "to": "knowledge_base.L0.M2"
-      },
-      {
-        "from": "knowledge_base.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L1.M0"
       },
       {
-        "from": "knowledge_base.L0.M1",
-        "relation": "tree_child",
-        "to": "knowledge_base.L1.M0"
-      },
-      {
-        "from": "knowledge_base.L0.M2",
-        "relation": "tree_child",
-        "to": "knowledge_base.L1.M0"
-      },
-      {
-        "from": "knowledge_base.L0.M0",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L1.M1"
       },
       {
-        "from": "knowledge_base.L0.M1",
-        "relation": "tree_child",
-        "to": "knowledge_base.L1.M1"
-      },
-      {
-        "from": "knowledge_base.L0.M2",
-        "relation": "tree_child",
-        "to": "knowledge_base.L1.M1"
-      },
-      {
-        "from": "knowledge_base.L1.M0",
-        "relation": "tree_child",
-        "to": "knowledge_base.L2.M0"
-      },
-      {
-        "from": "knowledge_base.L1.M1",
+        "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
         "to": "knowledge_base.L2.M0"
       }
     ],
     "nodes": [
+      {
+        "id": "project:knowledge_base_basic",
+        "label": "Project knowledge_base_basic",
+        "node_kind": "project",
+        "source_file": "projects/knowledge_base_basic/project.toml"
+      },
+      {
+        "id": "project:knowledge_base_basic:canonical",
+        "label": "canonical.json",
+        "node_kind": "canonical",
+        "source_file": "projects/knowledge_base_basic/generated/canonical.json"
+      },
       {
         "id": "backend.L0.M0",
         "label": "backend.L0.M0 知识库文件资源与对话契约原子模块",
