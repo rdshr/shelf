@@ -627,7 +627,7 @@ def _chat_script_init_section() -> str:
 
 def build_chat_script(project: ProjectRuntimeAssembly) -> str:
     _require_script_profile(project)
-    runtime_bundle = {
+    runtime_payload = {
         "project_config": project.project_config_view,
         "frontend_app_spec": resolve_frontend_app_spec(project),
         "knowledge_base_domain_spec": resolve_knowledge_base_domain_spec(project),
@@ -635,6 +635,6 @@ def build_chat_script(project: ProjectRuntimeAssembly) -> str:
         "routes": project_runtime_routes(project),
     }
     context = ChatScriptTemplateContext(
-        project_spec_json=json.dumps(runtime_bundle, ensure_ascii=False),
+        project_spec_json=json.dumps(runtime_payload, ensure_ascii=False),
     )
     return context.render()

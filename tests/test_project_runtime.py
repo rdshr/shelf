@@ -15,6 +15,8 @@ from project_runtime import (
     materialize_project_runtime,
 )
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 
 class ProjectRuntimeTest(unittest.TestCase):
     def test_load_default_project_uses_unified_config_and_package_compile(self) -> None:
@@ -51,11 +53,21 @@ class ProjectRuntimeTest(unittest.TestCase):
             self.assertTrue(canonical_path.exists())
             canonical = json.loads(canonical_path.read_text(encoding="utf-8"))
             self.assertEqual(set(canonical["layers"]), {"framework", "config", "code", "evidence"})
+            package_result = canonical["layers"]["code"]["package_results"]["frontend.L2.M0"]
+            self.assertEqual(
+                package_result["package_source_file"],
+                "src/framework_packages/modules/frontend_l2_m0/__init__.py",
+            )
             derived_views = canonical["layers"]["evidence"]["derived_views"]
             self.assertEqual(
                 derived_views["derived_governance_manifest_json"]["derived_from"],
                 generated.canonical_graph_json,
             )
+            strict_zone_report = json.loads(
+                (Path(temp_dir) / "generated" / "strict_zone_report.json").read_text(encoding="utf-8")
+            )
+            for item in strict_zone_report["files"]:
+                self.assertTrue((REPO_ROOT / item["file"]).exists(), item["file"])
             self.assertTrue((Path(temp_dir) / "generated" / "runtime_snapshot.py").exists())
 
 

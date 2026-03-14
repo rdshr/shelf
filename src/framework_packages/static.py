@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 from framework_ir import FrameworkModule
@@ -39,6 +41,7 @@ class StaticFrameworkPackage:
     def compile(self, payload: PackageCompileInput) -> PackageCompileResult:
         framework_module = payload.framework_module
         child_slots = self.child_slots(framework_module)
+        package_source_file = _package_source_file(self.__class__)
         export = {
             "module": framework_module.export_surface().to_dict(),
             "framework_title": {
@@ -70,6 +73,7 @@ class StaticFrameworkPackage:
             module_id=self.module_id(),
             entry_class=self.__class__.__name__,
             package_module=self.__class__.__module__,
+            package_source_file=package_source_file,
             config_contract=self.config_contract(),
             child_slots=child_slots,
             config_slice=dict(payload.config_slice),
@@ -77,3 +81,11 @@ class StaticFrameworkPackage:
             evidence=evidence,
             runtime_exports={},
         )
+
+
+def _package_source_file(entry_class: type[Any]) -> str:
+    module = import_module(entry_class.__module__)
+    module_file = getattr(module, "__file__", None)
+    if not isinstance(module_file, str):
+        raise ValueError(f"missing __file__ for package module: {entry_class.__module__}")
+    return Path(module_file).resolve().relative_to(Path(__file__).resolve().parents[2]).as_posix()

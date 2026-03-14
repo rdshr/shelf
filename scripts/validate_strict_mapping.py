@@ -46,6 +46,24 @@ def _compare_json(expected: dict[str, Any], actual_path: Path) -> str | None:
     return None
 
 
+def _validate_existing_report_paths(report_path: Path) -> list[str]:
+    payload = _read_json(report_path)
+    files = payload.get("files")
+    if not isinstance(files, list):
+        return [f"invalid strict zone report payload: {report_path.relative_to(REPO_ROOT)}"]
+    issues: list[str] = []
+    for item in files:
+        if not isinstance(item, dict):
+            continue
+        file_path = item.get("file")
+        if not isinstance(file_path, str) or not file_path:
+            continue
+        repo_path = REPO_ROOT / file_path
+        if not repo_path.exists():
+            issues.append(f"strict zone report references missing file: {file_path}")
+    return issues
+
+
 def validate_registry_bindings() -> list[str]:
     framework_registry = load_framework_registry()
     package_registry = load_builtin_package_registry()
@@ -96,6 +114,9 @@ def validate_project_materialization() -> list[str]:
                     issues.append(
                         f"derived view {view_name} does not point back to canonical graph in {canonical_path.relative_to(REPO_ROOT)}"
                     )
+        strict_zone_report_path = generated_dir / record.artifact_contract["strict_zone_report_json"]
+        if strict_zone_report_path.exists():
+            issues.extend(_validate_existing_report_paths(strict_zone_report_path))
     return issues
 
 

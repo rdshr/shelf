@@ -107,6 +107,7 @@ class PackageCompileResult:
     module_id: str
     entry_class: str
     package_module: str
+    package_source_file: str
     config_contract: PackageConfigContract
     child_slots: tuple[PackageChildSlot, ...]
     config_slice: dict[str, Any]
@@ -122,6 +123,7 @@ class PackageCompileResult:
             "module_id": self.module_id,
             "entry_class": self.entry_class,
             "package_module": self.package_module,
+            "package_source_file": self.package_source_file,
             "config_contract": self.config_contract.to_dict(),
             "child_slots": [item.to_dict() for item in self.child_slots],
             "config_slice": self.config_slice,

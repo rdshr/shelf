@@ -13,15 +13,15 @@
   - [x] 删除 `src/knowledge_base_runtime/app.py` 的知识库专属正式入口
   - [x] 新增 [src/project_runtime/runtime_app.py](../src/project_runtime/runtime_app.py) 作为 export-driven 通用入口
 
-- [x] 残差 0.1：去掉 `knowledge_base_workbench` 对 runtime 主链的控制
+- [x] 残差 0.1：去掉旧场景名对 runtime 主链的控制
   - [x] `project.toml` 中 `runtime_scene` 降级为普通元数据值
   - [x] 删除 `knowledge_base_contract.toml` 并把稳定 runtime profile 内联到 package code
   - [x] frontend / workbench validators 不再用场景名做主链约束
 
 - [x] 残差 0.2：清理旧命名派生产物
-  - [x] `runtime_bundle.py` 更名为 `runtime_snapshot.py`
-  - [x] `governance_manifest.json` 更名为 `derived_governance_manifest.json`
-  - [x] `governance_tree.json` 更名为 `derived_governance_tree.json`
+  - [x] runtime 快照产物统一使用 `runtime_snapshot.py`
+  - [x] 治理清单产物统一使用 `derived_governance_manifest.json`
+  - [x] 治理树产物统一使用 `derived_governance_tree.json`
 
 - [x] 残差 0.3：同步 README / docs / tests 到 export-driven 主链
   - [x] README 切到通用 runtime 入口

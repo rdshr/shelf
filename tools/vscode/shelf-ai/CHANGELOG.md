@@ -1,9 +1,15 @@
 # Changelog
 
+## 0.1.3 - 2026-03-14
+
+- Removed the repository-side `knowledge_base_basic` release payloads so public releases stay focused on the Shelf AI extension.
+- Tightened the release policy to state that `knowledge_base_basic` is only a local validation sample and must not be published as a standalone versioned deliverable.
+- Repackaged and reinstalled Shelf AI `0.1.3` so the shipped VSIX matches the validated workspace and release policy.
+
 ## 0.1.2 - 2026-03-14
 
 - Synced the extension with the final export-driven runtime rewrite so its navigation and governance assumptions match the shipped repository mainline.
-- Updated release-facing documentation to use the renamed canonical-derived governance artifacts instead of the retired `governance_manifest.json` / `governance_tree.json` labels.
+- Updated release-facing documentation to use the current canonical-derived governance artifact names consistently.
 - Repackaged and reinstalled the VSIX against the current workspace so the publishable asset matches the validated repository state.
 
 ## 0.1.1 - 2026-03-14

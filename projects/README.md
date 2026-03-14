@@ -30,6 +30,11 @@
 
 - [projects/knowledge_base_basic/project.toml](./knowledge_base_basic/project.toml)
 
+说明：
+
+- `knowledge_base_basic` 是用于验证 Shelf AI 编译链、治理链和运行时效果的样例项目
+- 它保留在仓库里参与物化与测试，但不是公开发布对象
+
 重新物化：
 
 ```bash

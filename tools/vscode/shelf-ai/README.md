@@ -84,4 +84,4 @@ The extension no longer treats the removed dual-track config files as live autho
 Public release notes live at:
 
 - `tools/vscode/shelf-ai/CHANGELOG.md`
-- `tools/vscode/shelf-ai/release-notes/0.1.2.md`
+- `tools/vscode/shelf-ai/release-notes/0.1.3.md`

@@ -71,6 +71,7 @@ class BackendL1M0Package(StaticFrameworkPackage):
             module_id=base.module_id,
             entry_class=base.entry_class,
             package_module=base.package_module,
+            package_source_file=base.package_source_file,
             config_contract=base.config_contract,
             child_slots=base.child_slots,
             config_slice=base.config_slice,

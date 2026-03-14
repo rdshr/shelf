@@ -28,6 +28,15 @@ def _package_results(canonical_graph: dict[str, Any]) -> dict[str, dict[str, Any
     }
 
 
+def _package_source_files(canonical_graph: dict[str, Any]) -> list[str]:
+    files: set[str] = set()
+    for result in _package_results(canonical_graph).values():
+        source_file = result.get("package_source_file")
+        if isinstance(source_file, str) and source_file:
+            files.add(source_file)
+    return sorted(files)
+
+
 def _derived_path_map(generated_artifacts: dict[str, str]) -> dict[str, dict[str, str]]:
     canonical_path = generated_artifacts.get("canonical_graph_json", "")
     return {
@@ -158,14 +167,7 @@ def build_strict_zone_report(canonical_graph: dict[str, Any]) -> dict[str, Any]:
     )
     config_layer = canonical_graph.get("layers", {}).get("config", {})
     project_file = config_layer.get("project_file")
-    package_results = _package_results(canonical_graph)
-    code_files = sorted(
-        {
-            str(result.get("package_module", "")).replace(".", "/") + ".py"
-            for result in package_results.values()
-            if isinstance(result.get("package_module"), str)
-        }
-    )
+    code_files = _package_source_files(canonical_graph)
     files: list[dict[str, Any]] = []
     for file_path in framework_files:
         files.append({"file": file_path, "layer": "framework", "reason": "selected framework or dependency"})
@@ -224,4 +226,3 @@ def build_derived_view_payloads(
         strict_zone_report=build_strict_zone_report(canonical_graph),
         object_coverage_report=build_object_coverage_report(canonical_graph),
     )
-

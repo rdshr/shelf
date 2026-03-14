@@ -39,6 +39,8 @@ framework/*.md
 - 文档详情页
 - canonical 派生治理视图
 
+该项目仅作为 Shelf AI 的仓库内样例与验证对象保留，不单独对外发布版本。
+
 ## 快速开始
 
 ```bash

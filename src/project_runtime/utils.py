@@ -9,17 +9,6 @@ from project_runtime.models import jsonable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LEGACY_GENERATED_ARTIFACT_NAMES = frozenset(
-    {
-        "framework_ir.json",
-        "product_spec.json",
-        "implementation_bundle.py",
-        "project_bundle.py",
-        "workbench_spec.json",
-    }
-)
-
-
 def relative_path(path: Path) -> str:
     try:
         return path.relative_to(REPO_ROOT).as_posix()
@@ -48,13 +37,12 @@ def tokenize(text: str) -> tuple[str, ...]:
 
 
 def cleanup_generated_output_dir(output_path: Path, expected_file_names: set[str]) -> None:
-    removable_names = expected_file_names | LEGACY_GENERATED_ARTIFACT_NAMES
     for child in output_path.iterdir():
         if not child.is_file():
             continue
         if child.name in expected_file_names:
             continue
-        if child.name in removable_names or child.suffix.lower() in {".json", ".py"}:
+        if child.suffix.lower() in {".json", ".py"}:
             child.unlink()
 
 
