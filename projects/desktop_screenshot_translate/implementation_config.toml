@@ -86,6 +86,8 @@ secret_source = "setup_ui_managed_runtime_store_or_env"
 # 当前约定是：
 # - overlay 截图遮罩继续使用原生 HTML/JS，保持轻量
 # - panel 结果面板使用 `Vue 3 + Vite + .vue SFC`，承接后续更复杂的状态与交互
+# - 当前项目的结果面板信息层级与状态视图映射，以
+#   `projects/desktop_screenshot_translate/结果面板界面契约.md` 为实现收敛入口
 [presentation_runtime]
 renderer = "floating_panel_vue_vite_v1"
 ui_framework = "vue3"

@@ -108,6 +108,8 @@ ocr_confidence_visible = false
 # [presentation] 固定结果交付面真相。
 # 它回答结果面板默认展示什么、有哪些动作、是否允许拖拽与关闭；
 # 不决定窗口类、DOM 结构或 CSS 布局细节。
+# 当前项目的更细结果面板首屏层级、状态映射与动作优先级，
+# 由 `projects/desktop_screenshot_translate/结果面板界面契约.md` 补充承接。
 [presentation]
 panel_variant = "floating_compact_dual_column"
 show_source_text = true

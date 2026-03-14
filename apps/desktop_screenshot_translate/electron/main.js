@@ -197,8 +197,10 @@ function createPanelWindow() {
   }
 
   panelWindow = new BrowserWindow({
-    width: savedState?.width || 440,
-    height: savedState?.height || 360,
+    width: savedState?.width || 560,
+    height: savedState?.height || 420,
+    minWidth: 480,
+    minHeight: 340,
     x: savedState?.x,
     y: savedState?.y,
     show: false,
