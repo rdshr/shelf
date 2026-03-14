@@ -5,6 +5,7 @@ let activeDisplay = null;
 let dragStart = null;
 let dragCurrent = null;
 let availableModes = [];
+let interactionLocked = false;
 
 function updateSelectionBox() {
   if (!dragStart || !dragCurrent) {
@@ -56,6 +57,7 @@ function buildFullscreenSelection() {
 window.aitransDesktop.onOverlayStart((payload) => {
   activeDisplay = payload.display;
   availableModes = Array.isArray(payload.modes) ? payload.modes : [];
+  interactionLocked = false;
   hintCopy.textContent = payload.hint;
   dragStart = null;
   dragCurrent = null;
@@ -63,6 +65,9 @@ window.aitransDesktop.onOverlayStart((payload) => {
 });
 
 window.addEventListener('pointerdown', (event) => {
+  if (interactionLocked) {
+    return;
+  }
   if (event.button !== 0) {
     return;
   }
@@ -72,6 +77,9 @@ window.addEventListener('pointerdown', (event) => {
 });
 
 window.addEventListener('pointermove', (event) => {
+  if (interactionLocked) {
+    return;
+  }
   if (!dragStart) {
     return;
   }
@@ -80,6 +88,9 @@ window.addEventListener('pointermove', (event) => {
 });
 
 window.addEventListener('pointerup', async (event) => {
+  if (interactionLocked) {
+    return;
+  }
   if (!dragStart || event.button !== 0) {
     return;
   }
@@ -91,6 +102,7 @@ window.addEventListener('pointerup', async (event) => {
     updateSelectionBox();
     return;
   }
+  interactionLocked = true;
   await window.aitransDesktop.submitSelection(selection);
   dragStart = null;
   dragCurrent = null;
@@ -98,23 +110,36 @@ window.addEventListener('pointerup', async (event) => {
 });
 
 window.addEventListener('keydown', async (event) => {
+  if (interactionLocked) {
+    return;
+  }
   if (event.key === 'Escape') {
+    interactionLocked = true;
     await window.aitransDesktop.cancelCapture('escape');
     return;
   }
   if (event.key === 'Enter' && supportsMode('fullscreen')) {
+    interactionLocked = true;
     await window.aitransDesktop.submitSelection(buildFullscreenSelection());
   }
 });
 
 window.addEventListener('contextmenu', async (event) => {
+  if (interactionLocked) {
+    return;
+  }
   event.preventDefault();
+  interactionLocked = true;
   await window.aitransDesktop.cancelCapture('right_click');
 });
 
 window.addEventListener('dblclick', async () => {
+  if (interactionLocked) {
+    return;
+  }
   if (!supportsMode('fullscreen')) {
     return;
   }
+  interactionLocked = true;
   await window.aitransDesktop.submitSelection(buildFullscreenSelection());
 });

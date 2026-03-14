@@ -115,6 +115,10 @@ const focusRestoreState = {
   target: null,
   preferInactivePanel: false,
 };
+const captureUiState = {
+  overlayVisible: false,
+  pipelineBusy: false,
+};
 const CAPTURE_SETTLE_MS = 180;
 const RETRYABLE_OCR_ERROR_FRAGMENT = 'tesseract returned empty OCR text';
 
@@ -184,7 +188,14 @@ function createOverlayWindow() {
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   overlayWindow.loadFile(path.join(__dirname, 'renderer', 'overlay', 'index.html'));
+  overlayWindow.on('show', () => {
+    captureUiState.overlayVisible = true;
+  });
+  overlayWindow.on('hide', () => {
+    captureUiState.overlayVisible = false;
+  });
   overlayWindow.on('closed', () => {
+    captureUiState.overlayVisible = false;
     overlayWindow = null;
   });
   return overlayWindow;
@@ -542,6 +553,13 @@ async function captureAndRecognize(selection) {
 }
 
 async function showOverlay() {
+  if (captureUiState.overlayVisible || captureUiState.pipelineBusy) {
+    appendStartupLog('overlay:show-skipped', {
+      overlayVisible: captureUiState.overlayVisible,
+      pipelineBusy: captureUiState.pipelineBusy,
+    });
+    return;
+  }
   if (!(await ensureScreenCaptureCapability())) {
     showSetupGuide();
     return;
@@ -762,6 +780,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
   lastSelection = selection;
   lastPipelineState = null;
   const audit = createAuditContext(selection);
+  captureUiState.pipelineBusy = true;
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.hide();
   }
@@ -866,6 +885,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       stageStatus: 'translation_ready',
       sourceLanguage: ocrResult.sourceLanguage || 'auto',
     });
+    captureUiState.pipelineBusy = false;
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -894,6 +914,7 @@ ipcMain.handle('overlay:submit-selection', async (_event, selection) => {
       sourceLanguage: lastPipelineState?.sourceLanguage || 'auto',
       error: message,
     });
+    captureUiState.pipelineBusy = false;
     return { ok: false, error: message };
   }
 });
@@ -902,6 +923,7 @@ ipcMain.handle('overlay:cancel', async () => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.hide();
   }
+  captureUiState.pipelineBusy = false;
   await restoreCapturedFocusTarget('capture_cancelled');
   clearFocusRestoreSession();
   return { ok: true };
