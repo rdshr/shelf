@@ -104,7 +104,7 @@ PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS = {
 PRODUCT_SPEC_ALLOWED_TOP_LEVEL_KEYS = set(PRODUCT_SPEC_REQUIRED_TOP_LEVEL_KEYS)
 PRODUCT_SPEC_REQUIRED_NESTED_TABLES: dict[str, set[str]] = {
     "surface": {"copy"},
-    "auth": {"copy", "surface", "flow", "contract"},
+    "auth": {"entry", "session", "identity", "guard", "return", "feedback", "service"},
     "library": {"copy"},
     "chat": {"copy"},
 }

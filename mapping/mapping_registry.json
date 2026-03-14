@@ -1,7 +1,23 @@
 {
   "meta": {
-    "updated_at": "2026-03-09",
+    "updated_at": "2026-03-13",
     "l3_sync_notes": [
+      {
+        "id": "SYNC-20260313-auth-l2-framework",
+        "note": "Add framework/auth/L2-M0-认证与会话框架标准模块.md to compress auth L0/L1 into a project-instantiable authentication/session framework with stable entry/session/identity/guard/return/feedback/service section boundaries."
+      },
+      {
+        "id": "SYNC-20260313-authorization-l2-framework",
+        "note": "Add framework/authorization/L2-M0-授权访问控制框架标准模块.md to compress authorization L0/L1 into a project-instantiable access-control framework with stable subject/resource/action/policy/guard/denied/auth_return section boundaries."
+      },
+      {
+        "id": "SYNC-20260313-authorization-l1-guard-flow",
+        "note": "Add framework/authorization/L1-M0-授权保护检查与拒绝反馈场景模块.md to define guard, deny-feedback, conditional-allow, and auth-return flows on top of authorization.L0 and auth.L1, keeping authorization denial distinct from authentication failure."
+      },
+      {
+        "id": "SYNC-20260313-authorization-l0-contracts",
+        "note": "Add framework/authorization/L0-M0-访问主体资源动作与授权结果原子模块.md as the dedicated authorization atomic contract layer, explicitly consuming authenticated subject/session outputs from auth without collapsing authorization back into authentication."
+      },
       {
         "id": "SYNC-20260309-framework-template-entry",
         "note": "Promote plain @framework standard-template generation to a hard repository authoring constraint, and keep the active framework/tooling chain aligned with a non-removable direct entry plus regression coverage."
@@ -117,6 +133,20 @@
             "level": "L2",
             "children": [
               {
+                "id": "NODE-L2-AUTH",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+                "children": []
+              },
+              {
+                "id": "NODE-L2-AUTHORIZATION",
+                "kind": "file",
+                "level": "L2",
+                "file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+                "children": []
+              },
+              {
                 "id": "NODE-L2-SHELF",
                 "kind": "file",
                 "level": "L2",
@@ -176,6 +206,188 @@
     "reverse_validation_command": "uv run python scripts/validate_strict_mapping.py --check-changes"
   },
   "mappings": [
+    {
+      "id": "MAP-AUTH-CAPABILITY",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 1. 能力声明（Capability Statement）",
+      "l2_file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+      "l2_anchor": "## 1. 能力声明（Capability Statement）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Capability"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTH-B",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+      "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class BoundaryDefinition"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class BoundaryItem"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTH-BASE",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 3. 最小可行基（Bases）",
+      "l2_file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+      "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Base"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTH-COMBINATION",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+      "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Rule"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class CombinationRules"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTH-V",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "framework/auth/L2-M0-认证与会话框架标准模块.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class VerificationInput"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class VerificationResult"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "def verify("
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTHORIZATION-CAPABILITY",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 1. 能力声明（Capability Statement）",
+      "l2_file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+      "l2_anchor": "## 1. 能力声明（Capability Statement）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Capability"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTHORIZATION-B",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 2. 边界定义（Boundary）",
+      "l2_file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+      "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class BoundaryDefinition"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class BoundaryItem"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTHORIZATION-BASE",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 3. 最小可行基（Bases）",
+      "l2_file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+      "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Base"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTHORIZATION-COMBINATION",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 4. 组合原则（Combination Principles）",
+      "l2_file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+      "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class Rule"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class CombinationRules"
+        }
+      ]
+    },
+    {
+      "id": "MAP-AUTHORIZATION-V",
+      "l0_file": "specs/规范总纲与树形结构.md",
+      "l0_anchor": "## 2. 标准树（强制）",
+      "l1_file": "specs/框架设计核心标准.md",
+      "l1_anchor": "## 5. 验证（Verification）",
+      "l2_file": "framework/authorization/L2-M0-授权访问控制框架标准模块.md",
+      "l2_anchor": "## 5. 验证（Verification）",
+      "impl_symbols": [
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class VerificationInput"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "class VerificationResult"
+        },
+        {
+          "file": "src/framework_core.py",
+          "symbol": "def verify("
+        }
+      ]
+    },
     {
       "id": "MAP-CAPABILITY",
       "l0_file": "specs/规范总纲与树形结构.md",

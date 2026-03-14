@@ -378,9 +378,6 @@ class AuthFlowConfig:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def to_flow_dict(self) -> dict[str, Any]:
-        return self.to_dict()
-
 
 @dataclass(frozen=True)
 class AuthContractConfig:
@@ -420,6 +417,7 @@ class AuthConfig:
     protected_routes: tuple[str, ...]
     public_routes: tuple[str, ...]
     default_return_target: str
+    identity_fields: tuple[str, ...]
     copy: AuthCopyConfig
     surface: AuthSurfaceConfig
     flow: AuthFlowConfig
@@ -435,6 +433,7 @@ class AuthConfig:
             "protected_routes": list(self.protected_routes),
             "public_routes": list(self.public_routes),
             "default_return_target": self.default_return_target,
+            "identity_fields": list(self.identity_fields),
             "copy": self.copy.to_dict(),
             "surface": self.surface.to_dict(),
             "flow": self.flow.to_dict(),
@@ -455,7 +454,7 @@ class AuthConfig:
             },
         }
 
-    def to_flow_dict(self) -> dict[str, Any]:
+    def to_scene_alignment_dict(self) -> dict[str, Any]:
         return {
             "AUTHENTRYFLOW": {
                 "entry": self.entry,
@@ -499,6 +498,9 @@ class AuthConfig:
             "AUTHERROR": {
                 "failure_modes": list(self.contract.failure_modes),
                 "failure_feedback": self.flow.failure_feedback,
+            },
+            "IDENTITYSUBJECT": {
+                "fields": list(self.identity_fields),
             },
         }
 
@@ -1115,6 +1117,71 @@ def _require_documents(data: dict[str, Any]) -> tuple[SeedDocumentSource, ...]:
     return tuple(items)
 
 
+def _load_auth_config(auth_table: dict[str, Any]) -> AuthConfig:
+    entry_table = _require_table(auth_table, "entry")
+    session_table = _require_table(auth_table, "session")
+    identity_table = _require_table(auth_table, "identity")
+    guard_table = _require_table(auth_table, "guard")
+    return_table = _require_table(auth_table, "return")
+    feedback_table = _require_table(auth_table, "feedback")
+    service_table = _require_table(auth_table, "service")
+
+    return AuthConfig(
+        enabled=_require_bool(session_table, "enabled"),
+        mode=_require_string(guard_table, "mode"),
+        entry=_require_string(entry_table, "entry_mode"),
+        session_scope=_require_string(session_table, "session_scope"),
+        return_after_login=_require_bool(return_table, "return_after_login"),
+        protected_routes=_require_string_tuple(guard_table, "protected_routes"),
+        public_routes=_require_string_tuple(guard_table, "public_routes"),
+        default_return_target=_require_string(return_table, "default_return_target"),
+        identity_fields=_require_string_tuple(identity_table, "fields"),
+        copy=AuthCopyConfig(
+            login_title=_require_string(entry_table, "title"),
+            login_subtitle=_require_string(entry_table, "subtitle"),
+            primary_action=_require_string(entry_table, "primary_action"),
+            secondary_action=_require_string(entry_table, "secondary_action"),
+            guard_message=_require_string(feedback_table, "guard_message"),
+            failure_message=_require_string(feedback_table, "failure_message"),
+            expired_message=_require_string(feedback_table, "expired_message"),
+            cancel_message=_require_string(feedback_table, "cancel_message"),
+            reauth_message=_require_string(feedback_table, "reauth_message"),
+        ),
+        surface=AuthSurfaceConfig(
+            page_variant=_require_string(entry_table, "page_variant"),
+            shell_variant=_require_string(entry_table, "shell_variant"),
+            entry_variant=_require_string(entry_table, "default_entry"),
+            sections=_require_string_tuple(entry_table, "sections"),
+            show_brand=_require_bool(entry_table, "show_brand"),
+            show_guard_message=_require_bool(entry_table, "show_guard_message"),
+            show_return_hint=_require_bool(entry_table, "show_return_hint"),
+            show_secondary_action=_require_bool(entry_table, "show_secondary_action"),
+            container_variant=_require_string(entry_table, "container_variant"),
+            density=_require_string(entry_table, "density"),
+            action_emphasis=_require_string(entry_table, "action_emphasis"),
+            header_alignment=_require_string(entry_table, "header_alignment"),
+        ),
+        flow=AuthFlowConfig(
+            guard_behavior=_require_string(guard_table, "guard_behavior"),
+            submit_behavior=_require_string(entry_table, "submit_behavior"),
+            success_behavior=_require_string(return_table, "success_behavior"),
+            failure_feedback=_require_string(feedback_table, "failure_feedback"),
+            cancel_behavior=_require_string(return_table, "cancel_behavior"),
+            expired_behavior=_require_string(feedback_table, "expired_behavior"),
+            reauth_behavior=_require_string(feedback_table, "reauth_behavior"),
+            restore_target=_require_bool(return_table, "restore_target"),
+            preserve_query=_require_bool(return_table, "preserve_query"),
+            preserve_anchor=_require_bool(return_table, "preserve_anchor"),
+        ),
+        contract=AuthContractConfig(
+            login_action=_require_string(service_table, "login_action"),
+            logout_action=_require_string(service_table, "logout_action"),
+            session_probe=_require_string(session_table, "session_probe"),
+            failure_modes=_require_string_tuple(session_table, "failure_modes"),
+        ),
+    )
+
+
 def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     raw = _read_toml_file(product_spec_path)
     project_table = _require_table(raw, "project")
@@ -1125,10 +1192,6 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     route_table = _require_table(raw, "route")
     page_shells_table = _require_table(raw, "page_shells")
     auth_table = _require_table(raw, "auth")
-    auth_copy_table = _require_table(auth_table, "copy")
-    auth_surface_table = _require_table(auth_table, "surface")
-    auth_flow_table = _require_table(auth_table, "flow")
-    auth_contract_table = _require_table(auth_table, "contract")
     a11y_table = _require_table(raw, "a11y")
     library_table = _require_table(raw, "library")
     library_copy_table = _require_table(library_table, "copy")
@@ -1143,9 +1206,9 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
     chat_enabled = _require_bool(chat_table, "enabled")
     citations_enabled = _require_bool(chat_table, "citations_enabled")
     return_enabled = _require_bool(return_table, "enabled")
-    auth_enabled = _require_bool(auth_table, "enabled")
     allow_create = _require_bool(library_table, "allow_create")
     allow_delete = _require_bool(library_table, "allow_delete")
+    auth_config = _load_auth_config(auth_table)
 
     return KnowledgeBaseProductSpec(
         product_spec_file=_relative_path(product_spec_path),
@@ -1209,59 +1272,7 @@ def _load_product_spec(product_spec_path: Path) -> KnowledgeBaseProductSpec:
             workspace_shell=_require_string_tuple(page_shells_table, "workspace_shell"),
             standalone_shell=_require_string_tuple(page_shells_table, "standalone_shell"),
         ),
-        auth=AuthConfig(
-            enabled=auth_enabled,
-            mode=_require_string(auth_table, "mode"),
-            entry=_require_string(auth_table, "entry"),
-            session_scope=_require_string(auth_table, "session_scope"),
-            return_after_login=_require_bool(auth_table, "return_after_login"),
-            protected_routes=_require_string_tuple(auth_table, "protected_routes"),
-            public_routes=_require_string_tuple(auth_table, "public_routes"),
-            default_return_target=_require_string(auth_table, "default_return_target"),
-            copy=AuthCopyConfig(
-                login_title=_require_string(auth_copy_table, "login_title"),
-                login_subtitle=_require_string(auth_copy_table, "login_subtitle"),
-                primary_action=_require_string(auth_copy_table, "primary_action"),
-                secondary_action=_require_string(auth_copy_table, "secondary_action"),
-                guard_message=_require_string(auth_copy_table, "guard_message"),
-                failure_message=_require_string(auth_copy_table, "failure_message"),
-                expired_message=_require_string(auth_copy_table, "expired_message"),
-                cancel_message=_require_string(auth_copy_table, "cancel_message"),
-                reauth_message=_require_string(auth_copy_table, "reauth_message"),
-            ),
-            surface=AuthSurfaceConfig(
-                page_variant=_require_string(auth_surface_table, "page_variant"),
-                shell_variant=_require_string(auth_surface_table, "shell_variant"),
-                entry_variant=_require_string(auth_surface_table, "entry_variant"),
-                sections=_require_string_tuple(auth_surface_table, "sections"),
-                show_brand=_require_bool(auth_surface_table, "show_brand"),
-                show_guard_message=_require_bool(auth_surface_table, "show_guard_message"),
-                show_return_hint=_require_bool(auth_surface_table, "show_return_hint"),
-                show_secondary_action=_require_bool(auth_surface_table, "show_secondary_action"),
-                container_variant=_require_string(auth_surface_table, "container_variant"),
-                density=_require_string(auth_surface_table, "density"),
-                action_emphasis=_require_string(auth_surface_table, "action_emphasis"),
-                header_alignment=_require_string(auth_surface_table, "header_alignment"),
-            ),
-            flow=AuthFlowConfig(
-                guard_behavior=_require_string(auth_flow_table, "guard_behavior"),
-                submit_behavior=_require_string(auth_flow_table, "submit_behavior"),
-                success_behavior=_require_string(auth_flow_table, "success_behavior"),
-                failure_feedback=_require_string(auth_flow_table, "failure_feedback"),
-                cancel_behavior=_require_string(auth_flow_table, "cancel_behavior"),
-                expired_behavior=_require_string(auth_flow_table, "expired_behavior"),
-                reauth_behavior=_require_string(auth_flow_table, "reauth_behavior"),
-                restore_target=_require_bool(auth_flow_table, "restore_target"),
-                preserve_query=_require_bool(auth_flow_table, "preserve_query"),
-                preserve_anchor=_require_bool(auth_flow_table, "preserve_anchor"),
-            ),
-            contract=AuthContractConfig(
-                login_action=_require_string(auth_contract_table, "login_action"),
-                logout_action=_require_string(auth_contract_table, "logout_action"),
-                session_probe=_require_string(auth_contract_table, "session_probe"),
-                failure_modes=_require_string_tuple(auth_contract_table, "failure_modes"),
-            ),
-        ),
+        auth=auth_config,
         a11y=A11yConfig(
             reading_order=_require_string_tuple(a11y_table, "reading_order"),
             keyboard_nav=_require_string_tuple(a11y_table, "keyboard_nav"),
@@ -1702,7 +1713,7 @@ def _build_ui_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "flow": project.auth.flow.to_dict(),
             "contract": project.auth.contract.to_dict(),
             "shell_alignment": project.auth.to_shell_dict(),
-            "flow_alignment": project.auth.to_flow_dict(),
+            "scene_alignment": project.auth.to_scene_alignment_dict(),
             "contract_alignment": project.auth.to_contract_alignment_dict(),
             "style": {
                 "profile": project.implementation.frontend.auth_style_profile,
@@ -1788,7 +1799,7 @@ def _build_backend_spec(project: KnowledgeBaseProject) -> dict[str, Any]:
             "session_transport": project.implementation.backend.auth_session_transport,
             "verification_mode": project.implementation.backend.auth_verification_mode,
             "contract": project.auth.contract.to_dict(),
-            "flow_alignment": project.auth.to_flow_dict(),
+            "scene_alignment": project.auth.to_scene_alignment_dict(),
             "contract_alignment": project.auth.to_contract_alignment_dict(),
             "api": project.implementation.backend.auth_api.to_dict(),
             "protected_routes": list(project.auth.protected_routes),
@@ -1908,7 +1919,7 @@ def _validate_product_spec(
         "oauth_button",
         "magic_link",
     }:
-        raise ValueError("auth.surface.entry_variant must stay within AUTHENTRYFLOW legal variants")
+        raise ValueError("auth.surface.entry_variant must stay within auth.entry.default_entry legal variants")
     expected_workspace_shell = ("workbench", "knowledge_list", "knowledge_detail", "document_detail")
     if tuple(product_spec.page_shells.workspace_shell) != expected_workspace_shell:
         raise ValueError("page_shells.workspace_shell must stay workbench -> knowledge_list -> knowledge_detail -> document_detail")

@@ -95,8 +95,8 @@ bundle_target = "modern_browser_es2022"
 # 细化前端如何承接产品层已经声明的登录前置条件。
 # 这里只讨论守卫方式、会话存放形态与登录承接面的实现路径，
 # 不能把“是否需要登录”这件事从产品层改掉。
-# 它主要服务于 `AUTHENTRYFLOW`、`GUARDFLOW`、`RETURNFLOW` 的前端运行时落地，
-# 不直接改写这些 flow 在 product_spec.toml 中已经固定的产品真相。
+# 它主要服务于 `[auth.entry]`、`[auth.guard]`、`[auth.return]` 在前端运行时的落地，
+# 必要时再向下编译到 auth 子域下层场景与壳体承接结构，但不直接改写 product_spec.toml 中已经固定的产品真相。
 # 这里承接的是工作台访问前的 auth runtime，而不是知识引用后的 citation return runtime；
 # 不应在这里偷偷改写 [return] 已声明的来源回路语义。
 [frontend.auth]
@@ -109,7 +109,7 @@ return_strategy = "query_redirect"
 # [frontend.auth_style]
 # 细化登录页样式实现 profile，但不改写 Product Spec 已声明的登录页结构与交互真相。
 # 这里讨论的是：前端用哪套样式实现去承接 centered_form / single_card / primary_strong 这些上游语义。
-# 它主要服务于 `AUTHENTRYFLOW` 和 `FEEDBACKFLOW` 的视觉落地。
+# 它主要服务于 `[auth.entry]` 与 `[auth.feedback]` 的视觉落地。
 # 如果团队讨论的是“登录页是否展示品牌、区块顺序是什么、成功后回哪里”，应回到 product_spec.toml；
 # 如果讨论的是“这套结构落到什么样式 profile、是否启用轻量动效、绑定哪套主题 token”，再改这里。
 [frontend.auth_style]
@@ -144,7 +144,8 @@ retrieval_strategy = "retrieval_stub"
 # 细化后端如何理解登录会话。
 # 当前先采用最小 stub 方案，给前端生成与路由守卫提供一致实现语义，
 # 不在这里引入真实身份提供商和复杂鉴权链。
-# 它主要服务于 `SESSIONFLOW`，并在更底层承接 `AUTHREQUEST / SESSIONSTATE / AUTHERROR`。
+# 它主要服务于 `[auth.session]`、`[auth.identity]`、`[auth.service]`，
+# 并在更底层承接认证请求、会话状态与认证错误这些服务契约。
 # 这里回答的是“工作台访问放行如何被后端理解与校验”，
 # 不回答“引用打开后如何返回来源锚点”；后者不属于 auth runtime。
 [backend.auth]
