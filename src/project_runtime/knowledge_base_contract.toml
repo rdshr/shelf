@@ -46,6 +46,71 @@ supported_backend_renderers = ["knowledge_chat_backend_v1"]
 supported_backend_transports = ["http_json"]
 supported_backend_retrieval_strategies = ["retrieval_stub"]
 
+[implementation.style_profiles]
+message_width = "820px"
+
+[implementation.style_profiles.surface_presets.sand]
+bg = "#f4efe5"
+panel = "#fffaf2"
+panel_soft = "#f7f1e7"
+ink = "#1b1f24"
+muted = "#6d6a65"
+line = "rgba(27, 31, 36, 0.12)"
+
+[implementation.style_profiles.surface_presets.light]
+bg = "#f6f7fb"
+panel = "#ffffff"
+panel_soft = "#f4f6fb"
+ink = "#111827"
+muted = "#667085"
+line = "rgba(17, 24, 39, 0.10)"
+
+[implementation.style_profiles.radius_scales]
+sm = "12px"
+md = "18px"
+lg = "24px"
+xl = "30px"
+
+[implementation.style_profiles.shadow_levels]
+sm = "0 10px 28px rgba(15, 23, 42, 0.08)"
+md = "0 18px 48px rgba(15, 23, 42, 0.10)"
+lg = "0 24px 60px rgba(12, 17, 22, 0.30)"
+
+[implementation.style_profiles.font_scales.sm]
+body = "0.94rem"
+title = "1.45rem"
+hero = "1.55rem"
+
+[implementation.style_profiles.font_scales.md]
+body = "1rem"
+title = "1.6rem"
+hero = "1.7rem"
+
+[implementation.style_profiles.font_scales.lg]
+body = "1.05rem"
+title = "1.72rem"
+hero = "1.84rem"
+
+[implementation.style_profiles.sidebar_widths]
+compact = "280px"
+md = "300px"
+wide = "320px"
+
+[implementation.style_profiles.drawer_widths]
+compact = "340px"
+md = "370px"
+wide = "390px"
+
+[implementation.style_profiles.density_presets.compact]
+shell_gap = "14px"
+shell_padding = "14px"
+panel_gap = "12px"
+
+[implementation.style_profiles.density_presets.comfortable]
+shell_gap = "18px"
+shell_padding = "18px"
+panel_gap = "16px"
+
 [frontend]
 shell_regions = ["conversation_sidebar", "chat_main", "citation_drawer"]
 secondary_pages = ["basketball_showcase", "knowledge_list", "knowledge_detail", "document_detail"]

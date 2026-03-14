@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 import tempfile
 import textwrap
@@ -9,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from project_runtime import (
     get_default_project_template_registration,
+    iter_project_template_registrations,
     resolve_project_template_registration,
 )
 from project_runtime.app_factory import build_project_app
@@ -33,10 +35,11 @@ DEFAULT_IMPLEMENTATION_CONFIG = textwrap.dedent(
     [evidence]
     product_spec_endpoint = "/api/public-knowledge/product-spec"
 
-    [artifacts]
-    framework_ir_json = "framework_ir.json"
-    product_spec_json = "product_spec.json"
-    implementation_bundle_py = "implementation_bundle.py"
+[artifacts]
+canonical_graph_json = "canonical_graph.json"
+framework_ir_json = "framework_ir.json"
+product_spec_json = "product_spec.json"
+implementation_bundle_py = "implementation_bundle.py"
     generation_manifest_json = "generation_manifest.json"
     governance_manifest_json = "governance_manifest.json"
     governance_tree_json = "governance_tree.json"
@@ -47,6 +50,15 @@ DEFAULT_IMPLEMENTATION_CONFIG = textwrap.dedent(
 
 
 class ProjectRuntimeTest(unittest.TestCase):
+    def test_src_package_import_keeps_template_registry_idempotent(self) -> None:
+        before = iter_project_template_registrations()
+
+        importlib.import_module("src.project_runtime")
+
+        after = iter_project_template_registrations()
+        self.assertEqual(len(before), len(after))
+        self.assertEqual(tuple(item.template_id for item in before), tuple(item.template_id for item in after))
+
     def test_template_registry_resolves_default_project(self) -> None:
         default_registration = get_default_project_template_registration()
         resolved_registration = resolve_project_template_registration(DEFAULT_KNOWLEDGE_BASE_PRODUCT_SPEC_FILE)
@@ -86,7 +98,9 @@ class ProjectRuntimeTest(unittest.TestCase):
         self.assertEqual(project.ui_spec["components"]["chat_composer"]["submit_label"], "发送")
         self.assertEqual(project.backend_spec["return_policy"]["chat_path"], "/knowledge-base")
         self.assertEqual(project.backend_spec["interaction_copy"]["loading_text"], "正在检索知识库并整理回答…")
-        self.assertTrue(project.validation_reports["overall"]["passed"])
+        self.assertEqual(project.visual_tokens["bg"], project.template_contract.style_profiles.surface_presets["light"].bg)
+        self.assertEqual(project.visual_tokens["message_width"], project.template_contract.style_profiles.message_width)
+        self.assertTrue(project.validation_reports.passed)
 
         product_spec = project.to_product_spec_dict()
         self.assertEqual(product_spec["product"]["project_id"], "knowledge_base_basic")
@@ -265,7 +279,7 @@ class ProjectRuntimeTest(unittest.TestCase):
                 project.backend_spec["return_policy"]["document_detail_path"],
                 "/public-knowledge/bases/details/documents/{document_id}",
             )
-            self.assertTrue(project.validation_reports["overall"]["passed"])
+            self.assertTrue(project.validation_reports.passed)
 
             client = TestClient(build_project_app(product_spec_file))
 

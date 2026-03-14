@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import ast
 import hashlib
 import inspect
@@ -11,17 +11,20 @@ import tomllib
 from typing import TYPE_CHECKING, Any, Callable, get_args, get_origin, get_type_hints
 
 from fastapi.routing import APIRoute
-from framework_ir import FrameworkModuleIR, parse_framework_module
+from framework_ir import FrameworkModule, parse_framework_module
 from project_runtime.project_config_source import (
     ProjectConfigLoadError,
     load_product_spec_document,
 )
 from project_runtime.project_governance import (
+    FrameworkDrivenProjectRecord,
     ProjectGovernanceClosure,
     RequiredRole,
+    ResolvedRoleBinding,
     SourceRef,
     StructuralObject,
     StructuralCandidate,
+    StrictZoneEntry,
     annotate_strict_zone_minimality,
     build_object_coverage_report,
     build_project_discovery_audit,
@@ -36,7 +39,7 @@ from project_runtime.project_governance import (
 )
 
 if TYPE_CHECKING:
-    from project_runtime.knowledge_base import KnowledgeBaseProject
+    from project_runtime.knowledge_base import ImplementationEffectEntry, KnowledgeBaseProject
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -105,6 +108,469 @@ class SymbolDefinition:
     high_risk_file_checks: tuple[tuple[str, str], ...] = ()
 
 
+@dataclass(frozen=True)
+class GeneratedArtifactPaths:
+    canonical_graph_json: str
+    framework_ir_json: str
+    product_spec_json: str
+    implementation_bundle_py: str
+    generation_manifest_json: str
+    governance_manifest_json: str
+    governance_tree_json: str
+    strict_zone_report_json: str
+    object_coverage_report_json: str
+
+    def items(self) -> tuple[tuple[str, str], ...]:
+        return tuple(self.to_dict().items())
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "canonical_graph_json": self.canonical_graph_json,
+            "framework_ir_json": self.framework_ir_json,
+            "product_spec_json": self.product_spec_json,
+            "implementation_bundle_py": self.implementation_bundle_py,
+            "generation_manifest_json": self.generation_manifest_json,
+            "governance_manifest_json": self.governance_manifest_json,
+            "governance_tree_json": self.governance_tree_json,
+            "strict_zone_report_json": self.strict_zone_report_json,
+            "object_coverage_report_json": self.object_coverage_report_json,
+        }
+
+
+@dataclass(frozen=True)
+class GovernanceSnapshotSymbol:
+    symbol_id: str
+    owner: str
+    kind: str
+    risk: str
+    bindings: tuple[dict[str, Any], ...]
+    upstream_refs: tuple[dict[str, Any], ...]
+    extractor: str
+    comparator: str
+    fingerprint: str
+    evidence: dict[str, Any]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "symbol_id": self.symbol_id,
+            "owner": self.owner,
+            "kind": self.kind,
+            "risk": self.risk,
+            "bindings": list(self.bindings),
+            "upstream_refs": list(self.upstream_refs),
+            "expected": {
+                "extractor": self.extractor,
+                "comparator": self.comparator,
+                "fingerprint": self.fingerprint,
+                "evidence": self.evidence,
+            },
+        }
+
+
+@dataclass(frozen=True)
+class GovernanceTreeRoots:
+    project_root_id: str
+    framework_root_id: str
+    product_root_id: str
+    implementation_root_id: str
+    structure_root_id: str
+    code_root_id: str
+    evidence_root_id: str
+
+    @classmethod
+    def for_project(cls, project_id: str) -> "GovernanceTreeRoots":
+        project_root_id = f"project:{project_id}"
+        return cls(
+            project_root_id=project_root_id,
+            framework_root_id=f"{project_root_id}:framework",
+            product_root_id=f"{project_root_id}:product_spec",
+            implementation_root_id=f"{project_root_id}:implementation_config",
+            structure_root_id=f"{project_root_id}:structure",
+            code_root_id=f"{project_root_id}:code",
+            evidence_root_id=f"{project_root_id}:evidence",
+        )
+
+
+@dataclass
+class GovernanceTreeNodeRecord:
+    node_id: str
+    parent: str | None
+    children: list[str] = field(default_factory=list)
+    payload: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "node_id": self.node_id,
+            "parent": self.parent,
+            "children": list(self.children),
+            **self.payload,
+        }
+
+
+@dataclass
+class GovernanceTreeBuilder:
+    project_id: str
+    roots: GovernanceTreeRoots
+    nodes: dict[str, GovernanceTreeNodeRecord] = field(default_factory=dict)
+    source_node_ids: dict[tuple[str, str, str, str], str] = field(default_factory=dict)
+    role_node_ids: dict[tuple[str, str], str] = field(default_factory=dict)
+    framework_modules: dict[str, FrameworkModule] = field(default_factory=dict)
+
+    def add_node(self, node_id: str, *, parent: str | None, **payload: Any) -> GovernanceTreeNodeRecord:
+        existing = self.nodes.get(node_id)
+        if existing is None:
+            existing = GovernanceTreeNodeRecord(
+                node_id=node_id,
+                parent=parent,
+                payload=dict(payload),
+            )
+            self.nodes[node_id] = existing
+        if parent is not None and parent in self.nodes and node_id not in self.nodes[parent].children:
+            self.nodes[parent].children.append(node_id)
+        return existing
+
+    def add_root_nodes(self, project: KnowledgeBaseProject) -> None:
+        self.add_node(
+            self.roots.project_root_id,
+            parent=None,
+            kind="project_root",
+            layer="Project",
+            title=project.metadata.display_name,
+            file=_relative(project.product_spec_file),
+            template_id=project.metadata.template,
+            project_id=project.metadata.project_id,
+        )
+        self.add_node(
+            self.roots.framework_root_id,
+            parent=self.roots.project_root_id,
+            kind="framework_root",
+            layer="Framework",
+            title="Framework",
+        )
+        self.add_node(
+            self.roots.product_root_id,
+            parent=self.roots.project_root_id,
+            kind="product_root",
+            layer="Product Spec",
+            title="Product Spec",
+        )
+        self.add_node(
+            self.roots.implementation_root_id,
+            parent=self.roots.project_root_id,
+            kind="implementation_root",
+            layer="Implementation Config",
+            title="Implementation Config",
+        )
+        self.add_node(
+            self.roots.structure_root_id,
+            parent=self.roots.project_root_id,
+            kind="structure_root",
+            layer="Project Structure",
+            title="Project Structure",
+        )
+        self.add_node(
+            self.roots.code_root_id,
+            parent=self.roots.project_root_id,
+            kind="code_root",
+            layer="Code",
+            title="Code",
+        )
+        self.add_node(
+            self.roots.evidence_root_id,
+            parent=self.roots.project_root_id,
+            kind="evidence_root",
+            layer="Evidence",
+            title="Evidence",
+        )
+
+    def add_source_ref(self, source: SourceRef) -> None:
+        if source.layer == "framework":
+            module = self.framework_modules.get(source.file)
+            if module is None:
+                module = parse_framework_module(REPO_ROOT / source.file)
+                self.framework_modules[source.file] = module
+            module_node_id = f"{self.roots.framework_root_id}:module:{module.module_id}"
+            self.add_node(
+                module_node_id,
+                parent=self.roots.framework_root_id,
+                kind="framework_module",
+                layer="Framework",
+                title=module.module_id,
+                file=source.file,
+                project_id=self.project_id,
+            )
+            node_id = f"{module_node_id}:rule:{source.ref_id}"
+            self.add_node(
+                node_id,
+                parent=module_node_id,
+                kind="framework_rule",
+                layer="Framework",
+                title=source.ref_id,
+                file=source.file,
+                ref_kind=source.ref_kind,
+                ref_id=source.ref_id,
+                digest=source.digest,
+                project_id=self.project_id,
+            )
+            self.source_node_ids[source.key()] = node_id
+            return
+
+        if source.layer == "product_spec":
+            root_id = self.roots.product_root_id
+            file_kind = "product_file"
+            section_kind = "product_section"
+            layer = "Product Spec"
+        elif source.layer == "implementation_config":
+            root_id = self.roots.implementation_root_id
+            file_kind = "implementation_file"
+            section_kind = "implementation_section"
+            layer = "Implementation Config"
+        else:
+            return
+
+        file_node_id = f"{root_id}:file:{source.file}"
+        self.add_node(
+            file_node_id,
+            parent=root_id,
+            kind=file_kind,
+            layer=layer,
+            title=Path(source.file).name,
+            file=source.file,
+            project_id=self.project_id,
+        )
+        node_id = f"{file_node_id}:section:{source.ref_id}"
+        self.add_node(
+            node_id,
+            parent=file_node_id,
+            kind=section_kind,
+            layer=layer,
+            title=source.ref_id,
+            file=source.file,
+            ref_kind=source.ref_kind,
+            ref_id=source.ref_id,
+            digest=source.digest,
+            project_id=self.project_id,
+        )
+        self.source_node_ids[source.key()] = node_id
+
+    def add_structural_object(self, structural_object: StructuralObject) -> None:
+        object_node_id = f"{self.roots.structure_root_id}:object:{structural_object.object_id}"
+        upstream_ids = [
+            self.source_node_ids[source.key()]
+            for source in structural_object.all_sources()
+            if source.key() in self.source_node_ids
+        ]
+        self.add_node(
+            object_node_id,
+            parent=self.roots.structure_root_id,
+            kind="structural_object",
+            layer="Project Structure",
+            title=structural_object.title,
+            object_id=structural_object.object_id,
+            structural_kind=structural_object.kind,
+            risk=structural_object.risk_level,
+            status=structural_object.status,
+            cardinality=structural_object.cardinality,
+            comparator=structural_object.comparator,
+            extractor=structural_object.extractor,
+            origin_categories=list(structural_object.origin_categories),
+            expected_evidence=structural_object.expected_evidence,
+            expected_fingerprint=structural_object.expected_fingerprint,
+            actual_evidence=structural_object.actual_evidence,
+            actual_fingerprint=structural_object.actual_fingerprint,
+            derived_from=upstream_ids,
+            project_id=self.project_id,
+        )
+        for role in structural_object.required_roles:
+            role_node_id = f"{object_node_id}:role:{role.role_id}"
+            self.add_node(
+                role_node_id,
+                parent=object_node_id,
+                kind="required_role",
+                layer="Project Structure",
+                title=role.role_id,
+                object_id=structural_object.object_id,
+                role_id=role.role_id,
+                role_kind=role.role_kind,
+                classification=role.classification,
+                locator_patterns=list(role.locator_patterns),
+                file_hints=list(role.file_hints),
+                candidate_kinds=list(role.candidate_kinds),
+                derived_from=[object_node_id],
+                project_id=self.project_id,
+            )
+            self.role_node_ids[(structural_object.object_id, role.role_id)] = role_node_id
+
+    def add_strict_zone_entry(self, strict_entry: Any) -> None:
+        file_node_id = f"{self.roots.code_root_id}:file:{strict_entry.file}"
+        derived_from = [
+            self.role_node_ids[(object_id, role_id)]
+            for object_id in strict_entry.object_ids
+            for role_id in strict_entry.role_ids
+            if (object_id, role_id) in self.role_node_ids
+        ]
+        if not derived_from:
+            derived_from = [
+                f"{self.roots.structure_root_id}:object:{object_id}"
+                for object_id in strict_entry.object_ids
+            ]
+        self.add_node(
+            file_node_id,
+            parent=self.roots.code_root_id,
+            kind="strict_zone_file",
+            layer="Code",
+            title=Path(strict_entry.file).name,
+            file=strict_entry.file,
+            object_ids=list(strict_entry.object_ids),
+            role_ids=list(strict_entry.role_ids),
+            reasons=list(strict_entry.reasons),
+            why_required=list(strict_entry.why_required),
+            minimality_status=strict_entry.minimality_status,
+            derived_from=derived_from,
+            project_id=self.project_id,
+        )
+
+    def add_candidate(self, candidate: StructuralCandidate) -> None:
+        file_node_id = f"{self.roots.code_root_id}:file:{candidate.file}"
+        if file_node_id not in self.nodes:
+            self.add_node(
+                file_node_id,
+                parent=self.roots.code_root_id,
+                kind="strict_zone_file",
+                layer="Code",
+                title=Path(candidate.file).name,
+                file=candidate.file,
+                object_ids=[],
+                role_ids=[],
+                reasons=["candidate-only strict zone carrier"],
+                derived_from=[],
+                project_id=self.project_id,
+            )
+        derived_from = [
+            self.role_node_ids[(candidate.object_id, role_id)]
+            for role_id in candidate.role_ids
+            if candidate.object_id is not None and (candidate.object_id, role_id) in self.role_node_ids
+        ]
+        if not derived_from and candidate.object_id is not None:
+            derived_from = [f"{self.roots.structure_root_id}:object:{candidate.object_id}"]
+        self.add_node(
+            f"{file_node_id}:candidate:{candidate.candidate_id}",
+            parent=file_node_id,
+            kind="structural_candidate",
+            layer="Code",
+            title=candidate.locator,
+            file=candidate.file,
+            locator=candidate.locator,
+            candidate_id=candidate.candidate_id,
+            candidate_kind=candidate.kind,
+            confidence=round(candidate.confidence, 3),
+            classification=candidate.classification,
+            object_id=candidate.object_id,
+            role_ids=list(candidate.role_ids),
+            reasons=list(candidate.reasons),
+            derived_from=derived_from,
+            project_id=self.project_id,
+        )
+
+    def add_evidence_artifacts(self, closure: ProjectGovernanceClosure) -> None:
+        all_object_node_ids = [
+            f"{self.roots.structure_root_id}:object:{item.object_id}" for item in closure.structural_objects
+        ]
+        for artifact_key, rel_path in closure.evidence_artifacts.items():
+            self.add_node(
+                f"{self.roots.evidence_root_id}:artifact:{artifact_key}",
+                parent=self.roots.evidence_root_id,
+                kind="evidence_artifact",
+                layer="Evidence",
+                title=artifact_key,
+                artifact=artifact_key,
+                file=rel_path,
+                derived_from=[self.roots.project_root_id, *all_object_node_ids],
+                project_id=self.project_id,
+            )
+
+    def serialized_nodes(self) -> list[dict[str, Any]]:
+        return [self.nodes[node_id].to_dict() for node_id in sorted(self.nodes)]
+
+
+@dataclass(frozen=True)
+class GovernancePayloadIndexes:
+    object_index: dict[str, dict[str, Any]]
+    binding_index: dict[tuple[str, str], dict[str, Any]]
+    candidate_index: dict[str, dict[str, Any]]
+    strict_zone_index: dict[str, dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class GovernanceComparisonContext:
+    project: KnowledgeBaseProject
+    closure: ProjectGovernanceClosure
+    payload: dict[str, Any]
+    payload_code: str
+    tree_mode: bool
+    strict_zone_report: dict[str, Any]
+    object_coverage_report: dict[str, Any]
+    indexes: GovernancePayloadIndexes
+
+
+@dataclass(frozen=True)
+class GovernanceProjectArtifactsContext:
+    project: KnowledgeBaseProject
+    closure: ProjectGovernanceClosure
+    strict_zone_report: dict[str, Any]
+    object_coverage_report: dict[str, Any]
+    binding_index: dict[str, list[GovernedBinding]]
+
+    @classmethod
+    def from_project(cls, project: KnowledgeBaseProject) -> "GovernanceProjectArtifactsContext":
+        closure = build_governance_closure(project)
+        return cls(
+            project=project,
+            closure=closure,
+            strict_zone_report=build_strict_zone_report(closure),
+            object_coverage_report=build_object_coverage_report(closure),
+            binding_index=_binding_index_for_project(project),
+        )
+
+
+@dataclass(frozen=True)
+class GovernanceDefinitionsContext:
+    project: KnowledgeBaseProject
+    definitions: tuple[SymbolDefinition, ...]
+    bindings_by_symbol: dict[str, list[GovernedBinding]]
+    unbound_high_risk: tuple[dict[str, Any], ...]
+
+    def sorted_bindings_for(self, symbol_id: str) -> tuple[GovernedBinding, ...]:
+        return tuple(
+            sorted(
+                self.bindings_by_symbol.get(symbol_id, []),
+                key=lambda item: (item.file, item.line, item.locator),
+            )
+        )
+
+    def missing_bindings_for(self, definition: SymbolDefinition) -> tuple[str, ...]:
+        return tuple(
+            f"{rel_file} -> {locator}"
+            for rel_file, locator in definition.required_bindings
+            if not _binding_exists(self.bindings_by_symbol, definition.symbol_id, rel_file, locator)
+        )
+
+
+@dataclass(frozen=True)
+class GovernanceStructuralContext:
+    structural_objects: tuple[StructuralObject, ...]
+    expected_artifacts: dict[str, str]
+    discovery: FrameworkDrivenProjectRecord
+    upstream_closure: tuple[SourceRef, ...]
+
+
+@dataclass(frozen=True)
+class GovernanceResolutionContext:
+    role_bindings: tuple[ResolvedRoleBinding, ...]
+    candidates: tuple[StructuralCandidate, ...]
+    strict_zone: tuple[StrictZoneEntry, ...]
+
+
 def _canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -123,31 +589,78 @@ def _relative(path: Path | str) -> str:
     return candidate.as_posix()
 
 
-def _expected_generated_artifact_paths(project: KnowledgeBaseProject) -> dict[str, str]:
+def _build_governance_definitions_context(project: KnowledgeBaseProject) -> GovernanceDefinitionsContext:
+    return GovernanceDefinitionsContext(
+        project=project,
+        definitions=tuple(_definitions(project)),
+        bindings_by_symbol=collect_governed_bindings(governed_files_for_project(project)),
+        unbound_high_risk=tuple(find_unbound_high_risk_structures()),
+    )
+
+
+def _raise_binding_validation_issues(binding_issues: list[dict[str, Any]]) -> None:
+    if not binding_issues:
+        return
+    details = "; ".join(
+        f"{item['file']}:{item['line']} {item['code']} {item['message']}" for item in binding_issues
+    )
+    raise ValueError(f"invalid governed bindings: {details}")
+
+
+def _raise_unbound_high_risk_issues(unbound_high_risk: tuple[dict[str, Any], ...]) -> None:
+    if not unbound_high_risk:
+        return
+    details = "; ".join(f"{item['file']}:{item['line']} -> {item['locator']}" for item in unbound_high_risk)
+    raise ValueError(f"missing governed_symbol binding for high-risk structures: {details}")
+
+
+def _raise_missing_required_bindings(
+    definition: SymbolDefinition,
+    missing_bindings: tuple[str, ...],
+) -> None:
+    if not missing_bindings:
+        return
+    raise ValueError(
+        f"missing governed_symbol binding(s) for {definition.symbol_id}: {', '.join(missing_bindings)}"
+    )
+
+
+def _validated_governance_definitions_context(project: KnowledgeBaseProject) -> GovernanceDefinitionsContext:
+    context = _build_governance_definitions_context(project)
+    _raise_binding_validation_issues(_binding_validation_issues(context.bindings_by_symbol, context.definitions))
+    _raise_unbound_high_risk_issues(context.unbound_high_risk)
+    for definition in context.definitions:
+        _raise_missing_required_bindings(definition, context.missing_bindings_for(definition))
+    return context
+
+
+def _expected_generated_artifact_paths(project: KnowledgeBaseProject) -> GeneratedArtifactPaths:
     if project.generated_artifacts is not None:
-        return {
-            "framework_ir_json": project.generated_artifacts.framework_ir_json,
-            "product_spec_json": project.generated_artifacts.product_spec_json,
-            "implementation_bundle_py": project.generated_artifacts.implementation_bundle_py,
-            "generation_manifest_json": project.generated_artifacts.generation_manifest_json,
-            "governance_manifest_json": project.generated_artifacts.governance_manifest_json,
-            "governance_tree_json": project.generated_artifacts.governance_tree_json,
-            "strict_zone_report_json": project.generated_artifacts.strict_zone_report_json,
-            "object_coverage_report_json": project.generated_artifacts.object_coverage_report_json,
-        }
+        return GeneratedArtifactPaths(
+            canonical_graph_json=project.generated_artifacts.canonical_graph_json,
+            framework_ir_json=project.generated_artifacts.framework_ir_json,
+            product_spec_json=project.generated_artifacts.product_spec_json,
+            implementation_bundle_py=project.generated_artifacts.implementation_bundle_py,
+            generation_manifest_json=project.generated_artifacts.generation_manifest_json,
+            governance_manifest_json=project.generated_artifacts.governance_manifest_json,
+            governance_tree_json=project.generated_artifacts.governance_tree_json,
+            strict_zone_report_json=project.generated_artifacts.strict_zone_report_json,
+            object_coverage_report_json=project.generated_artifacts.object_coverage_report_json,
+        )
 
     generated_dir = Path(project.product_spec_file).parent / "generated"
     artifact_names = project.implementation.artifacts
-    return {
-        "framework_ir_json": _relative(generated_dir / artifact_names.framework_ir_json),
-        "product_spec_json": _relative(generated_dir / artifact_names.product_spec_json),
-        "implementation_bundle_py": _relative(generated_dir / artifact_names.implementation_bundle_py),
-        "generation_manifest_json": _relative(generated_dir / artifact_names.generation_manifest_json),
-        "governance_manifest_json": _relative(generated_dir / artifact_names.governance_manifest_json),
-        "governance_tree_json": _relative(generated_dir / artifact_names.governance_tree_json),
-        "strict_zone_report_json": _relative(generated_dir / artifact_names.strict_zone_report_json),
-        "object_coverage_report_json": _relative(generated_dir / artifact_names.object_coverage_report_json),
-    }
+    return GeneratedArtifactPaths(
+        canonical_graph_json=_relative(generated_dir / artifact_names.canonical_graph_json),
+        framework_ir_json=_relative(generated_dir / artifact_names.framework_ir_json),
+        product_spec_json=_relative(generated_dir / artifact_names.product_spec_json),
+        implementation_bundle_py=_relative(generated_dir / artifact_names.implementation_bundle_py),
+        generation_manifest_json=_relative(generated_dir / artifact_names.generation_manifest_json),
+        governance_manifest_json=_relative(generated_dir / artifact_names.governance_manifest_json),
+        governance_tree_json=_relative(generated_dir / artifact_names.governance_tree_json),
+        strict_zone_report_json=_relative(generated_dir / artifact_names.strict_zone_report_json),
+        object_coverage_report_json=_relative(generated_dir / artifact_names.object_coverage_report_json),
+    )
 
 
 def _metadata_pairs(fragment: str) -> dict[str, str]:
@@ -355,7 +868,7 @@ def _binding_validation_issues(
     return issues
 
 
-def _framework_rule_refs(module: FrameworkModuleIR, rule_ids: tuple[str, ...] | None = None) -> tuple[UpstreamRef, ...]:
+def _framework_rule_refs(module: FrameworkModule, rule_ids: tuple[str, ...] | None = None) -> tuple[UpstreamRef, ...]:
     allowed = set(rule_ids) if rule_ids else None
     refs: list[UpstreamRef] = []
     for rule in module.rules:
@@ -431,7 +944,7 @@ def _expected_runtime_page_routes(project: KnowledgeBaseProject) -> dict[str, An
 def _actual_runtime_page_routes(project: KnowledgeBaseProject) -> dict[str, Any]:
     from knowledge_base_runtime.app import build_knowledge_base_runtime_app
 
-    app = build_knowledge_base_runtime_app(project)
+    app = build_knowledge_base_runtime_app(project.code_module)
     expected_names = {
         "root": "home",
         "knowledge_base_page": "chat_home",
@@ -865,7 +1378,7 @@ def _expected_api_chat_contract(project: KnowledgeBaseProject) -> dict[str, Any]
 def _route_contracts_from_router(project: KnowledgeBaseProject) -> dict[str, dict[str, Any]]:
     from knowledge_base_runtime.backend import KnowledgeRepository, build_knowledge_base_router
 
-    router = build_knowledge_base_router(project, KnowledgeRepository(project))
+    router = build_knowledge_base_router(project.code_module, KnowledgeRepository(project.code_module))
     payload: dict[str, dict[str, Any]] = {}
     for route in router.routes:
         if not isinstance(route, APIRoute):
@@ -968,7 +1481,7 @@ def _expected_answer_behavior(project: KnowledgeBaseProject) -> dict[str, Any]:
 def _actual_answer_behavior(project: KnowledgeBaseProject) -> dict[str, Any]:
     from knowledge_base_runtime.backend import KnowledgeRepository
 
-    repository = KnowledgeRepository(project)
+    repository = KnowledgeRepository(project.code_module)
     response = repository.answer_question(
         "Explain the generated runtime and citation drawer.",
         document_id="framework-compilation-chain",
@@ -1394,11 +1907,11 @@ def _effect_sink_roles(field_path: str, targets: tuple[str, ...]) -> tuple[Requi
 def _config_effect_object(
     project: KnowledgeBaseProject,
     field_path: str,
-    effect_entry: dict[str, Any],
+    effect_entry: ImplementationEffectEntry,
 ) -> StructuralObject:
-    relation = str(effect_entry.get("relation") or "equals")
-    configured_value = effect_entry.get("value")
-    targets = tuple(str(item) for item in effect_entry.get("targets", []) if str(item).strip())
+    relation = effect_entry.relation or "equals"
+    configured_value = effect_entry.value
+    targets = tuple(target_path for target_path in effect_entry.targets if target_path.strip())
     implementation_section = field_path.split(".", 1)[0]
     implementation_ref = SourceRef(
         layer="implementation_config",
@@ -1428,7 +1941,7 @@ def _config_effect_object(
     }
     runtime_bundle = project.to_runtime_bundle_dict()
     if runtime_bundle.get("generated_artifacts") in (None, {}, []):
-        runtime_bundle["generated_artifacts"] = dict(_expected_generated_artifact_paths(project))
+        runtime_bundle["generated_artifacts"] = _expected_generated_artifact_paths(project).to_dict()
     actual_evidence = {
         "field_path": field_path,
         "relation": relation,
@@ -1469,25 +1982,25 @@ def _config_effect_object(
     )
 
 
-def _project_record_for(project: KnowledgeBaseProject) -> Any:
+def _project_record_for(project: KnowledgeBaseProject) -> FrameworkDrivenProjectRecord:
     rel_product_spec = _relative(project.product_spec_file)
     for item in discover_framework_driven_projects():
         if item.product_spec_file == rel_product_spec:
             return item
     artifact_names = project.implementation.artifacts
-    return {
-        "project_id": project.metadata.project_id,
-        "template_id": project.metadata.template,
-        "product_spec_file": rel_product_spec,
-        "implementation_config_file": _relative(project.implementation_config_file),
-        "generated_dir": _relative(Path(project.product_spec_file).parent / "generated"),
-        "discovery_reasons": (
+    return FrameworkDrivenProjectRecord(
+        project_id=project.metadata.project_id,
+        template_id=project.metadata.template,
+        product_spec_file=rel_product_spec,
+        implementation_config_file=_relative(project.implementation_config_file),
+        generated_dir=_relative(Path(project.product_spec_file).parent / "generated"),
+        discovery_reasons=(
             "project spec exists under projects/<project_id>/product_spec.toml",
             "implementation_config.toml exists beside product_spec.toml",
             "registered template resolved through project.template",
             "project loads through the registered framework-driven materialization chain",
         ),
-        "framework_refs": tuple(
+        framework_refs=tuple(
             item
             for item in (
                 project.framework.frontend,
@@ -1496,9 +2009,10 @@ def _project_record_for(project: KnowledgeBaseProject) -> Any:
             )
             if isinstance(item, str) and item.strip()
         ),
-        "artifact_contract": tuple(
+        artifact_contract=tuple(
             getattr(artifact_names, field_name)
             for field_name in (
+                "canonical_graph_json",
                 "framework_ir_json",
                 "product_spec_json",
                 "implementation_bundle_py",
@@ -1509,168 +2023,126 @@ def _project_record_for(project: KnowledgeBaseProject) -> Any:
                 "object_coverage_report_json",
             )
         ),
-    }
+    )
 
 
-def build_governance_closure(project: KnowledgeBaseProject) -> ProjectGovernanceClosure:
+def _implementation_effect_objects(project: KnowledgeBaseProject) -> tuple[StructuralObject, ...]:
     from project_runtime.knowledge_base import build_implementation_effect_manifest
 
-    definitions = _definitions(project)
-    bindings_by_symbol = collect_governed_bindings(governed_files_for_project(project))
-    binding_issues = _binding_validation_issues(bindings_by_symbol, definitions)
-    if binding_issues:
-        details = "; ".join(
-            f"{item['file']}:{item['line']} {item['code']} {item['message']}" for item in binding_issues
-        )
-        raise ValueError(f"invalid governed bindings: {details}")
-    unbound = find_unbound_high_risk_structures()
-    if unbound:
-        details = "; ".join(f"{item['file']}:{item['line']} -> {item['locator']}" for item in unbound)
-        raise ValueError(f"missing governed_symbol binding for high-risk structures: {details}")
+    return tuple(
+        _config_effect_object(project, field_path, effect_entry)
+        for field_path, effect_entry in sorted(build_implementation_effect_manifest(project).items())
+    )
 
-    for definition in definitions:
-        missing_bindings = [
-            f"{rel_file} -> {locator}"
-            for rel_file, locator in definition.required_bindings
-            if not _binding_exists(bindings_by_symbol, definition.symbol_id, rel_file, locator)
+
+def _upstream_closure_from_structural_objects(
+    structural_objects: tuple[StructuralObject, ...],
+) -> tuple[SourceRef, ...]:
+    upstream_index: dict[tuple[str, str, str, str], SourceRef] = {}
+    for structural_object in structural_objects:
+        for source in structural_object.all_sources():
+            upstream_index[source.key()] = source
+    return tuple(
+        sorted(upstream_index.values(), key=lambda item: (item.layer, item.file, item.ref_kind, item.ref_id))
+    )
+
+
+def _build_governance_structural_context(
+    project: KnowledgeBaseProject,
+    definitions_context: GovernanceDefinitionsContext,
+) -> GovernanceStructuralContext:
+    structural_objects = tuple(
+        [
+            *(
+                _structural_object_from_definition(project, definition)
+                for definition in definitions_context.definitions
+            ),
+            *_implementation_effect_objects(project),
         ]
-        if missing_bindings:
-            raise ValueError(
-                f"missing governed_symbol binding(s) for {definition.symbol_id}: {', '.join(missing_bindings)}"
-            )
+    )
+    return GovernanceStructuralContext(
+        structural_objects=tuple(sorted(structural_objects, key=lambda item: item.object_id)),
+        expected_artifacts=_expected_generated_artifact_paths(project).to_dict(),
+        discovery=_project_record_for(project),
+        upstream_closure=_upstream_closure_from_structural_objects(structural_objects),
+    )
 
-    structural_objects: list[StructuralObject] = [
-        _structural_object_from_definition(project, definition)
-        for definition in definitions
-    ]
-    for field_path, effect_entry in sorted(build_implementation_effect_manifest(project).items()):
-        structural_objects.append(_config_effect_object(project, field_path, effect_entry))
 
+def _resolve_governance_candidates(
+    project: KnowledgeBaseProject,
+    structural_context: GovernanceStructuralContext,
+) -> GovernanceResolutionContext:
+    structural_objects = structural_context.structural_objects
+    expected_artifacts = structural_context.expected_artifacts
     raw_candidates = scan_python_structural_candidates(project_id=project.metadata.project_id)
-    seed_bindings = resolve_role_bindings(tuple(structural_objects), raw_candidates)
-    seed_candidates = classify_candidates(tuple(structural_objects), raw_candidates, seed_bindings)
+    seed_bindings = resolve_role_bindings(structural_objects, raw_candidates)
+    seed_candidates = classify_candidates(structural_objects, raw_candidates, seed_bindings)
     seed_strict_zone = infer_strict_zone(
-        tuple(structural_objects),
+        structural_objects,
         seed_bindings,
         seed_candidates,
-        _expected_generated_artifact_paths(project),
+        expected_artifacts,
     )
     strict_files = {entry.file for entry in seed_strict_zone}
     seed_candidate_ids = {candidate_id for binding in seed_bindings for candidate_id in binding.candidate_ids}
     project_candidates = tuple(
         candidate
         for candidate in raw_candidates
-        if candidate.file in strict_files and (candidate.confidence >= 0.75 or candidate.candidate_id in seed_candidate_ids)
+        if candidate.file in strict_files
+        and (candidate.confidence >= 0.75 or candidate.candidate_id in seed_candidate_ids)
     )
-    role_bindings = resolve_role_bindings(tuple(structural_objects), project_candidates)
-    candidates = classify_candidates(tuple(structural_objects), project_candidates, role_bindings)
-    strict_zone = infer_strict_zone(
-        tuple(structural_objects),
-        role_bindings,
-        candidates,
-        _expected_generated_artifact_paths(project),
+    role_bindings = tuple(resolve_role_bindings(structural_objects, project_candidates))
+    candidates = tuple(classify_candidates(structural_objects, project_candidates, role_bindings))
+    strict_zone = tuple(
+        annotate_strict_zone_minimality(
+            infer_strict_zone(
+                structural_objects,
+                role_bindings,
+                candidates,
+                expected_artifacts,
+            ),
+            role_bindings,
+            candidates,
+            expected_artifacts,
+        )
     )
-    strict_zone = annotate_strict_zone_minimality(
-        strict_zone,
-        role_bindings,
-        candidates,
-        _expected_generated_artifact_paths(project),
+    return GovernanceResolutionContext(
+        role_bindings=tuple(sorted(role_bindings, key=lambda item: (item.object_id, item.role_id))),
+        candidates=tuple(sorted(candidates, key=lambda item: (item.file, item.locator, item.kind))),
+        strict_zone=tuple(sorted(strict_zone, key=lambda item: item.file)),
     )
-    record = _project_record_for(project)
-    if hasattr(record, "to_dict"):
-        discovery = record
-    else:
-        from project_runtime.project_governance import FrameworkDrivenProjectRecord
 
-        discovery = FrameworkDrivenProjectRecord(**record)
 
-    upstream_index: dict[tuple[str, str, str, str], SourceRef] = {}
-    for structural_object in structural_objects:
-        for source in structural_object.all_sources():
-            upstream_index[source.key()] = source
+def build_governance_closure(project: KnowledgeBaseProject) -> ProjectGovernanceClosure:
+    definitions_context = _validated_governance_definitions_context(project)
+    structural_context = _build_governance_structural_context(project, definitions_context)
+    resolution_context = _resolve_governance_candidates(project, structural_context)
     return ProjectGovernanceClosure(
         project_id=project.metadata.project_id,
         template_id=project.metadata.template,
         product_spec_file=_relative(project.product_spec_file),
         implementation_config_file=_relative(project.implementation_config_file),
-        discovery=discovery,
-        structural_objects=tuple(sorted(structural_objects, key=lambda item: item.object_id)),
-        candidates=tuple(sorted(candidates, key=lambda item: (item.file, item.locator, item.kind))),
-        role_bindings=tuple(sorted(role_bindings, key=lambda item: (item.object_id, item.role_id))),
-        strict_zone=tuple(sorted(strict_zone, key=lambda item: item.file)),
-        upstream_closure=tuple(
-            sorted(upstream_index.values(), key=lambda item: (item.layer, item.file, item.ref_kind, item.ref_id))
-        ),
-        evidence_artifacts=_expected_generated_artifact_paths(project),
+        discovery=structural_context.discovery,
+        structural_objects=structural_context.structural_objects,
+        candidates=resolution_context.candidates,
+        role_bindings=resolution_context.role_bindings,
+        strict_zone=resolution_context.strict_zone,
+        upstream_closure=structural_context.upstream_closure,
+        evidence_artifacts=structural_context.expected_artifacts,
     )
 
 
 def _build_governance_snapshot(project: KnowledgeBaseProject) -> dict[str, Any]:
-    definitions = _definitions(project)
-    bindings_by_symbol = collect_governed_bindings(governed_files_for_project(project))
-    binding_issues = _binding_validation_issues(bindings_by_symbol, definitions)
-    if binding_issues:
-        details = "; ".join(
-            f"{item['file']}:{item['line']} {item['code']} {item['message']}" for item in binding_issues
-        )
-        raise ValueError(f"invalid governed bindings: {details}")
-    unbound = find_unbound_high_risk_structures()
-    if unbound:
-        details = "; ".join(f"{item['file']}:{item['line']} -> {item['locator']}" for item in unbound)
-        raise ValueError(f"missing governed_symbol binding for high-risk structures: {details}")
+    context = _validated_governance_definitions_context(project)
     upstream_closure: dict[tuple[str, str, str, str], str] = {}
-    symbols: list[dict[str, Any]] = []
-    for definition in definitions:
-        bindings = sorted(
-            bindings_by_symbol.get(definition.symbol_id, []),
-            key=lambda item: (item.file, item.line, item.locator),
-        )
-        missing_bindings = [
-            f"{rel_file} -> {locator}"
-            for rel_file, locator in definition.required_bindings
-            if not _binding_exists(bindings_by_symbol, definition.symbol_id, rel_file, locator)
-        ]
-        if missing_bindings:
-            raise ValueError(
-                f"missing governed_symbol binding(s) for {definition.symbol_id}: {', '.join(missing_bindings)}"
-            )
-        expected_evidence = definition.expected_builder(project)
-        upstream_refs = definition.upstream_ref_builder(project)
-        for ref in upstream_refs:
-            upstream_closure[ref.key()] = digest_upstream_ref(ref)
-        symbols.append(
-            {
-                "symbol_id": definition.symbol_id,
-                "owner": definition.owner,
-                "kind": definition.kind,
-                "risk": definition.risk,
-                "bindings": [item.to_manifest_dict() for item in bindings],
-                "upstream_refs": [
-                    ref.to_manifest_dict(digest=upstream_closure[ref.key()])
-                    for ref in upstream_refs
-                ],
-                "expected": {
-                    "extractor": definition.extractor,
-                    "comparator": definition.comparator,
-                    "fingerprint": _fingerprint(expected_evidence),
-                    "evidence": expected_evidence,
-                },
-            }
-        )
-    closure_items = [
-        {
-            "layer": layer,
-            "file": file_name,
-            "ref_kind": ref_kind,
-            "ref_id": ref_id,
-            "digest": digest,
-        }
-        for (layer, file_name, ref_kind, ref_id), digest in sorted(upstream_closure.items())
+    symbols = [
+        _snapshot_symbol_from_definition(project, context, definition, upstream_closure)
+        for definition in context.definitions
     ]
     return {
-        "definitions": definitions,
-        "symbols": symbols,
-        "upstream_closure": closure_items,
+        "definitions": list(context.definitions),
+        "symbols": [item.to_dict() for item in symbols],
+        "upstream_closure": _upstream_closure_items(upstream_closure),
     }
 
 
@@ -1688,340 +2160,138 @@ def _binding_index_for_project(project: KnowledgeBaseProject) -> dict[str, list[
     return collect_governed_bindings(governed_files_for_project(project))
 
 
-def build_governance_manifest(project: KnowledgeBaseProject) -> dict[str, Any]:
-    closure = build_governance_closure(project)
-    strict_zone_report = build_strict_zone_report(closure)
-    object_coverage_report = build_object_coverage_report(closure)
-    binding_index = _binding_index_for_project(project)
-    symbols = []
-    for structural_object in closure.structural_objects:
-        bindings = [
-            item.to_manifest_dict()
-            for item in sorted(
-                binding_index.get(structural_object.object_id, []),
-                key=lambda entry: (entry.file, entry.line, entry.locator),
-            )
-        ]
-        symbols.append(
-            {
-                "symbol_id": structural_object.object_id,
-                "owner": _object_owner(structural_object),
-                "kind": structural_object.kind,
-                "risk": structural_object.risk_level,
-                "bindings": bindings,
-                "expected": {
-                    "extractor": structural_object.extractor,
-                    "comparator": structural_object.comparator,
-                    "fingerprint": structural_object.expected_fingerprint,
-                    "evidence": structural_object.expected_evidence,
-                },
-            }
+def _manifest_binding_entries(bindings: tuple[GovernedBinding, ...]) -> tuple[dict[str, Any], ...]:
+    return tuple(item.to_manifest_dict() for item in bindings)
+
+
+def _upstream_closure_items(
+    upstream_closure: dict[tuple[str, str, str, str], str],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "layer": layer,
+            "file": file_name,
+            "ref_kind": ref_kind,
+            "ref_id": ref_id,
+            "digest": digest,
+        }
+        for (layer, file_name, ref_kind, ref_id), digest in sorted(upstream_closure.items())
+    ]
+
+
+def _snapshot_symbol_from_definition(
+    project: KnowledgeBaseProject,
+    context: GovernanceDefinitionsContext,
+    definition: SymbolDefinition,
+    upstream_closure: dict[tuple[str, str, str, str], str],
+) -> GovernanceSnapshotSymbol:
+    bindings = context.sorted_bindings_for(definition.symbol_id)
+    expected_evidence = definition.expected_builder(project)
+    upstream_refs = definition.upstream_ref_builder(project)
+    for ref in upstream_refs:
+        upstream_closure[ref.key()] = digest_upstream_ref(ref)
+    return GovernanceSnapshotSymbol(
+        symbol_id=definition.symbol_id,
+        owner=definition.owner,
+        kind=definition.kind,
+        risk=definition.risk,
+        bindings=_manifest_binding_entries(bindings),
+        upstream_refs=tuple(
+            ref.to_manifest_dict(digest=upstream_closure[ref.key()])
+            for ref in upstream_refs
+        ),
+        extractor=definition.extractor,
+        comparator=definition.comparator,
+        fingerprint=_fingerprint(expected_evidence),
+        evidence=expected_evidence,
+    )
+
+
+def _snapshot_symbol_from_structural_object(
+    structural_object: StructuralObject,
+    binding_index: dict[str, list[GovernedBinding]],
+) -> GovernanceSnapshotSymbol:
+    bindings = tuple(
+        sorted(
+            binding_index.get(structural_object.object_id, []),
+            key=lambda entry: (entry.file, entry.line, entry.locator),
         )
+    )
+    return GovernanceSnapshotSymbol(
+        symbol_id=structural_object.object_id,
+        owner=_object_owner(structural_object),
+        kind=structural_object.kind,
+        risk=structural_object.risk_level,
+        bindings=_manifest_binding_entries(bindings),
+        upstream_refs=(),
+        extractor=structural_object.extractor,
+        comparator=structural_object.comparator,
+        fingerprint=structural_object.expected_fingerprint,
+        evidence=structural_object.expected_evidence,
+    )
+
+
+def build_governance_manifest(project: KnowledgeBaseProject) -> dict[str, Any]:
+    context = GovernanceProjectArtifactsContext.from_project(project)
+    closure = context.closure
+    generated_artifacts = _expected_generated_artifact_paths(project)
+    symbols = [
+        _snapshot_symbol_from_structural_object(structural_object, context.binding_index)
+        for structural_object in closure.structural_objects
+    ]
     payload = closure.to_manifest_dict()
     payload.update(
         {
             "manifest_version": GOVERNANCE_MANIFEST_VERSION,
             "generator_version": GOVERNANCE_GENERATOR_VERSION,
-            "symbols": symbols,
-            "strict_zone_report": strict_zone_report,
-            "object_coverage_report": object_coverage_report,
+            "canonical_source": generated_artifacts.canonical_graph_json,
+            "derived_view_of": generated_artifacts.canonical_graph_json,
+            "symbols": [item.to_dict() for item in symbols],
+            "strict_zone_report": context.strict_zone_report,
+            "object_coverage_report": context.object_coverage_report,
         }
     )
     return payload
 
 
 def build_governance_tree(project: KnowledgeBaseProject) -> dict[str, Any]:
-    closure = build_governance_closure(project)
-    strict_zone_report = build_strict_zone_report(closure)
-    object_coverage_report = build_object_coverage_report(closure)
-    project_root_id = f"project:{project.metadata.project_id}"
-    framework_root_id = f"{project_root_id}:framework"
-    product_root_id = f"{project_root_id}:product_spec"
-    implementation_root_id = f"{project_root_id}:implementation_config"
-    structure_root_id = f"{project_root_id}:structure"
-    code_root_id = f"{project_root_id}:code"
-    evidence_root_id = f"{project_root_id}:evidence"
-
-    nodes: dict[str, dict[str, Any]] = {}
-    source_node_ids: dict[tuple[str, str, str, str], str] = {}
-    role_node_ids: dict[tuple[str, str], str] = {}
-
-    def add_node(node_id: str, *, parent: str | None, **payload: Any) -> dict[str, Any]:
-        existing = nodes.get(node_id)
-        if existing is None:
-            existing = {"node_id": node_id, "parent": parent, "children": []}
-            existing.update(payload)
-            nodes[node_id] = existing
-        if parent is not None and parent in nodes and node_id not in nodes[parent]["children"]:
-            nodes[parent]["children"].append(node_id)
-        return existing
-
-    add_node(
-        project_root_id,
-        parent=None,
-        kind="project_root",
-        layer="Project",
-        title=project.metadata.display_name,
-        file=_relative(project.product_spec_file),
-        template_id=project.metadata.template,
+    context = GovernanceProjectArtifactsContext.from_project(project)
+    closure = context.closure
+    generated_artifacts = _expected_generated_artifact_paths(project)
+    roots = GovernanceTreeRoots.for_project(project.metadata.project_id)
+    builder = GovernanceTreeBuilder(
         project_id=project.metadata.project_id,
+        roots=roots,
     )
-    add_node(framework_root_id, parent=project_root_id, kind="framework_root", layer="Framework", title="Framework")
-    add_node(product_root_id, parent=project_root_id, kind="product_root", layer="Product Spec", title="Product Spec")
-    add_node(
-        implementation_root_id,
-        parent=project_root_id,
-        kind="implementation_root",
-        layer="Implementation Config",
-        title="Implementation Config",
-    )
-    add_node(
-        structure_root_id,
-        parent=project_root_id,
-        kind="structure_root",
-        layer="Project Structure",
-        title="Project Structure",
-    )
-    add_node(code_root_id, parent=project_root_id, kind="code_root", layer="Code", title="Code")
-    add_node(evidence_root_id, parent=project_root_id, kind="evidence_root", layer="Evidence", title="Evidence")
-
-    framework_modules: dict[str, FrameworkModuleIR] = {}
+    builder.add_root_nodes(project)
     for source in closure.upstream_closure:
-        if source.layer == "framework":
-            module = framework_modules.get(source.file)
-            if module is None:
-                module = parse_framework_module(REPO_ROOT / source.file)
-                framework_modules[source.file] = module
-            module_node_id = f"{framework_root_id}:module:{module.module_id}"
-            add_node(
-                module_node_id,
-                parent=framework_root_id,
-                kind="framework_module",
-                layer="Framework",
-                title=module.module_id,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{module_node_id}:rule:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=module_node_id,
-                kind="framework_rule",
-                layer="Framework",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-            continue
-
-        if source.layer == "product_spec":
-            file_node_id = f"{product_root_id}:file:{source.file}"
-            add_node(
-                file_node_id,
-                parent=product_root_id,
-                kind="product_file",
-                layer="Product Spec",
-                title=Path(source.file).name,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{file_node_id}:section:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=file_node_id,
-                kind="product_section",
-                layer="Product Spec",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-            continue
-
-        if source.layer == "implementation_config":
-            file_node_id = f"{implementation_root_id}:file:{source.file}"
-            add_node(
-                file_node_id,
-                parent=implementation_root_id,
-                kind="implementation_file",
-                layer="Implementation Config",
-                title=Path(source.file).name,
-                file=source.file,
-                project_id=project.metadata.project_id,
-            )
-            node_id = f"{file_node_id}:section:{source.ref_id}"
-            add_node(
-                node_id,
-                parent=file_node_id,
-                kind="implementation_section",
-                layer="Implementation Config",
-                title=source.ref_id,
-                file=source.file,
-                ref_kind=source.ref_kind,
-                ref_id=source.ref_id,
-                digest=source.digest,
-                project_id=project.metadata.project_id,
-            )
-            source_node_ids[source.key()] = node_id
-
+        builder.add_source_ref(source)
     for structural_object in closure.structural_objects:
-        object_node_id = f"{structure_root_id}:object:{structural_object.object_id}"
-        upstream_ids = [
-            source_node_ids[source.key()]
-            for source in structural_object.all_sources()
-            if source.key() in source_node_ids
-        ]
-        add_node(
-            object_node_id,
-            parent=structure_root_id,
-            kind="structural_object",
-            layer="Project Structure",
-            title=structural_object.title,
-            object_id=structural_object.object_id,
-            structural_kind=structural_object.kind,
-            risk=structural_object.risk_level,
-            status=structural_object.status,
-            cardinality=structural_object.cardinality,
-            comparator=structural_object.comparator,
-            extractor=structural_object.extractor,
-            origin_categories=list(structural_object.origin_categories),
-            expected_evidence=structural_object.expected_evidence,
-            expected_fingerprint=structural_object.expected_fingerprint,
-            actual_evidence=structural_object.actual_evidence,
-            actual_fingerprint=structural_object.actual_fingerprint,
-            derived_from=upstream_ids,
-            project_id=project.metadata.project_id,
-        )
-        for role in structural_object.required_roles:
-            role_node_id = f"{object_node_id}:role:{role.role_id}"
-            add_node(
-                role_node_id,
-                parent=object_node_id,
-                kind="required_role",
-                layer="Project Structure",
-                title=role.role_id,
-                object_id=structural_object.object_id,
-                role_id=role.role_id,
-                role_kind=role.role_kind,
-                classification=role.classification,
-                locator_patterns=list(role.locator_patterns),
-                file_hints=list(role.file_hints),
-                candidate_kinds=list(role.candidate_kinds),
-                derived_from=[object_node_id],
-                project_id=project.metadata.project_id,
-            )
-            role_node_ids[(structural_object.object_id, role.role_id)] = role_node_id
-
+        builder.add_structural_object(structural_object)
     for strict_entry in closure.strict_zone:
-        file_node_id = f"{code_root_id}:file:{strict_entry.file}"
-        derived_from = [
-            role_node_ids[(object_id, role_id)]
-            for object_id in strict_entry.object_ids
-            for role_id in strict_entry.role_ids
-            if (object_id, role_id) in role_node_ids
-        ]
-        if not derived_from:
-            derived_from = [
-                f"{structure_root_id}:object:{object_id}"
-                for object_id in strict_entry.object_ids
-            ]
-        add_node(
-            file_node_id,
-            parent=code_root_id,
-            kind="strict_zone_file",
-            layer="Code",
-            title=Path(strict_entry.file).name,
-            file=strict_entry.file,
-            object_ids=list(strict_entry.object_ids),
-            role_ids=list(strict_entry.role_ids),
-            reasons=list(strict_entry.reasons),
-            why_required=list(strict_entry.why_required),
-            minimality_status=strict_entry.minimality_status,
-            derived_from=derived_from,
-            project_id=project.metadata.project_id,
-        )
-
+        builder.add_strict_zone_entry(strict_entry)
     for candidate in closure.candidates:
-        file_node_id = f"{code_root_id}:file:{candidate.file}"
-        if file_node_id not in nodes:
-            add_node(
-                file_node_id,
-                parent=code_root_id,
-                kind="strict_zone_file",
-                layer="Code",
-                title=Path(candidate.file).name,
-                file=candidate.file,
-                object_ids=[],
-                role_ids=[],
-                reasons=["candidate-only strict zone carrier"],
-                derived_from=[],
-                project_id=project.metadata.project_id,
-            )
-        derived_from = [
-            role_node_ids[(candidate.object_id, role_id)]
-            for role_id in candidate.role_ids
-            if candidate.object_id is not None and (candidate.object_id, role_id) in role_node_ids
-        ]
-        if not derived_from and candidate.object_id is not None:
-            derived_from = [f"{structure_root_id}:object:{candidate.object_id}"]
-        add_node(
-            f"{file_node_id}:candidate:{candidate.candidate_id}",
-            parent=file_node_id,
-            kind="structural_candidate",
-            layer="Code",
-            title=candidate.locator,
-            file=candidate.file,
-            locator=candidate.locator,
-            candidate_id=candidate.candidate_id,
-            candidate_kind=candidate.kind,
-            confidence=round(candidate.confidence, 3),
-            classification=candidate.classification,
-            object_id=candidate.object_id,
-            role_ids=list(candidate.role_ids),
-            reasons=list(candidate.reasons),
-            derived_from=derived_from,
-            project_id=project.metadata.project_id,
-        )
-
-    all_object_node_ids = [
-        f"{structure_root_id}:object:{item.object_id}" for item in closure.structural_objects
-    ]
-    for artifact_key, rel_path in closure.evidence_artifacts.items():
-        add_node(
-            f"{evidence_root_id}:artifact:{artifact_key}",
-            parent=evidence_root_id,
-            kind="evidence_artifact",
-            layer="Evidence",
-            title=artifact_key,
-            artifact=artifact_key,
-            file=rel_path,
-            derived_from=[project_root_id, *all_object_node_ids],
-            project_id=project.metadata.project_id,
-        )
+        builder.add_candidate(candidate)
+    builder.add_evidence_artifacts(closure)
 
     return {
         "tree_version": GOVERNANCE_TREE_VERSION,
         "project_id": project.metadata.project_id,
         "template_id": project.metadata.template,
         "generator_version": GOVERNANCE_GENERATOR_VERSION,
-        "root_node_id": project_root_id,
+        "canonical_source": generated_artifacts.canonical_graph_json,
+        "derived_view_of": generated_artifacts.canonical_graph_json,
+        "root_node_id": roots.project_root_id,
         "project_discovery": closure.discovery.to_dict(),
         "upstream_closure": [item.to_dict() for item in closure.upstream_closure],
         "strict_zone": [item.to_dict() for item in closure.strict_zone],
-        "strict_zone_report": strict_zone_report,
-        "object_coverage_report": object_coverage_report,
+        "strict_zone_report": context.strict_zone_report,
+        "object_coverage_report": context.object_coverage_report,
         "evidence_artifacts": dict(closure.evidence_artifacts),
         "structural_objects": [item.to_manifest_dict() for item in closure.structural_objects],
         "role_bindings": [item.to_dict() for item in closure.role_bindings],
         "candidates": [item.to_dict() for item in closure.candidates],
-        "nodes": [nodes[node_id] for node_id in sorted(nodes)],
+        "nodes": builder.serialized_nodes(),
     }
 
 
@@ -2038,7 +2308,7 @@ def digest_upstream_ref(ref: UpstreamRef) -> str:
     raise ValueError(f"unsupported governance upstream layer: {ref.layer}")
 
 
-def _framework_ref_payload(module: FrameworkModuleIR, ref: UpstreamRef) -> dict[str, Any]:
+def _framework_ref_payload(module: FrameworkModule, ref: UpstreamRef) -> dict[str, Any]:
     if ref.ref_kind == "rule":
         for rule in module.rules:
             if rule.rule_id == ref.ref_id:
@@ -2298,13 +2568,11 @@ def validate_tree_closure(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _binding_governance_issues(project: KnowledgeBaseProject) -> list[dict[str, Any]]:
-    definitions = _definitions(project)
-    binding_index = collect_governed_bindings(governed_files_for_project(project))
-    issues = list(_binding_validation_issues(binding_index, definitions))
-    for definition in definitions:
-        for rel_file, locator in definition.required_bindings:
-            if _binding_exists(binding_index, definition.symbol_id, rel_file, locator):
-                continue
+    context = _build_governance_definitions_context(project)
+    issues = list(_binding_validation_issues(context.bindings_by_symbol, context.definitions))
+    for definition in context.definitions:
+        for missing_binding in context.missing_bindings_for(definition):
+            rel_file, _separator, locator = missing_binding.partition(" -> ")
             issues.append(
                 {
                     "code": "MISSING_BINDING",
@@ -2314,7 +2582,7 @@ def _binding_governance_issues(project: KnowledgeBaseProject) -> list[dict[str, 
                     "symbol_id": definition.symbol_id,
                 }
             )
-    for item in find_unbound_high_risk_structures():
+    for item in context.unbound_high_risk:
         issues.append(
             {
                 "code": "MISSING_BINDING",
@@ -2449,58 +2717,49 @@ def _strict_zone_index(
     return strict_zone_index, issues
 
 
-def _compare_payload_to_closure(
-    project: KnowledgeBaseProject,
+def _governance_payload_indexes(
     payload: dict[str, Any],
     *,
-    tree_mode: bool,
-) -> list[dict[str, Any]]:
-    binding_issues = _binding_governance_issues(project)
-    if binding_issues:
-        return binding_issues
-    try:
-        closure = build_governance_closure(project)
-    except Exception as exc:
-        return [
-            {
-                "code": "GOVERNANCE_PROJECT_INVALID",
-                "message": str(exc),
-                "file": _relative(project.product_spec_file),
-                "line": 1,
-            }
-        ]
+    code: str,
+) -> tuple[GovernancePayloadIndexes, list[dict[str, Any]]]:
     issues: list[dict[str, Any]] = []
-    payload_code = "GOVERNANCE_TREE_INVALID" if tree_mode else "GOVERNANCE_MANIFEST_INVALID"
-    strict_zone_report = build_strict_zone_report(closure)
-    object_coverage_report = build_object_coverage_report(closure)
-
-    object_index, object_issues = _manifest_object_index(payload, code=payload_code)
+    object_index, object_issues = _manifest_object_index(payload, code=code)
     issues.extend(object_issues)
-    binding_index, binding_issues = _role_binding_index(payload, code=payload_code)
+    binding_index, binding_issues = _role_binding_index(payload, code=code)
     issues.extend(binding_issues)
-    candidate_index, candidate_issues = _candidate_index(payload, code=payload_code)
+    candidate_index, candidate_issues = _candidate_index(payload, code=code)
     issues.extend(candidate_issues)
-    strict_zone_index, strict_zone_issues = _strict_zone_index(payload, code=payload_code)
+    strict_zone_index, strict_zone_issues = _strict_zone_index(payload, code=code)
     issues.extend(strict_zone_issues)
+    return (
+        GovernancePayloadIndexes(
+            object_index=object_index,
+            binding_index=binding_index,
+            candidate_index=candidate_index,
+            strict_zone_index=strict_zone_index,
+        ),
+        issues,
+    )
 
-    expected_artifacts = closure.evidence_artifacts
-    payload_artifacts = payload.get("evidence_artifacts", {})
+
+def _compare_evidence_artifacts(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    payload_artifacts = context.payload.get("evidence_artifacts", {})
     if not isinstance(payload_artifacts, dict):
         issues.append(
             {
-                "code": payload_code,
+                "code": context.payload_code,
                 "message": "evidence_artifacts payload must be an object",
                 "file": "",
                 "line": 1,
             }
         )
         payload_artifacts = {}
-
-    for artifact_key, rel_path in expected_artifacts.items():
+    for artifact_key, rel_path in context.closure.evidence_artifacts.items():
         if payload_artifacts.get(artifact_key) != rel_path:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"evidence artifact path drifted for {artifact_key}",
                     "file": "",
                     "line": 1,
@@ -2509,27 +2768,39 @@ def _compare_payload_to_closure(
                     "actual": payload_artifacts.get(artifact_key),
                 }
             )
+    return issues
 
+
+def _compare_governance_reports(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
     for report_key, expected_report in (
-        ("strict_zone_report", strict_zone_report),
-        ("object_coverage_report", object_coverage_report),
+        ("strict_zone_report", context.strict_zone_report),
+        ("object_coverage_report", context.object_coverage_report),
     ):
-        payload_report = payload.get(report_key)
-        if _canonical_json(payload_report) != _canonical_json(expected_report):
+        if _canonical_json(context.payload.get(report_key)) != _canonical_json(expected_report):
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"{report_key} drifted from current governance closure",
                     "file": "",
                     "line": 1,
                     "report": report_key,
                 }
             )
+    return issues
 
-    for object_id in sorted(set(object_index) - {item.object_id for item in closure.structural_objects}):
+
+def _compare_structural_objects(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    object_index = context.indexes.object_index
+    binding_index = context.indexes.binding_index
+    closure = context.closure
+
+    expected_object_ids = {item.object_id for item in closure.structural_objects}
+    for object_id in sorted(set(object_index) - expected_object_ids):
         issues.append(
             {
-                "code": payload_code,
+                "code": context.payload_code,
                 "message": f"unknown structural object in governance payload: {object_id}",
                 "file": "",
                 "line": 1,
@@ -2542,7 +2813,7 @@ def _compare_payload_to_closure(
         if payload_object is None:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"governance payload is missing structural object: {structural_object.object_id}",
                     "file": "",
                     "line": 1,
@@ -2554,7 +2825,7 @@ def _compare_payload_to_closure(
         if payload_object.get("expected_fingerprint") != structural_object.expected_fingerprint:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"structural object expectation drifted: {structural_object.object_id}",
                     "file": "",
                     "line": 1,
@@ -2589,7 +2860,7 @@ def _compare_payload_to_closure(
             if binding is None:
                 issues.append(
                     {
-                        "code": payload_code,
+                        "code": context.payload_code,
                         "message": f"missing role binding entry: {structural_object.object_id} -> {role.role_id}",
                         "file": "",
                         "line": 1,
@@ -2609,13 +2880,18 @@ def _compare_payload_to_closure(
                         "role_id": role.role_id,
                     }
                 )
+    return issues
 
-    for strict_entry in closure.strict_zone:
+
+def _compare_strict_zone(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    strict_zone_index = context.indexes.strict_zone_index
+    for strict_entry in context.closure.strict_zone:
         payload_entry = strict_zone_index.get(strict_entry.file)
         if payload_entry is None:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"missing strict zone entry: {strict_entry.file}",
                     "file": strict_entry.file,
                     "line": 1,
@@ -2625,7 +2901,7 @@ def _compare_payload_to_closure(
         if sorted(payload_entry.get("object_ids", [])) != list(strict_entry.object_ids):
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"strict zone object closure drifted for {strict_entry.file}",
                     "file": strict_entry.file,
                     "line": 1,
@@ -2634,7 +2910,7 @@ def _compare_payload_to_closure(
         if payload_entry.get("minimality_status") != strict_entry.minimality_status:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"strict zone minimality drifted for {strict_entry.file}",
                     "file": strict_entry.file,
                     "line": 1,
@@ -2649,13 +2925,18 @@ def _compare_payload_to_closure(
                     "line": 1,
                 }
             )
+    return issues
 
-    for candidate in closure.candidates:
+
+def _compare_candidates(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    candidate_index = context.indexes.candidate_index
+    for candidate in context.closure.candidates:
         payload_candidate = candidate_index.get(candidate.candidate_id)
         if payload_candidate is None:
             issues.append(
                 {
-                    "code": payload_code,
+                    "code": context.payload_code,
                     "message": f"missing structural candidate entry: {candidate.candidate_id}",
                     "file": candidate.file,
                     "line": 1,
@@ -2699,45 +2980,91 @@ def _compare_payload_to_closure(
                     "candidate_id": candidate.candidate_id,
                 }
             )
+    return issues
 
+
+def _compare_tree_nodes(context: GovernanceComparisonContext) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    node_index, node_issues = _tree_node_index(context.payload)
+    issues.extend(node_issues)
+    project_id = context.project.metadata.project_id
+    for structural_object in context.closure.structural_objects:
+        object_node_id = f"project:{project_id}:structure:object:{structural_object.object_id}"
+        if object_node_id not in node_index:
+            issues.append(
+                {
+                    "code": "GOVERNANCE_TREE_INVALID",
+                    "message": f"governance tree is missing structural object node: {structural_object.object_id}",
+                    "file": "",
+                    "line": 1,
+                    "object_id": structural_object.object_id,
+                }
+            )
+    for strict_entry in context.closure.strict_zone:
+        file_node_id = f"project:{project_id}:code:file:{strict_entry.file}"
+        if file_node_id not in node_index:
+            issues.append(
+                {
+                    "code": "GOVERNANCE_TREE_INVALID",
+                    "message": f"governance tree is missing strict zone file node: {strict_entry.file}",
+                    "file": strict_entry.file,
+                    "line": 1,
+                }
+            )
+    for artifact_key in context.closure.evidence_artifacts:
+        node_id = f"project:{project_id}:evidence:artifact:{artifact_key}"
+        if node_id not in node_index:
+            issues.append(
+                {
+                    "code": "GOVERNANCE_TREE_INVALID",
+                    "message": f"governance tree is missing evidence artifact node: {artifact_key}",
+                    "file": "",
+                    "line": 1,
+                    "artifact": artifact_key,
+                }
+            )
+    return issues
+
+
+def _compare_payload_to_closure(
+    project: KnowledgeBaseProject,
+    payload: dict[str, Any],
+    *,
+    tree_mode: bool,
+) -> list[dict[str, Any]]:
+    binding_issues = _binding_governance_issues(project)
+    if binding_issues:
+        return binding_issues
+    try:
+        project_context = GovernanceProjectArtifactsContext.from_project(project)
+    except Exception as exc:
+        return [
+            {
+                "code": "GOVERNANCE_PROJECT_INVALID",
+                "message": str(exc),
+                "file": _relative(project.product_spec_file),
+                "line": 1,
+            }
+        ]
+    payload_code = "GOVERNANCE_TREE_INVALID" if tree_mode else "GOVERNANCE_MANIFEST_INVALID"
+    indexes, issues = _governance_payload_indexes(payload, code=payload_code)
+    context = GovernanceComparisonContext(
+        project=project,
+        closure=project_context.closure,
+        payload=payload,
+        payload_code=payload_code,
+        tree_mode=tree_mode,
+        strict_zone_report=project_context.strict_zone_report,
+        object_coverage_report=project_context.object_coverage_report,
+        indexes=indexes,
+    )
+    issues.extend(_compare_evidence_artifacts(context))
+    issues.extend(_compare_governance_reports(context))
+    issues.extend(_compare_structural_objects(context))
+    issues.extend(_compare_strict_zone(context))
+    issues.extend(_compare_candidates(context))
     if tree_mode:
-        node_index, node_issues = _tree_node_index(payload)
-        issues.extend(node_issues)
-        for structural_object in closure.structural_objects:
-            object_node_id = f"project:{project.metadata.project_id}:structure:object:{structural_object.object_id}"
-            if object_node_id not in node_index:
-                issues.append(
-                    {
-                        "code": "GOVERNANCE_TREE_INVALID",
-                        "message": f"governance tree is missing structural object node: {structural_object.object_id}",
-                        "file": "",
-                        "line": 1,
-                        "object_id": structural_object.object_id,
-                    }
-                )
-        for strict_entry in closure.strict_zone:
-            file_node_id = f"project:{project.metadata.project_id}:code:file:{strict_entry.file}"
-            if file_node_id not in node_index:
-                issues.append(
-                    {
-                        "code": "GOVERNANCE_TREE_INVALID",
-                        "message": f"governance tree is missing strict zone file node: {strict_entry.file}",
-                        "file": strict_entry.file,
-                        "line": 1,
-                    }
-                )
-        for artifact_key in expected_artifacts:
-            node_id = f"project:{project.metadata.project_id}:evidence:artifact:{artifact_key}"
-            if node_id not in node_index:
-                issues.append(
-                    {
-                        "code": "GOVERNANCE_TREE_INVALID",
-                        "message": f"governance tree is missing evidence artifact node: {artifact_key}",
-                        "file": "",
-                        "line": 1,
-                        "artifact": artifact_key,
-                    }
-                )
+        issues.extend(_compare_tree_nodes(context))
     return issues
 
 

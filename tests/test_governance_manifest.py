@@ -164,13 +164,19 @@ class GovernanceManifestTest(unittest.TestCase):
         payload = build_governance_manifest(project)
         drifted_project = replace(
             project,
-            frontend_contract={
-                **project.frontend_contract,
-                "interaction_actions": [
-                    *project.frontend_contract["interaction_actions"],
-                    {"action_id": "rogue_action", "boundary": "INTERACT"},
-                ],
-            },
+            code_module=replace(
+                project.code_module,
+                export={
+                    **project.code_module.export,
+                    "frontend_contract": {
+                        **project.frontend_contract,
+                        "interaction_actions": [
+                            *project.frontend_contract["interaction_actions"],
+                            {"action_id": "rogue_action", "boundary": "INTERACT"},
+                        ],
+                    },
+                },
+            ),
         )
 
         issues = compare_project_to_manifest(drifted_project, payload)
@@ -276,13 +282,19 @@ class GovernanceManifestTest(unittest.TestCase):
         payload = build_governance_tree(project)
         drifted_project = replace(
             project,
-            frontend_contract={
-                **project.frontend_contract,
-                "interaction_actions": [
-                    *project.frontend_contract["interaction_actions"],
-                    {"action_id": "rogue_action", "boundary": "INTERACT"},
-                ],
-            },
+            code_module=replace(
+                project.code_module,
+                export={
+                    **project.code_module.export,
+                    "frontend_contract": {
+                        **project.frontend_contract,
+                        "interaction_actions": [
+                            *project.frontend_contract["interaction_actions"],
+                            {"action_id": "rogue_action", "boundary": "INTERACT"},
+                        ],
+                    },
+                },
+            ),
         )
 
         issues = compare_project_to_tree(drifted_project, payload)

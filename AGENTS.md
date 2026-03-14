@@ -39,3 +39,14 @@
 - 领域标准：`framework/shelf/L2-M0-置物架框架标准模块.md`
 - 代码规范目录：`specs/code/`
 - Python 实现质量（静态类型）：`specs/code/Python实现质量标准.md`
+
+### 4.1 按语言读取标准（强制）
+- 修改 `.py` 文件前，必须阅读 `specs/code/Python实现质量标准.md`。
+- 修改 `.ts` 文件前，必须阅读 `specs/code/TypeScript实现质量标准.md`。
+- 修改 `.tsx` 文件前，必须同时阅读 `specs/code/TypeScript实现质量标准.md` 与 `specs/code/HTML与模板实现质量标准.md`。
+- 修改 `.js/.mjs/.cjs` 文件前，必须阅读 `specs/code/JavaScript实现质量标准.md`。
+- 修改 `.jsx` 文件前，必须同时阅读 `specs/code/JavaScript实现质量标准.md` 与 `specs/code/HTML与模板实现质量标准.md`。
+- 修改 `.html` 文件前，必须阅读 `specs/code/HTML与模板实现质量标准.md`。
+- 修改 `.css/.scss/.less` 文件前，必须阅读 `specs/code/前端样式实现质量标准.md`。
+- 多语言或混合语法文件必须同时满足对应标准；冲突时按更严格者执行。
+- 语言到标准的机器可读索引为 `specs/code/代码语言标准索引.toml`；新增语言或文件类型时，必须先更新该索引与本节，再允许 AI 或人工按新语言写代码。

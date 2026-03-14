@@ -4,9 +4,11 @@
 - Adds an Activity Bar icon entry (`Shelf AI`) for direct plugin access from the sidebar.
 - Sidebar home view provides one-click actions for the framework tree, governance tree, validation, and issue review.
 - Treats the current governance scope as mainline-first: Shelf strongly guards the structural path that carries `Framework -> Product Spec -> Implementation Config -> Code -> Evidence` plus the reverse validation path back to upstream structure.
+- Treats `projects/*/generated/canonical_graph.json` as the sole machine truth for the main project chain. Governance manifests / trees / reports are read as derived views rather than parallel truth sources.
 - Makes the current coverage boundary explicit instead of overstating it: runtime assembly, compiled contracts/specs, evidence, and governance compare are strongly covered; lower-level renderer/style/script details can still be only partially governed.
 - Opens the framework tree structure HTML in Webview by default (`docs/hierarchy/shelf_framework_tree.html`).
 - Keeps the workspace governance tree as a separate, secondary view for strict-guard closure and code/evidence trace inspection (`docs/hierarchy/shelf_governance_tree.html`).
+- Navigation should be read in two modes: the primary path is always layer-by-layer (`Framework -> Product Spec -> Implementation Config -> Code -> Evidence`), while direct framework-to-code jumps inside governance views are diagnostic shortcuts built from the same canonical graph.
 - Refreshes framework-tree and governance-tree artifacts with separate generator commands.
 - Supports node-to-source jump: click a node, then use `打开源文件` in detail panel to jump to the mapped markdown line.
 - Supports `Go to Definition` / `Ctrl/Cmd+Click` inside framework markdown for `B/C/R/V`, boundary ids, `Lx.My`, `framework.Lx.My`, and bracketed module-rule refs like `frontend.L1.M2[R1,R2]`.

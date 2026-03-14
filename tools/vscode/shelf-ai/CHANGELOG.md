@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.0.48 - 2026-03-14
+- Synced the packaged Shelf AI guidance with the repository's current canonical-layered architecture. The packaged README now explicitly treats `canonical_graph.json` as the sole machine truth for the project chain and explains that governance manifests / trees are derived views rather than parallel sources.
+- Clarified the navigation model shipped with the extension. The packaged docs now distinguish the primary layer-by-layer path (`Framework -> Product Spec -> Implementation Config -> Code -> Evidence`) from the secondary governance shortcuts that jump directly from framework-side structure to code-side governed symbols for diagnosis.
+- This is a packaging and documentation alignment release. Extension-side commands and runtime behaviors are unchanged, but the installed guidance now matches the current repository structure more accurately.
+
 ## 0.0.47 - 2026-03-13
 - Added a structure-first authoring workflow for framework drafts and product truth. Shelf AI now supports `framework_drafts/` navigation plus one-click draft publishing, can scaffold a framework-driven project from the extension, and lets `product_spec.toml` stay as the root entry while splitting concrete product sections into `product_spec/*.toml`.
 - Reworked boundary and authoring flows to remove hardwired single-file assumptions. Boundary jumps now prefer real split section files, repository governance resolves section source files through the composed product-spec loader, and generated governance evidence keeps pointing back to the actual section file instead of only the root `product_spec.toml`.

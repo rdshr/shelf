@@ -201,6 +201,7 @@ retrieval_strategy = "retrieval_stub"
 product_spec_endpoint = "/api/{{API_SLUG}}/product-spec"
 
 [artifacts]
+canonical_graph_json = "canonical_graph.json"
 framework_ir_json = "framework_ir.json"
 product_spec_json = "product_spec.json"
 implementation_bundle_py = "implementation_bundle.py"

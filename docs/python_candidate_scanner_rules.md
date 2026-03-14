@@ -150,7 +150,7 @@ Python candidate scanner 的职责不是扫描所有函数，而是扫描会承�
 
 - 位于 `src/` 或 `scripts/` 主链目录
 - 被 route decorator / router construction 命中
-- 消费 `framework/product/config/runtime bundle`
+- 消费 `framework/product/implementation/code export`
 - 返回或构造 contract/spec/schema/manifest
 - 影响用户可见行为或 evidence
 

@@ -32,6 +32,7 @@
 - 面向 `framework/*.md` 的标准模块文档必须保留 plain `@framework` 指令对应的标准模板起手入口。
 - `@framework` 入口属于框架作者起手约束，不得删除；若未来替换实现方式，必须提供同等直接、默认可用且可回归测试的替代入口。
 - `framework_drafts/*.md` 若用于草稿编写，仍应保留 plain `@framework` 入口与同一主章节骨架；正式发布前允许不参与项目代码一致性要求。
+- `framework/*.md` 的模块正文必须对下游承载层无感；不得直接写入 `Product Spec`、`Implementation Config`、`product_spec.toml`、`implementation_config.toml`、`[surface]` 这类实例 section token 或同类承载语法。
 - 框架模块文档应按顺序提供以下主 section：
   - `## 1. 能力声明`
   - `## 2. 边界定义`
@@ -69,6 +70,7 @@
 - 每个 `framework/*.md` 文件必须包含 plain `@framework` 指令，且不得携带参数。
 - 每个文件必须存在一级标题，标题格式必须为 `中文名:EnglishName`。
 - 标题 `:` 左右都不得为空，右侧英文部分必须包含 ASCII 字母。
+- 模块正文不得出现下游承载层名称、具体承载文件名或实例 section token；若需要说明 `Framework -> Product Spec -> Implementation Config -> Code` 的层间职责，应写入顶层规范或治理标准，而不是具体框架模块。
 - `@framework` 文档必须包含并保持以下主 section：
   - `## 1. 能力声明`
   - `## 2. 边界定义`

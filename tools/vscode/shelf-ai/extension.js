@@ -48,15 +48,156 @@ const FRAMEWORK_RULE_HINTS = {
   FW060: "新符号必须通过输出结构声明后才可在规则中使用"
 };
 
+function resetStatusToIdle(status) {
+  status.text = "$(check) Shelf idle";
+  status.tooltip = "Shelf";
+  status.backgroundColor = undefined;
+  status.color = undefined;
+}
+
+function createStatusController({
+  status,
+  getValidationTriggerMode,
+  getMappingValidationActive,
+  getLastRepoRoot,
+  getLastRunIssues,
+  getDirtyWatchedFileCount,
+  getLastValidationPassed,
+}) {
+  const setOk = () => {
+    status.text = "$(check) Shelf OK";
+    status.tooltip = "Shelf: no guard issues";
+    status.backgroundColor = undefined;
+    status.color = undefined;
+  };
+
+  const setError = (errors) => {
+    status.text = "$(close) Shelf failed";
+    status.tooltip = buildTooltip(errors);
+    status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
+    status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
+  };
+
+  const setPendingSave = () => {
+    const dirtyCount = getDirtyWatchedFileCount();
+    const triggerMode = getValidationTriggerMode();
+    const revalidateHint = triggerMode === "manual"
+      ? "Run validation when you are ready."
+      : "Save to revalidate.";
+    status.text = "$(close) Shelf pending";
+    status.tooltip = dirtyCount > 0
+      ? `Shelf: ${dirtyCount} watched file(s) changed. ${revalidateHint}`
+      : `Shelf: watched files changed. ${revalidateHint}`;
+    status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+    status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
+  };
+
+  const refresh = () => {
+    if (!getMappingValidationActive()) {
+      const repoRoot = getLastRepoRoot();
+      if (repoRoot) {
+        setStatusDisabled(status, repoRoot);
+      }
+      return;
+    }
+    const lastRunIssues = getLastRunIssues();
+    if (lastRunIssues.length) {
+      setError(lastRunIssues);
+      return;
+    }
+    if (getDirtyWatchedFileCount()) {
+      setPendingSave();
+      return;
+    }
+    if (getLastValidationPassed() === true) {
+      setOk();
+      return;
+    }
+    resetStatusToIdle(status);
+  };
+
+  return {
+    setOk,
+    setError,
+    setPendingSave,
+    refresh,
+  };
+}
+
+function toWatchedTriggerUris(repoRoot, uris, isSuppressedGeneratedPath) {
+  return (uris || []).filter((uri) => {
+    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, uri.fsPath));
+    return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+  });
+}
+
+function flattenRenameEventUris(items) {
+  const uris = [];
+  for (const item of items || []) {
+    uris.push(item.oldUri, item.newUri);
+  }
+  return uris;
+}
+
+function scheduleWatchedChangeValidation({
+  repoRoot,
+  uris,
+  scheduleValidation,
+  isSuppressedGeneratedPath,
+  source = "auto",
+}) {
+  const triggerUris = toWatchedTriggerUris(repoRoot, uris, isSuppressedGeneratedPath);
+  if (!triggerUris.length) {
+    return false;
+  }
+  scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source });
+  return true;
+}
+
+function createWorkspaceValidationWatchers({
+  watcherFolder,
+  shouldRunValidationTrigger,
+  scheduleValidation,
+  isSuppressedGeneratedPath,
+}) {
+  const watcherPatterns = [
+    ...workspaceGuard.WATCH_PREFIXES.map((prefix) => `${prefix}**`),
+    ...workspaceGuard.WATCH_FILES,
+  ];
+  const watcherDisposables = [];
+
+  for (const pattern of watcherPatterns) {
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(watcherFolder, pattern)
+    );
+
+    const triggerIfWatched = (uri) => {
+      if (!shouldRunValidationTrigger("workspace")) {
+        return;
+      }
+      scheduleWatchedChangeValidation({
+        repoRoot: watcherFolder.uri.fsPath,
+        uris: [uri],
+        scheduleValidation,
+        isSuppressedGeneratedPath,
+      });
+    };
+
+    watcher.onDidChange(triggerIfWatched);
+    watcher.onDidCreate(triggerIfWatched);
+    watcher.onDidDelete(triggerIfWatched);
+    watcherDisposables.push(watcher);
+  }
+
+  return watcherDisposables;
+}
+
 function activate(context) {
   const output = vscode.window.createOutputChannel("Shelf");
   const diagnostics = vscode.languages.createDiagnosticCollection("shelf-mapping");
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  status.text = "$(check) Shelf idle";
-  status.tooltip = "Shelf";
+  resetStatusToIdle(status);
   status.command = "shelf.showIssues";
-  status.backgroundColor = undefined;
-  status.color = undefined;
   status.show();
 
   context.subscriptions.push(output, diagnostics, status);
@@ -105,59 +246,16 @@ function activate(context) {
     }
     return triggerKind === "save";
   };
-
-  const setStatusOk = () => {
-    status.text = "$(check) Shelf OK";
-    status.tooltip = "Shelf: no guard issues";
-    status.backgroundColor = undefined;
-    status.color = undefined;
-  };
-
-  const setStatusError = (errors) => {
-    status.text = "$(close) Shelf failed";
-    status.tooltip = buildTooltip(errors);
-    status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
-    status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
-  };
-
-  const setStatusPendingSave = () => {
-    const dirtyCount = dirtyWatchedFiles.size;
-    const triggerMode = getValidationTriggerMode();
-    const revalidateHint = triggerMode === "manual"
-      ? "Run validation when you are ready."
-      : "Save to revalidate.";
-    status.text = "$(close) Shelf pending";
-    status.tooltip = dirtyCount > 0
-      ? `Shelf: ${dirtyCount} watched file(s) changed. ${revalidateHint}`
-      : `Shelf: watched files changed. ${revalidateHint}`;
-    status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
-    status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
-  };
-
-  const refreshStatusFromCurrentState = () => {
-    if (!mappingValidationActive) {
-      if (lastRepoRoot) {
-        setStatusDisabled(status, lastRepoRoot);
-      }
-      return;
-    }
-    if (lastRunIssues.length) {
-      setStatusError(lastRunIssues);
-      return;
-    }
-    if (dirtyWatchedFiles.size) {
-      setStatusPendingSave();
-      return;
-    }
-    if (lastValidationPassed === true) {
-      setStatusOk();
-      return;
-    }
-    status.text = "$(check) Shelf idle";
-    status.tooltip = "Shelf";
-    status.backgroundColor = undefined;
-    status.color = undefined;
-  };
+  const statusController = createStatusController({
+    status,
+    getValidationTriggerMode,
+    getMappingValidationActive: () => mappingValidationActive,
+    getLastRepoRoot: () => lastRepoRoot,
+    getLastRunIssues: () => lastRunIssues,
+    getDirtyWatchedFileCount: () => dirtyWatchedFiles.size,
+    getLastValidationPassed: () => lastValidationPassed,
+  });
+  const refreshStatusFromCurrentState = () => statusController.refresh();
 
   const normalizeTriggerUris = (options = {}) => {
     const inputs = [];
@@ -407,7 +505,7 @@ function activate(context) {
       lastValidationMode = "full";
       lastValidationPassed = false;
       applyDiagnostics({ passed: false, errors: materializeResult.errors }, diagnostics, repoRoot, null);
-      refreshStatusFromCurrentState();
+      statusController.refresh();
       refreshSidebarHome();
       const action = await vscode.window.showErrorMessage(
         "Shelf codegen preflight failed during materialization.",
@@ -431,6 +529,222 @@ function activate(context) {
         "Shelf codegen preflight passed. Framework -> Product Spec -> Implementation Config -> Code chain is consistent."
       );
     }
+  };
+
+  const loadGovernanceChangePlan = async ({
+    repoRoot,
+    relPaths,
+    governanceTreeSettings,
+  }) => {
+    const issues = [];
+    let governancePayload = null;
+    let changePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
+    try {
+      governancePayload = governanceTree.readGovernanceTree(
+        repoRoot,
+        path.relative(repoRoot, governanceTreeSettings.jsonPath)
+      );
+      changePlan = governanceTree.classifyWorkspaceChanges(repoRoot, relPaths, governancePayload);
+    } catch (error) {
+      issues.push(normalizeIssue({
+        message: `Shelf could not load governance tree: ${String(error)}`,
+        file: path.relative(repoRoot, governanceTreeSettings.jsonPath),
+        line: 1,
+        column: 1,
+        code: "SHELF_GOVERNANCE_TREE",
+      }));
+    }
+
+    let changeSummary = null;
+    if (changePlan.changeContext && governancePayload) {
+      changeSummary = governanceTree.summarizeChangeContext(governancePayload, changePlan.changeContext, 4);
+    } else if (changePlan.changeContext) {
+      changeSummary = {
+        touchedCount: Array.isArray(changePlan.changeContext.touchedNodes) ? changePlan.changeContext.touchedNodes.length : 0,
+        affectedCount: Array.isArray(changePlan.changeContext.affectedNodes) ? changePlan.changeContext.affectedNodes.length : 0,
+        touched: (changePlan.changeContext.touchedNodes || []).slice(0, 4).map((nodeId) => ({
+          id: String(nodeId),
+          label: String(nodeId),
+          layer: "",
+          file: "",
+        })),
+        affected: (changePlan.changeContext.affectedNodes || []).slice(0, 4).map((nodeId) => ({
+          id: String(nodeId),
+          label: String(nodeId),
+          layer: "",
+          file: "",
+        })),
+      };
+    }
+
+    return {
+      issues,
+      governancePayload,
+      changePlan,
+      changeSummary,
+    };
+  };
+
+  const protectGeneratedArtifacts = async ({
+    repoRoot,
+    config,
+    changePlan,
+    governanceTreeSettings,
+    frameworkTreeSettings,
+  }) => {
+    const issues = [];
+    const materializedProjectSpecs = new Set();
+    if (!config.get("protectGeneratedFiles") || !changePlan.protectedGeneratedPaths.length) {
+      return { issues, materializedProjectSpecs };
+    }
+
+    const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
+    const protectedWorkspaceArtifacts = changePlan.protectedWorkspaceArtifacts || [];
+    const protectedGovernanceArtifacts = changePlan.protectedGovernanceArtifacts || [];
+    const protectedFrameworkArtifacts = changePlan.protectedFrameworkArtifacts || [];
+
+    if (guardMode === "strict") {
+      if (changePlan.protectedProjectSpecs.length) {
+        const restoreCommand = buildMaterializeCommand(
+          String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
+          changePlan.protectedProjectSpecs
+        );
+        const restoreResult = await runParsedCommand(
+          "materialize",
+          restoreCommand,
+          repoRoot,
+          (stdout, stderr, code) => parseStageFailure(
+            "SHELF_GENERATED_PROTECT",
+            "Generated artifacts were edited directly and Shelf could not restore them.",
+            stdout,
+            stderr,
+            code
+          )
+        );
+        if (restoreResult.passed) {
+          for (const productSpecFile of changePlan.protectedProjectSpecs) {
+            materializedProjectSpecs.add(productSpecFile);
+          }
+          suppressGeneratedEventsForProjectSpecs(repoRoot, changePlan.protectedProjectSpecs);
+        } else {
+          issues.push(...restoreResult.errors);
+        }
+      }
+      if (protectedGovernanceArtifacts.length) {
+        const restoreResult = await runParsedCommand(
+          "governance-tree",
+          governanceTreeSettings.generateCommand,
+          repoRoot,
+          (stdout, stderr, code) => parseStageFailure(
+            "SHELF_GOVERNANCE_TREE_PROTECT",
+            "Workspace governance tree artifacts were edited directly and Shelf could not restore them.",
+            stdout,
+            stderr,
+            code
+          )
+        );
+        if (!restoreResult.passed) {
+          issues.push(...restoreResult.errors);
+        } else {
+          suppressArtifactEvents(protectedGovernanceArtifacts);
+        }
+      }
+      if (protectedFrameworkArtifacts.length) {
+        const restoreResult = await runParsedCommand(
+          "framework-tree",
+          frameworkTreeSettings.generateCommand,
+          repoRoot,
+          (stdout, stderr, code) => parseStageFailure(
+            "SHELF_FRAMEWORK_TREE_PROTECT",
+            "Workspace framework tree artifacts were edited directly and Shelf could not restore them.",
+            stdout,
+            stderr,
+            code
+          )
+        );
+        if (!restoreResult.passed) {
+          issues.push(...restoreResult.errors);
+        } else {
+          suppressArtifactEvents(protectedFrameworkArtifacts);
+        }
+      }
+      const unresolvedProtectedPaths = changePlan.protectedGeneratedPaths.filter(
+        (relPath) => !protectedWorkspaceArtifacts.includes(relPath)
+          && !workspaceGuard.resolveProjectProductSpecPath(repoRoot, relPath)
+      );
+      for (const relPath of unresolvedProtectedPaths) {
+        issues.push(normalizeIssue({
+          message: "Generated artifacts were edited directly and Shelf could not determine how to restore them.",
+          file: relPath,
+          line: 1,
+          column: 1,
+          code: "SHELF_GENERATED_PROTECT",
+        }));
+      }
+      return { issues, materializedProjectSpecs };
+    }
+
+    for (const relPath of changePlan.protectedGeneratedPaths) {
+      const isGovernanceArtifact = workspaceGuard.isWorkspaceGovernanceArtifact(relPath);
+      const isFrameworkArtifact = workspaceGuard.isWorkspaceFrameworkArtifact(relPath);
+      issues.push(normalizeIssue({
+        message: isGovernanceArtifact
+          ? "Workspace governance tree artifacts are derived evidence. Refresh the governance tree instead of editing them directly."
+          : (
+            isFrameworkArtifact
+              ? "Workspace framework tree artifacts are derived evidence. Refresh the framework tree instead of editing them directly."
+              : "Direct edits under projects/*/generated/* are forbidden. Change framework/product spec/implementation config and re-materialize instead."
+          ),
+        file: relPath,
+        line: 1,
+        column: 1,
+        code: isGovernanceArtifact
+          ? "SHELF_GOVERNANCE_TREE_EDIT"
+          : (isFrameworkArtifact ? "SHELF_FRAMEWORK_TREE_EDIT" : "SHELF_GENERATED_EDIT"),
+      }));
+    }
+    return { issues, materializedProjectSpecs };
+  };
+
+  const autoMaterializePendingProjects = async ({
+    repoRoot,
+    config,
+    changePlan,
+    materializedProjectSpecs,
+  }) => {
+    const issues = [];
+    const pendingMaterializeProjects = changePlan.materializeProjects
+      .filter((productSpecFile) => !materializedProjectSpecs.has(productSpecFile));
+
+    if (!config.get("autoMaterialize") || !pendingMaterializeProjects.length) {
+      return { issues, materializedProjectSpecs };
+    }
+
+    const materializeCommand = buildMaterializeCommand(
+      String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
+      pendingMaterializeProjects
+    );
+    const materializeResult = await runParsedCommand(
+      "materialize",
+      materializeCommand,
+      repoRoot,
+      (stdout, stderr, code) => parseStageFailure(
+        "SHELF_MATERIALIZE",
+        "Shelf auto-materialization failed.",
+        stdout,
+        stderr,
+        code
+      )
+    );
+    if (materializeResult.passed) {
+      for (const productSpecFile of pendingMaterializeProjects) {
+        materializedProjectSpecs.add(productSpecFile);
+      }
+      suppressGeneratedEventsForProjectSpecs(repoRoot, pendingMaterializeProjects);
+    } else {
+      issues.push(...materializeResult.errors);
+    }
+    return { issues, materializedProjectSpecs };
   };
 
   const runValidation = async (options = { mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" }) => {
@@ -490,182 +804,32 @@ function activate(context) {
     }
 
     const combinedIssues = [];
-    let governancePayload = null;
-    let changePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
-    try {
-      governancePayload = governanceTree.readGovernanceTree(
-        repoRoot,
-        path.relative(repoRoot, governanceTreeSettings.jsonPath)
-      );
-      changePlan = governanceTree.classifyWorkspaceChanges(repoRoot, relPaths, governancePayload);
-    } catch (error) {
-      combinedIssues.push(normalizeIssue({
-        message: `Shelf could not load governance tree: ${String(error)}`,
-        file: path.relative(repoRoot, governanceTreeSettings.jsonPath),
-        line: 1,
-        column: 1,
-        code: "SHELF_GOVERNANCE_TREE",
-      }));
-    }
-    let changeSummary = null;
-    if (changePlan.changeContext && governancePayload) {
-      changeSummary = governanceTree.summarizeChangeContext(governancePayload, changePlan.changeContext, 4);
-    } else if (changePlan.changeContext) {
-      changeSummary = {
-        touchedCount: Array.isArray(changePlan.changeContext.touchedNodes) ? changePlan.changeContext.touchedNodes.length : 0,
-        affectedCount: Array.isArray(changePlan.changeContext.affectedNodes) ? changePlan.changeContext.affectedNodes.length : 0,
-        touched: (changePlan.changeContext.touchedNodes || []).slice(0, 4).map((nodeId) => ({
-          id: String(nodeId),
-          label: String(nodeId),
-          layer: "",
-          file: "",
-        })),
-        affected: (changePlan.changeContext.affectedNodes || []).slice(0, 4).map((nodeId) => ({
-          id: String(nodeId),
-          label: String(nodeId),
-          layer: "",
-          file: "",
-        })),
-      };
-    }
+    const governancePlan = await loadGovernanceChangePlan({
+      repoRoot,
+      relPaths,
+      governanceTreeSettings,
+    });
+    combinedIssues.push(...governancePlan.issues);
+    const governancePayload = governancePlan.governancePayload;
+    const changePlan = governancePlan.changePlan;
+    const changeSummary = governancePlan.changeSummary;
 
-    const materializedProjectSpecs = new Set();
+    const protectionResult = await protectGeneratedArtifacts({
+      repoRoot,
+      config,
+      changePlan,
+      governanceTreeSettings,
+      frameworkTreeSettings,
+    });
+    combinedIssues.push(...protectionResult.issues);
 
-    if (config.get("protectGeneratedFiles") && changePlan.protectedGeneratedPaths.length) {
-      const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
-      const protectedWorkspaceArtifacts = changePlan.protectedWorkspaceArtifacts || [];
-      const protectedGovernanceArtifacts = changePlan.protectedGovernanceArtifacts || [];
-      const protectedFrameworkArtifacts = changePlan.protectedFrameworkArtifacts || [];
-      if (guardMode === "strict") {
-        if (changePlan.protectedProjectSpecs.length) {
-          const restoreCommand = buildMaterializeCommand(
-            String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
-            changePlan.protectedProjectSpecs
-          );
-          const restoreResult = await runParsedCommand(
-            "materialize",
-            restoreCommand,
-            repoRoot,
-            (stdout, stderr, code) => parseStageFailure(
-              "SHELF_GENERATED_PROTECT",
-              "Generated artifacts were edited directly and Shelf could not restore them.",
-              stdout,
-              stderr,
-              code
-            )
-          );
-          if (restoreResult.passed) {
-            for (const productSpecFile of changePlan.protectedProjectSpecs) {
-              materializedProjectSpecs.add(productSpecFile);
-            }
-            suppressGeneratedEventsForProjectSpecs(repoRoot, changePlan.protectedProjectSpecs);
-          } else {
-            combinedIssues.push(...restoreResult.errors);
-          }
-        }
-        if (protectedGovernanceArtifacts.length) {
-          const restoreResult = await runParsedCommand(
-            "governance-tree",
-            governanceTreeSettings.generateCommand,
-            repoRoot,
-            (stdout, stderr, code) => parseStageFailure(
-              "SHELF_GOVERNANCE_TREE_PROTECT",
-              "Workspace governance tree artifacts were edited directly and Shelf could not restore them.",
-              stdout,
-              stderr,
-              code
-            )
-          );
-          if (!restoreResult.passed) {
-            combinedIssues.push(...restoreResult.errors);
-          } else {
-            suppressArtifactEvents(protectedGovernanceArtifacts);
-          }
-        }
-        if (protectedFrameworkArtifacts.length) {
-          const restoreResult = await runParsedCommand(
-            "framework-tree",
-            frameworkTreeSettings.generateCommand,
-            repoRoot,
-            (stdout, stderr, code) => parseStageFailure(
-              "SHELF_FRAMEWORK_TREE_PROTECT",
-              "Workspace framework tree artifacts were edited directly and Shelf could not restore them.",
-              stdout,
-              stderr,
-              code
-            )
-          );
-          if (!restoreResult.passed) {
-            combinedIssues.push(...restoreResult.errors);
-          } else {
-            suppressArtifactEvents(protectedFrameworkArtifacts);
-          }
-        }
-        const unresolvedProtectedPaths = changePlan.protectedGeneratedPaths.filter(
-          (relPath) => !protectedWorkspaceArtifacts.includes(relPath)
-            && !workspaceGuard.resolveProjectProductSpecPath(repoRoot, relPath)
-        );
-        for (const relPath of unresolvedProtectedPaths) {
-          combinedIssues.push(normalizeIssue({
-            message: "Generated artifacts were edited directly and Shelf could not determine how to restore them.",
-            file: relPath,
-            line: 1,
-            column: 1,
-            code: "SHELF_GENERATED_PROTECT",
-          }));
-        }
-      } else {
-        for (const relPath of changePlan.protectedGeneratedPaths) {
-          const isGovernanceArtifact = workspaceGuard.isWorkspaceGovernanceArtifact(relPath);
-          const isFrameworkArtifact = workspaceGuard.isWorkspaceFrameworkArtifact(relPath);
-          combinedIssues.push(normalizeIssue({
-            message: isGovernanceArtifact
-              ? "Workspace governance tree artifacts are derived evidence. Refresh the governance tree instead of editing them directly."
-              : (
-                isFrameworkArtifact
-                  ? "Workspace framework tree artifacts are derived evidence. Refresh the framework tree instead of editing them directly."
-                  : "Direct edits under projects/*/generated/* are forbidden. Change framework/product spec/implementation config and re-materialize instead."
-              ),
-            file: relPath,
-            line: 1,
-            column: 1,
-            code: isGovernanceArtifact
-              ? "SHELF_GOVERNANCE_TREE_EDIT"
-              : (isFrameworkArtifact ? "SHELF_FRAMEWORK_TREE_EDIT" : "SHELF_GENERATED_EDIT"),
-          }));
-        }
-      }
-    }
-
-    const pendingMaterializeProjects = changePlan.materializeProjects
-      .filter((productSpecFile) => !materializedProjectSpecs.has(productSpecFile));
-
-    if (config.get("autoMaterialize") && pendingMaterializeProjects.length) {
-      const materializeCommand = buildMaterializeCommand(
-        String(config.get("materializeCommand") || DEFAULT_MATERIALIZE_COMMAND),
-        pendingMaterializeProjects
-      );
-      const materializeResult = await runParsedCommand(
-        "materialize",
-        materializeCommand,
-        repoRoot,
-        (stdout, stderr, code) => parseStageFailure(
-          "SHELF_MATERIALIZE",
-          "Shelf auto-materialization failed.",
-          stdout,
-          stderr,
-          code
-        )
-      );
-      if (materializeResult.passed) {
-        for (const productSpecFile of pendingMaterializeProjects) {
-          materializedProjectSpecs.add(productSpecFile);
-        }
-        suppressGeneratedEventsForProjectSpecs(repoRoot, pendingMaterializeProjects);
-      } else {
-        combinedIssues.push(...materializeResult.errors);
-      }
-    }
+    const materializeResult = await autoMaterializePendingProjects({
+      repoRoot,
+      config,
+      changePlan,
+      materializedProjectSpecs: protectionResult.materializedProjectSpecs,
+    });
+    combinedIssues.push(...materializeResult.issues);
 
     if (config.get("runMypyOnPythonChanges") && changePlan.shouldRunMypy) {
       const mypyCommand = String(config.get("typeCheckCommand") || DEFAULT_TYPE_CHECK_COMMAND);
@@ -697,9 +861,9 @@ function activate(context) {
 
     if (combined.passed) {
       lastFailureSignature = "";
-      refreshStatusFromCurrentState();
+      statusController.refresh();
     } else {
-      refreshStatusFromCurrentState();
+      statusController.refresh();
       const shouldNotify = task.notifyOnFail || config.get("notifyOnAutoFail");
       if (shouldNotify && shouldNotifyFailure(combined.errors, lastFailureSignature)) {
         lastFailureSignature = signature(combined.errors);
@@ -1849,13 +2013,12 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    const triggerUris = event.files.filter((uri) => {
-      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
-      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    scheduleWatchedChangeValidation({
+      repoRoot: folder.uri.fsPath,
+      uris: event.files,
+      scheduleValidation,
+      isSuppressedGeneratedPath,
     });
-    if (triggerUris.length) {
-      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
-    }
   });
 
   const deleteDisposable = vscode.workspace.onDidDeleteFiles(async (event) => {
@@ -1866,13 +2029,12 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    const triggerUris = event.files.filter((uri) => {
-      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
-      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    scheduleWatchedChangeValidation({
+      repoRoot: folder.uri.fsPath,
+      uris: event.files,
+      scheduleValidation,
+      isSuppressedGeneratedPath,
     });
-    if (triggerUris.length) {
-      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
-    }
   });
 
   const renameDisposable = vscode.workspace.onDidRenameFiles(async (event) => {
@@ -1883,17 +2045,12 @@ function activate(context) {
     if (!folder) {
       return;
     }
-    const uris = [];
-    for (const item of event.files) {
-      uris.push(item.oldUri, item.newUri);
-    }
-    const triggerUris = uris.filter((uri) => {
-      const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, uri.fsPath));
-      return workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath);
+    scheduleWatchedChangeValidation({
+      repoRoot: folder.uri.fsPath,
+      uris: flattenRenameEventUris(event.files),
+      scheduleValidation,
+      isSuppressedGeneratedPath,
     });
-    if (triggerUris.length) {
-      scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source: "auto" });
-    }
   });
 
   const focusDisposable = vscode.window.onDidChangeWindowState(async (state) => {
@@ -1906,31 +2063,14 @@ function activate(context) {
   const fileWatcherDisposables = [];
   const watcherFolder = vscode.workspace.workspaceFolders?.[0];
   if (watcherFolder) {
-    const watcherPatterns = [
-      ...workspaceGuard.WATCH_PREFIXES.map((prefix) => `${prefix}**`),
-      ...workspaceGuard.WATCH_FILES,
-    ];
-
-    for (const pattern of watcherPatterns) {
-      const watcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(watcherFolder, pattern)
-      );
-
-      const triggerIfWatched = (uri) => {
-        if (!shouldRunValidationTrigger("workspace")) {
-          return;
-        }
-        const relPath = workspaceGuard.normalizeRelPath(path.relative(watcherFolder.uri.fsPath, uri.fsPath));
-        if (workspaceGuard.isWatchedPath(relPath) && !isSuppressedGeneratedPath(relPath)) {
-          scheduleValidation({ mode: "change", triggerUris: [uri], notifyOnFail: false, source: "auto" });
-        }
-      };
-
-      watcher.onDidChange(triggerIfWatched);
-      watcher.onDidCreate(triggerIfWatched);
-      watcher.onDidDelete(triggerIfWatched);
-      fileWatcherDisposables.push(watcher);
-    }
+    fileWatcherDisposables.push(
+      ...createWorkspaceValidationWatchers({
+        watcherFolder,
+        shouldRunValidationTrigger,
+        scheduleValidation,
+        isSuppressedGeneratedPath,
+      })
+    );
   }
 
   context.subscriptions.push(

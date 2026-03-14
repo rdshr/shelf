@@ -2,47 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import dataclass
 from pathlib import Path
+import sys
 from typing import Any
 
+from dataclasses import dataclass
 
-@dataclass(frozen=True)
-class HierarchyNode:
-    node_id: str
-    label: str
-    level: int
-    description: str
-    order: int | None = None
-    metadata: dict[str, Any] | None = None
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-
-@dataclass(frozen=True)
-class HierarchyEdge:
-    source: str
-    target: str
-    relation: str
-    metadata: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class HierarchyFrameworkGroup:
-    name: str
-    order: int
-    local_levels: list[int]
-    level_node_counts: dict[int, int]
-
-
-@dataclass(frozen=True)
-class HierarchyGraph:
-    title: str
-    description: str
-    level_labels: dict[int, str]
-    nodes: list[HierarchyNode]
-    edges: list[HierarchyEdge]
-    layout_mode: str = "global_levels"
-    framework_groups: list[HierarchyFrameworkGroup] | None = None
-    storage_key_stem: str | None = None
+from hierarchy_models import HierarchyEdge, HierarchyFrameworkGroup, HierarchyGraph, HierarchyNode
 
 
 @dataclass(frozen=True)
@@ -50,6 +21,41 @@ class LayoutResult:
     positions: dict[str, tuple[float, float]]
     width: int
     height: int
+
+
+@dataclass(frozen=True)
+class HierarchyHtmlTemplateContext:
+    payload_json: str
+
+
+@dataclass(frozen=True)
+class HierarchyPayloadStats:
+    level_values: tuple[int, ...]
+    level_node_counts: dict[int, int]
+    relation_counts: dict[str, int]
+
+
+@dataclass(frozen=True)
+class HierarchyPayloadContext:
+    graph: HierarchyGraph
+    layout: LayoutResult
+    stats: HierarchyPayloadStats
+    framework_groups: tuple[HierarchyFrameworkGroup, ...]
+
+    @classmethod
+    def build(
+        cls,
+        graph: HierarchyGraph,
+        layout: LayoutResult,
+    ) -> "HierarchyPayloadContext":
+        return cls(
+            graph=graph,
+            layout=layout,
+            stats=_collect_payload_stats(graph),
+            framework_groups=tuple(
+                sorted(graph.framework_groups or [], key=lambda item: (item.order, item.name))
+            ),
+        )
 
 
 def _expect_dict(value: Any, field_name: str) -> dict[str, Any]:
@@ -485,85 +491,180 @@ def compute_layout(graph: HierarchyGraph, width: int = 1520, height: int = 980) 
     return _compute_global_level_layout(graph, width=width, height=height)
 
 
-def _build_payload(
-    graph: HierarchyGraph,
-    layout: LayoutResult,
-) -> dict[str, Any]:
-    level_values = sorted({node.level for node in graph.nodes})
+def _collect_payload_stats(graph: HierarchyGraph) -> HierarchyPayloadStats:
+    level_values = tuple(sorted({node.level for node in graph.nodes}))
 
-    level_to_node_count: dict[int, int] = {}
+    level_node_counts: dict[int, int] = {}
     for node in graph.nodes:
-        level_to_node_count[node.level] = level_to_node_count.get(node.level, 0) + 1
+        level_node_counts[node.level] = level_node_counts.get(node.level, 0) + 1
 
     relation_counts: dict[str, int] = {}
     for edge in graph.edges:
         relation_counts[edge.relation] = relation_counts.get(edge.relation, 0) + 1
 
-    nodes_payload: list[dict[str, Any]] = []
-    for node in graph.nodes:
-        x, y = layout.positions[node.node_id]
-        item: dict[str, Any] = {
-            "id": node.node_id,
-            "label": node.label,
-            "level": node.level,
-            "description": node.description,
-            "x": x,
-            "y": y,
-        }
-        if node.metadata:
-            item.update(node.metadata)
-        nodes_payload.append(item)
+    return HierarchyPayloadStats(
+        level_values=level_values,
+        level_node_counts=level_node_counts,
+        relation_counts=relation_counts,
+    )
 
-    edges_payload: list[dict[str, Any]] = []
-    for edge in graph.edges:
-        edge_item: dict[str, Any] = {
-            "from": edge.source,
-            "to": edge.target,
-            "relation": edge.relation,
-        }
-        edge_item.update(edge.metadata)
-        edges_payload.append(edge_item)
+
+def _node_payload(node: HierarchyNode, layout: LayoutResult) -> dict[str, Any]:
+    x, y = layout.positions[node.node_id]
+    item: dict[str, Any] = {
+        "id": node.node_id,
+        "label": node.label,
+        "level": node.level,
+        "description": node.description,
+        "x": x,
+        "y": y,
+    }
+    if node.metadata:
+        item.update(node.metadata)
+    return item
+
+
+def _edge_payload(edge: HierarchyEdge) -> dict[str, Any]:
+    edge_item: dict[str, Any] = {
+        "from": edge.source,
+        "to": edge.target,
+        "relation": edge.relation,
+    }
+    edge_item.update(edge.metadata)
+    return edge_item
+
+
+def _framework_group_payload(group: HierarchyFrameworkGroup) -> dict[str, Any]:
+    return {
+        "name": group.name,
+        "order": group.order,
+        "local_levels": group.local_levels,
+        "level_node_counts": {
+            str(level): count for level, count in sorted(group.level_node_counts.items())
+        },
+    }
+
+
+def _level_labels_payload(context: HierarchyPayloadContext) -> dict[str, str]:
+    return {
+        str(level): context.graph.level_labels.get(level, f"层级 {level}")
+        for level in context.stats.level_values
+    }
+
+
+def _level_node_counts_payload(context: HierarchyPayloadContext) -> dict[str, int]:
+    return {
+        str(level): context.stats.level_node_counts.get(level, 0)
+        for level in context.stats.level_values
+    }
+
+
+def _framework_groups_payload(context: HierarchyPayloadContext) -> list[dict[str, Any]]:
+    return [_framework_group_payload(group) for group in context.framework_groups]
+
+
+def _build_payload(
+    context: HierarchyPayloadContext,
+) -> dict[str, Any]:
+    graph = context.graph
+    nodes_payload = [_node_payload(node, context.layout) for node in graph.nodes]
+    edges_payload = [_edge_payload(edge) for edge in graph.edges]
 
     return {
         "title": graph.title,
         "description": graph.description,
-        "width": layout.width,
-        "height": layout.height,
+        "width": context.layout.width,
+        "height": context.layout.height,
         "nodes": nodes_payload,
         "edges": edges_payload,
-        "level_labels": {
-            str(level): graph.level_labels.get(level, f"层级 {level}") for level in level_values
-        },
-        "level_node_counts": {str(level): level_to_node_count.get(level, 0) for level in level_values},
-        "relation_counts": relation_counts,
+        "level_labels": _level_labels_payload(context),
+        "level_node_counts": _level_node_counts_payload(context),
+        "relation_counts": context.stats.relation_counts,
         "layout_mode": graph.layout_mode,
         "storage_key_stem": graph.storage_key_stem,
-        "framework_groups": [
-            {
-                "name": group.name,
-                "order": group.order,
-                "local_levels": group.local_levels,
-                "level_node_counts": {
-                    str(level): count for level, count in sorted(group.level_node_counts.items())
-                },
-            }
-            for group in sorted(graph.framework_groups or [], key=lambda item: (item.order, item.name))
-        ],
+        "framework_groups": _framework_groups_payload(context),
     }
 
 
-def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, height: int = 980) -> None:
+def _build_html_template_context(
+    graph: HierarchyGraph,
+    *,
+    width: int,
+    height: int,
+) -> HierarchyHtmlTemplateContext:
     layout = compute_layout(graph, width=width, height=height)
-    payload = _build_payload(graph, layout)
-    payload_json = json.dumps(payload, ensure_ascii=False)
+    payload = _build_payload(HierarchyPayloadContext.build(graph, layout))
+    return HierarchyHtmlTemplateContext(
+        payload_json=json.dumps(payload, ensure_ascii=False),
+    )
 
-    html = """<!doctype html>
-<html lang=\"zh-CN\">
-<head>
-  <meta charset=\"utf-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-  <title>M Hierarchy Graph</title>
-  <style>
+
+def _hierarchy_html_body_block() -> str:
+    return """<body>
+  <div class=\"layout\">
+    <section class=\"card graph-card\">
+      <div class=\"head\">
+        <h1 id=\"title\"></h1>
+        <p id=\"description\" class=\"desc\"></p>
+      </div>
+      <div class=\"legend\">
+        <span class=\"pill\" id=\"summaryNodes\"></span>
+        <span class=\"pill\" id=\"summaryEdges\"></span>
+        <span class=\"pill\" id=\"summaryFan\"></span>
+        <label class=\"switch-pill\">
+          <input type=\"checkbox\" id=\"toggleLabels\" checked />
+          显示全部标签
+        </label>
+        <span class=\"pill\">点击节点或连线查看关系</span>
+      </div>
+      <div class=\"graph-shell\">
+        <div class=\"graph-toolbar\">
+          <div class=\"zoom-controls\">
+            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"out\" aria-label=\"缩小\">-</button>
+            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"reset\">100%</button>
+            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"fit\">适配</button>
+            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"in\" aria-label=\"放大\">+</button>
+            <span class=\"zoom-indicator\" id=\"zoomIndicator\">100%</span>
+          </div>
+          <div class=\"toolbar-tail\">
+            <button type=\"button\" class=\"zoom-btn\" id=\"resetLayoutButton\">恢复布局</button>
+            <button type=\"button\" class=\"zoom-btn\" id=\"sideToggleButton\" aria-expanded=\"true\">隐藏侧栏</button>
+            <span class=\"graph-hint\">左键拖动画布与空白工作区，拖动框标题移动 framework，点击框右上角折叠/展开，Ctrl/⌘ + 滚轮缩放，Ctrl/⌘ + 点击节点或连线打开来源文档</span>
+          </div>
+        </div>
+        <div class=\"graph-scroll\">
+          <div class=\"graph-stage\">
+            <svg id=\"graphSvg\" role=\"img\" aria-label=\"M hierarchy graph\"></svg>
+          </div>
+        </div>
+      </div>
+      <p class=\"foot\" id=\"graphFoot\">图中只展示 M 结构层级与组合关系，不包含代码规范与框架规范条目。</p>
+    </section>
+
+    <aside class=\"side\">
+      <section class=\"card info-card\">
+        <h2 class=\"info-title\" id=\"levelStatsTitle\">层级统计</h2>
+        <div id=\"levelStats\"></div>
+      </section>
+
+      <section class=\"card info-card\">
+        <h2 class=\"info-title\">关系统计</h2>
+        <div id=\"relationStats\"></div>
+      </section>
+
+      <section class=\"card detail-card\">
+        <h2 class=\"detail-title\">节点详情</h2>
+        <div id=\"detailBox\"><p class=\"meta detail-empty\">点击左侧节点查看详情。</p></div>
+      </section>
+    </aside>
+  </div>
+
+  <div id=\"nodeHover\" class=\"node-hover\" aria-hidden=\"true\"></div>
+"""
+
+
+def _hierarchy_html_style_block() -> str:
+    return """
     :root {
       color-scheme: light dark;
       --bg: var(--vscode-editor-background, #1e1e1e);
@@ -1370,68 +1471,21 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
         position: static;
       }
     }
+"""
+
+
+def _render_hierarchy_html_document(context: HierarchyHtmlTemplateContext) -> str:
+    html = """<!doctype html>
+<html lang=\"zh-CN\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>M Hierarchy Graph</title>
+  <style>
+__STYLE_BLOCK__
   </style>
 </head>
-<body>
-  <div class=\"layout\">
-    <section class=\"card graph-card\">
-      <div class=\"head\">
-        <h1 id=\"title\"></h1>
-        <p id=\"description\" class=\"desc\"></p>
-      </div>
-      <div class=\"legend\">
-        <span class=\"pill\" id=\"summaryNodes\"></span>
-        <span class=\"pill\" id=\"summaryEdges\"></span>
-        <span class=\"pill\" id=\"summaryFan\"></span>
-        <label class=\"switch-pill\">
-          <input type=\"checkbox\" id=\"toggleLabels\" checked />
-          显示全部标签
-        </label>
-        <span class=\"pill\">点击节点或连线查看关系</span>
-      </div>
-      <div class=\"graph-shell\">
-        <div class=\"graph-toolbar\">
-          <div class=\"zoom-controls\">
-            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"out\" aria-label=\"缩小\">-</button>
-            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"reset\">100%</button>
-            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"fit\">适配</button>
-            <button type=\"button\" class=\"zoom-btn\" data-zoom=\"in\" aria-label=\"放大\">+</button>
-            <span class=\"zoom-indicator\" id=\"zoomIndicator\">100%</span>
-          </div>
-          <div class=\"toolbar-tail\">
-            <button type=\"button\" class=\"zoom-btn\" id=\"resetLayoutButton\">恢复布局</button>
-            <button type=\"button\" class=\"zoom-btn\" id=\"sideToggleButton\" aria-expanded=\"true\">隐藏侧栏</button>
-            <span class=\"graph-hint\">左键拖动画布与空白工作区，拖动框标题移动 framework，点击框右上角折叠/展开，Ctrl/⌘ + 滚轮缩放，Ctrl/⌘ + 点击节点或连线打开来源文档</span>
-          </div>
-        </div>
-        <div class=\"graph-scroll\">
-          <div class=\"graph-stage\">
-            <svg id=\"graphSvg\" role=\"img\" aria-label=\"M hierarchy graph\"></svg>
-          </div>
-        </div>
-      </div>
-      <p class=\"foot\" id=\"graphFoot\">图中只展示 M 结构层级与组合关系，不包含代码规范与框架规范条目。</p>
-    </section>
-
-    <aside class=\"side\">
-      <section class=\"card info-card\">
-        <h2 class=\"info-title\" id=\"levelStatsTitle\">层级统计</h2>
-        <div id=\"levelStats\"></div>
-      </section>
-
-      <section class=\"card info-card\">
-        <h2 class=\"info-title\">关系统计</h2>
-        <div id=\"relationStats\"></div>
-      </section>
-
-      <section class=\"card detail-card\">
-        <h2 class=\"detail-title\">节点详情</h2>
-        <div id=\"detailBox\"><p class=\"meta detail-empty\">点击左侧节点查看详情。</p></div>
-      </section>
-    </aside>
-  </div>
-
-  <div id=\"nodeHover\" class=\"node-hover\" aria-hidden=\"true\"></div>
+__BODY_BLOCK__
 
   <script>
     const graphData = __PAYLOAD_JSON__;
@@ -3139,7 +3193,17 @@ def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, hei
 </body>
 </html>
 """
-    html = html.replace("__PAYLOAD_JSON__", payload_json)
+    return (
+        html
+        .replace("__STYLE_BLOCK__", _hierarchy_html_style_block())
+        .replace("__BODY_BLOCK__", _hierarchy_html_body_block())
+        .replace("__PAYLOAD_JSON__", context.payload_json)
+    )
+
+
+def render_html(graph: HierarchyGraph, output_path: Path, width: int = 1520, height: int = 980) -> None:
+    context = _build_html_template_context(graph, width=width, height=height)
+    html = _render_hierarchy_html_document(context)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")

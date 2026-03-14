@@ -18,7 +18,7 @@ SRC_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SRC_DIR.parent
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
-KNOWN_COMMANDS = {"serve", "legacy-reference-shelf", "reference-shelf"}
+KNOWN_COMMANDS = {"serve", "legacy-reference-shelf"}
 DEFAULT_PRODUCT_SPEC_FILE = get_default_project_template_registration().default_product_spec_file
 PRODUCT_SPEC_FILE_ENV = "SHELF_PRODUCT_SPEC_FILE"
 RELOAD_DIRS = [
@@ -77,10 +77,6 @@ def _build_parser() -> argparse.ArgumentParser:
             "for the historical shelf domain sample"
         ),
     )
-    subparsers.add_parser(
-        "reference-shelf",
-        help=argparse.SUPPRESS,
-    )
     return parser
 
 
@@ -113,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(_normalize_argv(list(sys.argv[1:] if argv is None else argv)))
 
-    if args.command in {"legacy-reference-shelf", "reference-shelf"}:
+    if args.command == "legacy-reference-shelf":
         run_reference_pipeline()
         return 0
 

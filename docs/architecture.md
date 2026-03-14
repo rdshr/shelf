@@ -2,60 +2,88 @@
 
 ## 当前主线
 
-`shelf` 当前的默认主线不是 legacy 置物架求解，而是一个由结构化框架文档驱动的项目编译链：
+`shelf` 当前的默认主线已经固定为一条五层收敛链：
 
-> `Framework -> Product Spec -> Implementation Config -> Code -> Evidence`
+> `Framework -> Product -> Implementation -> Code -> Evidence`
 
-它的目标是把“框架文档作为共同结构语言”这件事真正落到可运行、可追溯、可验证的工程闭环里。
+这不是概念口号，而是当前知识库主链的真实工程结构。
 
-## 主要分层
+如果你要看完整的文件级落地路径、逐层跳转方式和 code 反查逻辑，直接看：
 
-- `specs/` 与 `framework/*/*.md`
-  - 定义共同结构、公理、边界、最小可行基、组合原则和验证规则。
-- `projects/<project_id>/product_spec.toml`
-  - 定义某个具体产品最终是什么。
-- `projects/<project_id>/implementation_config.toml`
-  - 定义该产品采用哪条实现路径落地。
+- [全链实现框架与跳转逻辑详解.md](./全链实现框架与跳转逻辑详解.md)
+
+- `Framework`
+  - 人类作者源，位于 `framework/*/*.md`
+  - 先写 Markdown，再编译为模块对象
+- `Product`
+  - 产品真相，位于 `projects/<project_id>/product_spec.toml`
+- `Implementation`
+  - 实现细化，位于 `projects/<project_id>/implementation_config.toml`
+- `Code`
+  - 只消费实现层导出，绑定到 contract / spec / runtime symbol
+- `Evidence`
+  - 只消费代码层导出，生成 canonical 图和其派生视图
+
+## 机器真相源
+
+知识库主链当前唯一机器真相源是：
+
+- `projects/<project_id>/generated/canonical_graph.json`
+
+它明确分成五层：
+
+- `layers.framework`
+- `layers.product`
+- `layers.implementation`
+- `layers.code`
+- `layers.evidence`
+
+其它生成文件都只是派生视图，例如：
+
+- `framework_ir.json`
+- `product_spec.json`
+- `implementation_bundle.py`
+- `generation_manifest.json`
+- `governance_manifest.json`
+- `governance_tree.json`
+- `strict_zone_report.json`
+- `object_coverage_report.json`
+
+这些文件仍然保留，是为了 GUI、治理、调试和审查方便；但它们不再被叙述为平行真相源。
+
+## 主要代码入口
+
 - `src/framework_ir/`
-  - 负责把框架 Markdown 解析为机器可读中间表示。
+  - 把 `framework/*.md` 解析成 `FrameworkModule`、`FrameworkBase`、`FrameworkRule`
 - `src/project_runtime/knowledge_base.py`
-  - 负责把框架、产品规格和实现配置编译为项目运行时 bundle。
+  - 把 Framework / Product / Implementation 编译成分层模块与 canonical graph
 - `src/knowledge_base_runtime/`
-  - 承载当前默认样例产品的运行时代码。
-- `projects/<project_id>/generated/`
-  - 承载物化出的证据层产物，例如 `framework_ir.json`、`product_spec.json`、`implementation_bundle.py`、治理清单与治理树。
+  - 只消费 Code 层导出，承载当前知识库主链的运行时代码
+- `src/project_runtime/governance.py`
+  - 从编译结果构造治理闭包和治理派生视图
+- `scripts/validate_strict_mapping.py`
+  - 对框架、项目配置、生成物和治理派生视图做严格校验
 
-## 默认运行链
+## 当前默认项目
 
-1. 解析 `framework/*.md` 到 `framework_ir`
-2. 校验结构、映射、层级、边界与弱充分性
-3. 读取 `product_spec.toml` 与 `implementation_config.toml`
-4. 编译生成运行时 bundle 与治理产物
-5. 启动 runtime app
+当前默认项目是：
 
-默认入口是：
+- `projects/knowledge_base_basic/`
 
-- `uv run python src/main.py`
-- `uv run python src/main.py serve`
+它展示的是：
 
-## 当前默认样例
-
-当前默认样例是 `projects/knowledge_base_basic/`，它展示的是：
-
-- 通用前端框架
-- 知识库领域框架
-- 后端知识接口框架
-- 产品真相与实现配置如何共同编译出一个知识库工作台
+- Framework Markdown 如何变成 Framework module
+- Product / Implementation 如何逐层收敛
+- Code 如何只消费 Implementation 的稳定导出
+- Evidence 如何把整条链固化成 canonical graph 与治理视图
 
 ## Legacy 样本
 
-历史上的置物架参考样本仍然保留，但已经不再是仓库默认主线。它现在位于：
+历史上的置物架样本仍保留，但它已经不是仓库默认主线。
+
+位置：
 
 - `src/examples/legacy_shelf/`
 - `docs/legacy_shelf/`
 
-运行命令：
-
-- `uv run python src/main.py legacy-reference-shelf`
-
-这个 legacy 样本的作用是保留方法论来源和早期严格对象域示范，而不是继续承担仓库默认入口职责。
+它现在只是方法论样本，不再承担当前仓库的默认架构叙事。

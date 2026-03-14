@@ -15,7 +15,7 @@ Loader = Callable[[str | Path], Any]
 Materializer = Callable[[str | Path, Path | None], Any]
 RuntimeAppBuilder = Callable[[str | Path], FastAPI]
 GovernanceClosureBuilder = Callable[[Any], Any]
-ImplementationEffectBuilder = Callable[[Any], dict[str, dict[str, Any]]]
+ImplementationEffectBuilder = Callable[[Any], dict[str, Any]]
 ProjectScaffolder = Callable[[Path, str | None, bool, bool], tuple[str, ...]]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -46,10 +46,56 @@ def _ensure_builtin_project_templates_loaded() -> None:
     import_module("project_runtime.knowledge_base")
 
 
+def _callable_identity(value: Callable[..., Any] | None) -> tuple[str, str] | None:
+    if value is None:
+        return None
+    return (getattr(value, "__module__", ""), getattr(value, "__name__", ""))
+
+
+def _alias_normalized_module(module_name: str) -> str:
+    return module_name.removeprefix("src.")
+
+
+def _callable_equivalent(
+    left: Callable[..., Any] | None,
+    right: Callable[..., Any] | None,
+) -> bool:
+    left_identity = _callable_identity(left)
+    right_identity = _callable_identity(right)
+    if left_identity is None or right_identity is None:
+        return left_identity == right_identity
+    return (
+        _alias_normalized_module(left_identity[0]) == _alias_normalized_module(right_identity[0])
+        and left_identity[1] == right_identity[1]
+    )
+
+
+def _registrations_equivalent(
+    left: ProjectTemplateRegistration,
+    right: ProjectTemplateRegistration,
+) -> bool:
+    return (
+        left.template_id == right.template_id
+        and left.default_product_spec_file == right.default_product_spec_file
+        and left.product_spec_layout == right.product_spec_layout
+        and left.implementation_config_layout == right.implementation_config_layout
+        and left.default == right.default
+        and _callable_equivalent(left.load_project, right.load_project)
+        and _callable_equivalent(left.materialize_project, right.materialize_project)
+        and _callable_equivalent(left.build_runtime_app_from_spec, right.build_runtime_app_from_spec)
+        and _callable_equivalent(left.build_governance_closure, right.build_governance_closure)
+        and _callable_equivalent(
+            left.build_implementation_effect_manifest,
+            right.build_implementation_effect_manifest,
+        )
+        and _callable_equivalent(left.scaffold_project, right.scaffold_project)
+    )
+
+
 def register_project_template(registration: ProjectTemplateRegistration) -> None:
     existing = _REGISTRY.get(registration.template_id)
     if existing is not None:
-        if existing == registration:
+        if existing == registration or _registrations_equivalent(existing, registration):
             return
         raise ValueError(f"project template already registered: {registration.template_id}")
     _REGISTRY[registration.template_id] = registration

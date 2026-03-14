@@ -24,6 +24,7 @@
         "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
       ],
       "artifact_contract": [
+        "canonical_graph.json",
         "framework_ir.json",
         "product_spec.json",
         "implementation_bundle.py",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import heapq
 import json
 import re
@@ -14,6 +15,7 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from hierarchy_models import HierarchyEdge, HierarchyFrameworkGroup, HierarchyGraph, HierarchyNode
 from standards_tree import build_standards_tree
 
 DEFAULT_REGISTRY = REPO_ROOT / "mapping/mapping_registry.json"
@@ -27,6 +29,54 @@ FRAMEWORK_BASE_ITEM_LINE_PATTERN = re.compile(r"^\s*[-*]\s*`(B(\d+))`\s*(.*)$")
 FRAMEWORK_UPSTREAM_TERM_PATTERN = re.compile(
     r"^(?:(?P<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?(?P<ref>L\d+\.M\d+)(?:\[(?P<rules>.*?)\])?$"
 )
+
+
+@dataclass(frozen=True)
+class CapabilityEntry:
+    token: str
+    text: str
+    line: int
+
+    def to_payload_dict(self) -> dict[str, str]:
+        return {"token": self.token, "text": self.text, "line": str(self.line)}
+
+
+@dataclass(frozen=True)
+class BaseEntry:
+    token: str
+    base_index: int
+    base_line_num: int
+    base_title: str
+    base_hover_text: str
+    upstream_refs: tuple[tuple[str, str], ...]
+
+    def to_payload_dict(self) -> dict[str, str]:
+        return {"token": self.token, "text": self.base_hover_text, "line": str(self.base_line_num)}
+
+
+@dataclass(frozen=True)
+class FrameworkModuleNodeRecord:
+    module_name: str
+    level_num: int
+    logical_id: str
+    logical_module: str
+    source_file: str
+    source_line: int
+    doc_line: int
+    module_title: str
+    heading_title: str
+    capability_items: tuple[CapabilityEntry, ...]
+    base_items: tuple[BaseEntry, ...]
+
+
+@dataclass(frozen=True)
+class FrameworkGrowthSpec:
+    module_name: str
+    level_num: int
+    source_file: str
+    source_line: int
+    target_ref: str
+    upstream_refs: tuple[tuple[str, str], ...]
 
 
 def parse_level(level_value: Any, *, node_id: str) -> int:
@@ -80,8 +130,8 @@ def build_payload_from_registry(registry_path: Path) -> dict[str, Any]:
 
     seen_ids: set[str] = set()
     level_order_counter: dict[int, int] = {}
-    nodes: list[dict[str, Any]] = []
-    edges: list[dict[str, Any]] = []
+    nodes: list[HierarchyNode] = []
+    edges: list[HierarchyEdge] = []
 
     def walk(node_obj: dict[str, Any], parent_id: str | None) -> None:
         node_id = node_obj.get("id")
@@ -113,24 +163,27 @@ def build_payload_from_registry(registry_path: Path) -> dict[str, Any]:
             source_line = find_first_h1_line(REPO_ROOT / file_name)
 
         nodes.append(
-            {
-                "id": node_id,
-                "label": node_label(kind, level_num, file_name),
-                "level": level_num,
-                "order": order,
-                "description": " | ".join(description_parts),
-                "source_file": file_name,
-                "source_line": source_line,
-            }
+            HierarchyNode(
+                node_id=node_id,
+                label=node_label(kind, level_num, file_name),
+                level=level_num,
+                order=order,
+                description=" | ".join(description_parts),
+                metadata={
+                    "source_file": file_name,
+                    "source_line": source_line,
+                },
+            )
         )
 
         if parent_id is not None:
             edges.append(
-                {
-                    "from": parent_id,
-                    "to": node_id,
-                    "relation": "tree_child",
-                }
+                HierarchyEdge(
+                    source=parent_id,
+                    target=node_id,
+                    relation="tree_child",
+                    metadata={},
+                )
             )
 
         children = node_obj.get("children", [])
@@ -143,19 +196,16 @@ def build_payload_from_registry(registry_path: Path) -> dict[str, Any]:
 
     walk(tree, None)
 
-    levels = sorted({node["level"] for node in nodes})
+    levels = sorted({node.level for node in nodes})
     level_labels = {str(level): f"L{level} 标准层" for level in levels}
-
-    root = {
-        "title": "框架标准树结构图",
-        "description": (
-            "从仓库规范标准集自动生成，展示框架标准树父子关系。"
-        ),
-        "level_labels": level_labels,
-        "nodes": nodes,
-        "edges": edges,
-    }
-    return {"root": root}
+    graph = HierarchyGraph(
+        title="框架标准树结构图",
+        description="从仓库规范标准集自动生成，展示框架标准树父子关系。",
+        level_labels={int(level): label for level, label in level_labels.items()},
+        nodes=nodes,
+        edges=edges,
+    )
+    return graph.to_payload_dict()
 
 
 def iter_framework_docs(framework_dir: Path) -> list[tuple[str, int, int, Path]]:
@@ -259,22 +309,22 @@ def parse_upstream_expr(expr: str) -> list[tuple[str, str]]:
 
 def compute_framework_group_order(
     framework_names: list[str],
-    nodes: list[dict[str, Any]],
-    edges: list[dict[str, Any]],
+    nodes: list[HierarchyNode],
+    edges: list[HierarchyEdge],
 ) -> list[str]:
     adjacency: dict[str, set[str]] = {name: set() for name in framework_names}
     indegree: dict[str, int] = {name: 0 for name in framework_names}
     node_framework_by_id = {
-        str(node["id"]): str(node.get("module_name") or "")
+        node.node_id: str((node.metadata or {}).get("module_name") or "")
         for node in nodes
-        if isinstance(node.get("module_name"), str)
+        if isinstance((node.metadata or {}).get("module_name"), str)
     }
 
     for edge in edges:
-        if edge.get("relation") != "framework_module_growth":
+        if edge.relation != "framework_module_growth":
             continue
-        source_framework = node_framework_by_id.get(str(edge.get("from") or ""), "")
-        target_framework = node_framework_by_id.get(str(edge.get("to") or ""), "")
+        source_framework = node_framework_by_id.get(edge.source, "")
+        target_framework = node_framework_by_id.get(edge.target, "")
         if not source_framework or not target_framework or source_framework == target_framework:
             continue
         if target_framework in adjacency[source_framework]:
@@ -307,8 +357,8 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
         raise ValueError("no framework Lx-Mn-*.md files found under framework directory")
 
     module_level_files: dict[str, dict[int, list[str]]] = {}
-    module_node_records: list[dict[str, Any]] = []
-    module_growth_specs: list[dict[str, Any]] = []
+    module_node_records: list[FrameworkModuleNodeRecord] = []
+    module_growth_specs: list[FrameworkGrowthSpec] = []
 
     warnings: list[str] = []
     seen_warnings: set[str] = set()
@@ -327,7 +377,7 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
         heading_title = find_first_h1_text(file_text, Path(markdown_file.name).stem)
         heading_line = find_first_h1_line(markdown_file)
 
-        capability_entries: list[dict[str, str]] = []
+        capability_entries: list[CapabilityEntry] = []
         for capability_line_num, capability_line in iter_section_bullet_lines(file_text, "## 1."):
             capability_match = FRAMEWORK_CAPABILITY_ITEM_LINE_PATTERN.match(capability_line)
             if capability_match is None:
@@ -335,14 +385,14 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
             capability_token = capability_match.group(1)
             capability_text = normalize_hover_text(capability_match.group(3))
             capability_entries.append(
-                {
-                    "token": capability_token,
-                    "text": capability_text or capability_token,
-                    "line": str(capability_line_num),
-                }
+                CapabilityEntry(
+                    token=capability_token,
+                    text=capability_text or capability_token,
+                    line=capability_line_num,
+                )
             )
 
-        base_entries: list[dict[str, Any]] = []
+        base_entries: list[BaseEntry] = []
         for base_line_num, base_line in iter_section_bullet_lines(file_text, "## 3."):
             base_match = FRAMEWORK_BASE_ITEM_LINE_PATTERN.match(base_line)
             if base_match is None:
@@ -354,57 +404,48 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
                 f"Base B{base_index}",
             )
             base_entries.append(
-                {
-                    "token": str(base_match.group(1)),
-                    "base_index": base_index,
-                    "base_line_num": base_line_num,
-                    "base_title": base_title,
-                    "base_hover_text": normalize_hover_text(base_text) or base_title,
-                    "upstream_refs": parse_upstream_refs(base_text),
-                }
+                BaseEntry(
+                    token=str(base_match.group(1)),
+                    base_index=base_index,
+                    base_line_num=base_line_num,
+                    base_title=base_title,
+                    base_hover_text=normalize_hover_text(base_text) or base_title,
+                    upstream_refs=tuple(parse_upstream_refs(base_text)),
+                )
             )
 
         if base_entries:
             logical_id = f"L{level_num}.{file_module_id}"
-            first_base_line = int(base_entries[0]["base_line_num"])
+            first_base_line = base_entries[0].base_line_num
             upstream_refs_set: set[tuple[str, str]] = set()
             for entry in base_entries:
-                for source_ref, source_rules in list(entry["upstream_refs"]):
+                for source_ref, source_rules in entry.upstream_refs:
                     upstream_refs_set.add((str(source_ref), str(source_rules)))
 
             module_node_records.append(
-                {
-                    "mode": "file",
-                    "module_name": module_name,
-                    "level_num": level_num,
-                    "logical_id": logical_id,
-                    "logical_module": file_module_id,
-                    "source_file": rel,
-                    "source_line": first_base_line,
-                    "doc_line": heading_line,
-                    "module_title": Path(markdown_file.name).stem,
-                    "heading_title": heading_title,
-                    "capability_items": capability_entries,
-                    "base_items": [
-                        {
-                            "token": str(entry["token"]),
-                            "text": str(entry["base_hover_text"]),
-                            "line": str(entry["base_line_num"]),
-                        }
-                        for entry in base_entries
-                    ],
-                }
+                FrameworkModuleNodeRecord(
+                    module_name=module_name,
+                    level_num=level_num,
+                    logical_id=logical_id,
+                    logical_module=file_module_id,
+                    source_file=rel,
+                    source_line=first_base_line,
+                    doc_line=heading_line,
+                    module_title=Path(markdown_file.name).stem,
+                    heading_title=heading_title,
+                    capability_items=tuple(capability_entries),
+                    base_items=tuple(base_entries),
+                )
             )
             module_growth_specs.append(
-                {
-                    "mode": "file",
-                    "module_name": module_name,
-                    "level_num": level_num,
-                    "source_file": rel,
-                    "source_line": first_base_line,
-                    "target_ref": logical_id,
-                    "upstream_refs": sorted(upstream_refs_set),
-                }
+                FrameworkGrowthSpec(
+                    module_name=module_name,
+                    level_num=level_num,
+                    source_file=rel,
+                    source_line=first_base_line,
+                    target_ref=logical_id,
+                    upstream_refs=tuple(sorted(upstream_refs_set)),
+                )
             )
             continue
 
@@ -417,86 +458,79 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
                 f"module '{module_name}' has no L0 base (lowest existing level: L{levels[0]})."
             )
 
-    nodes: list[dict[str, Any]] = []
-    edges: list[dict[str, Any]] = []
+    nodes: list[HierarchyNode] = []
+    edges: list[HierarchyEdge] = []
     level_order_counter: dict[int, int] = {}
     module_node_id_by_qualified_ref: dict[str, str] = {}
     seen_module_refs: set[str] = set()
 
     node_seq = 0
-    all_node_records: list[tuple[int, str, str, dict[str, Any]]] = []
+    all_node_records: list[tuple[int, str, str, FrameworkModuleNodeRecord]] = []
     for record in module_node_records:
         all_node_records.append(
-            (
-                int(record["level_num"]),
-                str(record["module_name"]),
-                str(record["logical_id"]),
-                record,
-            )
+            (record.level_num, record.module_name, record.logical_id, record)
         )
     all_node_records.sort(key=lambda item: (item[0], item[1], item[2]))
 
     for _, _, _, record in all_node_records:
-        level_num = int(record["level_num"])
-        module_name = str(record["module_name"])
-        source_file = str(record["source_file"])
+        level_num = record.level_num
+        module_name = record.module_name
+        source_file = record.source_file
 
         node_seq += 1
         node_id = f"NODE-FW-{node_seq:04d}"
         level_order_counter[level_num] = level_order_counter.get(level_num, 0) + 1
         order = level_order_counter[level_num]
 
-        if "logical_id" in record:
-            logical_id = str(record["logical_id"])
-            logical_module = str(record["logical_module"])
-            module_title = str(record["module_title"])
-            qualified_ref = f"{module_name}:{logical_id}"
-            if qualified_ref in seen_module_refs:
-                add_warning(
-                    f"duplicate module node declaration ignored: {qualified_ref} ({source_file})"
-                )
-                node_seq -= 1
-                level_order_counter[level_num] -= 1
-                continue
-            seen_module_refs.add(qualified_ref)
-            module_node_id_by_qualified_ref[qualified_ref] = node_id
+        logical_id = record.logical_id
+        logical_module = record.logical_module
+        module_title = record.module_title
+        qualified_ref = f"{module_name}:{logical_id}"
+        if qualified_ref in seen_module_refs:
+            add_warning(f"duplicate module node declaration ignored: {qualified_ref} ({source_file})")
+            node_seq -= 1
+            level_order_counter[level_num] -= 1
+            continue
+        seen_module_refs.add(qualified_ref)
+        module_node_id_by_qualified_ref[qualified_ref] = node_id
 
-            description_parts = [
-                f"module={module_name}",
-                f"level=L{level_num}",
-                f"node={logical_id}",
-                f"file={source_file}",
-            ]
-            if module_title:
-                description_parts.append(f"title={module_title}")
+        description_parts = [
+            f"module={module_name}",
+            f"level=L{level_num}",
+            f"node={logical_id}",
+            f"file={source_file}",
+        ]
+        if module_title:
+            description_parts.append(f"title={module_title}")
 
-            nodes.append(
-                {
-                    "id": node_id,
-                    "label": f"L{level_num}.{module_name}.{logical_module}",
-                    "level": level_num,
-                    "order": order,
-                    "description": " | ".join(description_parts),
+        nodes.append(
+            HierarchyNode(
+                node_id=node_id,
+                label=f"L{level_num}.{module_name}.{logical_module}",
+                level=level_num,
+                order=order,
+                description=" | ".join(description_parts),
+                metadata={
                     "source_file": source_file,
-                    "source_line": int(record["source_line"]),
-                    "doc_line": int(record.get("doc_line", record["source_line"])),
+                    "source_line": record.source_line,
+                    "doc_line": record.doc_line,
                     "module_name": module_name,
                     "module_ref": logical_id,
-                    "module_title": str(record.get("heading_title") or module_title),
-                    "capability_items": record.get("capability_items", []),
-                    "base_items": record.get("base_items", []),
-                }
+                    "module_title": record.heading_title or module_title,
+                    "capability_items": [item.to_payload_dict() for item in record.capability_items],
+                    "base_items": [item.to_payload_dict() for item in record.base_items],
+                },
             )
-            continue
+        )
 
     module_growth_edge_accumulator: dict[tuple[str, str], dict[str, Any]] = {}
     for growth_spec in module_growth_specs:
-        module_name = str(growth_spec["module_name"])
-        level_num = int(growth_spec["level_num"])
-        source_file = str(growth_spec["source_file"])
-        source_line = int(growth_spec["source_line"])
-        target_ref = str(growth_spec["target_ref"])
-        explicit_upstream_refs: list[tuple[str, str]] = growth_spec.get("upstream_refs", [])
+        module_name = growth_spec.module_name
+        level_num = growth_spec.level_num
+        source_file = growth_spec.source_file
+        source_line = growth_spec.source_line
+        target_ref = growth_spec.target_ref
+        explicit_upstream_refs = list(growth_spec.upstream_refs)
 
         target_node_id = module_node_id_by_qualified_ref.get(f"{module_name}:{target_ref}")
         if target_node_id is None:
@@ -579,46 +613,45 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
         rules = sorted(str(rule) for rule in edge_bucket["rules"] if str(rule).strip())
         terms = sorted(str(term) for term in edge_bucket["terms"] if str(term).strip())
         edges.append(
-            {
-                "from": source_node_id,
-                "to": target_node_id,
-                "relation": "framework_module_growth",
-                "module": edge_bucket["module_name"],
-                "from_level": edge_bucket["from_level"],
-                "to_level": edge_bucket["to_level"],
-                "source_ref": edge_bucket["source_ref"],
-                "target_ref": edge_bucket["target_ref"],
-                "rules": " | ".join(rules),
-                "terms": " + ".join(terms),
-                "source_file": edge_bucket["source_file"],
-                "source_line": edge_bucket["source_line"],
-            }
+            HierarchyEdge(
+                source=source_node_id,
+                target=target_node_id,
+                relation="framework_module_growth",
+                metadata={
+                    "module": edge_bucket["module_name"],
+                    "from_level": edge_bucket["from_level"],
+                    "to_level": edge_bucket["to_level"],
+                    "source_ref": edge_bucket["source_ref"],
+                    "target_ref": edge_bucket["target_ref"],
+                    "rules": " | ".join(rules),
+                    "terms": " + ".join(terms),
+                    "source_file": edge_bucket["source_file"],
+                    "source_line": edge_bucket["source_line"],
+                },
+            )
         )
 
-    levels = sorted({node["level"] for node in nodes})
+    levels = sorted({node.level for node in nodes})
     level_labels = {str(level): f"L{level} 标准层" for level in levels}
-    framework_names = sorted({str(record["module_name"]) for record in module_node_records})
+    framework_names = sorted({record.module_name for record in module_node_records})
     framework_order = compute_framework_group_order(framework_names, nodes, edges)
     framework_level_counts: dict[str, dict[int, int]] = {name: {} for name in framework_names}
     for node in nodes:
-        framework_name = str(node.get("module_name") or "")
+        framework_name = str((node.metadata or {}).get("module_name") or "")
         if not framework_name:
             continue
-        level_num = int(node["level"])
+        level_num = node.level
         framework_level_counts.setdefault(framework_name, {})
         framework_level_counts[framework_name][level_num] = (
             framework_level_counts[framework_name].get(level_num, 0) + 1
         )
     framework_groups = [
-        {
-            "name": framework_name,
-            "order": order,
-            "local_levels": sorted(framework_level_counts.get(framework_name, {})),
-            "level_node_counts": {
-                str(level): count
-                for level, count in sorted(framework_level_counts.get(framework_name, {}).items())
-            },
-        }
+        HierarchyFrameworkGroup(
+            name=framework_name,
+            order=order,
+            local_levels=sorted(framework_level_counts.get(framework_name, {})),
+            level_node_counts=dict(sorted(framework_level_counts.get(framework_name, {}).items())),
+        )
         for order, framework_name in enumerate(framework_order)
     ]
 
@@ -631,16 +664,16 @@ def build_payload_from_framework(framework_dir: Path) -> tuple[dict[str, Any], l
     if warnings:
         description = f"{description} 警告数量={len(warnings)}。"
 
-    root = {
-        "title": "框架标准树结构图",
-        "description": description,
-        "level_labels": level_labels,
-        "layout_mode": "framework_columns",
-        "framework_groups": framework_groups,
-        "nodes": nodes,
-        "edges": edges,
-    }
-    return {"root": root}, warnings
+    graph = HierarchyGraph(
+        title="框架标准树结构图",
+        description=description,
+        level_labels={int(level): label for level, label in level_labels.items()},
+        layout_mode="framework_columns",
+        framework_groups=framework_groups,
+        nodes=nodes,
+        edges=edges,
+    )
+    return graph.to_payload_dict(), warnings
 
 
 def render_html(input_json: Path, output_html: Path, width: int, height: int) -> None:

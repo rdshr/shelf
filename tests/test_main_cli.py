@@ -11,11 +11,11 @@ class MainCliTest(unittest.TestCase):
     def test_normalize_argv_defaults_to_serve(self) -> None:
         self.assertEqual(shelf_main._normalize_argv([]), ["serve"])
         self.assertEqual(shelf_main._normalize_argv(["--reload"]), ["serve", "--reload"])
-        self.assertEqual(shelf_main._normalize_argv(["reference-shelf"]), ["reference-shelf"])
+        self.assertEqual(shelf_main._normalize_argv(["legacy-reference-shelf"]), ["legacy-reference-shelf"])
 
     @mock.patch("main.run_reference_pipeline")
     def test_reference_shelf_command_runs_legacy_pipeline(self, run_reference_pipeline: mock.Mock) -> None:
-        result = shelf_main.main(["reference-shelf"])
+        result = shelf_main.main(["legacy-reference-shelf"])
 
         self.assertEqual(result, 0)
         run_reference_pipeline.assert_called_once_with()

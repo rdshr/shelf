@@ -130,6 +130,45 @@ class FrameworkStrictValidationTest(unittest.TestCase):
         )
         self.assertFalse(any(issue["code"] in {"FW022", "FW070", "FW075"} for issue in issues))
 
+    def test_framework_doc_must_not_reference_downstream_carrying_layers(self) -> None:
+        issues = self.run_framework_validation(
+            {
+                "demo/L0-M0-承接模块.md": """
+                # 承接模块:CarrierModule
+
+                @framework
+
+                本模块不应直接谈论 Product Spec 或 implementation_config.toml。
+
+                ## 1. 能力声明（Capability Statement）
+
+                - `C1` 承接能力：定义稳定承接结构。
+                - `N1` 非职责声明：不负责实例值。
+
+                ## 2. 边界定义（Boundary / 参数）
+
+                - `P1` 参数一：承接边界。来源：`C1`。
+
+                ## 3. 最小可行基（Minimum Viable Bases）
+
+                - `B1` 承接结构基：由承接骨架组成。来源：`C1 + P1`。
+
+                ## 4. 基组合原则（Base Combination Principles）
+
+                - `R1` 承接组合
+                  - `R1.1` 参与基：`B1`。
+                  - `R1.2` 组合方式：固定承接骨架。
+                  - `R1.3` 输出能力：`C1`。
+                  - `R1.4` 边界绑定：`P1`。
+
+                ## 5. 验证（Verification）
+
+                - `V1` 承接结构必须完整。
+                """,
+            }
+        )
+        self.assertTrue(any(issue["code"] == "FW004" for issue in issues))
+
     def test_non_l0_base_requires_inline_adjacent_module_refs(self) -> None:
         issues = self.run_framework_validation(
             {
