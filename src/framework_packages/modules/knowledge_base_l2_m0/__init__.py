@@ -1,4 +1,11 @@
-from framework_packages.contract import PackageCompileInput, PackageCompileResult, PackageConfigContract, PackageConfigFieldRule
+from framework_packages.contract import (
+    PackageCompileInput,
+    PackageCompileResult,
+    PackageConfigContract,
+    PackageConfigFieldRule,
+    RuntimeAppEntrypoint,
+    RuntimeValidationHook,
+)
 from framework_packages.static import StaticFrameworkPackage
 from project_runtime.export_builders import build_knowledge_base_runtime_exports
 
@@ -55,6 +62,10 @@ class KnowledgeBaseL2M0Package(StaticFrameworkPackage):
                 _required_field("truth.documents"),
             ),
             covered_roots=(
+                "truth.surface.layout_variant",
+                "truth.surface.sidebar_width",
+                "truth.surface.preview_mode",
+                "truth.surface.density",
                 "truth.library",
                 "truth.preview",
                 "truth.chat",
@@ -77,6 +88,19 @@ class KnowledgeBaseL2M0Package(StaticFrameworkPackage):
             export=base.export,
             evidence=base.evidence,
             runtime_exports=build_knowledge_base_runtime_exports(payload),
+            runtime_entrypoints=(
+                RuntimeAppEntrypoint(
+                    entrypoint_id="knowledge_base_runtime_app",
+                    factory_path="knowledge_base_runtime.app:build_knowledge_base_runtime_app",
+                ),
+            ),
+            runtime_validation_hooks=(
+                RuntimeValidationHook(
+                    scope="knowledge_base",
+                    validator_path="knowledge_base_framework.validators:validate_workbench_rules",
+                    summarizer_path="knowledge_base_framework.validators:summarize_workbench_rules",
+                ),
+            ),
         )
 
 

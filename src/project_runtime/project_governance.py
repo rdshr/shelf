@@ -5,8 +5,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from project_runtime.project_config_source import load_project_config_document
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROJECTS_DIR = REPO_ROOT / "projects"
@@ -20,18 +18,29 @@ def _relative_path(path: Path) -> str:
         return str(path)
 
 
-def _require_table(parent: dict[str, Any], key: str, *, file_path: Path) -> dict[str, Any]:
-    value = parent.get(key)
-    if not isinstance(value, dict):
-        raise ValueError(f"{file_path}: missing table {key}")
-    return value
+def discover_project_entry_files(projects_dir: Path | None = None) -> tuple[Path, ...]:
+    root = (projects_dir or PROJECTS_DIR).resolve()
+    return tuple(sorted(project_file.resolve() for project_file in root.glob(f"*/{PROJECT_FILE_NAME}")))
 
 
-def _require_string(parent: dict[str, Any], key: str, *, file_path: Path) -> str:
-    value = parent.get(key)
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{file_path}: missing string {key}")
-    return value.strip()
+def _read_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must decode into object")
+    return payload
+
+
+def _load_canonical_graph(project_dir: Path) -> tuple[Path, dict[str, Any]]:
+    generated_dir = project_dir / "generated"
+    if not generated_dir.exists():
+        raise ValueError(f"{project_dir}: missing generated directory")
+    candidates = sorted(generated_dir.glob("*.json"))
+    for path in candidates:
+        payload = _read_json(path)
+        schema_version = payload.get("schema_version")
+        if isinstance(schema_version, str) and schema_version.startswith("framework-package-canonical/"):
+            return path, payload
+    raise ValueError(f"{project_dir}: canonical graph not found in generated directory")
 
 
 @dataclass(frozen=True)
@@ -42,6 +51,7 @@ class FrameworkDrivenProjectRecord:
     generated_dir: str
     root_modules: dict[str, str]
     artifact_contract: dict[str, str]
+    canonical_graph_path: str
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -51,6 +61,7 @@ class FrameworkDrivenProjectRecord:
             "generated_dir": self.generated_dir,
             "root_modules": dict(self.root_modules),
             "artifact_contract": dict(self.artifact_contract),
+            "canonical_graph_path": self.canonical_graph_path,
         }
 
 
@@ -64,6 +75,7 @@ class ProjectDiscoveryAuditEntry:
     runtime_scene: str
     root_modules: dict[str, str]
     generated_dir: str
+    canonical_graph_path: str
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -75,50 +87,34 @@ class ProjectDiscoveryAuditEntry:
             "runtime_scene": self.runtime_scene,
             "root_modules": dict(self.root_modules),
             "generated_dir": self.generated_dir,
+            "canonical_graph_path": self.canonical_graph_path,
         }
 
 
-def _artifact_contract(data: dict[str, Any], *, file_path: Path) -> dict[str, str]:
-    refinement = _require_table(data, "refinement", file_path=file_path)
-    artifacts = _require_table(refinement, "artifacts", file_path=file_path)
-    names: dict[str, str] = {}
-    for key in (
-        "canonical_graph_json",
-        "runtime_bundle_py",
-        "generation_manifest_json",
-        "governance_manifest_json",
-        "governance_tree_json",
-        "strict_zone_report_json",
-        "object_coverage_report_json",
-    ):
-        names[key] = _require_string(artifacts, key, file_path=file_path)
-    return names
-
-
 def discover_framework_driven_projects(projects_dir: Path | None = None) -> tuple[FrameworkDrivenProjectRecord, ...]:
-    root = (projects_dir or PROJECTS_DIR).resolve()
     records: list[FrameworkDrivenProjectRecord] = []
-    for project_file in sorted(root.glob(f"*/{PROJECT_FILE_NAME}")):
-        document = load_project_config_document(project_file)
-        project_table = _require_table(document.merged_data, "project", file_path=project_file)
-        selection_table = _require_table(document.merged_data, "selection", file_path=project_file)
-        roots_value = selection_table.get("roots")
-        if not isinstance(roots_value, list) or not roots_value:
-            raise ValueError(f"{project_file}: missing selection.roots")
-        root_modules: dict[str, str] = {}
-        for item in roots_value:
-            if not isinstance(item, dict):
-                raise ValueError(f"{project_file}: invalid selection.roots entry")
-            role = _require_string(item, "role", file_path=project_file)
-            root_modules[role] = _require_string(item, "framework_file", file_path=project_file)
+    for project_file in discover_project_entry_files(projects_dir):
+        project_dir = project_file.parent
+        canonical_path, canonical = _load_canonical_graph(project_dir)
+        project_payload = canonical.get("project", {})
+        framework_layer = canonical.get("layers", {}).get("framework", {})
+        root_modules = framework_layer.get("selection", {}).get("root_modules", {})
+        evidence_layer = canonical.get("layers", {}).get("evidence", {})
+        generated_artifacts = evidence_layer.get("generated_artifacts", {})
+        artifact_contract = {
+            key: Path(value).name
+            for key, value in generated_artifacts.items()
+            if isinstance(key, str) and isinstance(value, str) and key != "directory"
+        }
         records.append(
             FrameworkDrivenProjectRecord(
-                project_id=_require_string(project_table, "project_id", file_path=project_file),
-                runtime_scene=_require_string(project_table, "runtime_scene", file_path=project_file),
+                project_id=str(project_payload.get("project_id", project_dir.name)),
+                runtime_scene=str(project_payload.get("runtime_scene", "")),
                 project_file=_relative_path(project_file),
-                generated_dir=_relative_path(project_file.parent / "generated"),
-                root_modules=root_modules,
-                artifact_contract=_artifact_contract(document.merged_data, file_path=project_file),
+                generated_dir=_relative_path(project_dir / "generated"),
+                root_modules={str(key): str(value) for key, value in root_modules.items()} if isinstance(root_modules, dict) else {},
+                artifact_contract=artifact_contract,
+                canonical_graph_path=_relative_path(canonical_path),
             )
         )
     return tuple(records)
@@ -132,14 +128,15 @@ def build_project_discovery_audit(projects_dir: Path | None = None) -> dict[str,
             directory=Path(item.project_file).parent.as_posix(),
             classification="framework-package-project",
             reasons=(
-                "contains project.toml",
-                "declares root framework modules",
-                "declares canonical-derived artifact contract",
+                "contains project entry file",
+                "governance metadata derived from canonical graph",
+                "derived artifacts point back to canonical graph",
             ),
             project_file=item.project_file,
             runtime_scene=item.runtime_scene,
             root_modules=item.root_modules,
             generated_dir=item.generated_dir,
+            canonical_graph_path=item.canonical_graph_path,
         )
         for item in projects
     ]
@@ -166,6 +163,7 @@ def render_project_discovery_audit_markdown(payload: dict[str, Any]) -> str:
         lines.append(f"- project_file: `{item.get('project_file', '')}`")
         lines.append(f"- runtime_scene: `{item.get('runtime_scene', '')}`")
         lines.append(f"- generated_dir: `{item.get('generated_dir', '')}`")
+        lines.append(f"- canonical_graph: `{item.get('canonical_graph_path', '')}`")
         lines.append(f"- classification: `{item.get('classification', '')}`")
         root_modules = item.get("root_modules", {})
         if isinstance(root_modules, dict):

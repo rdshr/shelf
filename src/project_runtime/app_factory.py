@@ -5,11 +5,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from project_runtime import DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE, build_project_runtime_app_from_project_file
+from project_runtime import DEFAULT_PROJECT_FILE, build_project_runtime_app_from_project_file
 
 
 PROJECT_FILE_ENV = "SHELF_PROJECT_FILE"
-DEFAULT_PROJECT_FILE = DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE
 
 
 def build_project_app(project_file: str | Path | None = None) -> FastAPI:

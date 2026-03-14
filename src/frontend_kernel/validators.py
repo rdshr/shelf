@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection, resolve_knowledge_base_projection
+
 if TYPE_CHECKING:
-    from project_runtime.knowledge_base import KnowledgeBaseRuntimeBundle
+    from project_runtime import ProjectRuntimeAssembly
 
 from rule_validation_models import RuleValidationOutcome, RuleValidationSummary
 
@@ -24,10 +26,11 @@ def _outcome(
     )
 
 
-def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[RuleValidationOutcome, ...]:
-    contract_spec = project.template_contract
-    contract = project.frontend_contract
-    ui_spec = project.ui_spec
+def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleValidationOutcome, ...]:
+    projection: KnowledgeBaseRuntimeProjection = resolve_knowledge_base_projection(project)
+    contract_spec = projection.template_contract
+    contract = projection.frontend_contract
+    ui_spec = projection.ui_spec
     surface_regions = {item["region_id"] for item in contract["surface_regions"]}
     interaction_actions = {item["action_id"] for item in contract["interaction_actions"]}
     a11y = contract["a11y"]
@@ -47,8 +50,8 @@ def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[Rule
         r1_reasons.append("surface.preview_mode must match ui_spec.shell.preview_mode")
 
     r2_required = contract_spec.frontend_interaction_action_ids(
-        allow_create=project.library.allow_create,
-        allow_delete=project.library.allow_delete,
+        allow_create=projection.library.allow_create,
+        allow_delete=projection.library.allow_delete,
     )
     r2_missing = [item for item in r2_required if item not in interaction_actions]
     r2_reasons = [f"missing interaction action: {item}" for item in r2_missing]
@@ -56,7 +59,7 @@ def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[Rule
         r2_reasons.append(
             "reading order must stay " + " -> ".join(contract_spec.required_reading_order)
         )
-    if contract_spec.preview_show_toc_required and not project.preview.show_toc:
+    if contract_spec.preview_show_toc_required and not projection.preview.show_toc:
         r2_reasons.append("preview TOC must stay enabled")
     if not route_contract["knowledge_list"].startswith("/"):
         r2_reasons.append("route.knowledge_list must stay routable")
@@ -69,28 +72,28 @@ def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[Rule
             r2_reasons.append(f"missing ui_spec page: {page_id}")
 
     r3_reasons: list[str] = []
-    if project.metadata.runtime_scene != contract_spec.template_id:
+    if projection.metadata.runtime_scene != contract_spec.template_id:
         r3_reasons.append(f"frontend extend slot must target {contract_spec.template_id}")
-    if contract["extend_slots"][0]["module_id"] != project.root_module_ids["knowledge_base"]:
+    if contract["extend_slots"][0]["module_id"] != projection.root_module_ids["knowledge_base"]:
         r3_reasons.append("domain workbench slot must point to the selected domain framework module")
-    if contract["extend_slots"][1]["module_id"] != project.root_module_ids["backend"]:
+    if contract["extend_slots"][1]["module_id"] != projection.root_module_ids["backend"]:
         r3_reasons.append("backend contract slot must point to the selected backend framework module")
 
     r4_reasons: list[str] = []
-    if not project.preview.enabled:
+    if not projection.preview.enabled:
         r4_reasons.append("preview cannot be disabled")
-    if not project.chat.enabled:
+    if not projection.chat.enabled:
         r4_reasons.append("chat cannot be disabled")
-    if project.chat.citations_enabled and not project.return_config.enabled:
+    if projection.chat.citations_enabled and not projection.return_config.enabled:
         r4_reasons.append("citation cannot be enabled without return_to_anchor")
-    missing_return_targets = contract_spec.required_return_target_set() - set(project.return_config.targets)
+    missing_return_targets = contract_spec.required_return_target_set() - set(projection.return_config.targets)
     for target in sorted(missing_return_targets):
         r4_reasons.append(f"return targets must include {target}")
     if contract["component_variants"]["chat_bubble"] not in contract_spec.supported_chat_bubble_variants:
         r4_reasons.append("chat bubble variant must stay within supported framework set")
     if contract["component_variants"]["chat_composer"] not in contract_spec.supported_chat_composer_variants:
         r4_reasons.append("chat composer variant must stay within supported framework set")
-    if component_spec.get("citation_drawer", {}).get("return_targets") != list(project.return_config.targets):
+    if component_spec.get("citation_drawer", {}).get("return_targets") != list(projection.return_config.targets):
         r4_reasons.append("ui_spec citation drawer return_targets must match return.targets")
 
     return (
@@ -123,7 +126,7 @@ def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[Rule
             r3_reasons,
             {
                 "extend_slots": contract["extend_slots"],
-                "runtime_scene": project.metadata.runtime_scene,
+                "runtime_scene": projection.metadata.runtime_scene,
             },
         ),
         _outcome(
@@ -132,8 +135,8 @@ def validate_frontend_rules(project: "KnowledgeBaseRuntimeBundle") -> tuple[Rule
             not r4_reasons,
             r4_reasons,
             {
-                "features": project.features.to_dict(),
-                "return": project.return_config.to_dict(),
+                "features": projection.features.to_dict(),
+                "return": projection.return_config.to_dict(),
                 "surface": contract["surface_config"],
             },
         ),

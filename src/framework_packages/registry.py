@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from framework_ir import FrameworkModule, FrameworkRegistry
 
-from .contract import FrameworkPackageContract
+from .contract import instantiate_framework_package_contract
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class FrameworkPackageRegistry:
         self._by_module_id: dict[str, FrameworkPackageRegistration] = {}
 
     def register(self, entry_class: type[Any]) -> None:
-        contract = cast(FrameworkPackageContract, entry_class())
+        contract = instantiate_framework_package_contract(entry_class)
         framework_file = contract.framework_file()
         module_id = contract.module_id()
         package_module = entry_class.__module__
@@ -88,9 +88,10 @@ class FrameworkPackageRegistry:
         return tuple(sorted(orphans))
 
     def validate_against_framework(self, framework_registry: FrameworkRegistry) -> None:
-        from .validators import validate_unique_package_entry_classes
+        from .validators import validate_package_config_contracts, validate_unique_package_entry_classes
 
         validate_unique_package_entry_classes(self)
+        validate_package_config_contracts(self)
         missing = self.detect_unimplemented_framework_files(framework_registry)
         if missing:
             raise ValueError("framework files missing package implementations: " + ", ".join(missing))

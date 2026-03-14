@@ -21,6 +21,7 @@ from generate_module_hierarchy_html import load_hierarchy, render_html
 from project_runtime import (
     build_project_discovery_audit,
     discover_framework_driven_projects,
+    discover_project_entry_files,
     materialize_project_runtime_bundle,
     render_project_discovery_audit_markdown,
 )
@@ -34,7 +35,7 @@ from workspace_governance import (
 
 
 def discover_project_files() -> list[Path]:
-    return [(REPO_ROOT / item.project_file).resolve() for item in discover_framework_driven_projects()]
+    return [item.resolve() for item in discover_project_entry_files()]
 
 
 def main() -> int:

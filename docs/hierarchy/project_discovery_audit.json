@@ -7,9 +7,9 @@
       "directory": "projects/knowledge_base_basic",
       "classification": "framework-package-project",
       "reasons": [
-        "contains project.toml",
-        "declares root framework modules",
-        "declares canonical-derived artifact contract"
+        "contains project entry file",
+        "governance metadata derived from canonical graph",
+        "derived artifacts point back to canonical graph"
       ],
       "project_file": "projects/knowledge_base_basic/project.toml",
       "runtime_scene": "knowledge_base_workbench",
@@ -18,7 +18,8 @@
         "knowledge_base": "framework/knowledge_base/L2-M0-知识库工作台场景模块.md",
         "backend": "framework/backend/L2-M0-知识库接口框架标准模块.md"
       },
-      "generated_dir": "projects/knowledge_base_basic/generated"
+      "generated_dir": "projects/knowledge_base_basic/generated",
+      "canonical_graph_path": "projects/knowledge_base_basic/generated/canonical_graph.json"
     }
   ]
 }

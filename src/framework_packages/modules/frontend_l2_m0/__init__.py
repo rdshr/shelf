@@ -1,4 +1,10 @@
-from framework_packages.contract import PackageCompileInput, PackageCompileResult, PackageConfigContract, PackageConfigFieldRule
+from framework_packages.contract import (
+    PackageCompileInput,
+    PackageCompileResult,
+    PackageConfigContract,
+    PackageConfigFieldRule,
+    RuntimeValidationHook,
+)
 from framework_packages.static import StaticFrameworkPackage
 from project_runtime.export_builders import build_frontend_runtime_exports
 
@@ -91,6 +97,7 @@ class FrontendL2M0Package(StaticFrameworkPackage):
                 _required_field("refinement.frontend.script_profile"),
             ),
             covered_roots=(
+                "selection.preset",
                 "truth.surface",
                 "truth.visual",
                 "truth.route",
@@ -99,6 +106,7 @@ class FrontendL2M0Package(StaticFrameworkPackage):
                 "truth.library",
                 "truth.preview",
                 "truth.chat",
+                "truth.context.sticky_document",
                 "truth.return",
                 "refinement.frontend",
             ),
@@ -117,6 +125,13 @@ class FrontendL2M0Package(StaticFrameworkPackage):
             export=base.export,
             evidence=base.evidence,
             runtime_exports=build_frontend_runtime_exports(payload),
+            runtime_validation_hooks=(
+                RuntimeValidationHook(
+                    scope="frontend",
+                    validator_path="frontend_kernel.validators:validate_frontend_rules",
+                    summarizer_path="frontend_kernel.validators:summarize_frontend_rules",
+                ),
+            ),
         )
 
 

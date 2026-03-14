@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from textwrap import dedent
 
-from project_runtime.knowledge_base import KnowledgeBaseRuntimeBundle
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class StyleTemplateContext:
     panel_gap: str
 
     @classmethod
-    def from_project(cls, project: KnowledgeBaseRuntimeBundle) -> "StyleTemplateContext":
+    def from_project(cls, project: KnowledgeBaseRuntimeProjection) -> "StyleTemplateContext":
         _require_style_profile(project)
         visual = project.ui_spec["visual"]["tokens"]
         return cls(
@@ -94,7 +94,7 @@ class StyleTemplateContext:
         }
 
 
-def _require_style_profile(project: KnowledgeBaseRuntimeBundle) -> str:
+def _require_style_profile(project: KnowledgeBaseRuntimeProjection) -> str:
     implementation = project.ui_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend style selection")
@@ -935,5 +935,5 @@ def _style_responsive_section() -> str:
     ).strip()
 
 
-def build_shared_style(project: KnowledgeBaseRuntimeBundle) -> str:
+def build_shared_style(project: KnowledgeBaseRuntimeProjection) -> str:
     return StyleTemplateContext.from_project(project).render()

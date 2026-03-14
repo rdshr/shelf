@@ -12,7 +12,8 @@ from knowledge_base_runtime.frontend import (
     compose_knowledge_base_list_page,
     compose_knowledge_base_page,
 )
-from project_runtime.knowledge_base import KnowledgeBaseRuntimeBundle
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection, resolve_knowledge_base_projection
+from project_runtime import ProjectRuntimeAssembly
 from project_runtime.pipeline import materialize_project_runtime_bundle
 
 
@@ -22,7 +23,7 @@ class BackendTransportContract:
     project_config_endpoint: str
 
 
-def _require_backend_transport(project: KnowledgeBaseRuntimeBundle) -> BackendTransportContract:
+def _require_backend_transport(project: KnowledgeBaseRuntimeProjection) -> BackendTransportContract:
     transport = project.backend_spec.get("transport")
     if not isinstance(transport, dict):
         raise ValueError("backend_spec.transport is required for runtime app construction")
@@ -37,10 +38,11 @@ def _require_backend_transport(project: KnowledgeBaseRuntimeBundle) -> BackendTr
     return BackendTransportContract(mode=mode, project_config_endpoint=project_config_endpoint)
 
 
-def build_knowledge_base_runtime_app(project: KnowledgeBaseRuntimeBundle | None = None) -> FastAPI:
-    resolved = project or materialize_project_runtime_bundle()
+def build_knowledge_base_runtime_app(project: ProjectRuntimeAssembly | None = None) -> FastAPI:
+    assembly = project or materialize_project_runtime_bundle()
+    resolved = resolve_knowledge_base_projection(assembly)
     transport = _require_backend_transport(resolved)
-    repository = KnowledgeRepository(resolved)
+    repository = KnowledgeRepository(assembly)
     app = FastAPI(
         title=resolved.metadata.display_name,
         summary=resolved.metadata.description,

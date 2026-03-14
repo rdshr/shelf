@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from framework_ir import FrameworkModule
 
@@ -112,6 +112,8 @@ class PackageCompileResult:
     export: dict[str, Any]
     evidence: dict[str, Any]
     runtime_exports: dict[str, Any] = field(default_factory=dict)
+    runtime_entrypoints: tuple["RuntimeAppEntrypoint", ...] = ()
+    runtime_validation_hooks: tuple["RuntimeValidationHook", ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -125,9 +127,38 @@ class PackageCompileResult:
             "export": self.export,
             "evidence": self.evidence,
             "runtime_exports": self.runtime_exports,
+            "runtime_entrypoints": [item.to_dict() for item in self.runtime_entrypoints],
+            "runtime_validation_hooks": [item.to_dict() for item in self.runtime_validation_hooks],
         }
 
 
+@dataclass(frozen=True)
+class RuntimeAppEntrypoint:
+    entrypoint_id: str
+    factory_path: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "entrypoint_id": self.entrypoint_id,
+            "factory_path": self.factory_path,
+        }
+
+
+@dataclass(frozen=True)
+class RuntimeValidationHook:
+    scope: str
+    validator_path: str
+    summarizer_path: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "scope": self.scope,
+            "validator_path": self.validator_path,
+            "summarizer_path": self.summarizer_path,
+        }
+
+
+@runtime_checkable
 class FrameworkPackageContract(Protocol):
     def framework_file(self) -> str: ...
 
@@ -138,3 +169,22 @@ class FrameworkPackageContract(Protocol):
     def child_slots(self, framework_module: FrameworkModule) -> tuple[PackageChildSlot, ...]: ...
 
     def compile(self, payload: PackageCompileInput) -> PackageCompileResult: ...
+
+
+def instantiate_framework_package_contract(entry_class: type[Any]) -> FrameworkPackageContract:
+    contract = entry_class()
+    if not isinstance(contract, FrameworkPackageContract):
+        raise TypeError(f"{entry_class.__module__}.{entry_class.__name__} does not implement FrameworkPackageContract")
+    return contract
+
+
+def is_framework_package_entry_class(candidate: object, *, module_name: str) -> bool:
+    if not isinstance(candidate, type):
+        return False
+    if candidate.__module__ != module_name:
+        return False
+    try:
+        instantiate_framework_package_contract(candidate)
+    except (TypeError, ValueError):
+        return False
+    return True

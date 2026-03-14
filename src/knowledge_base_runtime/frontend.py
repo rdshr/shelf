@@ -5,11 +5,12 @@ from html import escape
 from typing import TYPE_CHECKING
 
 from knowledge_base_runtime.frontend_script import build_chat_script
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection, resolve_knowledge_base_projection
 from knowledge_base_runtime.frontend_style import build_shared_style
-from project_runtime.knowledge_base import (
-    KnowledgeBaseRuntimeBundle,
+from project_runtime import (
     KnowledgeDocument,
-    load_knowledge_base_runtime_bundle,
+    ProjectRuntimeAssembly,
+    load_project_runtime_bundle,
 )
 
 if TYPE_CHECKING:
@@ -32,11 +33,16 @@ class AuxPageSpec:
     content_html: str
 
 
-def _resolve_project(project: KnowledgeBaseRuntimeBundle | None) -> KnowledgeBaseRuntimeBundle:
-    return project or load_knowledge_base_runtime_bundle()
+def _resolve_project(
+    project: ProjectRuntimeAssembly | KnowledgeBaseRuntimeProjection | None,
+) -> KnowledgeBaseRuntimeProjection:
+    if isinstance(project, KnowledgeBaseRuntimeProjection):
+        return project
+    assembly = project or load_project_runtime_bundle()
+    return resolve_knowledge_base_projection(assembly)
 
 
-def _require_frontend_renderer(project: KnowledgeBaseRuntimeBundle) -> str:
+def _require_frontend_renderer(project: KnowledgeBaseRuntimeProjection) -> str:
     implementation = project.ui_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend renderer selection")
@@ -48,7 +54,7 @@ def _require_frontend_renderer(project: KnowledgeBaseRuntimeBundle) -> str:
     return value
 
 
-def _shared_style(project: KnowledgeBaseRuntimeBundle) -> str:
+def _shared_style(project: KnowledgeBaseRuntimeProjection) -> str:
     _require_frontend_renderer(project)
     return build_shared_style(project)
 
@@ -65,7 +71,7 @@ def _chip_list(items: tuple[str, ...] | list[str]) -> str:
     return "".join(_chip(item) for item in items)
 
 
-def _aux_sidebar(project: KnowledgeBaseRuntimeBundle, active: str) -> str:
+def _aux_sidebar(project: KnowledgeBaseRuntimeProjection, active: str) -> str:
     ui_spec = project.ui_spec
     aux_sidebar = ui_spec["components"]["aux_sidebar"]
     knowledge_detail_href = ui_spec["pages"]["knowledge_detail"]["path"].replace(
@@ -117,7 +123,7 @@ def _render_page(title: str, style: str, body: str) -> str:
 """
 
 
-def _render_aux_page(project: KnowledgeBaseRuntimeBundle, *, style: str, page: AuxPageSpec) -> str:
+def _render_aux_page(project: KnowledgeBaseRuntimeProjection, *, style: str, page: AuxPageSpec) -> str:
     header_actions = "".join(_ghost_link(item.href, item.label) for item in page.actions)
     body = f"""
     <div class="aux-shell">
@@ -141,7 +147,7 @@ def _render_aux_page(project: KnowledgeBaseRuntimeBundle, *, style: str, page: A
     return _render_page(page.title, style, body)
 
 
-def compose_basketball_showcase_page(project: KnowledgeBaseRuntimeBundle) -> str:
+def compose_basketball_showcase_page(project: KnowledgeBaseRuntimeProjection) -> str:
     style = (
         _shared_style(project)
         + """
@@ -419,7 +425,7 @@ def compose_basketball_showcase_page(project: KnowledgeBaseRuntimeBundle) -> str
     )
 
 
-def compose_knowledge_base_list_page(project: KnowledgeBaseRuntimeBundle, repository: "KnowledgeRepository") -> str:
+def compose_knowledge_base_list_page(project: KnowledgeBaseRuntimeProjection, repository: "KnowledgeRepository") -> str:
     style = _shared_style(project)
     ui_spec = project.ui_spec
     page_spec = ui_spec["pages"]["knowledge_list"]
@@ -466,7 +472,7 @@ def compose_knowledge_base_list_page(project: KnowledgeBaseRuntimeBundle, reposi
 
 
 def compose_knowledge_base_detail_page(
-    project: KnowledgeBaseRuntimeBundle,
+    project: KnowledgeBaseRuntimeProjection,
     knowledge_base: "KnowledgeBaseDetailResponse",
 ) -> str:
     style = _shared_style(project)
@@ -519,7 +525,7 @@ def compose_knowledge_base_detail_page(
 
 
 def compose_document_detail_page(
-    project: KnowledgeBaseRuntimeBundle,
+    project: KnowledgeBaseRuntimeProjection,
     document: KnowledgeDocument,
     active_section_id: str | None = None,
 ) -> str:
@@ -577,12 +583,14 @@ def compose_document_detail_page(
     )
 
 
-def _chat_script(project: KnowledgeBaseRuntimeBundle) -> str:
+def _chat_script(project: KnowledgeBaseRuntimeProjection) -> str:
     _require_frontend_renderer(project)
     return build_chat_script(project)
 
 
-def compose_knowledge_base_page(project: KnowledgeBaseRuntimeBundle | None = None) -> str:
+def compose_knowledge_base_page(
+    project: ProjectRuntimeAssembly | KnowledgeBaseRuntimeProjection | None = None,
+) -> str:
     resolved = _resolve_project(project)
     ui_spec = resolved.ui_spec
     sidebar_spec = ui_spec["components"]["conversation_sidebar"]

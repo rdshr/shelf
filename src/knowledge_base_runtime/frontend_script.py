@@ -4,10 +4,10 @@ from dataclasses import dataclass
 import json
 from textwrap import dedent
 
-from project_runtime.knowledge_base import KnowledgeBaseRuntimeBundle
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection
 
 
-def _require_script_profile(project: KnowledgeBaseRuntimeBundle) -> str:
+def _require_script_profile(project: KnowledgeBaseRuntimeProjection) -> str:
     implementation = project.ui_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("ui_spec.implementation is required for frontend script selection")
@@ -616,7 +616,7 @@ def _chat_script_init_section() -> str:
     )
 
 
-def build_chat_script(project: KnowledgeBaseRuntimeBundle) -> str:
+def build_chat_script(project: KnowledgeBaseRuntimeProjection) -> str:
     _require_script_profile(project)
     context = ChatScriptTemplateContext(
         project_spec_json=json.dumps(project.to_spec_dict(), ensure_ascii=False),

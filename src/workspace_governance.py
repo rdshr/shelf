@@ -30,6 +30,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def build_workspace_governance_payload() -> dict[str, Any]:
+    projects = discover_framework_driven_projects()
     root_id = "workspace:shelf"
     projects_id = "workspace:shelf:projects"
     evidence_id = "workspace:shelf:evidence"
@@ -43,7 +44,7 @@ def build_workspace_governance_payload() -> dict[str, Any]:
         HierarchyEdge(root_id, evidence_id, "tree_child", {}),
     ]
 
-    for index, project in enumerate(discover_framework_driven_projects(), start=1):
+    for index, project in enumerate(projects, start=1):
         project_node_id = f"project:{project.project_id}"
         nodes.append(
             HierarchyNode(
@@ -57,8 +58,9 @@ def build_workspace_governance_payload() -> dict[str, Any]:
         )
         edges.append(HierarchyEdge(projects_id, project_node_id, "tree_child", {}))
 
-        canonical_path = REPO_ROOT / project.generated_dir / project.artifact_contract["canonical_graph_json"]
-        governance_path = REPO_ROOT / project.generated_dir / project.artifact_contract["governance_tree_json"]
+        canonical_path = REPO_ROOT / project.canonical_graph_path
+        governance_file = project.artifact_contract.get("governance_tree_json")
+        governance_path = REPO_ROOT / project.generated_dir / governance_file if governance_file else None
         nodes.append(
             HierarchyNode(
                 f"{project_node_id}:canonical",
@@ -69,16 +71,17 @@ def build_workspace_governance_payload() -> dict[str, Any]:
             )
         )
         edges.append(HierarchyEdge(project_node_id, f"{project_node_id}:canonical", "tree_child", {}))
-        nodes.append(
-            HierarchyNode(
-                f"{project_node_id}:governance_tree",
-                "governance_tree.json",
-                3,
-                f"derived view | file={_relative(governance_path)}",
-                metadata={"source_file": _relative(governance_path), "node_kind": "derived_view"},
+        if governance_path is not None:
+            nodes.append(
+                HierarchyNode(
+                    f"{project_node_id}:governance_tree",
+                    "governance_tree.json",
+                    3,
+                    f"derived view | file={_relative(governance_path)}",
+                    metadata={"source_file": _relative(governance_path), "node_kind": "derived_view"},
+                )
             )
-        )
-        edges.append(HierarchyEdge(project_node_id, f"{project_node_id}:governance_tree", "tree_child", {}))
+            edges.append(HierarchyEdge(project_node_id, f"{project_node_id}:governance_tree", "tree_child", {}))
 
         if canonical_path.exists():
             canonical = _read_json(canonical_path)
@@ -112,6 +115,6 @@ def build_workspace_governance_payload() -> dict[str, Any]:
         **graph.to_payload_dict(),
         "governance": {
             "schema_version": "workspace-governance/v2",
-            "project_count": len(discover_framework_driven_projects()),
+            "project_count": len(projects),
         },
     }

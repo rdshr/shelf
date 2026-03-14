@@ -17,6 +17,7 @@ from framework_ir import load_framework_registry
 from framework_packages import load_builtin_package_registry
 from project_runtime import (
     build_project_discovery_audit,
+    discover_project_entry_files,
     discover_framework_driven_projects,
     materialize_project_runtime_bundle,
     render_project_discovery_audit_markdown,
@@ -134,7 +135,7 @@ def validate_change_context() -> list[str]:
     if not changed_files:
         return []
 
-    known_projects = {record.project_file for record in discover_framework_driven_projects()}
+    known_projects = {_relative.relative_to(REPO_ROOT).as_posix() for _relative in discover_project_entry_files()}
     issues: list[str] = []
     for changed_file in changed_files:
         if changed_file.startswith("projects/") and changed_file.endswith("/project.toml"):

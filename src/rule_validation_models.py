@@ -50,8 +50,7 @@ class RuleValidationSummary:
 
 @dataclass(frozen=True)
 class ValidationReports:
-    frontend: RuleValidationSummary | None = None
-    knowledge_base: RuleValidationSummary | None = None
+    scopes: dict[str, RuleValidationSummary] = field(default_factory=dict)
 
     @classmethod
     def empty(cls) -> "ValidationReports":
@@ -59,32 +58,25 @@ class ValidationReports:
 
     @property
     def passed(self) -> bool:
-        summaries = tuple(item for item in (self.frontend, self.knowledge_base) if item is not None)
-        return all(item.passed for item in summaries)
+        return all(item.passed for item in self.scopes.values())
 
     @property
     def passed_count(self) -> int:
-        return sum(item.passed_count for item in (self.frontend, self.knowledge_base) if item is not None)
+        return sum(item.passed_count for item in self.scopes.values())
 
     @property
     def rule_count(self) -> int:
-        return sum(item.rule_count for item in (self.frontend, self.knowledge_base) if item is not None)
+        return sum(item.rule_count for item in self.scopes.values())
 
     def summary_by_scope(self) -> dict[str, dict[str, object]]:
-        payload: dict[str, dict[str, object]] = {}
-        if self.frontend is not None:
-            payload["frontend"] = {
-                "passed": self.frontend.passed,
-                "passed_count": self.frontend.passed_count,
-                "rule_count": self.frontend.rule_count,
+        return {
+            scope: {
+                "passed": summary.passed,
+                "passed_count": summary.passed_count,
+                "rule_count": summary.rule_count,
             }
-        if self.knowledge_base is not None:
-            payload["knowledge_base"] = {
-                "passed": self.knowledge_base.passed,
-                "passed_count": self.knowledge_base.passed_count,
-                "rule_count": self.knowledge_base.rule_count,
-            }
-        return payload
+            for scope, summary in sorted(self.scopes.items())
+        }
 
     def to_dict(self) -> dict[str, object]:
         payload: dict[str, object] = {
@@ -94,8 +86,6 @@ class ValidationReports:
                 "rule_count": self.rule_count,
             }
         }
-        if self.frontend is not None:
-            payload["frontend"] = self.frontend.to_dict()
-        if self.knowledge_base is not None:
-            payload["knowledge_base"] = self.knowledge_base.to_dict()
+        for scope, summary in sorted(self.scopes.items()):
+            payload[scope] = summary.to_dict()
         return payload

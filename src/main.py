@@ -7,7 +7,7 @@ import sys
 
 import uvicorn
 
-from project_runtime import DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE, materialize_project_runtime_bundle
+from project_runtime import DEFAULT_PROJECT_FILE, materialize_project_runtime_bundle
 from project_runtime.app_factory import PROJECT_FILE_ENV, build_project_app
 
 
@@ -16,7 +16,6 @@ REPO_ROOT = SRC_DIR.parent
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 KNOWN_COMMANDS = {"serve"}
-DEFAULT_PROJECT_FILE = DEFAULT_KNOWLEDGE_BASE_PROJECT_FILE
 RELOAD_DIRS = [
     SRC_DIR,
     REPO_ROOT / "framework",

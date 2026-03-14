@@ -5,22 +5,28 @@ from datetime import date
 import re
 
 from fastapi import APIRouter, HTTPException, Query, status
-from project_runtime.knowledge_base import (
-    KnowledgeBaseRuntimeBundle,
+from knowledge_base_runtime.projection import KnowledgeBaseRuntimeProjection, resolve_knowledge_base_projection
+from project_runtime import (
     KnowledgeDocument,
     KnowledgeDocumentSection,
+    ProjectRuntimeAssembly,
     SeedDocumentSource,
     compile_knowledge_document_source,
-    load_knowledge_base_runtime_bundle,
+    load_project_runtime_bundle,
 )
 from pydantic import BaseModel, Field
 
 
-def _resolve_project(project: KnowledgeBaseRuntimeBundle | None) -> KnowledgeBaseRuntimeBundle:
-    return project or load_knowledge_base_runtime_bundle()
+def _resolve_project(
+    project: ProjectRuntimeAssembly | KnowledgeBaseRuntimeProjection | None,
+) -> KnowledgeBaseRuntimeProjection:
+    if isinstance(project, KnowledgeBaseRuntimeProjection):
+        return project
+    assembly = project or load_project_runtime_bundle()
+    return resolve_knowledge_base_projection(assembly)
 
 
-def _require_backend_renderer(project: KnowledgeBaseRuntimeBundle) -> str:
+def _require_backend_renderer(project: KnowledgeBaseRuntimeProjection) -> str:
     implementation = project.backend_spec.get("implementation")
     if not isinstance(implementation, dict):
         raise ValueError("backend_spec.implementation is required for backend renderer selection")
@@ -134,7 +140,7 @@ def _make_document_id(value: str) -> str:
     return slug or "knowledge-document"
 
 
-def _document_detail_path(project: KnowledgeBaseRuntimeBundle, document_id: str, section_id: str | None = None) -> str:
+def _document_detail_path(project: KnowledgeBaseRuntimeProjection, document_id: str, section_id: str | None = None) -> str:
     base = project.backend_spec["return_policy"]["document_detail_path"].replace("{document_id}", document_id)
     if section_id:
         return f"{base}?section={section_id}"
@@ -142,7 +148,10 @@ def _document_detail_path(project: KnowledgeBaseRuntimeBundle, document_id: str,
 
 
 class KnowledgeRepository:
-    def __init__(self, project: KnowledgeBaseRuntimeBundle | None = None) -> None:
+    def __init__(
+        self,
+        project: ProjectRuntimeAssembly | KnowledgeBaseRuntimeProjection | None = None,
+    ) -> None:
         self.project = _resolve_project(project)
         _require_backend_renderer(self.project)
         self.backend_spec = self.project.backend_spec
@@ -423,7 +432,7 @@ def _to_document_detail(document: KnowledgeDocument) -> KnowledgeDocumentDetailR
 
 
 def build_knowledge_base_router(
-    project: KnowledgeBaseRuntimeBundle | None = None,
+    project: ProjectRuntimeAssembly | KnowledgeBaseRuntimeProjection | None = None,
     repository: KnowledgeRepository | None = None,
 ) -> APIRouter:
     resolved = _resolve_project(project)

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from framework_ir import FrameworkModule
-from project_runtime.knowledge_base_contract import KnowledgeBaseTemplateContract
+from framework_packages.contract import RuntimeAppEntrypoint, RuntimeValidationHook
 from rule_validation_models import ValidationReports
 
 if TYPE_CHECKING:
@@ -582,62 +582,66 @@ class ResolvedModuleTree:
 
 
 @dataclass(frozen=True)
-class KnowledgeBaseCompilationState:
+class ProjectCompilationState:
     project_file: str
     config: UnifiedProjectConfig
-    scene_contract: KnowledgeBaseTemplateContract
     package_registry: FrameworkPackageRegistry
     module_tree: ResolvedModuleTree
-    package_results: dict[str, PackageCompileResult]
+    package_results: dict[str, "PackageCompileResult"]
 
     @property
     def metadata(self) -> ProjectMetadata:
         return self.config.metadata
-
-    @property
-    def template_contract(self) -> KnowledgeBaseTemplateContract:
-        return self.scene_contract
 
     @property
     def selection(self) -> ModuleSelection:
         return self.config.selection
 
-    @property
-    def frontend_ir(self) -> FrameworkModule:
-        return self.module_tree.require_role("frontend")
+
+@dataclass(frozen=True)
+class RuntimeProjection:
+    package_exports: dict[str, dict[str, Any]]
+    export_index: dict[str, dict[str, Any]]
+    app_entrypoints: tuple[RuntimeAppEntrypoint, ...]
+    validation_hooks: tuple[RuntimeValidationHook, ...]
 
     @property
-    def domain_ir(self) -> FrameworkModule:
-        return self.module_tree.require_role("knowledge_base")
+    def export_values(self) -> dict[str, Any]:
+        return {
+            export_key: binding["value"]
+            for export_key, binding in self.export_index.items()
+        }
 
-    @property
-    def backend_ir(self) -> FrameworkModule:
-        return self.module_tree.require_role("backend")
+    def require_export(self, export_key: str) -> Any:
+        binding = self.export_index.get(export_key)
+        if binding is None:
+            raise KeyError(f"missing runtime export: {export_key}")
+        return binding["value"]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "package_exports": jsonable(self.package_exports),
+            "export_index": jsonable(self.export_index),
+            "app_entrypoints": [item.to_dict() for item in self.app_entrypoints],
+            "validation_hooks": [item.to_dict() for item in self.validation_hooks],
+        }
 
 
 @dataclass(frozen=True)
-class KnowledgeBaseRuntimeBundle:
+class ProjectRuntimeAssembly:
     project_file: str
     config: UnifiedProjectConfig
-    scene_contract: KnowledgeBaseTemplateContract
-    documents: tuple[KnowledgeDocument, ...]
     package_compile_order: tuple[str, ...]
     root_module_ids: dict[str, str]
-    runtime_exports: dict[str, Any]
+    runtime_projection: RuntimeProjection
     validation_reports: ValidationReports
     generated_artifacts: GeneratedArtifactPaths | None = None
     derived_views: dict[str, dict[str, str]] = field(default_factory=dict)
     canonical_graph: dict[str, Any] = field(default_factory=dict)
-    public_summary_payload: dict[str, Any] = field(default_factory=dict)
-    project_config_payload: dict[str, Any] = field(default_factory=dict)
 
     @property
     def metadata(self) -> ProjectMetadata:
         return self.config.metadata
-
-    @property
-    def template_contract(self) -> KnowledgeBaseTemplateContract:
-        return self.scene_contract
 
     @property
     def selection(self) -> ModuleSelection:
@@ -692,73 +696,43 @@ class KnowledgeBaseRuntimeBundle:
         return self.config.refinement
 
     @property
-    def frontend_contract(self) -> dict[str, Any]:
-        return dict(self.runtime_exports["frontend_contract"])
-
-    @property
-    def workbench_contract(self) -> dict[str, Any]:
-        return dict(self.runtime_exports["workbench_contract"])
-
-    @property
-    def ui_spec(self) -> dict[str, Any]:
-        return dict(self.runtime_exports["ui_spec"])
-
-    @property
-    def backend_spec(self) -> dict[str, Any]:
-        return dict(self.runtime_exports["backend_spec"])
-
-    @property
-    def copy(self) -> dict[str, str]:
-        return dict(self.runtime_exports.get("derived_copy", {}))
+    def project_config_view(self) -> dict[str, Any]:
+        return {
+            "project": self.metadata.to_dict(),
+            "selection": self.selection.to_dict(),
+            "truth": self.config.truth_payload(),
+            "refinement": self.refinement.to_dict(),
+            "narrative": jsonable(self.config.narrative),
+        }
 
     @property
     def public_summary(self) -> dict[str, Any]:
-        return dict(self.public_summary_payload)
+        return {
+            "project_file": self.project_file,
+            "project": self.metadata.to_dict(),
+            "selection": self.selection.to_dict(),
+            "package_compile_order": list(self.package_compile_order),
+            "runtime_export_keys": sorted(self.runtime_projection.export_values),
+            "validation_reports": self.validation_reports.to_dict(),
+            "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
+        }
 
     @property
-    def project_config_view(self) -> dict[str, Any]:
-        return dict(self.project_config_payload)
+    def runtime_exports(self) -> dict[str, Any]:
+        return dict(self.runtime_projection.export_values)
 
-    def _resolved_page_routes(self) -> dict[str, str]:
-        return {
-            "home": self.route.home,
-            "chat_home": self.route.workbench,
-            "basketball_showcase": self.route.basketball_showcase,
-            "knowledge_list": self.route.knowledge_list,
-            "knowledge_detail": f"{self.route.knowledge_detail}/{{knowledge_base_id}}",
-            "document_detail": f"{self.route.document_detail_prefix}/{{document_id}}",
-        }
-
-    def _resolved_api_routes(self) -> dict[str, str]:
-        return {
-            "knowledge_bases": f"{self.route.api_prefix}/knowledge-bases",
-            "knowledge_base_detail": f"{self.route.api_prefix}/knowledge-bases/{{knowledge_base_id}}",
-            "documents": f"{self.route.api_prefix}/documents",
-            "create_document": f"{self.route.api_prefix}/documents",
-            "document_detail": f"{self.route.api_prefix}/documents/{{document_id}}",
-            "delete_document": f"{self.route.api_prefix}/documents/{{document_id}}",
-            "section_detail": f"{self.route.api_prefix}/documents/{{document_id}}/sections/{{section_id}}",
-            "tags": f"{self.route.api_prefix}/tags",
-            "chat_turns": f"{self.route.api_prefix}/chat/turns",
-            "project_config": self.refinement.evidence.project_config_endpoint,
-        }
+    def require_runtime_export(self, export_key: str) -> Any:
+        return self.runtime_projection.require_export(export_key)
 
     def to_runtime_bundle_dict(self) -> dict[str, Any]:
         return {
             "project_file": self.project_file,
             "project": self.metadata.to_dict(),
             "selection": self.selection.to_dict(),
+            "root_module_ids": dict(self.root_module_ids),
+            "package_compile_order": list(self.package_compile_order),
             "project_config": self.project_config_view,
-            "routes": {
-                **self.route.to_dict(),
-                "pages": self._resolved_page_routes(),
-                "api": self._resolved_api_routes(),
-            },
-            "frontend_contract": self.frontend_contract,
-            "workbench_contract": self.workbench_contract,
-            "ui_spec": self.ui_spec,
-            "backend_spec": self.backend_spec,
-            "documents": [item.to_dict() for item in self.documents],
+            "runtime_projection": self.runtime_projection.to_dict(),
             "runtime_exports": jsonable(self.runtime_exports),
             "validation_reports": self.validation_reports.to_dict(),
             "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
