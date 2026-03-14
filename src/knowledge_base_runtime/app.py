@@ -47,7 +47,6 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseProject | None = None
     )
     app.include_router(build_knowledge_base_router(resolved, repository))
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(resolved.route.home, include_in_schema=False)
     def root() -> dict[str, object]:
         return {
@@ -56,22 +55,18 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseProject | None = None
             "project_config": transport.project_config_endpoint,
         }
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(resolved.route.workbench, response_class=HTMLResponse, include_in_schema=False)
     def knowledge_base_page() -> str:
         return compose_knowledge_base_page(resolved)
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(resolved.route.basketball_showcase, response_class=HTMLResponse, include_in_schema=False)
     def basketball_showcase_page() -> str:
         return compose_basketball_showcase_page(resolved)
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(resolved.route.knowledge_list, response_class=HTMLResponse, include_in_schema=False)
     def knowledge_base_list_page() -> str:
         return compose_knowledge_base_list_page(resolved, repository)
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(f"{resolved.route.knowledge_detail}/{{knowledge_base_id}}", response_class=HTMLResponse, include_in_schema=False)
     def knowledge_base_detail_page(knowledge_base_id: str) -> str:
         knowledge_base = repository.get_knowledge_base(knowledge_base_id)
@@ -79,7 +74,6 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseProject | None = None
             raise HTTPException(status_code=404, detail="Knowledge base not found")
         return compose_knowledge_base_detail_page(resolved, knowledge_base)
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(
         f"{resolved.route.document_detail_prefix}/{{document_id}}",
         response_class=HTMLResponse,
@@ -91,7 +85,6 @@ def build_knowledge_base_runtime_app(project: KnowledgeBaseProject | None = None
             raise HTTPException(status_code=404, detail="Document not found")
         return compose_document_detail_page(resolved, document, active_section_id=section)
 
-    # @governed_symbol id=kb.runtime.page_routes owner=framework kind=runtime_routes risk=high
     @app.get(transport.project_config_endpoint)
     def project_config() -> dict[str, object]:
         return resolved.project_config_view

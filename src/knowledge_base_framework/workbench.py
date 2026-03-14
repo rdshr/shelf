@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from project_runtime.knowledge_base import KnowledgeBaseProject
 
 
-# @governed_symbol id=kb.workbench.surface_contract owner=framework kind=surface_contract risk=high
 def build_workbench_contract(project: "KnowledgeBaseProject") -> dict[str, Any]:
     contract = project.template_contract
     library_actions = list(

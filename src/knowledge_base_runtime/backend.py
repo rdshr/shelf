@@ -431,12 +431,10 @@ def build_knowledge_base_router(
     repo = repository or KnowledgeRepository(resolved)
     router = APIRouter(prefix=resolved.route.api_prefix, tags=[resolved.metadata.project_id])
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/knowledge-bases", response_model=list[KnowledgeBaseSummaryResponse])
     def list_knowledge_bases() -> list[KnowledgeBaseSummaryResponse]:
         return repo.list_knowledge_bases()
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/knowledge-bases/{knowledge_base_id}", response_model=KnowledgeBaseDetailResponse)
     def get_knowledge_base(knowledge_base_id: str) -> KnowledgeBaseDetailResponse:
         knowledge_base = repo.get_knowledge_base(knowledge_base_id)
@@ -444,7 +442,6 @@ def build_knowledge_base_router(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge base not found")
         return knowledge_base
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/documents", response_model=list[KnowledgeDocumentSummaryResponse])
     def list_documents(
         query: str = "",
@@ -452,7 +449,6 @@ def build_knowledge_base_router(
     ) -> list[KnowledgeDocumentSummaryResponse]:
         return [_to_document_summary(item) for item in repo.list_documents(query=query, tag=tag)]
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.post("/documents", response_model=KnowledgeDocumentDetailResponse, status_code=status.HTTP_201_CREATED)
     def create_document(payload: KnowledgeDocumentCreateRequest) -> KnowledgeDocumentDetailResponse:
         try:
@@ -461,7 +457,6 @@ def build_knowledge_base_router(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
         return _to_document_detail(document)
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/documents/{document_id}", response_model=KnowledgeDocumentDetailResponse)
     def get_document(document_id: str) -> KnowledgeDocumentDetailResponse:
         document = repo.get_document(document_id)
@@ -469,7 +464,6 @@ def build_knowledge_base_router(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
         return _to_document_detail(document)
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/documents/{document_id}/sections/{section_id}", response_model=KnowledgeSectionResponse)
     def get_section(document_id: str, section_id: str) -> KnowledgeSectionResponse:
         section = repo.get_section(document_id, section_id)
@@ -483,7 +477,6 @@ def build_knowledge_base_router(
             plain_text=section.plain_text,
         )
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.delete("/documents/{document_id}", response_model=KnowledgeDocumentDeleteResponse)
     def delete_document(document_id: str) -> KnowledgeDocumentDeleteResponse:
         try:
@@ -494,12 +487,10 @@ def build_knowledge_base_router(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
         return KnowledgeDocumentDeleteResponse(document_id=document_id, deleted=True)
 
-    # @governed_symbol id=kb.api.library_contracts owner=framework kind=api_contract risk=high
     @router.get("/tags", response_model=KnowledgeTagListResponse)
     def list_tags() -> KnowledgeTagListResponse:
         return KnowledgeTagListResponse(items=repo.list_tags())
 
-    # @governed_symbol id=kb.api.chat_contract owner=framework kind=api_contract risk=high
     @router.post("/chat/turns", response_model=KnowledgeChatTurnResponse)
     def create_chat_turn(payload: KnowledgeChatTurnRequest) -> KnowledgeChatTurnResponse:
         return repo.answer_question(
