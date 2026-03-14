@@ -5,7 +5,6 @@ from datetime import date
 import re
 
 from fastapi import APIRouter, HTTPException, Query, status
-from framework_core import Base, BoundaryDefinition, BoundaryItem, Capability, VerificationInput, VerificationResult, verify
 from project_runtime.knowledge_base import (
     KnowledgeBaseCodeModule,
     KnowledgeDocument,
@@ -31,44 +30,6 @@ def _require_backend_renderer(project: KnowledgeBaseCodeModule) -> str:
     if value not in project.template_contract.supported_backend_renderers:
         raise ValueError(f"unsupported backend renderer: {value}")
     return value
-
-
-def _module_capabilities(project: KnowledgeBaseCodeModule) -> tuple[Capability, ...]:
-    return tuple(Capability(item.capability_id, item.statement) for item in project.backend_ir.capabilities)
-
-
-def _module_boundary(project: KnowledgeBaseCodeModule) -> BoundaryDefinition:
-    return BoundaryDefinition(
-        items=tuple(BoundaryItem(item.boundary_id, item.statement) for item in project.backend_ir.boundaries)
-    )
-
-
-def _module_bases(project: KnowledgeBaseCodeModule) -> tuple[Base, ...]:
-    return tuple(Base(item.base_id, item.name, item.inline_expr or item.statement) for item in project.backend_ir.bases)
-
-
-KNOWLEDGE_BASE_API_CAPABILITIES = (
-    Capability("C1", "稳定提供知识库列表、详情、文档列表、创建、删除、文档详情与章节锚点接口。"),
-    Capability("C2", "稳定提供正文预览、章节读取、引用抽屉与文档详情所需的来源结构。"),
-    Capability("C3", "稳定提供问答、行内引用、引用返回路径与文档详情跳转接口。"),
-)
-
-KNOWLEDGE_BASE_API_BOUNDARY = BoundaryDefinition(
-    items=(
-        BoundaryItem("LIBRARY", "知识库列表、详情、文档列表与写入入口必须统一。"),
-        BoundaryItem("PREVIEW", "正文、章节和锚点接口必须返回完整来源结构。"),
-        BoundaryItem("CHAT", "对话输入、回答、行内引用与来源跳转结构必须统一。"),
-        BoundaryItem("RESULT", "接口返回结构必须保持稳定。"),
-        BoundaryItem("AUTH", "写入类能力需由实例策略显式声明。"),
-        BoundaryItem("TRACE", "请求参数、错误原因与引用来源必须可追踪。"),
-    )
-)
-
-KNOWLEDGE_BASE_API_BASES = (
-    Base("B1", "知识库浏览接口基", "knowledge base list + detail + document list endpoints"),
-    Base("B2", "来源详情接口基", "document detail + section + citation drawer source endpoints"),
-    Base("B3", "问答引用接口基", "chat turn + inline refs + return/document detail paths"),
-)
 
 
 class KnowledgeBaseSummaryResponse(BaseModel):
@@ -459,36 +420,6 @@ def _to_document_detail(document: KnowledgeDocument) -> KnowledgeDocumentDetailR
             )
             for section in document.sections
         ],
-    )
-
-
-def verify_knowledge_base_backend(project: KnowledgeBaseCodeModule | None = None) -> VerificationResult:
-    resolved = _resolve_project(project)
-    boundary = _module_boundary(resolved)
-    boundary_valid, boundary_errors = boundary.validate()
-    result = verify(
-        VerificationInput(
-            subject="knowledge base backend",
-            pass_criteria=[
-                "knowledge base list/detail, document list/detail, section, tag, create, delete, and chat endpoints all exist",
-                "chat answers cite concrete sections and expose drawer plus document detail paths",
-                "product spec endpoint exposes compiled product truth",
-            ],
-            evidence={
-                "project": resolved.public_summary,
-                "capabilities": [item.to_dict() for item in _module_capabilities(resolved)],
-                "boundary": boundary.to_dict(),
-                "bases": [item.to_dict() for item in _module_bases(resolved)],
-                "routes": resolved.to_spec_dict()["routes"]["api"],
-                "backend_spec": resolved.backend_spec,
-                "upload_enabled": resolved.features.upload,
-            },
-        )
-    )
-    return VerificationResult(
-        passed=boundary_valid and result.passed,
-        reasons=[*boundary_errors, *result.reasons],
-        evidence=result.evidence,
     )
 
 

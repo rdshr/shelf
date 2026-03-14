@@ -466,8 +466,8 @@
       "l2_anchor": "## 1. 能力声明（Capability Statement）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/frontend.py",
-          "symbol": "KNOWLEDGE_BASE_FRONTEND_CAPABILITIES = ("
+          "file": "src/frontend_kernel/contracts.py",
+          "symbol": "def build_frontend_contract("
         }
       ]
     },
@@ -481,8 +481,8 @@
       "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/frontend.py",
-          "symbol": "KNOWLEDGE_BASE_FRONTEND_BOUNDARY = BoundaryDefinition("
+          "file": "src/frontend_kernel/contracts.py",
+          "symbol": "def build_frontend_contract("
         }
       ]
     },
@@ -496,8 +496,8 @@
       "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/frontend.py",
-          "symbol": "KNOWLEDGE_BASE_FRONTEND_BASES = ("
+          "file": "src/frontend_kernel/contracts.py",
+          "symbol": "def build_frontend_contract("
         }
       ]
     },
@@ -526,8 +526,12 @@
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/frontend.py",
-          "symbol": "def verify_knowledge_base_frontend("
+          "file": "src/frontend_kernel/validators.py",
+          "symbol": "def validate_frontend_rules("
+        },
+        {
+          "file": "src/frontend_kernel/validators.py",
+          "symbol": "def summarize_frontend_rules("
         }
       ]
     },
@@ -624,8 +628,8 @@
       "l2_anchor": "## 1. 能力声明（Capability Statement）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/workspace.py",
-          "symbol": "KNOWLEDGE_BASE_WORKSPACE_CAPABILITIES = ("
+          "file": "src/knowledge_base_framework/workbench.py",
+          "symbol": "def build_workbench_contract("
         }
       ]
     },
@@ -639,8 +643,8 @@
       "l2_anchor": "## 2. 边界定义（Boundary / 参数）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/workspace.py",
-          "symbol": "KNOWLEDGE_BASE_WORKSPACE_BOUNDARY = BoundaryDefinition("
+          "file": "src/knowledge_base_framework/workbench.py",
+          "symbol": "def build_workbench_contract("
         }
       ]
     },
@@ -654,8 +658,8 @@
       "l2_anchor": "## 3. 最小可行基（Minimum Viable Bases）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/workspace.py",
-          "symbol": "KNOWLEDGE_BASE_WORKSPACE_BASES = ("
+          "file": "src/knowledge_base_framework/workbench.py",
+          "symbol": "def build_workbench_contract("
         }
       ]
     },
@@ -669,8 +673,8 @@
       "l2_anchor": "## 4. 基组合原则（Base Combination Principles）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/workspace.py",
-          "symbol": "def compose_workspace_flow("
+          "file": "src/knowledge_base_framework/workbench.py",
+          "symbol": "def build_workbench_contract("
         }
       ]
     },
@@ -684,8 +688,12 @@
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/workspace.py",
-          "symbol": "def verify_workspace_flow("
+          "file": "src/knowledge_base_framework/validators.py",
+          "symbol": "def validate_workbench_rules("
+        },
+        {
+          "file": "src/knowledge_base_framework/validators.py",
+          "symbol": "def summarize_workbench_rules("
         }
       ]
     },
@@ -700,7 +708,7 @@
       "impl_symbols": [
         {
           "file": "src/knowledge_base_runtime/backend.py",
-          "symbol": "KNOWLEDGE_BASE_API_CAPABILITIES = ("
+          "symbol": "def build_knowledge_base_router("
         }
       ]
     },
@@ -715,7 +723,7 @@
       "impl_symbols": [
         {
           "file": "src/knowledge_base_runtime/backend.py",
-          "symbol": "KNOWLEDGE_BASE_API_BOUNDARY = BoundaryDefinition("
+          "symbol": "def build_knowledge_base_router("
         }
       ]
     },
@@ -730,7 +738,7 @@
       "impl_symbols": [
         {
           "file": "src/knowledge_base_runtime/backend.py",
-          "symbol": "KNOWLEDGE_BASE_API_BASES = ("
+          "symbol": "def build_knowledge_base_router("
         }
       ]
     },
@@ -759,8 +767,12 @@
       "l2_anchor": "## 5. 验证（Verification）",
       "impl_symbols": [
         {
-          "file": "src/knowledge_base_runtime/backend.py",
-          "symbol": "def verify_knowledge_base_backend("
+          "file": "src/project_runtime/governance.py",
+          "symbol": "def _actual_api_library_contracts("
+        },
+        {
+          "file": "src/project_runtime/governance.py",
+          "symbol": "def _actual_api_chat_contract("
         }
       ]
     }

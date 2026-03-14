@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from html import escape
 from typing import TYPE_CHECKING
 
-from framework_core import Base, BoundaryDefinition, BoundaryItem, Capability, VerificationInput, VerificationResult, verify
 from knowledge_base_runtime.frontend_script import build_chat_script
 from knowledge_base_runtime.frontend_style import build_shared_style
 from project_runtime.knowledge_base import KnowledgeBaseCodeModule, KnowledgeDocument, load_knowledge_base_code_module
@@ -43,76 +42,6 @@ def _require_frontend_renderer(project: KnowledgeBaseCodeModule) -> str:
     if value not in project.template_contract.supported_frontend_renderers:
         raise ValueError(f"unsupported frontend renderer: {value}")
     return value
-
-
-def _module_capabilities(project: KnowledgeBaseCodeModule) -> tuple[Capability, ...]:
-    return tuple(Capability(item.capability_id, item.statement) for item in project.frontend_ir.capabilities)
-
-
-def _module_boundary(project: KnowledgeBaseCodeModule) -> BoundaryDefinition:
-    return BoundaryDefinition(
-        items=tuple(BoundaryItem(item.boundary_id, item.statement) for item in project.frontend_ir.boundaries)
-    )
-
-
-def _module_bases(project: KnowledgeBaseCodeModule) -> tuple[Base, ...]:
-    return tuple(Base(item.base_id, item.name, item.inline_expr or item.statement) for item in project.frontend_ir.bases)
-
-
-KNOWLEDGE_BASE_FRONTEND_CAPABILITIES = (
-    Capability("C1", "把会话侧栏、消息流、输入器和引用抽屉装配为稳定知识问答客户端。"),
-    Capability("C2", "以统一前端结构承接聊天、知识库切换、来源抽屉和文档详情页。"),
-    Capability("C3", "为知识库领域输出 ChatGPT 风格但可追溯来源的稳定承载面。"),
-)
-
-KNOWLEDGE_BASE_FRONTEND_BOUNDARY = BoundaryDefinition(
-    items=(
-        BoundaryItem("SURFACE", "会话侧栏、聊天主区、引用抽屉和辅助页面职责必须明确。"),
-        BoundaryItem("INTERACT", "新建会话、切换知识库、提问、打开引用和进入文档详情动作必须稳定。"),
-        BoundaryItem("STATE", "当前会话、当前知识库、当前文档、当前章节和抽屉状态必须显式可见。"),
-        BoundaryItem("EXTEND", "领域工作台和后端契约只能通过固定槽位接入。"),
-        BoundaryItem("ROUTE", "聊天页、知识库页、文档详情页和来源返回路径必须可承接。"),
-        BoundaryItem("A11Y", "阅读顺序、键盘路径和抽屉焦点切换必须稳定。"),
-    )
-)
-
-KNOWLEDGE_BASE_FRONTEND_BASES = (
-    Base("B1", "聊天界面装配基", "conversation sidebar / chat main / composer assembly"),
-    Base("B2", "引用交互契约基", "inline refs / citation drawer / document detail routing"),
-    Base("B3", "领域承接基", "knowledge base selector / secondary pages / backend extension slots"),
-)
-
-
-def verify_knowledge_base_frontend(project: KnowledgeBaseCodeModule | None = None) -> VerificationResult:
-    resolved = _resolve_project(project)
-    boundary = _module_boundary(resolved)
-    boundary_valid, boundary_errors = boundary.validate()
-    result = verify(
-        VerificationInput(
-            subject="knowledge base frontend",
-            pass_criteria=[
-                "conversation sidebar, chat main, and citation drawer all exist in one chat shell",
-                "knowledge base switch, inline citations, and document detail routing stay explicit in the page contract",
-                "theme tokens and route contracts are compiled from one instance config",
-            ],
-            evidence={
-                "project": resolved.public_summary,
-                "capabilities": [item.to_dict() for item in _module_capabilities(resolved)],
-                "boundary": boundary.to_dict(),
-                "bases": [item.to_dict() for item in _module_bases(resolved)],
-                "frontend_contract": resolved.frontend_contract,
-                "ui_spec": resolved.ui_spec,
-                "rule_validation": (
-                    resolved.validation_reports.frontend.to_dict() if resolved.validation_reports.frontend is not None else {}
-                ),
-            },
-        )
-    )
-    return VerificationResult(
-        passed=boundary_valid and result.passed,
-        reasons=[*boundary_errors, *result.reasons],
-        evidence=result.evidence,
-    )
 
 
 def _shared_style(project: KnowledgeBaseCodeModule) -> str:
