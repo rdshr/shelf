@@ -30,6 +30,24 @@ def _outcome(
 def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleValidationOutcome, ...]:
     contract_spec = load_knowledge_base_runtime_profile()
     frontend_spec = resolve_frontend_app_spec(project)
+    domain_spec = project.require_runtime_export("knowledge_base_domain_spec")
+    if not isinstance(domain_spec, dict):
+        raise ValueError("knowledge_base_domain_spec export must be a dict")
+    workbench = domain_spec.get("workbench")
+    if not isinstance(workbench, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench must be a dict")
+    library = workbench.get("library")
+    preview = workbench.get("preview")
+    chat = workbench.get("chat")
+    return_contract = workbench.get("return")
+    if not isinstance(library, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.library must be a dict")
+    if not isinstance(preview, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.preview must be a dict")
+    if not isinstance(chat, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.chat must be a dict")
+    if not isinstance(return_contract, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.return must be a dict")
     contract = frontend_spec["contract"]
     frontend_ui = frontend_spec["ui"]
     surface_regions = {item["region_id"] for item in contract["surface_regions"]}
@@ -51,8 +69,8 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
         r1_reasons.append("surface.preview_mode must match frontend_app_spec.ui.shell.preview_mode")
 
     r2_required = contract_spec.frontend_interaction_action_ids(
-        allow_create=project.library.allow_create,
-        allow_delete=project.library.allow_delete,
+        allow_create=bool(library.get("allow_create")),
+        allow_delete=bool(library.get("allow_delete")),
     )
     r2_missing = [item for item in r2_required if item not in interaction_actions]
     r2_reasons = [f"missing interaction action: {item}" for item in r2_missing]
@@ -60,7 +78,7 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
         r2_reasons.append(
             "reading order must stay " + " -> ".join(contract_spec.required_reading_order)
         )
-    if contract_spec.preview_show_toc_required and not project.preview.show_toc:
+    if contract_spec.preview_show_toc_required and not bool(preview.get("show_toc")):
         r2_reasons.append("preview TOC must stay enabled")
     if not route_contract["knowledge_list"].startswith("/"):
         r2_reasons.append("route.knowledge_list must stay routable")
@@ -79,20 +97,22 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
         r3_reasons.append("backend contract slot must point to the selected backend framework module")
 
     r4_reasons: list[str] = []
-    if not project.preview.enabled:
+    if not bool(preview.get("enabled")):
         r4_reasons.append("preview cannot be disabled")
-    if not project.chat.enabled:
+    if not bool(chat.get("enabled")):
         r4_reasons.append("chat cannot be disabled")
-    if project.chat.citations_enabled and not project.return_config.enabled:
+    if bool(chat.get("citations_enabled")) and not bool(return_contract.get("enabled")):
         r4_reasons.append("citation cannot be enabled without return_to_anchor")
-    missing_return_targets = contract_spec.required_return_target_set() - set(project.return_config.targets)
+    missing_return_targets = contract_spec.required_return_target_set() - {
+        str(item) for item in return_contract.get("targets", [])
+    }
     for target in sorted(missing_return_targets):
         r4_reasons.append(f"return targets must include {target}")
     if contract["component_variants"]["chat_bubble"] not in contract_spec.supported_chat_bubble_variants:
         r4_reasons.append("chat bubble variant must stay within supported framework set")
     if contract["component_variants"]["chat_composer"] not in contract_spec.supported_chat_composer_variants:
         r4_reasons.append("chat composer variant must stay within supported framework set")
-    if component_spec.get("citation_drawer", {}).get("return_targets") != list(project.return_config.targets):
+    if component_spec.get("citation_drawer", {}).get("return_targets") != list(return_contract.get("targets", [])):
         r4_reasons.append("frontend_app_spec.ui citation drawer return_targets must match return.targets")
 
     return (
@@ -134,8 +154,15 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
             not r4_reasons,
             r4_reasons,
             {
-                "features": project.features.to_dict(),
-                "return": project.return_config.to_dict(),
+                "features": {
+                    "library": bool(library.get("enabled")),
+                    "preview": bool(preview.get("enabled")),
+                    "chat": bool(chat.get("enabled")),
+                    "citation": bool(chat.get("citations_enabled")),
+                    "return_to_anchor": bool(return_contract.get("enabled")),
+                    "upload": bool(library.get("allow_create")) or bool(library.get("allow_delete")),
+                },
+                "return": dict(return_contract),
                 "surface": contract["surface_config"],
             },
         ),

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -40,6 +42,9 @@ class ProjectRuntimeTest(unittest.TestCase):
         self.assertIn("runtime_blueprint", project.runtime_exports)
         self.assertIn("runtime_documents", project.runtime_exports)
         self.assertEqual(project.to_runtime_snapshot_dict()["project_config"]["project"]["project_id"], "knowledge_base_basic")
+        self.assertFalse(hasattr(project, "library"))
+        self.assertFalse(hasattr(project, "route"))
+        self.assertFalse(hasattr(project, "chat"))
 
     def test_materialize_writes_canonical_and_derived_views(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -69,6 +74,19 @@ class ProjectRuntimeTest(unittest.TestCase):
             for item in strict_zone_report["files"]:
                 self.assertTrue((REPO_ROOT / item["file"]).exists(), item["file"])
             self.assertTrue((Path(temp_dir) / "generated" / "runtime_snapshot.py").exists())
+
+    def test_strict_mapping_supports_json_output_for_report_scripts(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "validate_strict_mapping.py"), "--json", "--check-changes"],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["passed"])
+        self.assertIn("errors", payload)
 
 
 if __name__ == "__main__":

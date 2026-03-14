@@ -33,6 +33,7 @@ class RuntimeBlueprint:
 def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> FastAPI:
     assembly = project or load_project_runtime()
     blueprint = _load_runtime_blueprint(assembly)
+    root_path = _load_root_path(assembly)
     app = FastAPI(
         title=assembly.metadata.display_name,
         summary=assembly.metadata.description,
@@ -47,7 +48,7 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
         app.include_router(router_factory(assembly, repository))
     summary_factory = _load_callable(blueprint.summary_factory_path)
 
-    @app.get(assembly.route.home, include_in_schema=False)
+    @app.get(root_path, include_in_schema=False)
     def root() -> dict[str, object]:
         return {
             "project": summary_factory(assembly),
@@ -86,8 +87,8 @@ def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint
     if not isinstance(mode, str):
         raise ValueError("runtime_blueprint.transport.mode must be a string")
     project_config_endpoint = transport.get("project_config_endpoint")
-    if not isinstance(project_config_endpoint, str) or not project_config_endpoint.startswith(project.route.api_prefix):
-        raise ValueError("runtime_blueprint.transport.project_config_endpoint must stay under route.api_prefix")
+    if not isinstance(project_config_endpoint, str) or not project_config_endpoint.startswith("/"):
+        raise ValueError("runtime_blueprint.transport.project_config_endpoint must be a routable path")
     landing_path = value.get("landing_path")
     if not isinstance(landing_path, str) or not landing_path.startswith("/"):
         raise ValueError("runtime_blueprint.landing_path must be a routable path")
@@ -136,6 +137,22 @@ def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint
         api_router_factory_path=api_router_factory_path,
         page_routes=tuple(page_routes),
     )
+
+
+def _load_root_path(project: ProjectRuntimeAssembly) -> str:
+    frontend_spec = project.require_runtime_export("frontend_app_spec")
+    if not isinstance(frontend_spec, dict):
+        raise ValueError("frontend_app_spec export is required for runtime root route")
+    contract = frontend_spec.get("contract")
+    if not isinstance(contract, dict):
+        raise ValueError("frontend_app_spec.contract is required for runtime root route")
+    route_contract = contract.get("route_contract")
+    if not isinstance(route_contract, dict):
+        raise ValueError("frontend_app_spec.contract.route_contract is required for runtime root route")
+    home = route_contract.get("home")
+    if not isinstance(home, str) or not home.startswith("/"):
+        raise ValueError("frontend_app_spec.contract.route_contract.home must be a routable path")
+    return home
 
 
 def _resolve_response_class(response_class: str | None) -> type[Any] | None:

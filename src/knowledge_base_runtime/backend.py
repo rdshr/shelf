@@ -37,6 +37,27 @@ def _domain_spec(project: ProjectRuntimeAssembly) -> dict[str, Any]:
     return resolve_knowledge_base_domain_spec(project)
 
 
+def _workbench(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    value = _domain_spec(project).get("workbench")
+    if not isinstance(value, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench must be a dict")
+    return dict(value)
+
+
+def _library(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    value = _workbench(project).get("library")
+    if not isinstance(value, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.library must be a dict")
+    return dict(value)
+
+
+def _write_policy(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    value = _service_spec(project).get("write_policy")
+    if not isinstance(value, dict):
+        raise ValueError("backend_service_spec.write_policy must be a dict")
+    return dict(value)
+
+
 def _require_backend_renderer(project: ProjectRuntimeAssembly) -> str:
     implementation = _service_spec(project).get("implementation")
     if not isinstance(implementation, dict):
@@ -173,19 +194,20 @@ class KnowledgeRepository:
 
     def list_knowledge_bases(self) -> list[KnowledgeBaseSummaryResponse]:
         latest = max((item.updated_at for item in self._documents.values()), default=date.today().isoformat())
+        library = _library(self.project)
         return [
             KnowledgeBaseSummaryResponse(
-                knowledge_base_id=self.project.library.knowledge_base_id,
-                name=self.project.library.knowledge_base_name,
-                description=self.project.library.knowledge_base_description,
+                knowledge_base_id=str(library["knowledge_base_id"]),
+                name=str(library["knowledge_base_name"]),
+                description=str(library["knowledge_base_description"]),
                 document_count=len(self._document_order),
-                source_types=list(self.project.library.source_types),
+                source_types=[str(item) for item in library.get("source_types", [])],
                 updated_at=latest,
             )
         ]
 
     def get_knowledge_base(self, knowledge_base_id: str) -> KnowledgeBaseDetailResponse | None:
-        if knowledge_base_id != self.project.library.knowledge_base_id:
+        if knowledge_base_id != str(_library(self.project)["knowledge_base_id"]):
             return None
         summary = self.list_knowledge_bases()[0]
         return KnowledgeBaseDetailResponse(
@@ -229,7 +251,7 @@ class KnowledgeRepository:
         return [KnowledgeTagItem(name=name, count=count) for name, count in sorted(counts.items())]
 
     def create_document(self, payload: KnowledgeDocumentCreateRequest) -> KnowledgeDocument:
-        if not self.project.library.allow_create:
+        if not bool(_write_policy(self.project).get("allow_create")):
             raise ValueError("document creation is disabled by the current product settings")
         document_id = payload.document_id or _make_document_id(payload.title)
         if document_id in self._documents:
@@ -249,7 +271,7 @@ class KnowledgeRepository:
         return document
 
     def delete_document(self, document_id: str) -> None:
-        if not self.project.library.allow_delete:
+        if not bool(_write_policy(self.project).get("allow_delete")):
             raise ValueError("document deletion is disabled by the current product settings")
         if document_id not in self._documents:
             raise KeyError(document_id)
@@ -455,7 +477,13 @@ def build_knowledge_base_router(
     resolved = _resolve_project(project)
     _require_backend_renderer(resolved)
     repo = repository or KnowledgeRepository(resolved)
-    router = APIRouter(prefix=resolved.route.api_prefix, tags=[resolved.metadata.project_id])
+    transport = _service_spec(resolved).get("transport")
+    if not isinstance(transport, dict):
+        raise ValueError("backend_service_spec.transport must be a dict")
+    api_prefix = transport.get("api_prefix")
+    if not isinstance(api_prefix, str):
+        raise ValueError("backend_service_spec.transport.api_prefix must be a string")
+    router = APIRouter(prefix=api_prefix, tags=[resolved.metadata.project_id])
 
     @router.get("/knowledge-bases", response_model=list[KnowledgeBaseSummaryResponse])
     def list_knowledge_bases() -> list[KnowledgeBaseSummaryResponse]:

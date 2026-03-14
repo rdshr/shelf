@@ -57,7 +57,9 @@ def compile_project(project_file: str | Path) -> tuple[ProjectCompilationState, 
     runtime_projection = assemble_runtime_projection(package_results)
     assembly = ProjectRuntimeAssembly(
         project_file=config.project_file,
-        config=config,
+        metadata=config.metadata,
+        selection=config.selection,
+        project_config_view=config.project_config_view(),
         package_compile_order=tuple(package_results),
         root_module_ids=module_tree.root_module_ids(),
         runtime_projection=runtime_projection,
@@ -95,7 +97,7 @@ def materialize_project_runtime(
     output_path = normalize_project_path(output_dir) if output_dir is not None else generated_dir
     output_path.mkdir(parents=True, exist_ok=True)
 
-    artifact_names = assembly.refinement.artifacts
+    artifact_names = state.config.artifact_config
     expected_file_names = set(artifact_names.file_names())
     cleanup_generated_output_dir(output_path, expected_file_names)
     output_paths = GeneratedArtifactOutputPaths.from_artifact_config(artifact_names, output_dir=output_path)
@@ -354,11 +356,11 @@ def build_canonical_graph(
             },
             "config": {
                 "project_file": project.project_file,
-                "section_sources": dict(project.config.section_sources),
+                "section_sources": dict(state.config.section_sources),
                 "selection": project.selection.to_dict(),
-                "truth": project.config.truth_payload(),
-                "refinement": project.refinement.to_dict(),
-                "narrative": project.config.narrative,
+                "truth": state.config.truth_payload(),
+                "refinement": state.config.refinement_payload(),
+                "narrative": state.config.narrative,
                 "projection": {
                     module_id: {
                         "config_contract": result.config_contract.to_dict(),

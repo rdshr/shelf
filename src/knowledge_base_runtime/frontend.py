@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from knowledge_base_runtime.frontend_script import build_chat_script
 from knowledge_base_runtime.runtime_profile import load_knowledge_base_runtime_profile
 from knowledge_base_runtime.frontend_style import build_shared_style
-from knowledge_base_runtime.runtime_exports import resolve_frontend_app_spec
+from knowledge_base_runtime.runtime_exports import resolve_frontend_app_spec, resolve_knowledge_base_domain_spec
 from project_runtime import (
     KnowledgeDocument,
     ProjectRuntimeAssembly,
@@ -52,6 +52,20 @@ def _frontend_ui(project: ProjectRuntimeAssembly) -> dict[str, Any]:
     return dict(value)
 
 
+def _workbench(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    value = resolve_knowledge_base_domain_spec(project).get("workbench")
+    if not isinstance(value, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench must be a dict")
+    return dict(value)
+
+
+def _library(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    value = _workbench(project).get("library")
+    if not isinstance(value, dict):
+        raise ValueError("knowledge_base_domain_spec.workbench.library must be a dict")
+    return dict(value)
+
+
 def _copy(project: ProjectRuntimeAssembly) -> dict[str, str]:
     copy = _frontend_app_spec(project)["copy"]  # type: ignore[index]
     if not isinstance(copy, dict):
@@ -90,9 +104,11 @@ def _chip_list(items: tuple[str, ...] | list[str]) -> str:
 
 def _aux_sidebar(project: ProjectRuntimeAssembly, active: str) -> str:
     frontend_ui = _frontend_ui(project)
+    library = _library(project)
     aux_sidebar = frontend_ui["components"]["aux_sidebar"]
     knowledge_detail_href = frontend_ui["pages"]["knowledge_detail"]["path"].replace(
-        "{knowledge_base_id}", project.library.knowledge_base_id
+        "{knowledge_base_id}",
+        str(library["knowledge_base_id"]),
     )
     items = (
         NavLinkSpec("chat", frontend_ui["pages"]["chat_home"]["path"], aux_sidebar["nav"]["chat"]),
@@ -114,7 +130,7 @@ def _aux_sidebar(project: ProjectRuntimeAssembly, active: str) -> str:
       <div>
         <span class="eyebrow">{escape(copy["hero_kicker"])}</span>
         <h1>{escape(project.metadata.display_name)}</h1>
-        <p>{escape(project.library.knowledge_base_description)}</p>
+        <p>{escape(str(library["knowledge_base_description"]))}</p>
       </div>
       <nav class="aux-nav">
         {''.join(links)}
@@ -591,7 +607,7 @@ def compose_document_detail_page(
                     "knowledge-detail",
                     frontend_ui["pages"]["knowledge_detail"]["path"].replace(
                         "{knowledge_base_id}",
-                        project.library.knowledge_base_id,
+                        str(_library(project)["knowledge_base_id"]),
                     ),
                     page_spec["return_knowledge_detail_label"],
                 ),
@@ -611,6 +627,7 @@ def compose_knowledge_base_page(
 ) -> str:
     resolved = _resolve_project(project)
     frontend_ui = _frontend_ui(resolved)
+    library = _library(resolved)
     sidebar_spec = frontend_ui["components"]["conversation_sidebar"]
     header_spec = frontend_ui["components"]["chat_header"]
     composer_spec = frontend_ui["components"]["chat_composer"]
@@ -646,7 +663,7 @@ def compose_knowledge_base_page(
         <header class="chat-header" id="chat-header">
           <div class="header-copy">
             <div class="header-title" id="active-conversation-title">{escape(resolved.metadata.display_name)}</div>
-            <div class="header-subtitle" id="active-conversation-subtitle">{escape(header_spec['subtitle_template'].replace('{knowledge_base_name}', resolved.library.knowledge_base_name))}</div>
+            <div class="header-subtitle" id="active-conversation-subtitle">{escape(header_spec['subtitle_template'].replace('{knowledge_base_name}', str(library['knowledge_base_name'])))}</div>
           </div>
           <div class="header-actions">
             <button class="pill-button" type="button" data-open-knowledge-switch="true" id="knowledge-badge-secondary"></button>
@@ -662,7 +679,7 @@ def compose_knowledge_base_page(
                 <span class="eyebrow">{escape(conversation_spec['welcome_kicker'])}</span>
                 <h2>{escape(conversation_spec['welcome_title'])}</h2>
                 <p>{escape(conversation_spec['welcome_copy'])}</p>
-                <div class="kb-pill" style="justify-content:center;">{escape(conversation_spec['current_knowledge_base_template'].replace('{knowledge_base_name}', resolved.library.knowledge_base_name))}</div>
+                <div class="kb-pill" style="justify-content:center;">{escape(conversation_spec['current_knowledge_base_template'].replace('{knowledge_base_name}', str(library['knowledge_base_name'])))}</div>
                 <div class="prompt-grid" id="prompt-grid"></div>
               </div>
             </section>
@@ -673,7 +690,7 @@ def compose_knowledge_base_page(
         <div class="chat-composer-wrap">
           <form class="chat-composer" id="chat-form">
             <div class="composer-status">
-              <span id="composer-context">{escape(composer_spec['context_template'].replace('{context_label}', resolved.library.knowledge_base_name))}</span>
+              <span id="composer-context">{escape(composer_spec['context_template'].replace('{context_label}', str(library['knowledge_base_name'])))}</span>
               <span>{escape(composer_spec['citation_hint'])}</span>
             </div>
             <textarea

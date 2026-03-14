@@ -487,35 +487,24 @@ class UnifiedProjectConfig:
     section_sources: dict[str, str]
     metadata: ProjectMetadata
     selection: ModuleSelection
-    surface: SurfaceConfig
-    visual: VisualConfig
-    features: FeatureConfig
-    route: RouteConfig
-    showcase_page: ShowcasePageConfig
-    a11y: A11yConfig
-    library: LibraryConfig
-    preview: PreviewConfig
-    chat: ChatConfig
-    context: ContextConfig
-    return_config: ReturnConfig
-    documents: tuple[SeedDocumentSource, ...]
-    refinement: RefinementConfig
+    truth: dict[str, Any]
+    refinement: dict[str, Any]
+    artifact_config: ArtifactConfig
     narrative: dict[str, Any]
 
     def truth_payload(self) -> dict[str, Any]:
+        return jsonable(self.truth)
+
+    def refinement_payload(self) -> dict[str, Any]:
+        return jsonable(self.refinement)
+
+    def project_config_view(self) -> dict[str, Any]:
         return {
-            "surface": self.surface.to_dict(),
-            "visual": self.visual.to_dict(),
-            "features": self.features.to_dict(),
-            "route": self.route.to_dict(),
-            "showcase_page": self.showcase_page.to_dict(),
-            "a11y": self.a11y.to_dict(),
-            "library": self.library.to_dict(),
-            "preview": self.preview.to_dict(),
-            "chat": self.chat.to_dict(),
-            "context": self.context.to_dict(),
-            "return": self.return_config.to_dict(),
-            "documents": [item.to_dict() for item in self.documents],
+            "project": self.metadata.to_dict(),
+            "selection": self.selection.to_dict(),
+            "truth": self.truth_payload(),
+            "refinement": self.refinement_payload(),
+            "narrative": jsonable(self.narrative),
         }
 
     def root_payload(self) -> dict[str, Any]:
@@ -523,7 +512,7 @@ class UnifiedProjectConfig:
             "project": self.metadata.to_dict(),
             "selection": self.selection.to_dict(),
             "truth": self.truth_payload(),
-            "refinement": self.refinement.to_dict(),
+            "refinement": self.refinement_payload(),
             "narrative": jsonable(self.narrative),
         }
 
@@ -630,7 +619,9 @@ class RuntimeProjection:
 @dataclass(frozen=True)
 class ProjectRuntimeAssembly:
     project_file: str
-    config: UnifiedProjectConfig
+    metadata: ProjectMetadata
+    selection: ModuleSelection
+    project_config_view: dict[str, Any]
     package_compile_order: tuple[str, ...]
     root_module_ids: dict[str, str]
     runtime_projection: RuntimeProjection
@@ -638,72 +629,6 @@ class ProjectRuntimeAssembly:
     generated_artifacts: GeneratedArtifactPaths | None = None
     derived_views: dict[str, dict[str, str]] = field(default_factory=dict)
     canonical_graph: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def metadata(self) -> ProjectMetadata:
-        return self.config.metadata
-
-    @property
-    def selection(self) -> ModuleSelection:
-        return self.config.selection
-
-    @property
-    def surface(self) -> SurfaceConfig:
-        return self.config.surface
-
-    @property
-    def visual(self) -> VisualConfig:
-        return self.config.visual
-
-    @property
-    def features(self) -> FeatureConfig:
-        return self.config.features
-
-    @property
-    def route(self) -> RouteConfig:
-        return self.config.route
-
-    @property
-    def showcase_page(self) -> ShowcasePageConfig:
-        return self.config.showcase_page
-
-    @property
-    def a11y(self) -> A11yConfig:
-        return self.config.a11y
-
-    @property
-    def library(self) -> LibraryConfig:
-        return self.config.library
-
-    @property
-    def preview(self) -> PreviewConfig:
-        return self.config.preview
-
-    @property
-    def chat(self) -> ChatConfig:
-        return self.config.chat
-
-    @property
-    def context(self) -> ContextConfig:
-        return self.config.context
-
-    @property
-    def return_config(self) -> ReturnConfig:
-        return self.config.return_config
-
-    @property
-    def refinement(self) -> RefinementConfig:
-        return self.config.refinement
-
-    @property
-    def project_config_view(self) -> dict[str, Any]:
-        return {
-            "project": self.metadata.to_dict(),
-            "selection": self.selection.to_dict(),
-            "truth": self.config.truth_payload(),
-            "refinement": self.refinement.to_dict(),
-            "narrative": jsonable(self.config.narrative),
-        }
 
     @property
     def public_summary(self) -> dict[str, Any]:

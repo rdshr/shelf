@@ -39,27 +39,47 @@ def resolve_runtime_documents(project: ProjectRuntimeAssembly) -> tuple[Knowledg
 
 
 def project_runtime_routes(project: ProjectRuntimeAssembly) -> dict[str, dict[str, str]]:
-    route = project.route
+    frontend_spec = resolve_frontend_app_spec(project)
+    service_spec = resolve_backend_service_spec(project)
+    pages = _require_dict(frontend_spec, "ui", "frontend_app_spec.ui").get("pages")
+    if not isinstance(pages, dict):
+        raise ValueError("frontend_app_spec.ui.pages must be a dict")
+    contract = frontend_spec.get("contract")
+    if not isinstance(contract, dict):
+        raise ValueError("frontend_app_spec.contract must be a dict")
+    route_contract = contract.get("route_contract")
+    if not isinstance(route_contract, dict):
+        raise ValueError("frontend_app_spec.contract.route_contract must be a dict")
+    transport = service_spec.get("transport")
+    if not isinstance(transport, dict):
+        raise ValueError("backend_service_spec.transport must be a dict")
+    api_prefix = transport.get("api_prefix")
+    project_config_endpoint = transport.get("project_config_endpoint")
+    if not isinstance(api_prefix, str):
+        raise ValueError("backend_service_spec.transport.api_prefix must be a string")
+    if not isinstance(project_config_endpoint, str):
+        raise ValueError("backend_service_spec.transport.project_config_endpoint must be a string")
+
     return {
         "pages": {
-            "home": route.home,
-            "chat_home": route.workbench,
-            "basketball_showcase": route.basketball_showcase,
-            "knowledge_list": route.knowledge_list,
-            "knowledge_detail": f"{route.knowledge_detail}/{{knowledge_base_id}}",
-            "document_detail": f"{route.document_detail_prefix}/{{document_id}}",
+            "home": str(route_contract.get("home", "/")),
+            "chat_home": _page_path(pages, "chat_home"),
+            "basketball_showcase": _page_path(pages, "basketball_showcase"),
+            "knowledge_list": _page_path(pages, "knowledge_list"),
+            "knowledge_detail": _page_path(pages, "knowledge_detail"),
+            "document_detail": _page_path(pages, "document_detail"),
         },
         "api": {
-            "knowledge_bases": f"{route.api_prefix}/knowledge-bases",
-            "knowledge_base_detail": f"{route.api_prefix}/knowledge-bases/{{knowledge_base_id}}",
-            "documents": f"{route.api_prefix}/documents",
-            "create_document": f"{route.api_prefix}/documents",
-            "document_detail": f"{route.api_prefix}/documents/{{document_id}}",
-            "delete_document": f"{route.api_prefix}/documents/{{document_id}}",
-            "section_detail": f"{route.api_prefix}/documents/{{document_id}}/sections/{{section_id}}",
-            "tags": f"{route.api_prefix}/tags",
-            "chat_turns": f"{route.api_prefix}/chat/turns",
-            "project_config": project.refinement.evidence.project_config_endpoint,
+            "knowledge_bases": f"{api_prefix}/knowledge-bases",
+            "knowledge_base_detail": f"{api_prefix}/knowledge-bases/{{knowledge_base_id}}",
+            "documents": f"{api_prefix}/documents",
+            "create_document": f"{api_prefix}/documents",
+            "document_detail": f"{api_prefix}/documents/{{document_id}}",
+            "delete_document": f"{api_prefix}/documents/{{document_id}}",
+            "section_detail": f"{api_prefix}/documents/{{document_id}}/sections/{{section_id}}",
+            "tags": f"{api_prefix}/tags",
+            "chat_turns": f"{api_prefix}/chat/turns",
+            "project_config": project_config_endpoint,
         },
     }
 
@@ -74,8 +94,8 @@ def project_runtime_public_summary(project: ProjectRuntimeAssembly) -> dict[str,
         "project_file": project.project_file,
         "project": project.metadata.to_dict(),
         "selection": project.selection.to_dict(),
-        "route": project.route.to_dict(),
-        "a11y": project.a11y.to_dict(),
+        "route": frontend_spec.get("contract", {}).get("route_contract", {}),
+        "a11y": frontend_spec.get("contract", {}).get("a11y", {}),
         "routes": project_runtime_routes(project),
         "document_count": len(documents),
         "resolved_module_ids": list(project.package_compile_order),
@@ -107,4 +127,21 @@ def _require_dict_export(project: ProjectRuntimeAssembly, export_key: str) -> di
     value = project.require_runtime_export(export_key)
     if not isinstance(value, dict):
         raise ValueError(f"runtime export must be a dict: {export_key}")
+    return dict(value)
+
+
+def _page_path(pages: dict[str, Any], page_id: str) -> str:
+    page = pages.get(page_id)
+    if not isinstance(page, dict):
+        raise ValueError(f"missing runtime page: {page_id}")
+    path = page.get("path")
+    if not isinstance(path, str):
+        raise ValueError(f"runtime page path must be a string: {page_id}")
+    return path
+
+
+def _require_dict(payload: dict[str, Any], key: str, label: str) -> dict[str, Any]:
+    value = payload.get(key)
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be a dict")
     return dict(value)

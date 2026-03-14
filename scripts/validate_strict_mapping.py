@@ -172,11 +172,20 @@ def validate_change_context() -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate framework-package registry, canonical graphs, and derived views.")
     parser.add_argument("--check-changes", action="store_true", help="validate git change context instead of full materialization")
+    parser.add_argument("--json", action="store_true", help="emit machine-readable validation output")
     args = parser.parse_args()
 
     issues = validate_change_context() if args.check_changes else (
         validate_registry_bindings() + validate_project_materialization() + validate_workspace_views()
     )
+    if args.json:
+        payload = {
+            "passed": not issues,
+            "checked_changes": args.check_changes,
+            "errors": [{"message": issue} for issue in issues],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0 if not issues else 1
     if issues:
         for issue in issues:
             print("[FAIL]", issue)

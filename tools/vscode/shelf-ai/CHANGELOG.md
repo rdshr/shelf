@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 - 2026-03-14
+
+- Removed the last project-wide knowledge-base aggregate assumptions from the runtime app, runtime summaries, validators, and backend/frontend helpers so shipped behavior now resolves from package exports and runtime projection.
+- Added machine-readable `--json` output to `scripts/validate_strict_mapping.py` and re-synced report generators to the current validator contract.
+- Revalidated the repository architecture end-to-end, rebuilt the VSIX, and prepared the extension release notes for the new publishable version.
+
 ## 0.1.3 - 2026-03-14
 
 - Removed the repository-side `knowledge_base_basic` release payloads so public releases stay focused on the Shelf AI extension.

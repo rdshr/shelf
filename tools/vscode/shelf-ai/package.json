@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: framework-tree-first navigation for registry-bound packages and canonical-derived evidence.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
