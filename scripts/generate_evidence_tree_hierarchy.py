@@ -60,39 +60,50 @@ def _evidence_graph(project_file: str, canonical_path: str, canonical: dict[str,
     framework = canonical["framework"]
     if not isinstance(framework, dict):
         raise ValueError("canonical.framework must be an object")
-    modules = framework["modules"]
-    if not isinstance(modules, list):
+    framework_modules = framework["modules"]
+    if not isinstance(framework_modules, list):
         raise ValueError("canonical.framework.modules must be a list")
+    config = canonical["config"]
+    if not isinstance(config, dict):
+        raise ValueError("canonical.config must be an object")
+    config_modules = config["modules"]
+    if not isinstance(config_modules, list):
+        raise ValueError("canonical.config.modules must be a list")
+    code = canonical["code"]
+    if not isinstance(code, dict):
+        raise ValueError("canonical.code must be an object")
+    code_modules = code["modules"]
+    if not isinstance(code_modules, list):
+        raise ValueError("canonical.code.modules must be a list")
+    evidence = canonical["evidence"]
+    if not isinstance(evidence, dict):
+        raise ValueError("canonical.evidence must be an object")
+    evidence_modules = evidence["modules"]
+    if not isinstance(evidence_modules, list):
+        raise ValueError("canonical.evidence.modules must be a list")
     links = canonical["links"]
     if not isinstance(links, dict):
         raise ValueError("canonical.links must be an object")
-
-    config_class_by_module: dict[str, str] = {}
-    for item in links.get("framework_to_config", []):
-        if not isinstance(item, dict):
-            continue
-        module_id = str(item.get("framework_module_id") or "")
-        class_name = str(item.get("config_module_class") or "")
-        if module_id and class_name:
-            config_class_by_module[module_id] = class_name
-
-    code_class_by_module: dict[str, str] = {}
-    for item in links.get("config_to_code", []):
-        if not isinstance(item, dict):
-            continue
-        module_id = str(item.get("config_module_id") or "")
-        class_name = str(item.get("code_module_class") or "")
-        if module_id and class_name:
-            code_class_by_module[module_id] = class_name
-
-    evidence_class_by_module: dict[str, str] = {}
-    for item in links.get("code_to_evidence", []):
-        if not isinstance(item, dict):
-            continue
-        module_id = str(item.get("code_module_id") or "")
-        class_name = str(item.get("evidence_module_class") or "")
-        if module_id and class_name:
-            evidence_class_by_module[module_id] = class_name
+    framework_module_lookup = {
+        str(item["module_id"]): item
+        for item in framework_modules
+        if isinstance(item, dict) and isinstance(item.get("module_id"), str)
+    }
+    config_module_lookup = {
+        str(item["module_id"]): item
+        for item in config_modules
+        if isinstance(item, dict) and isinstance(item.get("module_id"), str)
+    }
+    code_module_lookup = {
+        str(item["module_id"]): item
+        for item in code_modules
+        if isinstance(item, dict) and isinstance(item.get("module_id"), str)
+    }
+    evidence_module_lookup = {
+        str(item["module_id"]): item
+        for item in evidence_modules
+        if isinstance(item, dict) and isinstance(item.get("module_id"), str)
+    }
 
     project_id = str(project["project_id"])
     project_node_id = f"project:{project_id}"
@@ -126,7 +137,7 @@ def _evidence_graph(project_file: str, canonical_path: str, canonical: dict[str,
                 "node_kind": "canonical",
                 "module_title": "Canonical JSON",
                 "hover_kicker": "Canonical Artifact",
-                "capability_items": [{"token": "Schema", "text": "four-layer-canonical/v1"}],
+                "capability_items": [{"token": "Schema", "text": str(canonical.get("schema_version") or "")}],
                 "base_items": [{"token": "Layers", "text": "framework / config / code / evidence"}],
             },
         ),
@@ -141,7 +152,7 @@ def _evidence_graph(project_file: str, canonical_path: str, canonical: dict[str,
     ]
 
     ordered_modules: list[tuple[str, int, int, dict[str, object]]] = []
-    for item in modules:
+    for item in framework_modules:
         if not isinstance(item, dict):
             continue
         module_id = str(item["module_id"])
@@ -155,21 +166,27 @@ def _evidence_graph(project_file: str, canonical_path: str, canonical: dict[str,
         doc_line = _find_first_h1_line(framework_file)
         title_cn = str(item.get("title_cn") or "")
         title_en = str(item.get("title_en") or "")
-        config_class = config_class_by_module.get(module_id, "")
-        code_class = code_class_by_module.get(module_id, "")
-        evidence_class = evidence_class_by_module.get(module_id, "")
+        config_module = config_module_lookup.get(module_id, {})
+        code_module = code_module_lookup.get(module_id, {})
+        evidence_module = evidence_module_lookup.get(module_id, {})
+        config_class = str(config_module.get("class_name") or "")
+        code_class = str(code_module.get("class_name") or "")
+        evidence_class = str(evidence_module.get("class_name") or "")
         boundaries = item.get("boundaries")
+        config_node_id = f"config:{module_id}"
+        code_node_id = f"code:{module_id}"
+        evidence_node_id = f"evidence:{module_id}"
+        framework_node_id = f"framework:{module_id}"
 
         nodes.append(
             HierarchyNode(
-                node_id=module_id,
-                label=module_id,
-                level=level_num + 2,
+                node_id=framework_node_id,
+                label=f"framework:{module_id}",
+                level=2,
                 order=module_num,
                 description=(
-                    f"module={module_id} | framework={framework_name} | level=L{level_num} | "
-                    f"config={config_class or 'n/a'} | code={code_class or 'n/a'} | "
-                    f"evidence={evidence_class or 'n/a'}"
+                    f"layer=framework | module={module_id} | framework={framework_name} | "
+                    f"level=L{level_num} | file={framework_file}"
                 ),
                 metadata={
                     "source_file": framework_file,
@@ -204,27 +221,149 @@ def _evidence_graph(project_file: str, canonical_path: str, canonical: dict[str,
         edges.append(
             HierarchyEdge(
                 source=canonical_node_id,
-                target=module_id,
+                target=framework_node_id,
                 relation="tree_child",
                 metadata={},
             )
         )
+        config_source_file = str(config_module.get("source_ref", {}).get("file_path") or project_file)
+        nodes.append(
+            HierarchyNode(
+                node_id=config_node_id,
+                label=f"config:{module_id}",
+                level=3,
+                order=module_num,
+                description=(
+                    f"layer=config | module={module_id} | class={config_class or 'n/a'} | "
+                    f"file={config_source_file}"
+                ),
+                metadata={
+                    "source_file": config_source_file,
+                    "source_line": 1,
+                    "doc_line": 1,
+                    "node_kind": "config_module",
+                    "module_name": framework_name,
+                    "module_ref": f"L{level_num}.M{module_num}",
+                    "module_title": title_cn or title_en or module_id,
+                    "hover_kicker": "Config Module",
+                    "capability_items": [{"token": "Class", "text": config_class or "未记录"}],
+                    "base_items": [
+                        {
+                            "token": "Bindings",
+                            "text": ", ".join(
+                                str(entry.get("boundary_id") or "")
+                                for entry in config_module.get("compiled_config_export", {}).get("boundary_bindings", [])
+                                if isinstance(entry, dict)
+                            )
+                            or "无",
+                        }
+                    ],
+                },
+            )
+        )
+        edges.append(
+            HierarchyEdge(
+                source=framework_node_id,
+                target=config_node_id,
+                relation="tree_child",
+                metadata={"link_role": "mainline"},
+            )
+        )
+        code_source_file = str(code_module.get("source_ref", {}).get("file_path") or "src/project_runtime/code_layer.py")
+        nodes.append(
+            HierarchyNode(
+                node_id=code_node_id,
+                label=f"code:{module_id}",
+                level=4,
+                order=module_num,
+                description=(
+                    f"layer=code | module={module_id} | class={code_class or 'n/a'} | "
+                    f"file={code_source_file}"
+                ),
+                metadata={
+                    "source_file": code_source_file,
+                    "source_line": 1,
+                    "doc_line": 1,
+                    "node_kind": "code_module",
+                    "module_name": framework_name,
+                    "module_ref": f"L{level_num}.M{module_num}",
+                    "module_title": title_cn or title_en or module_id,
+                    "hover_kicker": "Code Module",
+                    "capability_items": [
+                        {
+                            "token": "Owner",
+                            "text": str(code_module.get("code_bindings", {}).get("owner", {}).get("owner_class_name") or "未记录"),
+                        }
+                    ],
+                    "base_items": [
+                        {
+                            "token": "Slots",
+                            "text": str(len(code_module.get("code_bindings", {}).get("implementation_slots", []))),
+                        }
+                    ],
+                },
+            )
+        )
+        edges.append(
+            HierarchyEdge(
+                source=config_node_id,
+                target=code_node_id,
+                relation="tree_child",
+                metadata={"link_role": "mainline"},
+            )
+        )
+        evidence_source_file = str(
+            evidence_module.get("source_ref", {}).get("file_path") or "src/project_runtime/evidence_layer.py"
+        )
+        nodes.append(
+            HierarchyNode(
+                node_id=evidence_node_id,
+                label=f"evidence:{module_id}",
+                level=5,
+                order=module_num,
+                description=(
+                    f"layer=evidence | module={module_id} | class={evidence_class or 'n/a'} | "
+                    f"file={evidence_source_file}"
+                ),
+                metadata={
+                    "source_file": evidence_source_file,
+                    "source_line": 1,
+                    "doc_line": 1,
+                    "node_kind": "evidence_module",
+                    "module_name": framework_name,
+                    "module_ref": f"L{level_num}.M{module_num}",
+                    "module_title": title_cn or title_en or module_id,
+                    "hover_kicker": "Evidence Module",
+                    "capability_items": [{"token": "Class", "text": evidence_class or "未记录"}],
+                    "base_items": [{"token": "Source", "text": code_class or "未记录"}],
+                },
+            )
+        )
+        edges.append(
+            HierarchyEdge(
+                source=code_node_id,
+                target=evidence_node_id,
+                relation="tree_child",
+                metadata={"link_role": "mainline"},
+            )
+        )
 
-    max_level = max(node.level for node in nodes)
     level_labels = {
         0: "Project",
         1: "Canonical",
+        2: "Framework",
+        3: "Config",
+        4: "Code",
+        5: "Evidence",
     }
-    for level in range(2, max_level + 1):
-        level_labels[level] = f"L{level - 2} Modules"
 
     return HierarchyGraph(
         title="Shelf Evidence Tree",
         description=(
-            "从 canonical.json 派生，恢复旧交互式树图画布；"
-            "保持当前 evidence tree 的 project/canonical/module 节点语义，只补回图形化浏览层。"
+            "从 canonical.json 派生，沿 Framework -> Config -> Code -> Evidence 主链展示模块证据结构；"
+            "boundary/base 绑定只保留为 canonical 内的辅助追溯视图，不再作为树图主链。"
         ),
-        foot_text="图中展示 project / canonical / framework module 的证据追踪关系，保持现有 evidence tree 节点语义。",
+        foot_text="图中按四层主链展示 project / canonical / framework / config / code / evidence 的逐层关系。",
         level_labels=level_labels,
         nodes=nodes,
         edges=edges,

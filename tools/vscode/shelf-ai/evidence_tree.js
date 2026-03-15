@@ -2,19 +2,183 @@ const fs = require("fs");
 const path = require("path");
 const workspaceGuard = require("./guarding");
 
-function readEvidenceTree(repoRoot, relativeJsonPath) {
-  const jsonPath = path.resolve(repoRoot, relativeJsonPath);
-  const raw = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+function discoverCanonicalFiles(repoRoot) {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
+    return [];
+  }
+  const canonicalFiles = [];
+  for (const entry of fs.readdirSync(projectsDir)) {
+    const canonicalPath = path.join(projectsDir, entry, "generated", "canonical.json");
+    if (fs.existsSync(canonicalPath) && fs.statSync(canonicalPath).isFile()) {
+      canonicalFiles.push(canonicalPath);
+    }
+  }
+  return canonicalFiles.sort();
+}
+
+function readCanonicalFile(canonicalPath) {
+  const raw = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
   if (!raw || typeof raw !== "object") {
-    throw new Error("evidence tree JSON must decode into an object");
-  }
-  if (!raw.root || typeof raw.root !== "object") {
-    throw new Error("evidence tree JSON is missing root");
-  }
-  if (!Array.isArray(raw.root.nodes) || !Array.isArray(raw.root.edges)) {
-    throw new Error("evidence tree JSON is missing nodes or edges");
+    throw new Error(`canonical JSON must decode into an object: ${canonicalPath}`);
   }
   return raw;
+}
+
+function normalizeNode(node) {
+  return {
+    id: String(node.id),
+    label: String(node.label),
+    level: Number(node.level) || 0,
+    description: String(node.description || ""),
+    source_file: String(node.source_file || ""),
+    node_kind: String(node.node_kind || ""),
+  };
+}
+
+function addNode(nodes, edges, node) {
+  nodes.push(normalizeNode(node));
+  if (node.parentId) {
+    edges.push({
+      from: String(node.parentId),
+      to: String(node.id),
+      relation: "tree_child",
+    });
+  }
+}
+
+function buildCanonicalEvidencePayload(repoRoot) {
+  const nodes = [];
+  const edges = [];
+  const canonicalFiles = discoverCanonicalFiles(repoRoot);
+  if (!canonicalFiles.length) {
+    throw new Error("no generated canonical.json files found");
+  }
+
+  for (const canonicalFile of canonicalFiles) {
+    const canonical = readCanonicalFile(canonicalFile);
+    const project = canonical.project;
+    if (!project || typeof project !== "object") {
+      continue;
+    }
+    const projectId = String(project.project_id || "");
+    if (!projectId) {
+      continue;
+    }
+    const relCanonical = workspaceGuard.normalizeRelPath(path.relative(repoRoot, canonicalFile));
+    const projectFile = workspaceGuard.normalizeRelPath(
+      path.relative(repoRoot, path.join(path.dirname(path.dirname(canonicalFile)), "project.toml"))
+    );
+    const projectNodeId = `project:${projectId}`;
+    const canonicalNodeId = `${projectNodeId}:canonical`;
+    addNode(nodes, edges, {
+      id: projectNodeId,
+      label: projectNodeId,
+      level: 0,
+      description: `project=${projectId} | file=${projectFile}`,
+      source_file: projectFile,
+      node_kind: "project",
+    });
+    addNode(nodes, edges, {
+      id: canonicalNodeId,
+      parentId: projectNodeId,
+      label: "canonical.json",
+      level: 1,
+      description: `artifact=canonical.json | file=${relCanonical}`,
+      source_file: relCanonical,
+      node_kind: "canonical",
+    });
+
+    const frameworkModules = Array.isArray(canonical.framework?.modules) ? canonical.framework.modules : [];
+    const configModules = new Map(
+      (Array.isArray(canonical.config?.modules) ? canonical.config.modules : [])
+        .filter((item) => item && typeof item === "object" && typeof item.module_id === "string")
+        .map((item) => [String(item.module_id), item])
+    );
+    const codeModules = new Map(
+      (Array.isArray(canonical.code?.modules) ? canonical.code.modules : [])
+        .filter((item) => item && typeof item === "object" && typeof item.module_id === "string")
+        .map((item) => [String(item.module_id), item])
+    );
+    const evidenceModules = new Map(
+      (Array.isArray(canonical.evidence?.modules) ? canonical.evidence.modules : [])
+        .filter((item) => item && typeof item === "object" && typeof item.module_id === "string")
+        .map((item) => [String(item.module_id), item])
+    );
+
+    for (const frameworkModule of frameworkModules) {
+      if (!frameworkModule || typeof frameworkModule !== "object" || typeof frameworkModule.module_id !== "string") {
+        continue;
+      }
+      const moduleId = String(frameworkModule.module_id);
+      const frameworkNodeId = `framework:${moduleId}`;
+      const configNodeId = `config:${moduleId}`;
+      const codeNodeId = `code:${moduleId}`;
+      const evidenceNodeId = `evidence:${moduleId}`;
+      const relFrameworkFile = workspaceGuard.normalizeRelPath(String(frameworkModule.framework_file || ""));
+      const configModule = configModules.get(moduleId) || {};
+      const codeModule = codeModules.get(moduleId) || {};
+      const evidenceModule = evidenceModules.get(moduleId) || {};
+      const configSource = workspaceGuard.normalizeRelPath(
+        String(configModule.source_ref?.file_path || projectFile)
+      );
+      const codeSource = workspaceGuard.normalizeRelPath(
+        String(codeModule.source_ref?.file_path || path.join("src", "project_runtime", "code_layer.py"))
+      );
+      const evidenceSource = workspaceGuard.normalizeRelPath(
+        String(evidenceModule.source_ref?.file_path || path.join("src", "project_runtime", "evidence_layer.py"))
+      );
+      addNode(nodes, edges, {
+        id: frameworkNodeId,
+        parentId: canonicalNodeId,
+        label: frameworkNodeId,
+        level: 2,
+        description: `layer=framework | module=${moduleId} | file=${relFrameworkFile}`,
+        source_file: relFrameworkFile,
+        node_kind: "framework_module",
+      });
+      addNode(nodes, edges, {
+        id: configNodeId,
+        parentId: frameworkNodeId,
+        label: configNodeId,
+        level: 3,
+        description: `layer=config | module=${moduleId} | file=${configSource}`,
+        source_file: configSource,
+        node_kind: "config_module",
+      });
+      addNode(nodes, edges, {
+        id: codeNodeId,
+        parentId: configNodeId,
+        label: codeNodeId,
+        level: 4,
+        description: `layer=code | module=${moduleId} | file=${codeSource}`,
+        source_file: codeSource,
+        node_kind: "code_module",
+      });
+      addNode(nodes, edges, {
+        id: evidenceNodeId,
+        parentId: codeNodeId,
+        label: evidenceNodeId,
+        level: 5,
+        description: `layer=evidence | module=${moduleId} | file=${evidenceSource}`,
+        source_file: evidenceSource,
+        node_kind: "evidence_module",
+      });
+    }
+  }
+
+  return {
+    root: {
+      title: "Shelf Evidence Tree",
+      description: "Canonical-derived four-layer evidence graph.",
+      nodes,
+      edges,
+    },
+  };
+}
+
+function readEvidenceTree(repoRoot, _relativeJsonPath) {
+  return buildCanonicalEvidencePayload(repoRoot);
 }
 
 function buildIndexes(payload) {

@@ -5,6 +5,18 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class FrameworkSourceRef:
+    file_path: str
+    line: int
+    section: str
+    anchor: str
+    token: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class FrameworkUpstreamLink:
     framework: str
     level: int
@@ -24,9 +36,15 @@ class FrameworkCapability:
     capability_id: str
     name: str
     statement: str
+    source_ref: FrameworkSourceRef
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "capability_id": self.capability_id,
+            "name": self.name,
+            "statement": self.statement,
+            "source_ref": self.source_ref.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -34,9 +52,15 @@ class FrameworkNonResponsibility:
     responsibility_id: str
     name: str
     statement: str
+    source_ref: FrameworkSourceRef
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "responsibility_id": self.responsibility_id,
+            "name": self.name,
+            "statement": self.statement,
+            "source_ref": self.source_ref.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -45,9 +69,16 @@ class FrameworkBoundary:
     name: str
     statement: str
     source_tokens: tuple[str, ...]
+    source_ref: FrameworkSourceRef
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "boundary_id": self.boundary_id,
+            "name": self.name,
+            "statement": self.statement,
+            "source_tokens": list(self.source_tokens),
+            "source_ref": self.source_ref.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -58,6 +89,7 @@ class FrameworkBase:
     inline_expr: str
     source_tokens: tuple[str, ...]
     upstream_links: tuple[FrameworkUpstreamLink, ...]
+    source_ref: FrameworkSourceRef
 
     @property
     def upstream_refs(self) -> tuple[FrameworkUpstreamLink, ...]:
@@ -71,6 +103,7 @@ class FrameworkBase:
             "inline_expr": self.inline_expr,
             "source_tokens": list(self.source_tokens),
             "upstream_links": [item.to_dict() for item in self.upstream_links],
+            "source_ref": self.source_ref.to_dict(),
         }
 
 
@@ -83,9 +116,19 @@ class FrameworkRule:
     output_capabilities: tuple[str, ...]
     invalid_conclusions: tuple[str, ...]
     boundary_bindings: tuple[str, ...]
+    source_ref: FrameworkSourceRef
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "rule_id": self.rule_id,
+            "name": self.name,
+            "participant_bases": list(self.participant_bases),
+            "combination": self.combination,
+            "output_capabilities": list(self.output_capabilities),
+            "invalid_conclusions": list(self.invalid_conclusions),
+            "boundary_bindings": list(self.boundary_bindings),
+            "source_ref": self.source_ref.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -93,9 +136,15 @@ class FrameworkVerification:
     verification_id: str
     name: str
     statement: str
+    source_ref: FrameworkSourceRef
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "verification_id": self.verification_id,
+            "name": self.name,
+            "statement": self.statement,
+            "source_ref": self.source_ref.to_dict(),
+        }
 
 
 @dataclass(frozen=True)
@@ -143,6 +192,7 @@ class FrameworkModule:
     bases: tuple[FrameworkBase, ...]
     rules: tuple[FrameworkRule, ...]
     verifications: tuple[FrameworkVerification, ...]
+    source_ref: FrameworkSourceRef
 
     @property
     def module_id(self) -> str:
@@ -183,6 +233,7 @@ class FrameworkModule:
             "bases": [item.to_dict() for item in self.bases],
             "rules": [item.to_dict() for item in self.rules],
             "verifications": [item.to_dict() for item in self.verifications],
+            "source_ref": self.source_ref.to_dict(),
             "export_surface": export_surface.to_dict(),
         }
 

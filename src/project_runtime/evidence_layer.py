@@ -11,15 +11,19 @@ from project_runtime.utils import sha256_text
 
 
 class EvidenceModuleClass:
+    class_id: str
     module_id: str
     framework_file: str
+    source_ref: dict[str, Any]
     evidence_exports: dict[str, Any]
 
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
         return {
+            "class_id": cls.class_id,
             "module_id": cls.module_id,
             "framework_file": cls.framework_file,
+            "source_ref": dict(cls.source_ref),
             "evidence_exports": jsonable(cls.evidence_exports),
             "class_name": cls.__name__,
         }
@@ -120,8 +124,15 @@ def build_evidence_modules(
             class_name,
             (EvidenceModuleClass,),
             {
+                "class_id": f"evidence_module_class::{binding.framework_module.module_id}",
                 "module_id": binding.framework_module.module_id,
                 "framework_file": binding.framework_module.framework_file,
+                "source_ref": {
+                    "file_path": "src/project_runtime/evidence_layer.py",
+                    "section": "evidence_module",
+                    "anchor": binding.framework_module.module_id,
+                    "token": binding.framework_module.module_id,
+                },
                 "evidence_exports": module_exports,
             },
         )

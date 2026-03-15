@@ -42,19 +42,31 @@ def _build_links(
         framework_to_config.append(
             {
                 "framework_module_id": config_binding.framework_module.module_id,
+                "framework_module_class_id": config_binding.framework_module.class_id,
+                "config_module_id": config_binding.config_module.module_id,
+                "config_module_class_id": config_binding.config_module.class_id,
                 "config_module_class": config_binding.config_module.__name__,
+                "link_role": "mainline",
             }
         )
         config_to_code.append(
             {
                 "config_module_id": config_binding.config_module.module_id,
+                "config_module_class_id": config_binding.config_module.class_id,
+                "code_module_id": code_binding.code_module.module_id,
+                "code_module_class_id": code_binding.code_module.class_id,
                 "code_module_class": code_binding.code_module.__name__,
+                "link_role": "mainline",
             }
         )
         code_to_evidence.append(
             {
                 "code_module_id": code_binding.code_module.module_id,
+                "code_module_class_id": code_binding.code_module.class_id,
+                "evidence_module_id": evidence_module.module_id,
+                "evidence_module_class_id": evidence_module.class_id,
                 "evidence_module_class": evidence_module.__name__,
+                "link_role": "mainline",
             }
         )
         compiled_config = config_binding.config_module.compiled_config_export
@@ -63,21 +75,44 @@ def _build_links(
                 {
                     "module_id": config_binding.framework_module.module_id,
                     "boundary_id": item["boundary_id"],
-                    "communication_path": item["communication_path"],
-                    "exact_path": item["exact_path"],
+                    "projection_id": item["projection_id"],
+                    "projection_source": item["projection_source"],
+                    "mapping_mode": item["mapping_mode"],
+                    "primary_communication_path": item["primary_communication_path"],
+                    "related_communication_paths": list(item["related_communication_paths"]),
+                    "primary_exact_path": item["primary_exact_path"],
+                    "related_exact_paths": list(item["related_exact_paths"]),
+                    "note": item["note"],
+                    "config_module_id": config_binding.config_module.module_id,
+                    "config_module_class_id": config_binding.config_module.class_id,
+                    "code_module_id": code_binding.code_module.module_id,
+                    "code_module_class_id": code_binding.code_module.class_id,
                     "code_module_class": code_binding.code_module.__name__,
+                    "evidence_module_id": evidence_module.module_id,
+                    "evidence_module_class_id": evidence_module.class_id,
                     "evidence_module_class": evidence_module.__name__,
+                    "link_role": "trace_view",
                 }
             )
         for item in code_binding.code_module.code_bindings["base_bindings"]:
             base_bindings.append(
                 {
                     "module_id": code_binding.framework_module.module_id,
-                    "base_id": item["base_id"],
-                    "code_module_class": item["class_name"],
+                    **item,
+                    "code_module_id": code_binding.code_module.module_id,
+                    "code_module_class_id": code_binding.code_module.class_id,
+                    "code_module_class": code_binding.code_module.__name__,
+                    "link_role": "trace_view",
                 }
             )
     return {
+        "link_roles": {
+            "framework_to_config": "mainline",
+            "config_to_code": "mainline",
+            "code_to_evidence": "mainline",
+            "boundary_bindings": "trace_view",
+            "base_bindings": "trace_view",
+        },
         "framework_to_config": framework_to_config,
         "config_to_code": config_to_code,
         "code_to_evidence": code_to_evidence,
@@ -95,7 +130,7 @@ def _build_canonical(
     evidence_exports: dict[str, Any],
 ) -> dict[str, Any]:
     return {
-        "schema_version": "four-layer-canonical/v1",
+        "schema_version": "four-layer-canonical/v2",
         "project": assembly.metadata.to_dict(),
         "framework": {
             "author_source": "framework/*.md",

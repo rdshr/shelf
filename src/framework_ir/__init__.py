@@ -7,6 +7,7 @@ from .models import (
     FrameworkNonResponsibility,
     FrameworkCatalog,
     FrameworkRule,
+    FrameworkSourceRef,
     FrameworkUpstreamLink,
     FrameworkVerification,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "FrameworkNonResponsibility",
     "FrameworkCatalog",
     "FrameworkRule",
+    "FrameworkSourceRef",
     "FrameworkUpstreamLink",
     "FrameworkVerification",
     "load_framework_catalog",

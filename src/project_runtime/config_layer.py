@@ -10,34 +10,11 @@ from project_runtime.models import ArtifactConfig, ProjectConfig, ProjectMetadat
 from project_runtime.utils import lookup_dotted_path, normalize_project_path, relative_path
 
 
-BOUNDARY_CONFIG_PATHS = {
-    "SURFACE": ("communication.frontend.surface", "exact.frontend.surface"),
-    "VISUAL": ("communication.frontend.visual", "exact.frontend.visual"),
-    "INTERACT": ("communication.frontend.interact", "exact.frontend.interact"),
-    "STATE": ("communication.frontend.state", "exact.frontend.state"),
-    "EXTEND": ("communication.frontend.extend", "exact.frontend.extend"),
-    "ROUTE": ("communication.frontend.route", "exact.frontend.route"),
-    "A11Y": ("communication.frontend.a11y", "exact.frontend.a11y"),
-    "LIBRARY": ("communication.knowledge_base.library", "exact.knowledge_base.library"),
-    "PREVIEW": ("communication.knowledge_base.preview", "exact.knowledge_base.preview"),
-    "CHAT": ("communication.knowledge_base.chat", "exact.knowledge_base.chat"),
-    "CONTEXT": ("communication.knowledge_base.context", "exact.knowledge_base.context"),
-    "RETURN": ("communication.knowledge_base.return", "exact.knowledge_base.return"),
-    "RESULT": ("communication.backend.result", "exact.backend.result"),
-    "AUTH": ("communication.backend.auth", "exact.backend.auth"),
-    "TRACE": ("communication.backend.trace", "exact.backend.trace"),
-}
-
-MODULE_EXACT_OVERLAYS = {
-    "frontend": ("exact.code.frontend",),
-    "knowledge_base": ("exact.knowledge_base.documents",),
-    "backend": ("exact.code.backend",),
-}
-
-
 class ConfigModuleClass:
+    class_id: str
     module_id: str
     framework_file: str
+    source_ref: dict[str, Any]
     communication_export: dict[str, Any]
     exact_export: dict[str, Any]
     compiled_config_export: dict[str, Any]
@@ -45,8 +22,10 @@ class ConfigModuleClass:
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
         return {
+            "class_id": cls.class_id,
             "module_id": cls.module_id,
             "framework_file": cls.framework_file,
+            "source_ref": dict(cls.source_ref),
             "communication_export": cls.communication_export,
             "exact_export": cls.exact_export,
             "compiled_config_export": cls.compiled_config_export,
@@ -60,13 +39,9 @@ class ConfigModuleBinding:
     config_module: type[ConfigModuleClass]
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "framework_module_id": self.framework_module.module_id,
-            "config_module_id": self.config_module.module_id,
-            "framework_file": self.framework_module.framework_file,
-            "communication_export": self.config_module.communication_export,
-            "exact_export": self.config_module.exact_export,
-        }
+        payload = self.config_module.to_dict()
+        payload["framework_module_id"] = self.framework_module.module_id
+        return payload
 
 
 def _require_table(parent: dict[str, Any], key: str) -> dict[str, Any]:
@@ -136,40 +111,42 @@ def build_config_modules(
     framework_modules: tuple[type[FrameworkModuleClass], ...],
 ) -> tuple[ConfigModuleBinding, ...]:
     bindings: list[ConfigModuleBinding] = []
+    project_payload = project_config.to_dict()
     for module_class in framework_modules:
-        boundary_pairs: list[dict[str, str]] = []
+        boundary_pairs: list[dict[str, Any]] = []
         communication_boundaries: dict[str, Any] = {}
         exact_boundaries: dict[str, Any] = {}
+        boundary_projection_map: dict[str, dict[str, Any]] = {}
         for boundary in module_class.boundaries:
-            path_pair = BOUNDARY_CONFIG_PATHS.get(boundary.boundary_id)
-            if path_pair is None:
+            projection = module_class.boundary_projection_map.get(boundary.boundary_id)
+            if projection is None:
                 continue
-            communication_path, exact_path = path_pair
+            communication_path = str(projection["primary_communication_path"])
+            exact_path = str(projection["primary_exact_path"])
             communication_boundaries[boundary.boundary_id] = lookup_dotted_path(
-                project_config.to_dict(),
+                project_payload,
                 communication_path,
             )
             exact_boundaries[boundary.boundary_id] = lookup_dotted_path(
-                project_config.to_dict(),
+                project_payload,
                 exact_path,
             )
-            boundary_pairs.append(
-                {
-                    "boundary_id": boundary.boundary_id,
-                    "communication_path": communication_path,
-                    "exact_path": exact_path,
-                }
-            )
+            boundary_projection_map[boundary.boundary_id] = dict(projection)
+            boundary_pairs.append(dict(projection))
         overlays: dict[str, Any] = {}
-        for overlay_path in MODULE_EXACT_OVERLAYS.get(module_class.framework, ()):
+        for overlay_path in module_class.exact_overlay_paths:
             overlay_key = overlay_path.rsplit(".", 1)[-1]
-            overlays[overlay_key] = lookup_dotted_path(project_config.to_dict(), overlay_path)
+            overlays[overlay_key] = lookup_dotted_path(project_payload, overlay_path)
         communication_export = {
             "module_id": module_class.module_id,
+            "source_ref": dict(module_class.source_ref),
+            "boundary_projections": boundary_projection_map,
             "boundaries": communication_boundaries,
         }
         exact_export = {
             "module_id": module_class.module_id,
+            "source_ref": dict(module_class.source_ref),
+            "boundary_projections": boundary_projection_map,
             "boundaries": exact_boundaries,
             "overlays": overlays,
         }
@@ -178,14 +155,23 @@ def build_config_modules(
             class_name,
             (ConfigModuleClass,),
             {
+                "class_id": f"config_module_class::{module_class.module_id}",
                 "module_id": module_class.module_id,
                 "framework_file": module_class.framework_file,
+                "source_ref": {
+                    "file_path": project_config.project_file,
+                    "section": "config_module",
+                    "anchor": module_class.module_id,
+                    "token": module_class.module_id,
+                },
                 "communication_export": communication_export,
                 "exact_export": exact_export,
                 "compiled_config_export": {
                     "module_id": module_class.module_id,
                     "framework_file": module_class.framework_file,
+                    "projection_source": "framework_export",
                     "boundary_bindings": boundary_pairs,
+                    "exact_overlay_paths": list(module_class.exact_overlay_paths),
                     "communication_export": communication_export,
                     "exact_export": exact_export,
                 },

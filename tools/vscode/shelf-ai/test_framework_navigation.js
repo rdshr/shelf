@@ -1,5 +1,6 @@
 const assert = require("assert");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const {
@@ -33,6 +34,11 @@ function locate(text, needle) {
 function targetLineText(result) {
   const text = fs.readFileSync(result.filePath, "utf8");
   return text.split(/\r?\n/)[result.line] || "";
+}
+
+function writeFile(filePath, text) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, text);
 }
 
 function main() {
@@ -95,6 +101,69 @@ function main() {
     boundaryRefs.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/project.toml")),
     "boundary references should include the unified project config target"
   );
+
+  const tempRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-framework-nav-"));
+  try {
+    const tempFrameworkPath = path.join(
+      tempRepoRoot,
+      "framework",
+      "knowledge_base",
+      "L2-M0-知识库工作台场景模块.md"
+    );
+    const tempProjectPath = path.join(tempRepoRoot, "projects", "demo", "project.toml");
+    writeFile(tempFrameworkPath, workbenchL2.text);
+    writeFile(
+      tempProjectPath,
+      `
+[project]
+project_id = "demo"
+runtime_scene = "test"
+display_name = "Demo"
+description = "Demo"
+version = "0.0.0"
+
+[framework]
+
+[[framework.modules]]
+role = "knowledge_base"
+framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
+`
+    );
+
+    const noCanonicalDefinition = resolveDefinitionTarget({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(noCanonicalDefinition, "boundary definition should still resolve locally without canonical");
+    assert.strictEqual(noCanonicalDefinition.filePath, tempFrameworkPath);
+
+    const noCanonicalHover = resolveHoverTarget({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(noCanonicalHover, "boundary hover should still resolve without canonical");
+    assert(!noCanonicalHover.markdown.includes("Project Config"));
+
+    const noCanonicalRefs = resolveReferenceTargets({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(
+      !noCanonicalRefs.some((item) => item.filePath.endsWith("project.toml")),
+      "project config references should require canonical instead of inferred fallback"
+    );
+  } finally {
+    fs.rmSync(tempRepoRoot, { recursive: true, force: true });
+  }
 }
 
 main();

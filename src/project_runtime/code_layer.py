@@ -12,8 +12,10 @@ from project_runtime.models import KnowledgeDocument, SeedDocumentSource
 
 
 class CodeModuleClass:
+    class_id: str
     module_id: str
     framework_file: str
+    source_ref: dict[str, Any]
     exact_export: dict[str, Any]
     code_exports: dict[str, Any]
     code_bindings: dict[str, Any]
@@ -21,8 +23,10 @@ class CodeModuleClass:
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
         return {
+            "class_id": cls.class_id,
             "module_id": cls.module_id,
             "framework_file": cls.framework_file,
+            "source_ref": dict(cls.source_ref),
             "exact_export": cls.exact_export,
             "code_exports": cls.code_exports,
             "code_bindings": cls.code_bindings,
@@ -37,12 +41,10 @@ class CodeModuleBinding:
     code_module: type[CodeModuleClass]
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "framework_module_id": self.framework_module.module_id,
-            "code_module_id": self.code_module.module_id,
-            "code_exports": self.code_module.code_exports,
-            "code_bindings": self.code_module.code_bindings,
-        }
+        payload = self.code_module.to_dict()
+        payload["framework_module_id"] = self.framework_module.module_id
+        payload["config_module_id"] = self.config_module.module_id
+        return payload
 
 
 def _require_boundary(exact_export: dict[str, Any], boundary_id: str) -> dict[str, Any]:
@@ -394,6 +396,166 @@ def _compile_backend_service_spec(
     }
 
 
+def _module_compile_symbol(module_id: str, root_module_ids: dict[str, str]) -> str:
+    if module_id == root_module_ids.get("frontend"):
+        return "project_runtime.code_layer:_compile_frontend_app_spec"
+    if module_id == root_module_ids.get("knowledge_base"):
+        return "project_runtime.code_layer:_compile_knowledge_base_domain_spec"
+    if module_id == root_module_ids.get("backend"):
+        return "project_runtime.code_layer:_compile_backend_service_spec"
+    return "project_runtime.code_layer:build_code_modules"
+
+
+def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) -> dict[str, tuple[str, ...]]:
+    if module_id == root_module_ids.get("frontend"):
+        return {
+            "SURFACE": (
+                "frontend_app_spec.ui.shell",
+                "frontend_app_spec.contract.surface_config",
+                "frontend_app_spec.contract.surface_regions",
+            ),
+            "VISUAL": (
+                "frontend_app_spec.ui.visual",
+                "frontend_app_spec.contract.component_variants",
+            ),
+            "INTERACT": (
+                "frontend_app_spec.ui.components.conversation_sidebar",
+                "frontend_app_spec.ui.components.chat_composer",
+                "frontend_app_spec.contract.interaction_actions",
+            ),
+            "STATE": (
+                "frontend_app_spec.ui.components.message_stream",
+                "frontend_app_spec.ui.conversation",
+            ),
+            "EXTEND": ("frontend_app_spec.contract.extend_slots",),
+            "ROUTE": (
+                "frontend_app_spec.ui.pages",
+                "frontend_app_spec.contract.route_contract",
+            ),
+            "A11Y": ("frontend_app_spec.contract.a11y",),
+        }
+    if module_id == root_module_ids.get("knowledge_base"):
+        return {
+            "SURFACE": (
+                "knowledge_base_domain_spec.workbench.layout_variant",
+                "knowledge_base_domain_spec.workbench.surface",
+                "knowledge_base_domain_spec.workbench.regions",
+            ),
+            "LIBRARY": (
+                "knowledge_base_domain_spec.workbench.library",
+                "knowledge_base_domain_spec.workbench.knowledge_bases",
+                "knowledge_base_domain_spec.workbench.documents",
+            ),
+            "PREVIEW": ("knowledge_base_domain_spec.workbench.preview",),
+            "CHAT": ("knowledge_base_domain_spec.workbench.chat",),
+            "CONTEXT": ("knowledge_base_domain_spec.workbench.context",),
+            "RETURN": (
+                "knowledge_base_domain_spec.workbench.return",
+                "knowledge_base_domain_spec.workbench.citation_return",
+            ),
+        }
+    if module_id == root_module_ids.get("backend"):
+        return {
+            "LIBRARY": ("backend_service_spec.knowledge_base",),
+            "PREVIEW": ("backend_service_spec.retrieval",),
+            "CHAT": (
+                "backend_service_spec.answer_policy",
+                "backend_service_spec.return_policy",
+            ),
+            "RESULT": (
+                "backend_service_spec.transport",
+                "backend_service_spec.answer_policy",
+                "backend_service_spec.interaction_copy",
+            ),
+            "AUTH": ("backend_service_spec.write_policy",),
+            "TRACE": ("backend_service_spec.retrieval",),
+        }
+    return {}
+
+
+def _build_implementation_slots(
+    binding: ConfigModuleBinding,
+    *,
+    root_module_ids: dict[str, str],
+) -> list[dict[str, Any]]:
+    exact_export = binding.config_module.exact_export
+    boundary_projections = exact_export.get("boundary_projections", {})
+    if not isinstance(boundary_projections, dict):
+        boundary_projections = {}
+    slots: list[dict[str, Any]] = []
+    runtime_slot_map = _module_runtime_slot_map(binding.framework_module.module_id, root_module_ids)
+    compile_symbol = _module_compile_symbol(binding.framework_module.module_id, root_module_ids)
+    for boundary in binding.framework_module.boundaries:
+        projection = boundary_projections.get(boundary.boundary_id, {})
+        related_exact_paths = projection.get("related_exact_paths", [])
+        if not isinstance(related_exact_paths, list):
+            related_exact_paths = []
+        slots.append(
+            {
+                "slot_id": f"code_slot::{binding.framework_module.module_id}::{boundary.boundary_id}::exact_boundary",
+                "slot_kind": "exact_boundary",
+                "boundary_id": boundary.boundary_id,
+                "owner_id": f"code_owner::{binding.framework_module.module_id}",
+                "source_symbol": f"{binding.framework_module.module_id}.exact_export.boundaries.{boundary.boundary_id}",
+                "anchor_path": f"exact_export.boundaries.{boundary.boundary_id}",
+                "projection_paths": list(dict.fromkeys(related_exact_paths)),
+            }
+        )
+        for anchor_path in runtime_slot_map.get(boundary.boundary_id, ()):
+            slots.append(
+                {
+                    "slot_id": f"code_slot::{binding.framework_module.module_id}::{boundary.boundary_id}::{anchor_path}",
+                    "slot_kind": "runtime_export",
+                    "boundary_id": boundary.boundary_id,
+                    "owner_id": f"code_owner::{binding.framework_module.module_id}",
+                    "source_symbol": f"{compile_symbol}->{anchor_path}",
+                    "anchor_path": anchor_path,
+                    "projection_paths": list(dict.fromkeys(related_exact_paths)),
+                }
+            )
+    return slots
+
+
+def _base_binding_records(
+    binding: ConfigModuleBinding,
+    *,
+    class_name: str,
+    implementation_slots: list[dict[str, Any]],
+    root_module_ids: dict[str, str],
+) -> list[dict[str, Any]]:
+    slot_lookup = {slot["slot_id"]: slot for slot in implementation_slots}
+    owner_id = f"code_owner::{binding.framework_module.module_id}"
+    owner_source_symbol = _module_compile_symbol(binding.framework_module.module_id, root_module_ids)
+    records: list[dict[str, Any]] = []
+    for base_class in binding.framework_module.base_classes:
+        boundary_ids = list(base_class.boundary_bindings)
+        implementing_slot_ids = [
+            slot["slot_id"]
+            for slot in implementation_slots
+            if slot["boundary_id"] in base_class.boundary_bindings
+        ]
+        bound_symbols = [
+            str(slot_lookup[slot_id]["source_symbol"])
+            for slot_id in implementing_slot_ids
+            if slot_id in slot_lookup
+        ]
+        records.append(
+            {
+                "base_id": base_class.base_id,
+                "base_class_id": base_class.class_id,
+                "code_owner_id": owner_id,
+                "code_owner_class_id": f"code_module_class::{binding.framework_module.module_id}",
+                "code_owner_class_name": class_name,
+                "binding_kind": "code_owner_slots",
+                "boundary_ids": boundary_ids,
+                "implementing_slot_ids": implementing_slot_ids,
+                "bound_symbols": bound_symbols or [owner_source_symbol],
+                "owner_source_symbol": owner_source_symbol,
+            }
+        )
+    return records
+
+
 def build_code_modules(
     config_modules: tuple[ConfigModuleBinding, ...],
     *,
@@ -436,25 +598,41 @@ def build_code_modules(
         if binding.framework_module.module_id == root_module_ids.get("backend"):
             code_exports["backend_service_spec"] = backend_service_spec
         class_name = binding.framework_module.__name__.replace("FrameworkModule", "CodeModule")
+        implementation_slots = _build_implementation_slots(binding, root_module_ids=root_module_ids)
+        base_bindings = _base_binding_records(
+            binding,
+            class_name=class_name,
+            implementation_slots=implementation_slots,
+            root_module_ids=root_module_ids,
+        )
+        owner_source_symbol = _module_compile_symbol(binding.framework_module.module_id, root_module_ids)
         code_module = type(
             class_name,
             (CodeModuleClass,),
             {
+                "class_id": f"code_module_class::{binding.framework_module.module_id}",
                 "module_id": binding.framework_module.module_id,
                 "framework_file": binding.framework_module.framework_file,
+                "source_ref": {
+                    "file_path": "src/project_runtime/code_layer.py",
+                    "section": "code_module",
+                    "anchor": binding.framework_module.module_id,
+                    "token": binding.framework_module.module_id,
+                },
                 "exact_export": exact_export,
                 "code_exports": code_exports,
                 "code_bindings": {
                     "module_class": class_name,
-                    "source_symbol": f"{binding.framework_module.module_id}.exact_export",
-                    "base_bindings": [
-                        {
-                            "base_id": base_class.base_id,
-                            "class_name": class_name,
-                            "binding_kind": "code_module_class",
-                        }
-                        for base_class in binding.framework_module.base_classes
-                    ],
+                    "module_class_id": f"code_module_class::{binding.framework_module.module_id}",
+                    "source_symbol": owner_source_symbol,
+                    "owner": {
+                        "owner_id": f"code_owner::{binding.framework_module.module_id}",
+                        "owner_class_id": f"code_module_class::{binding.framework_module.module_id}",
+                        "owner_class_name": class_name,
+                        "source_symbol": owner_source_symbol,
+                    },
+                    "implementation_slots": implementation_slots,
+                    "base_bindings": base_bindings,
                 },
             },
         )

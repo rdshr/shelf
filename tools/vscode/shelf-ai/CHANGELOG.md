@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6 - 2026-03-15
+
+- Tightened framework-to-config navigation so boundary jumps now resolve from canonical-backed framework exports instead of extension-side inferred fallback tables.
+- Added stable class/source identities across the four-layer canonical output and expanded base bindings beyond module ownership into owner/slot/symbol traces.
+- Revalidated the repository, regenerated evidence artifacts, and rebuilt the local VSIX so the installed extension matches the current workspace.
+
 ## 0.1.5 - 2026-03-15
 
 - Restored the interactive framework and evidence graph canvas so the generated tree views are no longer reduced to plain HTML lists.

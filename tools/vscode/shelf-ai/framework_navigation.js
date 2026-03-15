@@ -54,151 +54,6 @@ function createBoundaryConfigMapping(primarySection, relatedSections = [primaryS
   };
 }
 
-function directConfigMapping(primarySection, relatedSections = [primarySection]) {
-  return createBoundaryConfigMapping(primarySection, relatedSections, { mappingMode: "direct" });
-}
-
-function derivedConfigMapping(primarySection, relatedSections = [primarySection], note = "") {
-  return createBoundaryConfigMapping(primarySection, relatedSections, {
-    mappingMode: "derived",
-    note,
-  });
-}
-
-const FRAMEWORK_BOUNDARY_SECTION_MAP = {
-  frontend: {
-    SURFACE: directConfigMapping("exact.frontend.surface", ["exact.frontend.surface.copy"]),
-    VISUAL: directConfigMapping("exact.frontend.visual"),
-    INTERACT: directConfigMapping("exact.frontend.interact", ["exact.frontend.interact.aux_nav"]),
-    STATE: directConfigMapping("exact.frontend.state", ["exact.frontend.state.role_labels", "exact.frontend.state.relative_groups"]),
-    EXTEND: directConfigMapping("exact.frontend.extend"),
-    ROUTE: directConfigMapping("exact.frontend.route", ["exact.frontend.route.showcase_page"]),
-    A11Y: directConfigMapping("exact.frontend.a11y"),
-  },
-  knowledge_base: {
-    SURFACE: directConfigMapping("exact.frontend.surface", ["exact.frontend.surface.copy"]),
-    LIBRARY: directConfigMapping("exact.knowledge_base.library"),
-    PREVIEW: directConfigMapping("exact.knowledge_base.preview"),
-    CHAT: directConfigMapping("exact.knowledge_base.chat"),
-    CONTEXT: directConfigMapping("exact.knowledge_base.context"),
-    RETURN: directConfigMapping("exact.knowledge_base.return"),
-    A11Y: derivedConfigMapping("exact.frontend.a11y", ["exact.frontend.a11y"], "该边界由工作台可访问切片承接。"),
-    FILESET: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
-    INGEST: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
-    CLASSIFY: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
-    LIMIT: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库配置承接。"),
-    VISIBILITY: derivedConfigMapping(
-      "exact.knowledge_base.library",
-      ["exact.knowledge_base.library", "exact.knowledge_base.preview"],
-      "该边界由知识库入口与来源预览配置共同承接。"
-    ),
-    ENTRY: derivedConfigMapping(
-      "exact.knowledge_base.library",
-      ["exact.knowledge_base.library", "exact.frontend.route"],
-      "该边界由知识库入口配置与工作台路由共同承接。"
-    ),
-    DOCVIEW: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
-    TOC: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
-    META: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
-    FOCUS: derivedConfigMapping(
-      "exact.knowledge_base.preview",
-      ["exact.knowledge_base.preview", "exact.frontend.a11y"],
-      "该边界由来源预览与可访问配置共同承接。"
-    ),
-    ANCHOR: derivedConfigMapping(
-      "exact.knowledge_base.preview",
-      ["exact.knowledge_base.preview", "exact.knowledge_base.return"],
-      "该边界由来源锚点与返回路径配置共同承接。"
-    ),
-    TURN: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
-    INPUT: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
-    STATUS: derivedConfigMapping(
-      "exact.knowledge_base.chat",
-      ["exact.knowledge_base.chat", "exact.knowledge_base.preview"],
-      "该边界由对话输出与来源状态配置共同承接。"
-    ),
-    CITATION: derivedConfigMapping(
-      "exact.knowledge_base.chat",
-      ["exact.knowledge_base.chat", "exact.knowledge_base.context", "exact.knowledge_base.return", "exact.knowledge_base.preview"],
-      "该边界由对话、上下文、返回与来源预览配置共同承接。"
-    ),
-    SCOPE: derivedConfigMapping(
-      "exact.knowledge_base.context",
-      ["exact.knowledge_base.context", "exact.knowledge_base.preview"],
-      "该边界由上下文选择与来源预览配置共同承接。"
-    ),
-    TURNLINK: derivedConfigMapping(
-      "exact.knowledge_base.return",
-      ["exact.knowledge_base.return", "exact.knowledge_base.chat", "exact.knowledge_base.context"],
-      "该边界由回合返回链路与上下文配置共同承接。"
-    ),
-    TRACE: derivedConfigMapping(
-      "exact.knowledge_base.context",
-      ["exact.knowledge_base.context", "exact.knowledge_base.preview", "exact.knowledge_base.return"],
-      "该边界由上下文、来源追踪与返回链路配置共同承接。"
-    ),
-    EMPTY: derivedConfigMapping(
-      "exact.knowledge_base.chat",
-      ["exact.knowledge_base.chat", "exact.knowledge_base.preview", "exact.knowledge_base.library"],
-      "该边界由聊天、预览与知识库空态配置共同承接。"
-    ),
-    REGION: derivedConfigMapping(
-      "exact.frontend.surface",
-      ["exact.frontend.surface", "exact.frontend.surface.copy"],
-      "该边界由工作台界面承载配置承接。"
-    ),
-    RESPONSIVE: derivedConfigMapping(
-      "exact.frontend.surface",
-      ["exact.frontend.surface", "exact.frontend.visual"],
-      "该边界由界面承载与视觉配置共同承接。"
-    ),
-  },
-  backend: {
-    LIBRARY: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
-    LIBAPI: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
-    FILE: derivedConfigMapping("exact.knowledge_base.library", ["exact.knowledge_base.library"], "该边界由知识库项目配置承接。"),
-    PREVIEW: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
-    PREVIEWAPI: derivedConfigMapping("exact.knowledge_base.preview", ["exact.knowledge_base.preview"], "该边界由来源预览配置承接。"),
-    CHAT: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
-    CHATAPI: derivedConfigMapping("exact.knowledge_base.chat", ["exact.knowledge_base.chat"], "该边界由对话项目配置承接。"),
-    CITATION: derivedConfigMapping(
-      "exact.knowledge_base.chat",
-      ["exact.knowledge_base.chat", "exact.knowledge_base.context", "exact.knowledge_base.return", "exact.knowledge_base.preview"],
-      "该边界由对话、返回与来源预览配置共同承接。"
-    ),
-    TRACE: derivedConfigMapping(
-      "exact.backend.trace",
-      ["exact.backend.trace", "exact.knowledge_base.return"],
-      "该边界由追踪与返回链路配置共同承接。"
-    ),
-    RESULT: derivedConfigMapping(
-      "exact.backend.result",
-      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.library", "exact.knowledge_base.preview"],
-      "该边界由返回链路与统一结果结构配置共同承接。"
-    ),
-    AUTH: derivedConfigMapping(
-      "exact.backend.auth",
-      ["exact.backend.auth", "exact.knowledge_base.chat"],
-      "该边界由接口返回治理与对话入口配置共同承接。"
-    ),
-    ERROR: derivedConfigMapping(
-      "exact.backend.result",
-      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.preview"],
-      "该边界由错误返回链路与界面反馈配置共同承接。"
-    ),
-    VALID: derivedConfigMapping(
-      "exact.backend.auth",
-      ["exact.backend.auth", "exact.knowledge_base.chat"],
-      "该边界由返回链路与交互约束配置共同承接。"
-    ),
-    CONSIST: derivedConfigMapping(
-      "exact.backend.result",
-      ["exact.backend.result", "exact.knowledge_base.chat", "exact.knowledge_base.library", "exact.knowledge_base.preview"],
-      "该边界由统一返回与多接口一致性配置共同承接。"
-    ),
-  },
-};
-
 function normalizePathSlashes(value) {
   return value.replace(/\\/g, "/");
 }
@@ -636,167 +491,61 @@ function resolveTomlSectionTarget(projectFilePath, sectionNames) {
   return null;
 }
 
-function getBoundaryConfigMapping(frameworkName, token) {
-  const mapping = FRAMEWORK_BOUNDARY_SECTION_MAP[frameworkName];
-  if (mapping && mapping[token]) {
-    return mapping[token];
-  }
-  return inferBoundaryConfigMapping(frameworkName, token);
-}
-
-function inferFrontendBoundaryConfigMapping(token) {
-  const upper = String(token || "").toUpperCase();
-  if (!upper) {
+function readProjectCanonical(projectFilePath) {
+  const canonicalPath = path.join(path.dirname(projectFilePath), "generated", "canonical.json");
+  if (!fs.existsSync(canonicalPath) || !fs.statSync(canonicalPath).isFile()) {
     return null;
   }
-
-  if (
-    upper === "A11Y" ||
-    upper.endsWith("A11Y") ||
-    new Set(["READ", "ORDER", "FOCUS"]).has(upper)
-  ) {
-    return derivedConfigMapping("a11y", ["a11y"], "该边界按可访问与阅读路径归属到项目配置。");
+  try {
+    const raw = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
   }
+}
 
-  if (new Set(["ROUTE", "NAV", "ENTRY", "RETURN", "PAGESET", "SCENE", "STEP", "REF"]).has(upper)) {
-    return derivedConfigMapping("route", ["route"], "该边界按导航与返回路径归属到项目配置。");
-  }
-
-  if (
-    new Set([
-      "VISUAL",
-      "TOKEN",
-      "THEME",
-      "DENSITY",
-      "ALERT",
-      "TAG",
-      "BUBBLE",
-      "TEXTTONE",
-      "TEXTTYPO",
-      "BTNCHROME",
-      "PANELTONE",
-      "FEEDBACK",
-    ]).has(upper) ||
-    upper.includes("TONE") ||
-    upper.includes("TYPO") ||
-    upper.includes("CHROME")
-  ) {
-    return derivedConfigMapping("visual", ["visual"], "该边界按视觉与主题语义归属到项目配置。");
-  }
-
-  return derivedConfigMapping(
-    "surface",
-    ["surface", "surface.copy"],
-    "该边界按界面承载与组件装配归属到项目配置。"
+function readCanonicalBoundaryProjection(canonical, moduleId, token) {
+  const frameworkModules = Array.isArray(canonical?.framework?.modules) ? canonical.framework.modules : [];
+  const frameworkModule = frameworkModules.find(
+    (item) => item && typeof item === "object" && String(item.module_id || "") === moduleId
   );
-}
-
-function inferKnowledgeBaseBoundaryConfigMapping(token) {
-  const upper = String(token || "").toUpperCase();
-  if (!upper) {
+  if (!frameworkModule) {
     return null;
   }
-
-  if (upper === "A11Y" || upper.endsWith("A11Y")) {
-    return derivedConfigMapping("a11y", ["a11y"], "该边界由工作台项目配置中的可访问切片承接。");
-  }
-  if (new Set(["RETURN", "TURNLINK"]).has(upper)) {
-    return derivedConfigMapping(
-      "return",
-      ["return", "chat", "context"],
-      "该边界由回合返回链路与上下文配置共同承接。"
-    );
-  }
-  if (new Set(["CHAT", "TURN", "INPUT", "STATUS"]).has(upper)) {
-    return derivedConfigMapping("chat", ["chat", "chat.copy"], "该边界由对话项目配置承接。");
-  }
-  if (upper === "CITATION") {
-    return derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "context", "return", "preview"],
-      "该边界由对话、上下文、返回与来源预览配置共同承接。"
-    );
-  }
-  if (new Set(["CONTEXT", "SCOPE", "TRACE"]).has(upper)) {
-    return derivedConfigMapping(
-      "context",
-      ["context", "preview", "return"],
-      "该边界由上下文、来源追踪与返回链路配置共同承接。"
-    );
-  }
-  if (new Set(["PREVIEW", "DOCVIEW", "TOC", "ANCHOR", "META", "FOCUS", "EMPTY"]).has(upper)) {
-    return derivedConfigMapping(
-      "preview",
-      ["preview", "return"],
-      "该边界由来源预览与锚点返回配置共同承接。"
-    );
-  }
-  if (new Set(["LIBRARY", "ENTRY", "FILESET", "INGEST", "LIMIT", "CLASSIFY", "VISIBILITY"]).has(upper)) {
-    return derivedConfigMapping(
-      "library",
-      ["library", "library.copy", "preview"],
-      "该边界由知识库入口与来源预览配置共同承接。"
-    );
-  }
-  if (new Set(["SURFACE", "REGION", "RESPONSIVE"]).has(upper)) {
-    return derivedConfigMapping(
-      "surface",
-      ["surface", "surface.copy", "visual"],
-      "该边界由工作台界面承载与视觉配置共同承接。"
-    );
-  }
-
-  return null;
-}
-
-function inferBackendBoundaryConfigMapping(token) {
-  const upper = String(token || "").toUpperCase();
-  if (!upper) {
+  const boundaries = Array.isArray(frameworkModule.boundaries) ? frameworkModule.boundaries : [];
+  const boundary = boundaries.find(
+    (item) => item && typeof item === "object" && String(item.boundary_id || "") === token
+  );
+  if (!boundary || typeof boundary.config_projection !== "object" || !boundary.config_projection) {
     return null;
   }
-
-  if (upper.startsWith("LIB") || upper === "FILE" || upper === "LIBRARY") {
-    return derivedConfigMapping("library", ["library", "library.copy"], "该边界由知识库项目配置承接。");
-  }
-  if (upper.startsWith("PREVIEW") || upper === "PREVIEW") {
-    return derivedConfigMapping("preview", ["preview"], "该边界由来源预览配置承接。");
-  }
-  if (upper.startsWith("CHAT") || upper === "CITATION") {
-    return derivedConfigMapping(
-      "chat",
-      ["chat", "chat.copy", "context", "return", "preview"],
-      "该边界由对话、返回与来源预览配置共同承接。"
-    );
-  }
-  if (upper === "TRACE") {
-    return derivedConfigMapping(
-      "context",
-      ["context", "return"],
-      "该边界由上下文与返回链路配置共同承接。"
-    );
-  }
-  if (new Set(["RESULT", "AUTH", "ERROR", "VALID", "CONSIST"]).has(upper)) {
-    return derivedConfigMapping(
-      "return",
-      ["return", "chat", "library", "preview"],
-      "该边界由统一返回结构与跨接口约束配置共同承接。"
-    );
-  }
-
-  return null;
+  return boundary.config_projection;
 }
 
-function inferBoundaryConfigMapping(frameworkName, token) {
-  if (frameworkName === "frontend") {
-    return inferFrontendBoundaryConfigMapping(token);
+function canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token) {
+  const projectFilePath = resolvePreferredProjectFile(repoRoot, frameworkName);
+  if (!projectFilePath || !moduleId) {
+    return null;
   }
-  if (frameworkName === "knowledge_base") {
-    return inferKnowledgeBaseBoundaryConfigMapping(token);
+  const canonical = readProjectCanonical(projectFilePath);
+  if (!canonical) {
+    return null;
   }
-  if (frameworkName === "backend") {
-    return inferBackendBoundaryConfigMapping(token);
+  const projection = readCanonicalBoundaryProjection(canonical, moduleId, token);
+  if (!projection) {
+    return null;
   }
-  return null;
+  const primarySection = normalizeConfigSection(String(projection.primary_exact_path || ""));
+  const relatedSections = Array.isArray(projection.related_exact_paths)
+    ? projection.related_exact_paths.map((item) => normalizeConfigSection(String(item || ""))).filter(Boolean)
+    : [primarySection];
+  return {
+    projectFilePath,
+    mapping: createBoundaryConfigMapping(primarySection, relatedSections, {
+      mappingMode: String(projection.mapping_mode || "direct"),
+      note: String(projection.note || ""),
+    }),
+  };
 }
 
 function discoverProjectFiles(repoRoot) {
@@ -855,12 +604,13 @@ function resolvePreferredProjectFile(repoRoot, frameworkName) {
   return null;
 }
 
-function resolveBoundaryConfigTarget(repoRoot, frameworkName, token) {
-  const mapping = getBoundaryConfigMapping(frameworkName, token);
-  if (!mapping) {
+function resolveBoundaryConfigTarget(repoRoot, frameworkName, moduleId, token) {
+  const mappingResult = canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token);
+  if (!mappingResult || !mappingResult.mapping) {
     return null;
   }
-  const projectFilePath = resolvePreferredProjectFile(repoRoot, frameworkName);
+  const mapping = mappingResult.mapping;
+  const projectFilePath = mappingResult.projectFilePath;
   if (!projectFilePath || !fs.existsSync(projectFilePath)) {
     return null;
   }
@@ -914,6 +664,10 @@ function buildModuleLabel(moduleInfo) {
   return moduleInfo
     ? `${moduleInfo.frameworkName}.${moduleInfo.level}.${moduleInfo.moduleId}`
     : "module";
+}
+
+function canonicalModuleId(moduleInfo) {
+  return moduleInfo ? `${moduleInfo.frameworkName}.${moduleInfo.level}.${moduleInfo.moduleId}` : "";
 }
 
 function pushItemSection(parts, title, items) {
@@ -997,8 +751,8 @@ function buildRuleHoverMarkdown(moduleInfo, rule) {
   return parts.join("\n");
 }
 
-function appendBoundaryConfigHover(parts, repoRoot, frameworkName, token) {
-  const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, token);
+function appendBoundaryConfigHover(parts, repoRoot, frameworkName, moduleId, token) {
+  const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, moduleId, token);
   if (!boundaryTarget) {
     return;
   }
@@ -1048,7 +802,7 @@ function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot) {
 
   const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
   if (item.kind === "boundary" && repoRoot && moduleInfo?.frameworkName) {
-    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, item.token);
+    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, canonicalModuleId(moduleInfo), item.token);
   }
   return parts.join("\n");
 }
@@ -1119,6 +873,7 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
     const boundaryTarget = resolveBoundaryConfigTarget(
       repoRoot,
       documentInfo.frameworkName,
+      canonicalModuleId(documentInfo),
       tokenContext.token
     );
     if (boundaryTarget) {
@@ -1249,7 +1004,12 @@ function resolveReferenceTargets({ repoRoot, filePath, text, line, character }) 
 
   const localItem = getItemForToken(index, tokenContext.token);
   if (localItem && localItem.kind === "boundary" && documentInfo.frameworkName) {
-    const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, documentInfo.frameworkName, tokenContext.token);
+    const boundaryTarget = resolveBoundaryConfigTarget(
+      repoRoot,
+      documentInfo.frameworkName,
+      canonicalModuleId(documentInfo),
+      tokenContext.token
+    );
     if (boundaryTarget) {
       targets.push(boundaryTarget);
     }
