@@ -197,6 +197,14 @@ function main() {
     !readme.includes("validate_canonical.py --json"),
     "README must not document the optional --json canonical flag as the default command"
   );
+  assert(
+    readme.includes("Treats stale / missing / invalid canonical as non-authoritative"),
+    "README must document strict canonical freshness behavior"
+  );
+  assert(
+    readme.includes("Shelf blocks the formal evidence tree until you materialize again"),
+    "README must explain how the evidence tree behaves when canonical is stale"
+  );
 
   const atEntries = frameworkCompletion.getFrameworkCompletionEntries("@", "@", false);
   assert(

@@ -11,6 +11,7 @@
 - Maps framework boundaries back to `projects/*/project.toml` sections such as `[exact.knowledge_base.chat]` and `[exact.frontend.surface]`.
 - Auto-materializes affected projects when `framework/*.md` or `projects/*/project.toml` changes.
 - Guards `projects/*/generated/*` and workspace tree artifacts from direct edits.
+- Treats stale / missing / invalid canonical as non-authoritative: formal config jumps and the evidence tree wait for fresh canonical.
 - Runs canonical validation and optionally `mypy` from the extension.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
 
@@ -70,6 +71,7 @@ The `@framework` template entry is a repository-side hard authoring contract and
 
 The framework tree is the authoring view.
 The evidence tree is the canonical-derived workspace evidence view.
+When canonical is stale, missing, or invalid, Shelf blocks the formal evidence tree until you materialize again.
 
 ## Project Config Navigation
 

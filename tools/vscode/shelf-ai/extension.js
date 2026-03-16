@@ -256,6 +256,60 @@ function activate(context) {
   });
   const refreshStatusFromCurrentState = () => statusController.refresh();
 
+  const getCanonicalFreshnessState = (repoRoot) => {
+    const summary = workspaceGuard.summarizeCanonicalFreshness(repoRoot);
+    const authoritativeSources = new Set();
+    for (const projectFreshness of summary.projects) {
+      for (const relPath of projectFreshness.authoritativeSourceRelPaths || []) {
+        authoritativeSources.add(relPath);
+      }
+    }
+    const dirtySourceRelPaths = [...dirtyWatchedFiles]
+      .map((fsPath) => workspaceGuard.normalizeRelPath(path.relative(repoRoot, fsPath)))
+      .filter((relPath) => authoritativeSources.has(relPath))
+      .sort();
+    return {
+      projects: summary.projects,
+      blockingProjects: summary.blockingProjects,
+      dirtySourceRelPaths,
+      hasBlocking: summary.hasBlockingProjects || dirtySourceRelPaths.length > 0,
+    };
+  };
+
+  const describeProjectFreshness = (projectFreshness) => {
+    const projectLabel = projectFreshness.projectId || path.basename(path.dirname(projectFreshness.projectFilePath || ""));
+    if (projectFreshness.status === "missing") {
+      return `${projectLabel}: missing ${projectFreshness.canonicalRelPath || "generated/canonical.json"}`;
+    }
+    if (projectFreshness.status === "invalid") {
+      return `${projectLabel}: invalid canonical.json`;
+    }
+    const staleSources = [
+      ...(projectFreshness.newerSourceRelPaths || []),
+      ...(projectFreshness.missingSourceRelPaths || []),
+    ];
+    if (!staleSources.length) {
+      return `${projectLabel}: stale canonical`;
+    }
+    return `${projectLabel}: stale via ${staleSources.slice(0, 2).join(", ")}`;
+  };
+
+  const describeCanonicalFreshness = (freshnessState) => {
+    const parts = [];
+    if (freshnessState.dirtySourceRelPaths.length) {
+      parts.push(`dirty authoring sources: ${freshnessState.dirtySourceRelPaths.slice(0, 2).join(", ")}`);
+    }
+    if (freshnessState.blockingProjects.length) {
+      parts.push(
+        freshnessState.blockingProjects
+          .slice(0, 2)
+          .map(describeProjectFreshness)
+          .join(" | ")
+      );
+    }
+    return parts.join(" | ");
+  };
+
   const normalizeTriggerUris = (options = {}) => {
     const inputs = [];
     if (options.triggerUri) {
@@ -972,6 +1026,25 @@ function activate(context) {
     const refreshCommandLabel = kind === "evidence"
       ? "Shelf: Refresh Evidence Tree"
       : "Shelf: Refresh Framework Tree";
+    const freshnessState = getCanonicalFreshnessState(repoRoot);
+
+    if (kind === "evidence" && freshnessState.hasBlocking) {
+      const freshnessDetail = describeCanonicalFreshness(freshnessState);
+      const panel = ensureTreePanel(kind);
+      panel.webview.html = buildTreeFallbackHtml(
+        freshnessDetail
+          ? `Evidence tree unavailable until canonical is fresh. ${freshnessDetail}`
+          : "Evidence tree unavailable until canonical is fresh.",
+        "Shelf: Run Codegen Preflight",
+        treeTitleForKind(kind)
+      );
+      vscode.window.showWarningMessage(
+        freshnessDetail
+          ? `Shelf: evidence tree is unavailable until canonical is fresh. ${freshnessDetail}`
+          : "Shelf: evidence tree is unavailable until canonical is fresh."
+      );
+      return;
+    }
 
     if (options.regenerateIfMissing && !fs.existsSync(treeSettings.htmlPath)) {
       await generateTreeArtifacts(repoRoot, treeSettings.generateCommand, output, treeLabel);
@@ -1173,6 +1246,8 @@ function activate(context) {
     const validationTriggerMode = getValidationTriggerMode();
     const standardsExists = hasStandardsTree(repoRoot);
     const validationEnabled = standardsExists && validationActive;
+    const freshnessState = getCanonicalFreshnessState(repoRoot);
+    const freshnessDetail = describeCanonicalFreshness(freshnessState);
     const frameworkTreeExists = fs.existsSync(frameworkTreePath);
     const evidenceTreeExists = fs.existsSync(evidenceTreePath);
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
@@ -1237,6 +1312,19 @@ function activate(context) {
       calloutAction = {
         action: "openStandards",
         label: "打开规范总纲路径"
+      };
+    } else if (freshnessState.hasBlocking) {
+      heroTone = "error";
+      heroStatus = "canonical 已过期";
+      heroSummary = "正式跨层导航和证据树入口已收紧。先物化并重新校验，再继续信任当前主链结果。";
+      calloutTone = "error";
+      calloutTitle = "先刷新 canonical";
+      calloutBody = freshnessDetail
+        ? `${freshnessDetail}。先执行物化与完整校验，再继续打开证据树或使用正式跨层跳转。`
+        : "当前 canonical 不是 fresh 状态。先执行物化与完整校验，再继续打开证据树或使用正式跨层跳转。";
+      calloutAction = {
+        action: "codegenPreflight",
+        label: "先物化并校验"
       };
     } else if (!frameworkTreeExists) {
       heroStatus = "框架树产物缺失";
@@ -1303,6 +1391,14 @@ function activate(context) {
         note: evidenceTreeExists
           ? toWorkspaceRelative(evidenceTreePath, repoRoot)
           : `等待生成 ${toWorkspaceRelative(evidenceTreePath, repoRoot)}`
+      },
+      {
+        label: "Canonical Freshness",
+        value: freshnessState.hasBlocking ? "Stale" : "Fresh",
+        tone: freshnessState.hasBlocking ? "error" : "ok",
+        note: freshnessState.hasBlocking
+          ? (freshnessDetail || "先 materialize / validate，再继续信任正式跨层结果。")
+          : "当前正式跨层跳转与证据树可继续信任 canonical。"
       },
       {
         label: "守卫模式",
@@ -1512,12 +1608,14 @@ function activate(context) {
           return null;
         }
 
+        const allowCanonicalProjection = getCanonicalFreshnessState(repoRoot).dirtySourceRelPaths.length === 0;
         const target = frameworkNavigation.resolveDefinitionTarget({
           repoRoot,
           filePath: document.uri.fsPath,
           text: document.getText(),
           line: position.line,
           character: position.character,
+          allowCanonicalProjection,
         });
         if (!target) {
           return null;
@@ -1545,12 +1643,14 @@ function activate(context) {
           return null;
         }
 
+        const allowCanonicalProjection = getCanonicalFreshnessState(repoRoot).dirtySourceRelPaths.length === 0;
         const target = frameworkNavigation.resolveHoverTarget({
           repoRoot,
           filePath: document.uri.fsPath,
           text: document.getText(),
           line: position.line,
           character: position.character,
+          allowCanonicalProjection,
         });
         if (!target) {
           return null;
@@ -1577,12 +1677,14 @@ function activate(context) {
           return [];
         }
 
+        const allowCanonicalProjection = getCanonicalFreshnessState(repoRoot).dirtySourceRelPaths.length === 0;
         const targets = frameworkNavigation.resolveReferenceTargets({
           repoRoot,
           filePath: document.uri.fsPath,
           text: document.getText(),
           line: position.line,
           character: position.character,
+          allowCanonicalProjection,
         });
         return targets.map((target) => {
           const targetUri = vscode.Uri.file(target.filePath);
@@ -1858,6 +1960,25 @@ function activate(context) {
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("shelf");
     const evidenceTreeSettings = getEvidenceTreeSettings(repoRoot, config);
+    const freshnessState = getCanonicalFreshnessState(repoRoot);
+
+    if (freshnessState.hasBlocking) {
+      const freshnessDetail = describeCanonicalFreshness(freshnessState);
+      const panel = ensureTreePanel("evidence");
+      panel.webview.html = buildTreeFallbackHtml(
+        freshnessDetail
+          ? `Evidence tree unavailable until canonical is fresh. ${freshnessDetail}`
+          : "Evidence tree unavailable until canonical is fresh.",
+        "Shelf: Run Codegen Preflight",
+        treeTitleForKind("evidence")
+      );
+      vscode.window.showWarningMessage(
+        freshnessDetail
+          ? `Shelf: refresh evidence tree is blocked until canonical is fresh. ${freshnessDetail}`
+          : "Shelf: refresh evidence tree is blocked until canonical is fresh."
+      );
+      return;
+    }
 
     const ok = await generateTreeArtifacts(
       repoRoot,
