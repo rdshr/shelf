@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const workspaceGuard = require("./guarding");
 
 const FRAMEWORK_FILE_PATH_PATTERN = /^(framework|framework_drafts)\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
 const MODULE_REF_WITH_RULES_PATTERN =
@@ -527,6 +528,10 @@ function canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token
   if (!projectFilePath || !moduleId) {
     return null;
   }
+  const freshness = workspaceGuard.getProjectCanonicalFreshness(repoRoot, projectFilePath);
+  if (freshness.status !== "fresh") {
+    return null;
+  }
   const canonical = readProjectCanonical(projectFilePath);
   if (!canonical) {
     return null;
@@ -751,7 +756,10 @@ function buildRuleHoverMarkdown(moduleInfo, rule) {
   return parts.join("\n");
 }
 
-function appendBoundaryConfigHover(parts, repoRoot, frameworkName, moduleId, token) {
+function appendBoundaryConfigHover(parts, repoRoot, frameworkName, moduleId, token, allowCanonicalProjection) {
+  if (!allowCanonicalProjection) {
+    return;
+  }
   const boundaryTarget = resolveBoundaryConfigTarget(repoRoot, frameworkName, moduleId, token);
   if (!boundaryTarget) {
     return;
@@ -773,7 +781,7 @@ function appendBoundaryConfigHover(parts, repoRoot, frameworkName, moduleId, tok
   }
 }
 
-function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot) {
+function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot, allowCanonicalProjection = true) {
   const item = getItemForToken(index, token);
   if (!item) {
     return null;
@@ -802,12 +810,19 @@ function buildSymbolHoverMarkdown(moduleInfo, index, token, repoRoot) {
 
   const parts = [`**${buildModuleLabel(moduleInfo)} · \`${item.token}\`**`, item.text];
   if (item.kind === "boundary" && repoRoot && moduleInfo?.frameworkName) {
-    appendBoundaryConfigHover(parts, repoRoot, moduleInfo.frameworkName, canonicalModuleId(moduleInfo), item.token);
+    appendBoundaryConfigHover(
+      parts,
+      repoRoot,
+      moduleInfo.frameworkName,
+      canonicalModuleId(moduleInfo),
+      item.token,
+      allowCanonicalProjection
+    );
   }
   return parts.join("\n");
 }
 
-function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) {
+function resolveDefinitionTarget({ repoRoot, filePath, text, line, character, allowCanonicalProjection = true }) {
   const documentInfo = getFrameworkDocumentInfo(filePath, repoRoot);
   if (!documentInfo) {
     return null;
@@ -865,6 +880,7 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
   }
   const localItem = getItemForToken(index, tokenContext.token);
   if (
+    allowCanonicalProjection &&
     localItem &&
     localItem.kind === "boundary" &&
     localItem.line !== line &&
@@ -888,12 +904,11 @@ function resolveDefinitionTarget({ repoRoot, filePath, text, line, character }) 
   };
 }
 
-function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
+function resolveHoverTarget({ repoRoot, filePath, text, line, character, allowCanonicalProjection = true }) {
   const documentInfo = getFrameworkDocumentInfo(filePath, repoRoot);
   if (!documentInfo) {
     return null;
   }
-
   const lines = text.split(/\r?\n/);
   const lineText = lines[line] || "";
   const tokenContext = findTokenContext(lineText, character);
@@ -919,7 +934,7 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
     const targetInfo = getFrameworkDocumentInfo(targetFilePath, repoRoot);
     const markdown = tokenContext.kind === "moduleRef"
       ? buildModuleHoverMarkdown(targetInfo, targetIndex)
-      : buildSymbolHoverMarkdown(targetInfo, targetIndex, tokenContext.token, repoRoot);
+      : buildSymbolHoverMarkdown(targetInfo, targetIndex, tokenContext.token, repoRoot, allowCanonicalProjection);
     if (!markdown) {
       return null;
     }
@@ -932,7 +947,13 @@ function resolveHoverTarget({ repoRoot, filePath, text, line, character }) {
   }
 
   const currentIndex = buildDefinitionIndex(text);
-  const markdown = buildSymbolHoverMarkdown(documentInfo, currentIndex, tokenContext.token, repoRoot);
+  const markdown = buildSymbolHoverMarkdown(
+    documentInfo,
+    currentIndex,
+    tokenContext.token,
+    repoRoot,
+    allowCanonicalProjection
+  );
   if (!markdown) {
     return null;
   }
@@ -961,12 +982,11 @@ function dedupeTargets(targets) {
   return deduped;
 }
 
-function resolveReferenceTargets({ repoRoot, filePath, text, line, character }) {
+function resolveReferenceTargets({ repoRoot, filePath, text, line, character, allowCanonicalProjection = true }) {
   const documentInfo = getFrameworkDocumentInfo(filePath, repoRoot);
   if (!documentInfo) {
     return [];
   }
-
   const lines = text.split(/\r?\n/);
   const lineText = lines[line] || "";
   const tokenContext = findTokenContext(lineText, character);
@@ -1003,7 +1023,12 @@ function resolveReferenceTargets({ repoRoot, filePath, text, line, character }) 
   }
 
   const localItem = getItemForToken(index, tokenContext.token);
-  if (localItem && localItem.kind === "boundary" && documentInfo.frameworkName) {
+  if (
+    allowCanonicalProjection &&
+    localItem &&
+    localItem.kind === "boundary" &&
+    documentInfo.frameworkName
+  ) {
     const boundaryTarget = resolveBoundaryConfigTarget(
       repoRoot,
       documentInfo.frameworkName,

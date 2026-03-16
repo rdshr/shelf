@@ -23,6 +23,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+          cache-dependency-path: tools/vscode/shelf-ai/package-lock.json
+
+      - name: Install extension dependencies
+        run: npm ci
 
       - name: Resolve package version
         id: meta

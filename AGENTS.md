@@ -20,6 +20,7 @@
 8. 自然语言说明只能做补充；机器判定必须依赖结构化字段。
 9. `generated/canonical.json` 是唯一机器真相源。其他 tree、report、evidence view 都只能是它的派生视图。
 10. 不要恢复旧的核心架构。不要保留并行真相源，不要把旧系统换个名字继续跑。
+11. 写任何代码前，先评估是否存在更简洁的等效实现；若存在必须优先采用。只有在正确性、性能、兼容性或可测试性明确需要时，才允许增加实现复杂度。
 
 ## 默认工作顺序
 1. 读相关 `framework/*.md`
@@ -29,6 +30,19 @@
 5. 更新 `generated/canonical.json`
 7. 更新所有 derived views 和 validation outputs
 8. 始终保持架构单一，不要创建 side channel
+
+## 对话触发守卫（强制）
+- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
+- 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改 `projects/**`、`src/**`、`tools/**` 等实现层文件，并明确提示“先由人修改 framework，再继续实现层变更”。
+- AI 完成实现层修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，确保未引入新的 framework 语义越权。
+- 该守卫属于“对话级自动触发”，不得要求用户手工复制临时 `project.toml` 才触发。
+
+### 对话意图到框架映射门禁（强制）
+- 用户提出“新增/调整功能”时，AI 必须先完成“需求 -> framework 显式映射”再动实现层文件。
+- 映射结果至少应包含：`module_id`、对应 `boundary_id`（或明确的 Rule/Base 约束）、以及落点 `exact.*` 路径。
+- 若 AI 不能给出上述映射，或映射结果无法在当前 framework 中找到对应约束，AI 必须拒绝修改 `project.toml` 与 `src/**` 代码，并提示“该需求尚未进入 framework，请先由人修改 framework”。
+- 在“映射失败”场景中，AI 不得通过“直接改 config 或 code”规避框架前置；不得创建平行真相路径。
+- `framework/**` 是人类作者源；AI 对 framework 默认只读。需要新增框架能力时，AI 只能给出修改建议，不得直接落盘 framework 文件。
 
 ## 工程执行规范（强制）
 
@@ -72,7 +86,7 @@
 - 多语言或混合语法文件必须同时满足对应标准；冲突时按更严格者执行。
 - 语言到标准的机器可读索引为 `specs/code/代码语言标准索引.toml`；新增语言或文件类型时，必须先更新该索引与本节，再允许 AI 或人工按新语言写代码。
 
-### 4.2 Shelf AI 插件契约入口（强制）
+### 4.2 Shelf AI 契约与技术方案同步（强制）
 - 只要任务涉及 `tools/vscode/shelf-ai/**`，无论是代码、配置、README、release notes、tree 视图脚本，还是与插件直接耦合的导航 / evidence / validation 路径，都必须先阅读 `tools/vscode/shelf-ai/插件设计与实现契约.md`。
 - Shelf AI 插件的后续设计与实现，默认以 `tools/vscode/shelf-ai/插件设计与实现契约.md` 作为一线约束；README、零散注释、临时讨论或历史实现都不得覆盖该文档。
 - 凡是插件相关实现发生变化，必须同步审查该契约文档是否需要更新；若实现语义已变而契约文档未更新，则该实现视为未完成。
@@ -87,3 +101,7 @@
   - `tools/vscode/shelf-ai/README.md`
   - `tools/vscode/shelf-ai/release-notes/*`
   - 与插件直接耦合的 tree / validation / materialize 脚本
+- `tools/vscode/shelf-ai/插件设计与实现契约.md` 第 13 章《仓库技术方案（当前讨论基线）》是本仓库技术方案讨论与落地的固定入口。
+- 以后凡是修改本仓库代码（不限语言、不限目录），提交前都必须审查第 13 章是否需要更新。
+- 若实现语义、模块边界、交互行为、依赖策略、验证门槛任一发生变化，必须同步更新第 13 章；未更新视为任务未完成。
+- 若本次代码变更不影响第 13 章，也必须在提交说明或评审说明中显式声明“技术方案章节无变更”。

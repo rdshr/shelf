@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from copy import deepcopy
+from pathlib import Path
+import tempfile
 import unittest
 
 from project_runtime.compiler import compile_project_runtime
 from project_runtime.config_layer import build_config_modules, load_project_config
+from project_runtime.framework_violation_guard import summarize_framework_violation_guard
 from project_runtime.framework_layer import resolve_selected_framework_modules
+from project_runtime.path_scope_guard import summarize_path_scope_guard
 
 
 class FourLayerCanonicalTest(unittest.TestCase):
@@ -173,6 +178,69 @@ class FourLayerCanonicalTest(unittest.TestCase):
                 for binding in config_bindings
             )
         )
+
+    def test_framework_guard_scope_is_included_and_passes_on_current_project(self) -> None:
+        canonical = compile_project_runtime().canonical
+        validation_reports = canonical["evidence"]["validation_reports"]
+        self.assertIn("framework_guard", validation_reports)
+        self.assertTrue(validation_reports["framework_guard"]["passed"])
+        self.assertEqual(validation_reports["framework_guard"]["rule_count"], 1)
+        self.assertIn("path_scope_guard", validation_reports)
+        self.assertTrue(validation_reports["path_scope_guard"]["passed"])
+        self.assertEqual(validation_reports["path_scope_guard"]["rule_count"], 1)
+
+    def test_framework_guard_reports_out_of_projection_paths(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, _ = resolve_selected_framework_modules(project_config.framework_modules)
+
+        exact_config = deepcopy(project_config.exact)
+        communication_config = deepcopy(project_config.communication)
+        frontend_exact = exact_config.setdefault("frontend", {})
+        frontend_comm = communication_config.setdefault("frontend", {})
+        self.assertIsInstance(frontend_exact, dict)
+        self.assertIsInstance(frontend_comm, dict)
+        frontend_exact["forbidden_extension"] = {"enabled": True}
+        frontend_comm["non_projected_section"] = {"note": "unauthorized"}
+
+        summary = summarize_framework_violation_guard(
+            framework_modules=framework_modules,
+            communication_config=communication_config,
+            exact_config=exact_config,
+        )
+
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(
+            any("exact.frontend.forbidden_extension" in reason for reason in reasons)
+        )
+        self.assertTrue(
+            any("communication.frontend.non_projected_section" in reason for reason in reasons)
+        )
+
+    def test_path_scope_guard_reports_guarded_import_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / "src").mkdir(parents=True, exist_ok=True)
+            (repo_root / "support").mkdir(parents=True, exist_ok=True)
+            (repo_root / "src" / "app.py").write_text(
+                "from support.hidden import run\nrun()\n",
+                encoding="utf-8",
+            )
+            (repo_root / "support" / "hidden.py").write_text(
+                "def run() -> None:\n    return None\n",
+                encoding="utf-8",
+            )
+
+            summary = summarize_path_scope_guard(
+                repo_root=repo_root,
+                guarded_prefixes=("src/",),
+                ignored_prefixes=(),
+            )
+
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("FRAMEWORK_VIOLATION" in reason for reason in reasons))
+        self.assertTrue(any("src/app.py" in reason and "support/hidden.py" in reason for reason in reasons))
 
 
 if __name__ == "__main__":

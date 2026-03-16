@@ -283,7 +283,7 @@ Framework markdown defines structure, boundary, base, rule, and verification sta
 Each CodeModule consumes only the exact export from its ConfigModule and binds it to concrete frontend, domain, and backend code.
 
 ## Code To Evidence
-Evidence modules generate validation results, runtime snapshots, and canonical navigation data from Code exports only.
+Evidence modules generate validation results and canonical-derived navigation payloads from Code exports only.
 """
 
 [[exact.knowledge_base.documents]]
@@ -335,4 +335,3 @@ retrieval_strategy = "retrieval_stub"
 
 [exact.evidence.artifacts]
 canonical_json = "canonical.json"
-runtime_snapshot_py = "runtime_snapshot.py"

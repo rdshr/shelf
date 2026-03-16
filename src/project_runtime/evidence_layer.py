@@ -6,8 +6,10 @@ from typing import Any
 from rule_validation_models import ValidationReports
 
 from project_runtime.code_layer import CodeModuleBinding
+from project_runtime.framework_violation_guard import summarize_framework_violation_guard
+from project_runtime.path_scope_guard import summarize_path_scope_guard
 from project_runtime.models import ProjectRuntimeAssembly, jsonable
-from project_runtime.utils import sha256_text
+from project_runtime.utils import REPO_ROOT, sha256_text
 
 
 class EvidenceModuleClass:
@@ -84,6 +86,23 @@ def _document_digests(runtime_documents: list[dict[str, Any]]) -> dict[str, str]
     }
 
 
+def _read_path_scope_overrides(
+    communication_config: dict[str, Any],
+) -> tuple[list[str] | None, list[str] | None]:
+    raw_gate = communication_config.get("intent_gate")
+    if not isinstance(raw_gate, dict):
+        return None, None
+
+    def read_list(field: str) -> list[str] | None:
+        payload = raw_gate.get(field)
+        if not isinstance(payload, list):
+            return None
+        normalized = [str(item).strip() for item in payload if str(item).strip()]
+        return normalized or None
+
+    return read_list("guarded_path_prefixes"), read_list("ignored_path_prefixes")
+
+
 def build_evidence_modules(
     assembly: ProjectRuntimeAssembly,
     code_modules: tuple[CodeModuleBinding, ...],
@@ -93,10 +112,23 @@ def build_evidence_modules(
 
     frontend_summary = summarize_frontend_rules(validate_frontend_rules(assembly))
     knowledge_summary = summarize_workbench_rules(validate_workbench_rules(assembly))
+    framework_summary = summarize_framework_violation_guard(
+        framework_modules=tuple(binding.framework_module for binding in code_modules),
+        communication_config=assembly.config.communication,
+        exact_config=assembly.config.exact,
+    )
+    guarded_prefixes, ignored_prefixes = _read_path_scope_overrides(assembly.config.communication)
+    path_scope_summary = summarize_path_scope_guard(
+        repo_root=REPO_ROOT,
+        guarded_prefixes=guarded_prefixes,
+        ignored_prefixes=ignored_prefixes,
+    )
     validation_reports = ValidationReports(
         scopes={
             "frontend": frontend_summary,
             "knowledge_base": knowledge_summary,
+            "framework_guard": framework_summary,
+            "path_scope_guard": path_scope_summary,
         }
     )
     runtime_documents = assembly.require_runtime_export("runtime_documents")

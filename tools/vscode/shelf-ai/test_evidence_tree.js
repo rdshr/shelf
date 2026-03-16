@@ -6,7 +6,7 @@ const { classifyWorkspaceChanges, readEvidenceTree, summarizeChangeContext } = r
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
 
 function main() {
-  const payload = readEvidenceTree(repoRoot, path.join("docs", "hierarchy", "shelf_evidence_tree.json"));
+  const payload = readEvidenceTree(repoRoot, "");
 
   const projectPlan = classifyWorkspaceChanges(
     repoRoot,

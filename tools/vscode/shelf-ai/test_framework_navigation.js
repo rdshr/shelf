@@ -41,6 +41,11 @@ function writeFile(filePath, text) {
   fs.writeFileSync(filePath, text);
 }
 
+function setMtime(filePath, timeMs) {
+  const time = new Date(timeMs);
+  fs.utimesSync(filePath, time, time);
+}
+
 function main() {
   const knowledgeBaseL0 = loadFrameworkFile("framework/knowledge_base/L0-M2-对话与引用原子模块.md");
   const moduleRef = locate(knowledgeBaseL0.text, "frontend.L1.M2[R1,R2]");
@@ -160,6 +165,91 @@ framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.
     assert(
       !noCanonicalRefs.some((item) => item.filePath.endsWith("project.toml")),
       "project config references should require canonical instead of inferred fallback"
+    );
+
+    const staleCanonicalPath = path.join(tempRepoRoot, "projects", "demo", "generated", "canonical.json");
+    writeFile(
+      staleCanonicalPath,
+      JSON.stringify(
+        {
+          framework: {
+            modules: [
+              {
+                module_id: "knowledge_base.L2.M0",
+                boundaries: [
+                  {
+                    boundary_id: "CHAT",
+                    config_projection: {
+                      primary_exact_path: "exact.demo.chat",
+                      related_exact_paths: ["exact.demo.chat"],
+                      mapping_mode: "direct",
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        null,
+        2
+      )
+    );
+    writeFile(
+      tempProjectPath,
+      `
+[project]
+project_id = "demo"
+runtime_scene = "test"
+display_name = "Demo"
+description = "Demo"
+version = "0.0.0"
+
+[framework]
+
+[[framework.modules]]
+role = "knowledge_base"
+framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
+
+[exact.demo.chat]
+value = "demo"
+`
+    );
+
+    const baseTime = Date.now() - 60 * 1000;
+    setMtime(staleCanonicalPath, baseTime);
+    setMtime(tempProjectPath, baseTime + 5_000);
+    setMtime(tempFrameworkPath, baseTime + 5_000);
+
+    const staleDefinition = resolveDefinitionTarget({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(staleDefinition, "stale canonical should still allow local boundary navigation");
+    assert.strictEqual(staleDefinition.filePath, tempFrameworkPath);
+
+    const staleHover = resolveHoverTarget({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(staleHover, "stale canonical should still allow local hover");
+    assert(!staleHover.markdown.includes("Project Config"));
+
+    const staleRefs = resolveReferenceTargets({
+      repoRoot: tempRepoRoot,
+      filePath: tempFrameworkPath,
+      text: workbenchL2.text,
+      line: boundaryConfigRef.line,
+      character: boundaryConfigRef.character,
+    });
+    assert(
+      !staleRefs.some((item) => item.filePath.endsWith("project.toml")),
+      "stale canonical should not keep advertising stale project config targets"
     );
   } finally {
     fs.rmSync(tempRepoRoot, { recursive: true, force: true });

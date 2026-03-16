@@ -23,18 +23,6 @@ const WATCH_FILES = new Set([
 
 const PROJECT_FILE_PATTERN = /^projects\/([^/]+)\/project\.toml$/;
 const GENERATED_PATTERN = /^projects\/([^/]+)\/generated(?:\/(.+))?$/;
-const WORKSPACE_EVIDENCE_ARTIFACTS = new Set([
-  "docs/hierarchy/shelf_evidence_tree.json",
-  "docs/hierarchy/shelf_evidence_tree.html",
-]);
-const WORKSPACE_FRAMEWORK_ARTIFACTS = new Set([
-  "docs/hierarchy/shelf_framework_tree.json",
-  "docs/hierarchy/shelf_framework_tree.html",
-]);
-const WORKSPACE_TREE_ARTIFACTS = new Set([
-  ...WORKSPACE_EVIDENCE_ARTIFACTS,
-  ...WORKSPACE_FRAMEWORK_ARTIFACTS,
-]);
 
 function normalizeRelPath(relPath) {
   if (typeof relPath !== "string") {
@@ -93,6 +81,171 @@ function inferConfiguredFrameworks(projectConfigText) {
   return frameworks;
 }
 
+function inferConfiguredFrameworkFiles(projectConfigText) {
+  const frameworkFiles = new Set();
+  const lines = String(projectConfigText).split(/\r?\n/);
+  for (const lineText of lines) {
+    const valueMatch = /^\s*framework_file\s*=\s*"([^"]+)"/.exec(lineText);
+    if (valueMatch) {
+      frameworkFiles.add(normalizeRelPath(valueMatch[1]));
+    }
+  }
+  return frameworkFiles;
+}
+
+function canonicalPathForProjectFile(projectFilePath) {
+  return path.join(path.dirname(projectFilePath), "generated", "canonical.json");
+}
+
+function safeReadCanonical(canonicalPath) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
+    return raw && typeof raw === "object"
+      ? { ok: true, canonical: raw }
+      : { ok: false, reason: "canonical.json must decode into an object" };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function addSourceRefPaths(target, items) {
+  for (const item of Array.isArray(items) ? items : []) {
+    const relPath = normalizeRelPath(String(item?.source_ref?.file_path || ""));
+    if (relPath) {
+      target.add(relPath);
+    }
+  }
+}
+
+function collectCanonicalSourceRelPaths(repoRoot, projectFilePath, projectConfigText, canonical) {
+  const relPaths = new Set([
+    normalizeRelPath(path.relative(repoRoot, projectFilePath)),
+  ]);
+
+  for (const frameworkFile of inferConfiguredFrameworkFiles(projectConfigText)) {
+    relPaths.add(frameworkFile);
+  }
+
+  for (const frameworkModule of Array.isArray(canonical?.framework?.modules) ? canonical.framework.modules : []) {
+    const relPath = normalizeRelPath(String(frameworkModule?.framework_file || ""));
+    if (relPath) {
+      relPaths.add(relPath);
+    }
+  }
+
+  addSourceRefPaths(relPaths, canonical?.config?.modules);
+  addSourceRefPaths(relPaths, canonical?.code?.modules);
+  addSourceRefPaths(relPaths, canonical?.evidence?.modules);
+
+  return [...relPaths].sort();
+}
+
+function getProjectCanonicalFreshness(repoRoot, projectFilePath) {
+  const resolvedProjectFile = path.resolve(projectFilePath);
+  const projectId = path.basename(path.dirname(resolvedProjectFile));
+  const canonicalPath = canonicalPathForProjectFile(resolvedProjectFile);
+  const canonicalRelPath = normalizeRelPath(path.relative(repoRoot, canonicalPath));
+  let projectConfigText = "";
+
+  try {
+    projectConfigText = fs.readFileSync(resolvedProjectFile, "utf8");
+  } catch (error) {
+    return {
+      projectId,
+      projectFilePath: resolvedProjectFile,
+      canonicalPath,
+      canonicalRelPath,
+      status: "invalid",
+      reason: error instanceof Error ? error.message : String(error),
+      authoritativeSourceRelPaths: [],
+      newerSourceRelPaths: [],
+      missingSourceRelPaths: [],
+    };
+  }
+
+  if (!fs.existsSync(canonicalPath) || !fs.statSync(canonicalPath).isFile()) {
+    return {
+      projectId,
+      projectFilePath: resolvedProjectFile,
+      canonicalPath,
+      canonicalRelPath,
+      status: "missing",
+      reason: "canonical.json is missing",
+      authoritativeSourceRelPaths: collectCanonicalSourceRelPaths(repoRoot, resolvedProjectFile, projectConfigText, {}),
+      newerSourceRelPaths: [],
+      missingSourceRelPaths: [],
+    };
+  }
+
+  const canonicalRead = safeReadCanonical(canonicalPath);
+  if (!canonicalRead.ok) {
+    return {
+      projectId,
+      projectFilePath: resolvedProjectFile,
+      canonicalPath,
+      canonicalRelPath,
+      status: "invalid",
+      reason: canonicalRead.reason,
+      authoritativeSourceRelPaths: collectCanonicalSourceRelPaths(repoRoot, resolvedProjectFile, projectConfigText, {}),
+      newerSourceRelPaths: [],
+      missingSourceRelPaths: [],
+    };
+  }
+
+  const canonicalStat = fs.statSync(canonicalPath);
+  const authoritativeSourceRelPaths = collectCanonicalSourceRelPaths(
+    repoRoot,
+    resolvedProjectFile,
+    projectConfigText,
+    canonicalRead.canonical
+  );
+  const newerSourceRelPaths = [];
+  const missingSourceRelPaths = [];
+
+  for (const relPath of authoritativeSourceRelPaths) {
+    const absPath = path.join(repoRoot, relPath);
+    if (!fs.existsSync(absPath) || !fs.statSync(absPath).isFile()) {
+      missingSourceRelPaths.push(relPath);
+      continue;
+    }
+    const sourceStat = fs.statSync(absPath);
+    if (sourceStat.mtimeMs > canonicalStat.mtimeMs) {
+      newerSourceRelPaths.push(relPath);
+    }
+  }
+
+  const status = newerSourceRelPaths.length || missingSourceRelPaths.length
+    ? "stale"
+    : "fresh";
+
+  return {
+    projectId,
+    projectFilePath: resolvedProjectFile,
+    canonicalPath,
+    canonicalRelPath,
+    status,
+    reason: status === "fresh" ? "" : "canonical.json is older than its authoritative sources",
+    authoritativeSourceRelPaths,
+    newerSourceRelPaths,
+    missingSourceRelPaths,
+  };
+}
+
+function summarizeCanonicalFreshness(repoRoot) {
+  const projects = discoverProjectFiles(repoRoot).map((projectFile) =>
+    getProjectCanonicalFreshness(repoRoot, projectFile)
+  );
+  const blockingProjects = projects.filter((project) => project.status !== "fresh");
+  return {
+    projects,
+    blockingProjects,
+    hasBlockingProjects: blockingProjects.length > 0,
+  };
+}
+
 function resolveProjectFilePath(repoRoot, relPath) {
   const normalized = normalizeRelPath(relPath);
   let match = normalized.match(PROJECT_FILE_PATTERN);
@@ -110,15 +263,7 @@ function resolveProjectFilePath(repoRoot, relPath) {
 
 function isProtectedGeneratedPath(relPath) {
   const normalized = normalizeRelPath(relPath);
-  return GENERATED_PATTERN.test(normalized) || WORKSPACE_TREE_ARTIFACTS.has(normalized);
-}
-
-function isWorkspaceEvidenceArtifact(relPath) {
-  return WORKSPACE_EVIDENCE_ARTIFACTS.has(normalizeRelPath(relPath));
-}
-
-function isWorkspaceFrameworkArtifact(relPath) {
-  return WORKSPACE_FRAMEWORK_ARTIFACTS.has(normalizeRelPath(relPath));
+  return GENERATED_PATTERN.test(normalized);
 }
 
 function shouldRunMypyForRelPath(relPath) {
@@ -139,9 +284,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
   const materializeProjects = new Set();
   const protectedGeneratedPaths = [];
   const protectedProjectFiles = new Set();
-  const protectedWorkspaceArtifacts = [];
-  const protectedEvidenceArtifacts = [];
-  const protectedFrameworkArtifacts = [];
   let shouldRunMypy = false;
   let discoveredProjectFiles = null;
 
@@ -159,15 +301,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
 
     if (isProtectedGeneratedPath(relPath)) {
       protectedGeneratedPaths.push(relPath);
-      if (WORKSPACE_TREE_ARTIFACTS.has(relPath)) {
-        protectedWorkspaceArtifacts.push(relPath);
-      }
-      if (WORKSPACE_EVIDENCE_ARTIFACTS.has(relPath)) {
-        protectedEvidenceArtifacts.push(relPath);
-      }
-      if (WORKSPACE_FRAMEWORK_ARTIFACTS.has(relPath)) {
-        protectedFrameworkArtifacts.push(relPath);
-      }
       const protectedProjectFile = resolveProjectFilePath(repoRoot, relPath);
       if (protectedProjectFile) {
         protectedProjectFiles.add(protectedProjectFile);
@@ -212,26 +345,25 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     shouldMaterialize: materializeProjects.size > 0,
     materializeProjects: [...materializeProjects].sort(),
     protectedGeneratedPaths,
-    protectedWorkspaceArtifacts,
-    protectedEvidenceArtifacts,
-    protectedFrameworkArtifacts,
     protectedProjectFiles: [...protectedProjectFiles].sort(),
   };
 }
 
 module.exports = {
+  canonicalPathForProjectFile,
   WATCH_FILES,
   WATCH_PREFIXES,
   anyWatchedUris,
   classifyWorkspaceChanges,
+  getProjectCanonicalFreshness,
   discoverProjectFiles,
+  inferConfiguredFrameworkFiles,
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
-  isWorkspaceFrameworkArtifact,
-  isWorkspaceEvidenceArtifact,
   isWatchedPath,
   isWatchedUri,
   normalizeRelPath,
   resolveProjectFilePath,
   shouldRunMypyForRelPath,
+  summarizeCanonicalFreshness,
 };

@@ -32,7 +32,6 @@ def main() -> int:
         raise ValueError("generated artifact paths are required after materialization")
     print(f"[materialize] project={assembly.metadata.project_id}")
     print(f"[materialize] canonical={artifacts.canonical_json}")
-    print(f"[materialize] runtime_snapshot={artifacts.runtime_snapshot_py}")
     print(
         "[materialize] validation="
         f"passed={assembly.validation_reports.passed} "

@@ -18,12 +18,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROJECT_FILE = REPO_ROOT / "projects" / "knowledge_base_basic" / "project.toml"
 
 
-def _artifact_paths(project_file: Path, canonical_name: str, runtime_snapshot_name: str) -> GeneratedArtifactPaths:
+def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifactPaths:
     output_dir = project_file.parent / "generated"
     return GeneratedArtifactPaths(
         directory=relative_path(output_dir),
         canonical_json=relative_path(output_dir / canonical_name),
-        runtime_snapshot_py=relative_path(output_dir / runtime_snapshot_name),
     )
 
 
@@ -177,7 +176,6 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
         generated_artifacts=_artifact_paths(
             resolved_project_file,
             project_config.artifacts.canonical_json,
-            project_config.artifacts.runtime_snapshot_py,
         ),
     )
     evidence_modules, evidence_exports, validation_reports = build_evidence_modules(draft_assembly, code_modules)
@@ -224,28 +222,10 @@ def materialize_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE)
     generated.mkdir(parents=True, exist_ok=True)
     expected = {
         assembly.config.artifacts.canonical_json,
-        assembly.config.artifacts.runtime_snapshot_py,
     }
     cleanup_generated_output_dir(generated, expected)
     canonical_path = generated / assembly.config.artifacts.canonical_json
-    runtime_snapshot_path = generated / assembly.config.artifacts.runtime_snapshot_py
     canonical_text = json.dumps(assembly.canonical, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     canonical_path.write_text(canonical_text, encoding="utf-8")
-    runtime_snapshot = {
-        **assembly.to_runtime_snapshot_dict(),
-        "frontend_app_spec": assembly.require_runtime_export("frontend_app_spec"),
-        "knowledge_base_domain_spec": assembly.require_runtime_export("knowledge_base_domain_spec"),
-        "backend_service_spec": assembly.require_runtime_export("backend_service_spec"),
-        "runtime_blueprint": assembly.require_runtime_export("runtime_blueprint"),
-    }
-    runtime_snapshot_path.write_text(
-        "from __future__ import annotations\n\n"
-        "# GENERATED FILE. DO NOT EDIT.\n"
-        "import json\n\n"
-        f"RUNTIME_SNAPSHOT = json.loads(r'''{json.dumps(runtime_snapshot, ensure_ascii=False)}''')\n"
-        "PROJECT_CONFIG = RUNTIME_SNAPSHOT['project_config']\n"
-        "CANONICAL = RUNTIME_SNAPSHOT['canonical']\n",
-        encoding="utf-8",
-    )
     load_project_runtime.cache_clear()
     return assembly

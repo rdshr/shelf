@@ -38,6 +38,12 @@ def _build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _build_parser().parse_args()
     assembly = materialize_project_runtime(args.project_file)
+    failed_rules = [
+        outcome
+        for summary in assembly.validation_reports.scopes.values()
+        for outcome in summary.rules
+        if not outcome.passed
+    ]
     payload = {
         "passed": assembly.validation_reports.passed,
         "passed_count": assembly.validation_reports.passed_count,
@@ -57,6 +63,9 @@ def main() -> int:
             f"rules={payload['passed_count']}/{payload['rule_count']} "
             f"canonical={payload['canonical_json']}"
         )
+        for outcome in failed_rules:
+            for reason in outcome.reasons:
+                print(f"- {reason}")
     return 0 if assembly.validation_reports.passed else 1
 
 

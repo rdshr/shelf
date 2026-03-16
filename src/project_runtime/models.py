@@ -40,7 +40,6 @@ class SelectedFrameworkModule:
 @dataclass(frozen=True)
 class ArtifactConfig:
     canonical_json: str
-    runtime_snapshot_py: str
 
     def to_dict(self) -> dict[str, str]:
         return asdict(self)
@@ -162,7 +161,6 @@ class KnowledgeDocument:
 class GeneratedArtifactPaths:
     directory: str
     canonical_json: str
-    runtime_snapshot_py: str
 
     def to_dict(self) -> dict[str, str]:
         return asdict(self)
@@ -197,16 +195,4 @@ class ProjectRuntimeAssembly:
             "runtime_export_keys": sorted(self.runtime_exports),
             "validation_reports": self.validation_reports.to_dict(),
             "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
-        }
-
-    def to_runtime_snapshot_dict(self) -> dict[str, Any]:
-        return {
-            "project_file": self.project_file,
-            "project": self.metadata.to_dict(),
-            "project_config": self.project_config_view,
-            "root_module_ids": dict(self.root_module_ids),
-            "runtime_exports": jsonable(self.runtime_exports),
-            "validation_reports": self.validation_reports.to_dict(),
-            "generated_artifacts": self.generated_artifacts.to_dict() if self.generated_artifacts else None,
-            "canonical": jsonable(self.canonical),
         }
