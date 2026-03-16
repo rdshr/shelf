@@ -305,11 +305,6 @@ function summarizeChangeContext(payload, changeContext, limit = 4) {
 function classifyWorkspaceChanges(repoRoot, relPaths, payload) {
   const baselinePlan = workspaceGuard.classifyWorkspaceChanges(repoRoot, relPaths);
   const protectedProjectFiles = baselinePlan.protectedGeneratedPaths
-    .filter(
-      (relPath) =>
-        !workspaceGuard.isWorkspaceEvidenceArtifact(relPath)
-        && !workspaceGuard.isWorkspaceFrameworkArtifact(relPath)
-    )
     .map((relPath) => workspaceGuard.resolveProjectFilePath(repoRoot, relPath))
     .filter(Boolean)
     .sort();
@@ -321,9 +316,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths, payload) {
     shouldMaterialize: baselinePlan.shouldMaterialize,
     materializeProjects: baselinePlan.materializeProjects,
     protectedGeneratedPaths: baselinePlan.protectedGeneratedPaths,
-    protectedWorkspaceArtifacts: baselinePlan.protectedWorkspaceArtifacts,
-    protectedEvidenceArtifacts: baselinePlan.protectedEvidenceArtifacts,
-    protectedFrameworkArtifacts: baselinePlan.protectedFrameworkArtifacts,
     protectedProjectFiles,
     changeContext,
   };

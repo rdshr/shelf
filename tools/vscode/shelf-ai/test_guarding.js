@@ -35,8 +35,8 @@ function main() {
   assert(!isWatchedPath("../outside.txt"));
 
   assert(isProtectedGeneratedPath("projects/knowledge_base_basic/generated/canonical.json"));
-  assert(isProtectedGeneratedPath("docs/hierarchy/shelf_framework_tree.json"));
-  assert(isProtectedGeneratedPath("docs/hierarchy/shelf_evidence_tree.json"));
+  assert(!isProtectedGeneratedPath("docs/hierarchy/shelf_framework_tree.json"));
+  assert(!isProtectedGeneratedPath("docs/hierarchy/shelf_evidence_tree.json"));
   assert(!isProtectedGeneratedPath("projects/knowledge_base_basic/project.toml"));
 
   assert(shouldRunMypyForRelPath("src/project_runtime/compiler.py"));

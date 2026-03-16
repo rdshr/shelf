@@ -229,36 +229,6 @@
           "default": "uv run python scripts/validate_canonical.py",
           "description": "Command used for manual full validation."
         },
-        "shelf.frameworkTreeJsonPath": {
-          "type": "string",
-          "default": "docs/hierarchy/shelf_framework_tree.json",
-          "description": "Workspace-relative path of generated framework tree JSON."
-        },
-        "shelf.frameworkTreeHtmlPath": {
-          "type": "string",
-          "default": "docs/hierarchy/shelf_framework_tree.html",
-          "description": "Workspace-relative path of generated framework tree HTML."
-        },
-        "shelf.frameworkTreeGenerateCommand": {
-          "type": "string",
-          "default": "uv run python scripts/generate_framework_tree_hierarchy.py --output-json docs/hierarchy/shelf_framework_tree.json --output-html docs/hierarchy/shelf_framework_tree.html",
-          "description": "Command used by 'Refresh Framework Tree'."
-        },
-        "shelf.evidenceTreeJsonPath": {
-          "type": "string",
-          "default": "docs/hierarchy/shelf_evidence_tree.json",
-          "description": "Workspace-relative path of generated evidence tree JSON."
-        },
-        "shelf.evidenceTreeHtmlPath": {
-          "type": "string",
-          "default": "docs/hierarchy/shelf_evidence_tree.html",
-          "description": "Workspace-relative path of generated evidence tree HTML."
-        },
-        "shelf.evidenceTreeGenerateCommand": {
-          "type": "string",
-          "default": "uv run python scripts/generate_evidence_tree_hierarchy.py --output-json docs/hierarchy/shelf_evidence_tree.json --output-html docs/hierarchy/shelf_evidence_tree.html",
-          "description": "Command used by 'Refresh Evidence Tree'."
-        },
         "shelf.materializeCommand": {
           "type": "string",
           "default": "uv run python scripts/materialize_project.py",

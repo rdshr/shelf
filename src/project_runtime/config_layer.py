@@ -101,7 +101,6 @@ def load_project_config(project_file: str | Path) -> ProjectConfig:
         exact=exact_table,
         artifacts=ArtifactConfig(
             canonical_json=_require_string(artifacts_table, "canonical_json"),
-            runtime_snapshot_py=_require_string(artifacts_table, "runtime_snapshot_py"),
         ),
     )
 

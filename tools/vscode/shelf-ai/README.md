@@ -10,7 +10,7 @@
 - Supports framework-markdown navigation for `B/C/R/V`, boundaries, module refs, and rule refs.
 - Maps framework boundaries back to `projects/*/project.toml` sections such as `[exact.knowledge_base.chat]` and `[exact.frontend.surface]`.
 - Auto-materializes affected projects when `framework/*.md` or `projects/*/project.toml` changes.
-- Guards `projects/*/generated/*` and workspace tree artifacts from direct edits.
+- Guards `projects/*/generated/*` from direct edits.
 - Treats stale / missing / invalid canonical as non-authoritative: formal config jumps and the evidence tree wait for fresh canonical.
 - Runs canonical validation and optionally `mypy` from the extension.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
@@ -43,8 +43,6 @@
 
 ## Configuration
 
-- `shelf.frameworkTreeJsonPath`
-- `shelf.evidenceTreeJsonPath`
 - `shelf.guardMode = strict`
 
 ## Validation
@@ -62,15 +60,9 @@ The `@framework` template entry is a repository-side hard authoring contract and
 
 ## Tree Views
 
-- Framework tree:
-  `docs/hierarchy/shelf_framework_tree.json`
-  `docs/hierarchy/shelf_framework_tree.html`
-- Evidence tree:
-  `docs/hierarchy/shelf_evidence_tree.json`
-  `docs/hierarchy/shelf_evidence_tree.html`
-
 The framework tree is the authoring view.
 The evidence tree is the canonical-derived workspace evidence view.
+No persisted tree artifact is used for these views; both trees are runtime projections.
 When canonical is stale, missing, or invalid, Shelf blocks the formal evidence tree until you materialize again.
 
 ## Project Config Navigation

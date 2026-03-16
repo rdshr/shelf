@@ -73,12 +73,6 @@ function main() {
     "shelf.runMypyOnPythonChanges",
     "shelf.protectGeneratedFiles",
     "shelf.promptInstallGitHooks",
-    "shelf.frameworkTreeJsonPath",
-    "shelf.frameworkTreeHtmlPath",
-    "shelf.frameworkTreeGenerateCommand",
-    "shelf.evidenceTreeJsonPath",
-    "shelf.evidenceTreeHtmlPath",
-    "shelf.evidenceTreeGenerateCommand",
     "shelf.materializeCommand",
     "shelf.typeCheckCommand",
   ]) {
@@ -170,14 +164,6 @@ function main() {
     "README must document the evidence tree open command"
   );
   assert(
-    readme.includes("shelf.frameworkTreeJsonPath"),
-    "README must document the framework tree JSON path setting"
-  );
-  assert(
-    readme.includes("shelf.evidenceTreeJsonPath"),
-    "README must document the evidence tree JSON path setting"
-  );
-  assert(
     readme.includes("The `@framework` template entry is a repository-side hard authoring contract"),
     "README must document the non-removable @framework authoring contract"
   );
@@ -204,6 +190,10 @@ function main() {
   assert(
     readme.includes("Shelf blocks the formal evidence tree until you materialize again"),
     "README must explain how the evidence tree behaves when canonical is stale"
+  );
+  assert(
+    readme.includes("No persisted tree artifact"),
+    "README must state tree views are runtime projections without persisted artifacts"
   );
 
   const atEntries = frameworkCompletion.getFrameworkCompletionEntries("@", "@", false);

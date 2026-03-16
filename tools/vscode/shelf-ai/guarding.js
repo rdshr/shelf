@@ -23,18 +23,6 @@ const WATCH_FILES = new Set([
 
 const PROJECT_FILE_PATTERN = /^projects\/([^/]+)\/project\.toml$/;
 const GENERATED_PATTERN = /^projects\/([^/]+)\/generated(?:\/(.+))?$/;
-const WORKSPACE_EVIDENCE_ARTIFACTS = new Set([
-  "docs/hierarchy/shelf_evidence_tree.json",
-  "docs/hierarchy/shelf_evidence_tree.html",
-]);
-const WORKSPACE_FRAMEWORK_ARTIFACTS = new Set([
-  "docs/hierarchy/shelf_framework_tree.json",
-  "docs/hierarchy/shelf_framework_tree.html",
-]);
-const WORKSPACE_TREE_ARTIFACTS = new Set([
-  ...WORKSPACE_EVIDENCE_ARTIFACTS,
-  ...WORKSPACE_FRAMEWORK_ARTIFACTS,
-]);
 
 function normalizeRelPath(relPath) {
   if (typeof relPath !== "string") {
@@ -275,15 +263,7 @@ function resolveProjectFilePath(repoRoot, relPath) {
 
 function isProtectedGeneratedPath(relPath) {
   const normalized = normalizeRelPath(relPath);
-  return GENERATED_PATTERN.test(normalized) || WORKSPACE_TREE_ARTIFACTS.has(normalized);
-}
-
-function isWorkspaceEvidenceArtifact(relPath) {
-  return WORKSPACE_EVIDENCE_ARTIFACTS.has(normalizeRelPath(relPath));
-}
-
-function isWorkspaceFrameworkArtifact(relPath) {
-  return WORKSPACE_FRAMEWORK_ARTIFACTS.has(normalizeRelPath(relPath));
+  return GENERATED_PATTERN.test(normalized);
 }
 
 function shouldRunMypyForRelPath(relPath) {
@@ -304,9 +284,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
   const materializeProjects = new Set();
   const protectedGeneratedPaths = [];
   const protectedProjectFiles = new Set();
-  const protectedWorkspaceArtifacts = [];
-  const protectedEvidenceArtifacts = [];
-  const protectedFrameworkArtifacts = [];
   let shouldRunMypy = false;
   let discoveredProjectFiles = null;
 
@@ -324,15 +301,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
 
     if (isProtectedGeneratedPath(relPath)) {
       protectedGeneratedPaths.push(relPath);
-      if (WORKSPACE_TREE_ARTIFACTS.has(relPath)) {
-        protectedWorkspaceArtifacts.push(relPath);
-      }
-      if (WORKSPACE_EVIDENCE_ARTIFACTS.has(relPath)) {
-        protectedEvidenceArtifacts.push(relPath);
-      }
-      if (WORKSPACE_FRAMEWORK_ARTIFACTS.has(relPath)) {
-        protectedFrameworkArtifacts.push(relPath);
-      }
       const protectedProjectFile = resolveProjectFilePath(repoRoot, relPath);
       if (protectedProjectFile) {
         protectedProjectFiles.add(protectedProjectFile);
@@ -377,9 +345,6 @@ function classifyWorkspaceChanges(repoRoot, relPaths) {
     shouldMaterialize: materializeProjects.size > 0,
     materializeProjects: [...materializeProjects].sort(),
     protectedGeneratedPaths,
-    protectedWorkspaceArtifacts,
-    protectedEvidenceArtifacts,
-    protectedFrameworkArtifacts,
     protectedProjectFiles: [...protectedProjectFiles].sort(),
   };
 }
@@ -395,8 +360,6 @@ module.exports = {
   inferConfiguredFrameworkFiles,
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
-  isWorkspaceFrameworkArtifact,
-  isWorkspaceEvidenceArtifact,
   isWatchedPath,
   isWatchedUri,
   normalizeRelPath,
