@@ -23,9 +23,13 @@
 
 ## Install (Local)
 
-1. Package and install the current source version:
+1. Install extension development dependencies:
+   `cd tools/vscode/shelf-ai && npm install`
+2. Build tree webview bundle:
+   `npm run build:webview`
+3. Package and install the current source version:
    `bash tools/vscode/shelf-ai/install_local.sh`
-2. If your VSCode CLI is not `code`, set it explicitly:
+4. If your VSCode CLI is not `code`, set it explicitly:
    `CODE_BIN=code-insiders bash tools/vscode/shelf-ai/install_local.sh`
 
 ## Commands
@@ -44,6 +48,19 @@
 ## Configuration
 
 - `shelf.guardMode = strict`
+- `shelf.frameworkTreeNodeHorizontalGap = 8`
+- `shelf.frameworkTreeLevelVerticalGap = 80`
+- `shelf.treeZoomMinScale = 0.68`
+- `shelf.treeZoomMaxScale = 1.55`
+- `shelf.treeWheelSensitivity = 1`
+- `shelf.treeInspectorWidth = 338`
+- `shelf.treeInspectorRailWidth = 42`
+- `shelf.validationCommandTimeoutMs = 120000`
+- `shelf.generatedEventSuppressionMs = 2500`
+- `shelf.manualValidationRestartThresholdMs = 15000`
+- `shelf.validationDebounceMs = 250`
+
+Changing tree webview settings will re-render the currently open tree panel automatically. If no tree panel is open, the next open/refresh will use the new values. Validation timing settings take effect on the next scheduled or manual validation run without requiring reload.
 
 ## Validation
 
@@ -63,7 +80,8 @@ The `@framework` template entry is a repository-side hard authoring contract and
 The framework tree is the authoring view.
 The evidence tree is the canonical-derived workspace evidence view.
 No persisted tree artifact is used for these views; both trees are runtime projections.
-Both tree views render as interactive webview graphs (drag node, pan canvas, wheel zoom, inspector + open source).
+Both tree views render as interactive webview graphs (dagre layout + d3-zoom runtime interaction), and framework nodes stay layer-fixed with layout-engine auto sorting.
+Tree interactions include search, upstream/downstream focus, keyboard navigation (arrow keys + Enter), and viewport/selection state persistence.
 When canonical is stale, missing, or invalid, Shelf blocks the formal evidence tree until you materialize again.
 
 ## Project Config Navigation

@@ -8,6 +8,30 @@ require_command() {
   fi
 }
 
+ensure_extension_dependencies() {
+  local script_dir="$1"
+
+  if [[ ! -d "${script_dir}/node_modules" ]]; then
+    echo "Installing extension dependencies..."
+    (
+      cd "${script_dir}"
+      npm install
+    )
+    return
+  fi
+
+  if ! (
+    cd "${script_dir}"
+    npm ls --depth=0 esbuild >/dev/null 2>&1
+  ); then
+    echo "Refreshing extension dependencies..."
+    (
+      cd "${script_dir}"
+      npm install
+    )
+  fi
+}
+
 major_node_version() {
   node -p "process.versions.node.split('.')[0]"
 }
@@ -66,6 +90,8 @@ CODE_BIN="$(resolve_code_bin)"
 
 require_command node
 require_command npx
+require_command npm
+ensure_extension_dependencies "${SCRIPT_DIR}"
 
 VERSION="$(cd "${SCRIPT_DIR}" && node -p "require('./package.json').version")"
 RELEASES_DIR="${SCRIPT_DIR}/releases"

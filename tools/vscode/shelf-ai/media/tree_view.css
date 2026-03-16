@@ -1,0 +1,857 @@
+:root {
+  color-scheme: light dark;
+  --bg: var(--vscode-editor-background, #1e1e1e);
+  --card: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.03));
+  --card-muted: rgba(255, 255, 255, 0.04);
+  --text: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
+  --sub: var(--vscode-descriptionForeground, #9da1a6);
+  --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
+  --accent: var(--vscode-textLink-foreground, #3794ff);
+  --accent-strong: var(--vscode-focusBorder, var(--vscode-textLink-foreground, #3794ff));
+  --button-bg: var(--vscode-button-secondaryBackground, rgba(255, 255, 255, 0.06));
+  --button-bg-hover: var(--vscode-button-secondaryHoverBackground, rgba(255, 255, 255, 0.1));
+  --button-fg: var(--vscode-button-secondaryForeground, var(--text));
+  --pill-bg: var(--vscode-badge-background, rgba(90, 93, 94, 0.35));
+  --pill-fg: var(--vscode-badge-foreground, var(--text));
+  --canvas: var(--vscode-editor-background, #1e1e1e);
+  --graph-shell-bg: rgba(255, 255, 255, 0.02);
+  --graph-stage: rgba(255, 255, 255, 0.015);
+  --graph-guide: rgba(255, 255, 255, 0.1);
+  --graph-edge: rgba(176, 192, 210, 0.72);
+  --graph-edge-active: var(--accent);
+  --graph-edge-hidden: rgba(255, 255, 255, 0.06);
+  --graph-label: var(--text);
+  --graph-label-bg: rgba(30, 30, 30, 0.82);
+  --graph-label-border: rgba(255, 255, 255, 0.08);
+  --graph-node-active: var(--accent);
+  --graph-group-frame: color-mix(in srgb, var(--card) 84%, rgba(255, 255, 255, 0.06));
+  --graph-group-header: color-mix(in srgb, var(--accent) 12%, var(--card-muted));
+  --graph-group-border: color-mix(in srgb, var(--accent) 18%, var(--border));
+  --graph-depth-band-0: rgba(55, 148, 255, 0.08);
+  --graph-depth-band-1: rgba(48, 181, 120, 0.07);
+  --graph-depth-band-2: rgba(208, 142, 73, 0.07);
+  --graph-depth-band-3: rgba(167, 110, 245, 0.07);
+  --graph-depth-band-4: rgba(255, 109, 125, 0.06);
+  --graph-depth-band-5: rgba(97, 183, 209, 0.07);
+  --inspector-width-px: 338px;
+  --inspector-rail-width-px: 42px;
+  --inspector-width: min(var(--inspector-width-px), calc(100vw - 40px));
+  --inspector-rail-width: var(--inspector-rail-width-px);
+}
+
+body.vscode-light {
+  --card: #ffffff;
+  --card-muted: #f6f8fa;
+  --border: var(--vscode-panel-border, rgba(0, 0, 0, 0.12));
+  --button-bg: #eef2f7;
+  --button-bg-hover: #e4ebf3;
+  --pill-bg: #edf1f5;
+  --pill-fg: #445366;
+  --canvas: #ffffff;
+  --graph-shell-bg: rgba(0, 0, 0, 0.025);
+  --graph-stage: rgba(0, 0, 0, 0.018);
+  --graph-guide: rgba(0, 0, 0, 0.08);
+  --graph-edge: rgba(74, 98, 128, 0.62);
+  --graph-edge-hidden: rgba(0, 0, 0, 0.08);
+  --graph-label-bg: rgba(255, 255, 255, 0.86);
+  --graph-label-border: rgba(0, 0, 0, 0.09);
+  --graph-group-frame: color-mix(in srgb, #ffffff 88%, #edf4ff);
+  --graph-group-header: color-mix(in srgb, var(--accent) 10%, #f5f9ff);
+  --graph-group-border: color-mix(in srgb, var(--accent) 18%, rgba(0, 0, 0, 0.12));
+}
+
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --border: var(--vscode-contrastBorder, #ffffff);
+  --graph-guide: var(--vscode-contrastBorder, #ffffff);
+  --graph-edge: var(--vscode-contrastActiveBorder, #f38518);
+  --graph-edge-active: var(--vscode-contrastActiveBorder, #f38518);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
+  background: var(--bg);
+}
+
+code {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-muted);
+  font-family: var(--vscode-editor-font-family, "Cascadia Code", monospace);
+  font-size: 11px;
+}
+
+.layout {
+  max-width: none;
+  margin: 0 auto;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.graph-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+}
+
+.head {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+.desc {
+  margin: 4px 0 0;
+  color: var(--sub);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+  padding: 4px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.zoom-pill {
+  min-width: 62px;
+  justify-content: center;
+}
+
+.graph-shell {
+  position: relative;
+  padding: 8px;
+  min-width: 0;
+  background:
+    linear-gradient(180deg, rgba(55, 148, 255, 0.06), transparent 40%),
+    var(--graph-shell-bg);
+}
+
+.graph-stage-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.toolbar-row,
+.toolbar-tail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.field {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-muted);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 5px 9px;
+}
+
+.field.search {
+  width: min(360px, 80vw);
+}
+
+.field.search:focus,
+.field.select:focus {
+  outline: 1px solid var(--accent-strong);
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--button-bg-hover);
+}
+
+.btn.primary {
+  background: var(--vscode-button-background, var(--accent));
+  color: var(--vscode-button-foreground, #ffffff);
+  border-color: transparent;
+}
+
+.btn.primary:hover {
+  background: var(--vscode-button-hoverBackground, var(--accent));
+}
+
+.graph-scroll {
+  overflow: auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 60vh;
+  max-height: min(78vh, 980px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--graph-stage);
+  touch-action: none;
+}
+
+.graph-canvas {
+  width: max(100%, 1180px);
+  min-height: min(66vh, 900px);
+  display: block;
+  cursor: grab;
+}
+
+.graph-canvas:active {
+  cursor: grabbing;
+}
+
+.depth-band {
+  stroke: color-mix(in srgb, var(--graph-guide) 80%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 6 8;
+  pointer-events: none;
+}
+
+.depth-band.depth-0 { fill: var(--graph-depth-band-0); }
+.depth-band.depth-1 { fill: var(--graph-depth-band-1); }
+.depth-band.depth-2 { fill: var(--graph-depth-band-2); }
+.depth-band.depth-3 { fill: var(--graph-depth-band-3); }
+.depth-band.depth-4 { fill: var(--graph-depth-band-4); }
+.depth-band.depth-5 { fill: var(--graph-depth-band-5); }
+
+.depth-label {
+  fill: var(--sub);
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.graph-edge {
+  fill: none;
+  stroke: var(--graph-edge);
+  stroke-width: 2.05;
+  opacity: 0.92;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  marker-end: url(#tree-edge-arrow-default);
+  pointer-events: none;
+  transition: opacity 100ms ease, stroke 140ms ease, stroke-width 140ms ease;
+}
+
+.graph-edge-arrow-default {
+  fill: var(--graph-edge);
+}
+
+.graph-edge-arrow-active {
+  fill: var(--graph-edge-active);
+}
+
+.graph-edge.active {
+  stroke: var(--graph-edge-active);
+  marker-end: url(#tree-edge-arrow-active);
+  stroke-width: 2.55;
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(55, 148, 255, 0.22));
+}
+
+.graph-edge.faded {
+  opacity: 0.12;
+  stroke: var(--graph-edge-hidden);
+}
+
+.graph-edge.hidden {
+  opacity: 0.06;
+  stroke: var(--graph-edge-hidden);
+}
+
+.graph-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
+.graph-edge-hit.hidden {
+  pointer-events: none;
+}
+
+.graph-node {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 110ms ease, filter 120ms ease;
+}
+
+.graph-node.hidden {
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.graph-node.faded {
+  opacity: 0.28;
+}
+
+.node-hit-area {
+  fill: transparent;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.node-circle {
+  stroke: var(--canvas);
+  stroke-width: 2.4;
+  pointer-events: none;
+  transition: opacity 140ms ease, filter 140ms ease, stroke 140ms ease, stroke-width 140ms ease;
+}
+
+.graph-node.node-root .node-circle {
+  fill: color-mix(in srgb, #3b7dd8 76%, #111111);
+}
+
+.graph-node.node-group .node-circle {
+  fill: color-mix(in srgb, #2f9d78 72%, #101010);
+}
+
+.graph-node.node-module .node-circle {
+  fill: color-mix(in srgb, #5f6fe6 68%, #101010);
+}
+
+.graph-node.node-project .node-circle {
+  fill: color-mix(in srgb, #d08f49 70%, #141414);
+}
+
+.graph-node.node-config .node-circle {
+  fill: color-mix(in srgb, #5f7de0 69%, #141414);
+}
+
+.graph-node.node-code .node-circle {
+  fill: color-mix(in srgb, #2d9c8a 68%, #141414);
+}
+
+.graph-node.node-evidence .node-circle {
+  fill: color-mix(in srgb, #a76ef5 68%, #141414);
+}
+
+.graph-node.node-generic .node-circle {
+  fill: color-mix(in srgb, #6a7386 72%, #101010);
+}
+
+.graph-node.hovered .node-circle {
+  stroke: rgba(198, 223, 255, 0.82);
+  stroke-width: 2.9;
+  filter: brightness(1.1) saturate(1.03) drop-shadow(0 0 10px rgba(55, 148, 255, 0.2));
+}
+
+.graph-node.selected .node-circle {
+  stroke: #ffffff;
+  stroke-width: 2.8;
+  filter: drop-shadow(0 0 12px rgba(55, 148, 255, 0.3));
+}
+
+.graph-node.neighbor .node-circle {
+  stroke: color-mix(in srgb, var(--accent) 70%, #ffffff);
+  stroke-width: 1.5;
+}
+
+.node-label {
+  fill: var(--graph-label);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: hanging;
+  letter-spacing: 0.14px;
+  pointer-events: none;
+  transition: opacity 120ms ease, fill 120ms ease;
+}
+
+.graph-node.hovered .node-label {
+  fill: var(--text);
+}
+
+.graph-node.faded .node-label {
+  opacity: 0.32;
+}
+
+.node-label-box {
+  fill: var(--graph-label-bg);
+  stroke: var(--graph-label-border);
+  stroke-width: 1;
+  pointer-events: none;
+  transition: opacity 120ms ease, fill 120ms ease, stroke 120ms ease;
+}
+
+.graph-node.hovered .node-label-box {
+  fill: rgba(50, 83, 126, 0.84);
+  stroke: rgba(136, 188, 255, 0.38);
+}
+
+.graph-node.faded .node-label-box {
+  opacity: 0.25;
+}
+
+.framework-group-frame {
+  fill: var(--graph-group-frame);
+  stroke: var(--graph-group-border);
+  stroke-width: 1.2;
+}
+
+.framework-group-header {
+  fill: var(--graph-group-header);
+  stroke: none;
+}
+
+.framework-group-title,
+.framework-group-meta {
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.framework-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.framework-group-meta {
+  font-size: 11px;
+  opacity: 0.68;
+}
+
+.graph-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--sub);
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.inspector-card {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  bottom: auto;
+  width: var(--inspector-width);
+  max-width: calc(100% - 12px);
+  max-height: min(74vh, 680px);
+  display: grid;
+  grid-template-columns: var(--inspector-rail-width) minmax(0, 1fr);
+  align-content: start;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 32%),
+    color-mix(in srgb, var(--card) 90%, var(--bg));
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  transform: translateX(calc(100% - var(--inspector-rail-width)));
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.inspector-card:hover,
+.inspector-card:focus-within,
+.inspector-card[data-pinned="true"] {
+  transform: translateX(0);
+  box-shadow:
+    0 22px 54px rgba(0, 0, 0, 0.28),
+    0 0 0 1px color-mix(in srgb, var(--accent) 18%, var(--border));
+}
+
+.inspector-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 100%;
+  padding: 12px 7px 10px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(55, 148, 255, 0.16), rgba(55, 148, 255, 0.04)),
+    color-mix(in srgb, var(--card-muted) 84%, transparent);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+
+.inspector-rail:focus {
+  box-shadow: inset 0 0 0 1px var(--accent-strong);
+}
+
+.inspector-rail-label,
+.inspector-rail-value {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.inspector-rail-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+
+.inspector-rail-value {
+  max-height: 124px;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.inspector-panel {
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.inspector-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-head-copy {
+  min-width: 0;
+}
+
+.inspector-head h2 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.inspector-summary {
+  margin: 4px 0 0;
+  color: var(--sub);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.inspector-head-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inspector-pin-btn {
+  min-width: 64px;
+}
+
+.kind-pill {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inspector-detail-box {
+  padding: 10px;
+  min-width: 0;
+  max-height: min(46vh, 400px);
+  overflow: auto;
+}
+
+.detail-empty {
+  margin: 0;
+  color: var(--sub);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.detail-group {
+  padding: 0 0 10px;
+  margin: 0 0 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.detail-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.detail-section-title {
+  margin: 0 0 10px;
+  color: var(--sub);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.detail-kv {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 6px;
+  align-items: start;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.detail-key {
+  color: var(--sub);
+}
+
+.detail-value {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.detail-value.mono {
+  font-family: var(--vscode-editor-font-family, "Cascadia Code", monospace);
+  font-size: 11px;
+}
+
+.detail-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.detail-item {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.detail-action {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.detail-action:hover {
+  background: var(--button-bg-hover);
+}
+
+.hint-box {
+  margin: 0 10px 10px;
+  padding: 8px 9px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--card-muted);
+  color: var(--sub);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.hint-box p {
+  margin: 0 0 8px;
+}
+
+.hint-box p:last-child {
+  margin-bottom: 0;
+}
+
+.node-hover {
+  position: fixed;
+  inset: auto auto 0 0;
+  width: min(320px, calc(100vw - 20px));
+  max-height: min(56vh, 440px);
+  overflow: auto;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  z-index: 10;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%),
+    color-mix(in srgb, var(--card) 96%, var(--bg));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.26);
+}
+
+.node-hover.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hover-kicker {
+  margin: 0;
+  color: var(--sub);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hover-title {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.hover-subtitle {
+  margin: 4px 0 0;
+  color: var(--sub);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.hover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.hover-section {
+  min-width: 0;
+}
+
+.hover-section-title {
+  margin: 0 0 6px;
+  color: var(--sub);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hover-list {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.hover-item {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.hover-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  color: var(--sub);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .graph-scroll {
+    max-height: min(68vh, 860px);
+  }
+  .inspector-card {
+    width: min(var(--inspector-width-px), calc(100% - 12px));
+    top: 8px;
+    right: 8px;
+    max-height: min(70vh, 620px);
+  }
+}
+
+@media (max-width: 780px) {
+  :root {
+    --inspector-width: min(var(--inspector-width-px), calc(100vw - 20px));
+    --inspector-rail-width: min(var(--inspector-rail-width-px), 40px);
+  }
+
+  .graph-shell {
+    padding: 8px;
+  }
+
+  .graph-toolbar {
+    gap: 8px;
+  }
+
+  .toolbar-row,
+  .toolbar-tail {
+    width: 100%;
+  }
+
+  .field.search {
+    width: 100%;
+  }
+
+  .hover-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inspector-card {
+    width: min(var(--inspector-width-px), calc(100% - 8px));
+    top: 6px;
+    right: 6px;
+    max-height: min(68vh, 560px);
+  }
+}
