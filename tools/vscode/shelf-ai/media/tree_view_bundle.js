@@ -7820,7 +7820,15 @@
         layoutMode: model.layoutMode === "framework_columns" ? "framework_columns" : "global_levels",
         levelLabels: model.levelLabels && typeof model.levelLabels === "object" ? model.levelLabels : {},
         frameworkGroups: Array.isArray(model.frameworkGroups) ? model.frameworkGroups : [],
-        relationCounts: model.relationCounts && typeof model.relationCounts === "object" ? model.relationCounts : {}
+        relationCounts: model.relationCounts && typeof model.relationCounts === "object" ? model.relationCounts : {},
+        objectIndex: model.objectIndex && typeof model.objectIndex === "object" ? model.objectIndex : {},
+        validationSummary: model.validationSummary && typeof model.validationSummary === "object" ? model.validationSummary : {
+          passed: false,
+          ruleCount: 0,
+          errorCount: 0,
+          issues: [],
+          issueCountByObject: {}
+        }
       }
     };
   }
@@ -8239,6 +8247,97 @@
       };
     }).filter((entry) => Boolean(entry));
   }
+  function normalizeNavigationTarget(candidate) {
+    if (!candidate || typeof candidate !== "object") {
+      return null;
+    }
+    const raw = candidate;
+    const targetKind = normalizeText(raw.targetKind ?? raw.target_kind);
+    const layer = normalizeText(raw.layer);
+    const filePath = normalizeText(raw.filePath ?? raw.file_path);
+    if (!targetKind || !layer || !filePath) {
+      return null;
+    }
+    return {
+      targetKind,
+      layer,
+      filePath,
+      startLine: normalizePositiveInt(raw.startLine ?? raw.start_line, 1),
+      endLine: normalizePositiveInt(raw.endLine ?? raw.end_line, normalizePositiveInt(raw.startLine ?? raw.start_line, 1)),
+      symbol: normalizeText(raw.symbol),
+      label: normalizeText(raw.label) || targetKind,
+      isPrimary: raw.isPrimary === true || raw.is_primary === true,
+      isEditable: raw.isEditable === true || raw.is_editable === true,
+      isDeprecatedAlias: raw.isDeprecatedAlias === true || raw.is_deprecated_alias === true
+    };
+  }
+  function normalizeNavigationTargets(candidate) {
+    if (!Array.isArray(candidate)) {
+      return [];
+    }
+    return candidate.map((entry) => normalizeNavigationTarget(entry)).filter((entry) => Boolean(entry));
+  }
+  function normalizeCorrespondenceObject(candidate) {
+    if (!candidate || typeof candidate !== "object") {
+      return null;
+    }
+    const raw = candidate;
+    const objectId = normalizeText(raw.objectId ?? raw.object_id);
+    if (!objectId) {
+      return null;
+    }
+    const correspondenceAnchor = normalizeNavigationTarget(raw.correspondenceAnchor ?? raw.correspondence_anchor);
+    const implementationAnchor = normalizeNavigationTarget(raw.implementationAnchor ?? raw.implementation_anchor);
+    return {
+      objectKind: normalizeText(raw.objectKind ?? raw.object_kind),
+      objectId,
+      ownerModuleId: normalizeText(raw.ownerModuleId ?? raw.owner_module_id),
+      displayName: normalizeText(raw.displayName ?? raw.display_name) || objectId,
+      materializationKind: normalizeText(raw.materializationKind ?? raw.materialization_kind),
+      primaryNavTargetKind: normalizeText(raw.primaryNavTargetKind ?? raw.primary_nav_target_kind),
+      primaryEditTargetKind: normalizeText(raw.primaryEditTargetKind ?? raw.primary_edit_target_kind),
+      navigationTargets: normalizeNavigationTargets(raw.navigationTargets ?? raw.navigation_targets),
+      ...correspondenceAnchor ? { correspondenceAnchor } : {},
+      ...implementationAnchor ? { implementationAnchor } : {}
+    };
+  }
+  function normalizeValidationSummary(candidate) {
+    if (!candidate || typeof candidate !== "object") {
+      return {
+        passed: false,
+        ruleCount: 0,
+        errorCount: 0,
+        issues: [],
+        issueCountByObject: {}
+      };
+    }
+    const raw = candidate;
+    const issues = Array.isArray(raw.issues) ? raw.issues.filter((entry) => entry && typeof entry === "object").map((entry) => {
+      const issue = entry;
+      const objectIds = issue.objectIds ?? issue.object_ids;
+      return {
+        issueKind: normalizeText(issue.issueKind ?? issue.issue_kind),
+        level: normalizeText(issue.level) || "error",
+        reason: normalizeText(issue.reason),
+        objectIds: Array.isArray(objectIds) ? objectIds.map((value) => normalizeText(value)).filter(Boolean) : [],
+        primaryObjectId: normalizeText(issue.primaryObjectId ?? issue.primary_object_id)
+      };
+    }) : [];
+    const issueCountByObject = {};
+    const rawCounts = raw.issueCountByObject ?? raw.issue_count_by_object;
+    if (rawCounts && typeof rawCounts === "object") {
+      for (const [objectId, count] of Object.entries(rawCounts)) {
+        issueCountByObject[normalizeText(objectId)] = Math.max(0, Math.floor(Number(count) || 0));
+      }
+    }
+    return {
+      passed: raw.passed === true,
+      ruleCount: Math.max(0, Math.floor(Number(raw.ruleCount ?? raw.rule_count) || 0)),
+      errorCount: Math.max(0, Math.floor(Number(raw.errorCount ?? raw.error_count) || issues.length)),
+      issues,
+      issueCountByObject
+    };
+  }
   function visualLength(value) {
     let length = 0;
     for (const char of value) {
@@ -8273,6 +8372,12 @@
     const order = Number.isFinite(Number(candidate.order)) ? Math.max(0, Number(candidate.order)) : null;
     const sourceLine = Number.isFinite(Number(candidate.sourceLine)) ? normalizePositiveInt(candidate.sourceLine, 1) : null;
     const docLine = Number.isFinite(Number(candidate.docLine)) ? normalizePositiveInt(candidate.docLine, 1) : null;
+    const defaultTarget = normalizeNavigationTarget(candidate.defaultTarget);
+    const editTarget = normalizeNavigationTarget(candidate.editTarget);
+    const correspondenceAnchor = normalizeNavigationTarget(candidate.correspondenceAnchor);
+    const implementationAnchor = normalizeNavigationTarget(candidate.implementationAnchor);
+    const secondaryTargets = Array.isArray(candidate.secondaryTargets) ? normalizeNavigationTargets(candidate.secondaryTargets) : [];
+    const relatedObjectIds = Array.isArray(candidate.relatedObjectIds) ? candidate.relatedObjectIds.map((value) => normalizeText(value)).filter(Boolean) : [];
     return {
       id: id2,
       label,
@@ -8291,6 +8396,13 @@
       ...hoverKicker ? { hoverKicker } : {},
       capabilityItems: normalizeHoverItems(candidate.capabilityItems),
       baseItems: normalizeHoverItems(candidate.baseItems),
+      ...normalizeText(candidate.objectId) ? { objectId: normalizeText(candidate.objectId) } : {},
+      ...defaultTarget ? { defaultTarget } : {},
+      ...editTarget ? { editTarget } : {},
+      ...correspondenceAnchor ? { correspondenceAnchor } : {},
+      ...implementationAnchor ? { implementationAnchor } : {},
+      ...secondaryTargets.length ? { secondaryTargets } : {},
+      ...relatedObjectIds.length ? { relatedObjectIds } : {},
       width: size.width,
       height: size.height
     };
@@ -8415,6 +8527,8 @@
       });
       this.frameworkGroupByName = new Map(this.frameworkGroups.map((group) => [group.name, group]));
       this.relationCounts = /* @__PURE__ */ new Map();
+      this.objectIndex = /* @__PURE__ */ new Map();
+      this.validationSummary = normalizeValidationSummary(rawModel.validationSummary);
       for (const node of nodes) {
         this.outgoingById.set(node.id, /* @__PURE__ */ new Set());
         this.incomingById.set(node.id, /* @__PURE__ */ new Set());
@@ -8437,6 +8551,15 @@
           this.relationCounts.set(relation, Math.max(0, Math.floor(normalizedCount)));
         }
       }
+      if (rawModel.objectIndex && typeof rawModel.objectIndex === "object") {
+        for (const [objectId, candidate] of Object.entries(rawModel.objectIndex)) {
+          const objectValue = normalizeCorrespondenceObject(candidate);
+          if (!objectValue || objectValue.objectId !== objectId) {
+            continue;
+          }
+          this.objectIndex.set(objectId, objectValue);
+        }
+      }
     }
     hasNode(nodeId) {
       return this.nodeById.has(nodeId);
@@ -8446,6 +8569,9 @@
     }
     edge(edgeId) {
       return this.edgeById.get(edgeId) || null;
+    }
+    object(objectId) {
+      return this.objectIndex.get(objectId) || null;
     }
     outgoingEdges(nodeId) {
       return [...this.outgoingEdgesById.get(nodeId) || []];
@@ -12080,6 +12206,42 @@
     }
     return items.map((item) => `<li class="detail-item">${escapeHtml2(item)}</li>`).join("");
   }
+  function targetSignature(target) {
+    if (!target) {
+      return "";
+    }
+    return [
+      target.targetKind,
+      target.filePath,
+      String(target.startLine),
+      target.symbol
+    ].join("|");
+  }
+  function actionButton(label, target, options) {
+    if (!target) {
+      return '<span class="detail-value">无</span>';
+    }
+    const classes = ["detail-action"];
+    if (options?.muted) {
+      classes.push("ghost");
+    }
+    return `<button type="button" class="${classes.join(" ")}" data-open-source="1" data-file="${escapeHtml2(target.filePath)}" data-line="${target.startLine}">${escapeHtml2(label)}</button>`;
+  }
+  function relatedObjectButton(objectId, label) {
+    return `<button type="button" class="detail-action ghost" data-show-object="1" data-object-id="${escapeHtml2(objectId)}">${escapeHtml2(label)}</button>`;
+  }
+  function targetSummary(target) {
+    if (!target) {
+      return "无";
+    }
+    return `${target.targetKind} · ${target.filePath}:${target.startLine}`;
+  }
+  function formatTargetList(targets) {
+    if (!targets.length) {
+      return '<li class="detail-item">无</li>';
+    }
+    return targets.map((target) => `<li class="detail-item">${actionButton(target.label || target.targetKind, target, { muted: true })} <span class="mono">${escapeHtml2(target.targetKind)}</span> · <span class="mono">${escapeHtml2(target.filePath)}:${target.startLine}</span></li>`).join("");
+  }
   function main() {
     const bootstrap = readRuntimeBootstrap();
     const bridge = new WebviewBridge();
@@ -12149,6 +12311,42 @@
         schedulePersist();
       }
     };
+    let currentSelection = { kind: "none" };
+    const openTarget = (target) => {
+      if (!target?.filePath) {
+        return;
+      }
+      bridge.openSource(target.filePath, target.startLine);
+    };
+    const nodeDefaultTarget = (node) => {
+      if (!node) {
+        return null;
+      }
+      return node.defaultTarget || node.editTarget || null;
+    };
+    const objectSecondaryTargets = (objectValue) => {
+      const excluded = new Set(
+        [
+          objectValue.navigationTargets.find((target) => target.targetKind === objectValue.primaryNavTargetKind) || null,
+          objectValue.navigationTargets.find((target) => target.targetKind === objectValue.primaryEditTargetKind) || null,
+          objectValue.correspondenceAnchor || null,
+          objectValue.implementationAnchor || null
+        ].map((target) => targetSignature(target)).filter(Boolean)
+      );
+      return objectValue.navigationTargets.filter((target) => !excluded.has(targetSignature(target)));
+    };
+    const renderObjectLinkList = (objectIds) => {
+      if (!objectIds.length) {
+        return '<li class="detail-item">无</li>';
+      }
+      return objectIds.map((objectId) => {
+        const objectValue = model.object(objectId);
+        const label = objectValue?.displayName || objectId;
+        const issueCount = model.validationSummary.issueCountByObject[objectId] || 0;
+        const suffix = issueCount > 0 ? ` · ${issueCount} issue(s)` : "";
+        return `<li class="detail-item">${relatedObjectButton(objectId, label)}${suffix ? ` <span class="mono">${escapeHtml2(suffix)}</span>` : ""}</li>`;
+      }).join("");
+    };
     const attachDetailActions = () => {
       inspectorDetailBox.querySelectorAll("[data-open-source='1']").forEach((element) => {
         element.addEventListener("click", (event) => {
@@ -12158,6 +12356,21 @@
           if (filePath) {
             bridge.openSource(filePath, lineNumber);
           }
+        });
+      });
+      inspectorDetailBox.querySelectorAll("[data-show-object='1']").forEach((element) => {
+        element.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const objectId = element.getAttribute("data-object-id") || "";
+          if (objectId) {
+            renderCorrespondenceObjectDetail(objectId);
+          }
+        });
+      });
+      inspectorDetailBox.querySelectorAll("[data-reset-inspector='1']").forEach((element) => {
+        element.addEventListener("click", (event) => {
+          event.stopPropagation();
+          updateInspector(currentSelection);
         });
       });
     };
@@ -12172,6 +12385,62 @@
         Click a node or edge to inspect details. Search, focus mode, hover, and source jumps stay available while the canvas remains primary.
       </p>
     `;
+    };
+    const renderCorrespondenceObjectDetail = (objectId) => {
+      const objectValue = model.object(objectId);
+      if (!objectValue) {
+        renderEmptyDetail();
+        return;
+      }
+      const primaryNavTarget = objectValue.navigationTargets.find(
+        (target) => target.targetKind === objectValue.primaryNavTargetKind
+      ) || null;
+      const primaryEditTarget = objectValue.navigationTargets.find(
+        (target) => target.targetKind === objectValue.primaryEditTargetKind
+      ) || null;
+      const secondaryTargets = objectSecondaryTargets(objectValue);
+      const issueCount = model.validationSummary.issueCountByObject[objectValue.objectId] || 0;
+      const ownerModuleObject = objectValue.ownerModuleId ? model.object(objectValue.ownerModuleId) : null;
+      selectionKindPill.textContent = objectValue.objectKind;
+      selectionKindPill.className = `pill kind-pill ${objectValue.objectKind.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+      inspectorRailValue.textContent = objectValue.displayName;
+      inspectorRailValue.title = objectValue.displayName;
+      inspectorSummaryValue.textContent = `${objectValue.objectId} · nav=${objectValue.primaryNavTargetKind}`;
+      inspectorDetailBox.innerHTML = `
+      <section class="detail-group">
+        <h3 class="detail-section-title">对象概览</h3>
+        <div class="detail-kv"><span class="detail-key">Object ID</span><span class="detail-value mono">${escapeHtml2(objectValue.objectId)}</span></div>
+        <div class="detail-kv"><span class="detail-key">类型</span><span class="detail-value">${escapeHtml2(objectValue.objectKind)}</span></div>
+        <div class="detail-kv"><span class="detail-key">显示名</span><span class="detail-value">${escapeHtml2(objectValue.displayName)}</span></div>
+        <div class="detail-kv"><span class="detail-key">Materialization</span><span class="detail-value mono">${escapeHtml2(objectValue.materializationKind || "unknown")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Owner Module</span><span class="detail-value">${ownerModuleObject ? relatedObjectButton(ownerModuleObject.objectId, ownerModuleObject.displayName) : escapeHtml2(objectValue.ownerModuleId || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Issues</span><span class="detail-value">${issueCount ? `${issueCount} issue(s)` : "0"}</span></div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">默认跳转</h3>
+        <div class="detail-kv"><span class="detail-key">Primary Nav</span><span class="detail-value mono">${escapeHtml2(targetSummary(primaryNavTarget))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Primary Edit</span><span class="detail-value mono">${escapeHtml2(targetSummary(primaryEditTarget))}</span></div>
+        <div class="action-row">
+          ${actionButton("默认打开", primaryNavTarget)}
+          ${targetSignature(primaryEditTarget) && targetSignature(primaryEditTarget) !== targetSignature(primaryNavTarget) ? actionButton("编辑落点", primaryEditTarget, { muted: true }) : ""}
+          <button type="button" class="detail-action ghost" data-reset-inspector="1">返回节点</button>
+        </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">结构与实现锚点</h3>
+        <div class="detail-kv"><span class="detail-key">Correspondence</span><span class="detail-value mono">${escapeHtml2(targetSummary(objectValue.correspondenceAnchor))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Implementation</span><span class="detail-value mono">${escapeHtml2(targetSummary(objectValue.implementationAnchor))}</span></div>
+        <div class="action-row">
+          ${actionButton("结构锚点", objectValue.correspondenceAnchor, { muted: true })}
+          ${actionButton("实现锚点", objectValue.implementationAnchor, { muted: true })}
+        </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">次级跳转</h3>
+        <ul class="detail-list">${formatTargetList(secondaryTargets)}</ul>
+      </section>
+    `;
+      attachDetailActions();
     };
     const renderNodeDetail = (nodeId) => {
       const node = layout.nodes.get(nodeId);
@@ -12190,7 +12459,11 @@
       const sourceFile = node.file;
       const docLine = node.docLine || node.line;
       const sourceLine = node.sourceLine || node.line;
+      const defaultTarget = nodeDefaultTarget(node);
       const levelLabel = node.moduleName ? `${node.moduleName} · ${model.levelLabel(node.depth)}` : model.levelLabel(node.depth);
+      const objectValue = node.objectId ? model.object(node.objectId) : null;
+      const issueCount = node.objectId ? model.validationSummary.issueCountByObject[node.objectId] || 0 : 0;
+      const secondaryTargets = node.secondaryTargets || [];
       selectionKindPill.textContent = node.kind;
       selectionKindPill.className = `pill kind-pill ${node.kind.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
       inspectorRailValue.textContent = node.title || node.label;
@@ -12204,14 +12477,40 @@
         <div class="detail-kv"><span class="detail-key">层级</span><span class="detail-value">${escapeHtml2(levelLabel)}</span></div>
         <div class="detail-kv"><span class="detail-key">标签</span><span class="detail-value">${escapeHtml2(node.label)}</span></div>
         <div class="detail-kv"><span class="detail-key">描述</span><span class="detail-value">${escapeHtml2(node.detail || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Object ID</span><span class="detail-value mono">${escapeHtml2(node.objectId || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Issue Count</span><span class="detail-value">${issueCount}</span></div>
       </section>
       <section class="detail-group">
         <h3 class="detail-section-title">来源与跳转</h3>
         <div class="detail-kv"><span class="detail-key">文档位置</span><span class="detail-value mono">${sourceFile ? `${escapeHtml2(sourceFile)}:${docLine}` : "无"}</span></div>
         <div class="detail-kv"><span class="detail-key">结构来源</span><span class="detail-value mono">${sourceFile ? `${escapeHtml2(sourceFile)}:${sourceLine}` : "无"}</span></div>
+        <div class="detail-kv"><span class="detail-key">默认跳转</span><span class="detail-value mono">${escapeHtml2(targetSummary(defaultTarget))}</span></div>
         <div class="action-row">
-          ${sourceFile ? `<button type="button" class="detail-action" data-open-source="1" data-file="${escapeHtml2(sourceFile)}" data-line="${docLine}">打开文档</button>` : "无"}
+          ${actionButton("默认打开", defaultTarget)}
+          ${actionButton("打开文档", sourceFile ? {
+        targetKind: "framework_definition",
+        layer: "framework",
+        filePath: sourceFile,
+        startLine: docLine,
+        endLine: docLine,
+        symbol: node.id,
+        label: "Framework definition",
+        isPrimary: false,
+        isEditable: true,
+        isDeprecatedAlias: false
+      } : null, { muted: true })}
+          ${objectValue ? relatedObjectButton(objectValue.objectId, "查看对象详情") : ""}
         </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">锚点与次级跳转</h3>
+        <div class="detail-kv"><span class="detail-key">Correspondence</span><span class="detail-value mono">${escapeHtml2(targetSummary(node.correspondenceAnchor || objectValue?.correspondenceAnchor))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Implementation</span><span class="detail-value mono">${escapeHtml2(targetSummary(node.implementationAnchor || objectValue?.implementationAnchor))}</span></div>
+        <ul class="detail-list">${formatTargetList(secondaryTargets)}</ul>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">关联对象</h3>
+        <ul class="detail-list">${renderObjectLinkList(node.relatedObjectIds || [])}</ul>
       </section>
       <section class="detail-group">
         <h3 class="detail-section-title">上游节点</h3>
@@ -12262,6 +12561,7 @@
       attachDetailActions();
     };
     const updateInspector = (selection2) => {
+      currentSelection = selection2;
       if (selection2.kind === "node") {
         renderNodeDetail(selection2.nodeId);
         return;
@@ -12282,6 +12582,11 @@
       },
       onNodeOpened: (nodeId) => {
         const node = layout.nodes.get(nodeId);
+        const target = nodeDefaultTarget(node || null);
+        if (target) {
+          openTarget(target);
+          return;
+        }
         if (node?.file) {
           bridge.openSource(node.file, node.docLine || node.line);
         }
@@ -12306,7 +12611,8 @@
         });
         renderer.applyFilter(filter2);
         const selectedNodeId = renderer.selectedNodeIdOrEmpty();
-        elements.statusElement.textContent = selectedNodeId ? `Selected ${selectedNodeId}` : "Ready";
+        const validationSuffix = model.validationSummary.errorCount ? ` · ${model.validationSummary.errorCount} correspondence issue(s)` : "";
+        elements.statusElement.textContent = selectedNodeId ? `Selected ${selectedNodeId}${validationSuffix}` : `Ready${validationSuffix}`;
         schedulePersist();
       } finally {
         isApplyingFilters = false;

@@ -5,9 +5,12 @@ import type {
   GraphFrameworkGroup,
   GraphNode,
   HoverItem,
+  RuntimeCorrespondenceObject,
   RuntimeFrameworkGroup,
+  RuntimeNavigationTarget,
   RuntimeTreeLayoutMode,
   RuntimeTreeModel,
+  RuntimeValidationSummary,
 } from "./types";
 
 const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
@@ -65,6 +68,111 @@ function normalizeHoverItems(candidate: unknown): HoverItem[] {
     .filter((entry): entry is HoverItem => Boolean(entry));
 }
 
+function normalizeNavigationTarget(candidate: unknown): RuntimeNavigationTarget | null {
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+  const raw = candidate as Record<string, unknown>;
+  const targetKind = normalizeText(raw.targetKind ?? raw.target_kind);
+  const layer = normalizeText(raw.layer);
+  const filePath = normalizeText(raw.filePath ?? raw.file_path);
+  if (!targetKind || !layer || !filePath) {
+    return null;
+  }
+  return {
+    targetKind,
+    layer,
+    filePath,
+    startLine: normalizePositiveInt(raw.startLine ?? raw.start_line, 1),
+    endLine: normalizePositiveInt(raw.endLine ?? raw.end_line, normalizePositiveInt(raw.startLine ?? raw.start_line, 1)),
+    symbol: normalizeText(raw.symbol),
+    label: normalizeText(raw.label) || targetKind,
+    isPrimary: raw.isPrimary === true || raw.is_primary === true,
+    isEditable: raw.isEditable === true || raw.is_editable === true,
+    isDeprecatedAlias: raw.isDeprecatedAlias === true || raw.is_deprecated_alias === true,
+  };
+}
+
+function normalizeNavigationTargets(candidate: unknown): RuntimeNavigationTarget[] {
+  if (!Array.isArray(candidate)) {
+    return [];
+  }
+  return candidate
+    .map((entry) => normalizeNavigationTarget(entry))
+    .filter((entry): entry is RuntimeNavigationTarget => Boolean(entry));
+}
+
+function normalizeCorrespondenceObject(candidate: unknown): RuntimeCorrespondenceObject | null {
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+  const raw = candidate as Record<string, unknown>;
+  const objectId = normalizeText(raw.objectId ?? raw.object_id);
+  if (!objectId) {
+    return null;
+  }
+  const correspondenceAnchor = normalizeNavigationTarget(raw.correspondenceAnchor ?? raw.correspondence_anchor);
+  const implementationAnchor = normalizeNavigationTarget(raw.implementationAnchor ?? raw.implementation_anchor);
+  return {
+    objectKind: normalizeText(raw.objectKind ?? raw.object_kind),
+    objectId,
+    ownerModuleId: normalizeText(raw.ownerModuleId ?? raw.owner_module_id),
+    displayName: normalizeText(raw.displayName ?? raw.display_name) || objectId,
+    materializationKind: normalizeText(raw.materializationKind ?? raw.materialization_kind),
+    primaryNavTargetKind: normalizeText(raw.primaryNavTargetKind ?? raw.primary_nav_target_kind),
+    primaryEditTargetKind: normalizeText(raw.primaryEditTargetKind ?? raw.primary_edit_target_kind),
+    navigationTargets: normalizeNavigationTargets(raw.navigationTargets ?? raw.navigation_targets),
+    ...(correspondenceAnchor ? { correspondenceAnchor } : {}),
+    ...(implementationAnchor ? { implementationAnchor } : {}),
+  };
+}
+
+function normalizeValidationSummary(candidate: unknown): RuntimeValidationSummary {
+  if (!candidate || typeof candidate !== "object") {
+    return {
+      passed: false,
+      ruleCount: 0,
+      errorCount: 0,
+      issues: [],
+      issueCountByObject: {},
+    };
+  }
+  const raw = candidate as Record<string, unknown>;
+  const issues = Array.isArray(raw.issues)
+    ? raw.issues
+      .filter((entry) => entry && typeof entry === "object")
+      .map((entry) => {
+        const issue = entry as Record<string, unknown>;
+        const objectIds = issue.objectIds ?? issue.object_ids;
+        return {
+          issueKind: normalizeText(issue.issueKind ?? issue.issue_kind),
+          level: normalizeText(issue.level) || "error",
+          reason: normalizeText(issue.reason),
+          objectIds: Array.isArray(objectIds)
+            ? (objectIds as unknown[])
+              .map((value) => normalizeText(value))
+              .filter(Boolean)
+            : [],
+          primaryObjectId: normalizeText(issue.primaryObjectId ?? issue.primary_object_id),
+        };
+      })
+    : [];
+  const issueCountByObject: Record<string, number> = {};
+  const rawCounts = raw.issueCountByObject ?? raw.issue_count_by_object;
+  if (rawCounts && typeof rawCounts === "object") {
+    for (const [objectId, count] of Object.entries(rawCounts as Record<string, unknown>)) {
+      issueCountByObject[normalizeText(objectId)] = Math.max(0, Math.floor(Number(count) || 0));
+    }
+  }
+  return {
+    passed: raw.passed === true,
+    ruleCount: Math.max(0, Math.floor(Number(raw.ruleCount ?? raw.rule_count) || 0)),
+    errorCount: Math.max(0, Math.floor(Number(raw.errorCount ?? raw.error_count) || issues.length)),
+    issues,
+    issueCountByObject,
+  };
+}
+
 function visualLength(value: string): number {
   let length = 0;
   for (const char of value) {
@@ -110,6 +218,18 @@ function normalizeNode(node: unknown): GraphNode | null {
   const docLine = Number.isFinite(Number(candidate.docLine))
     ? normalizePositiveInt(candidate.docLine, 1)
     : null;
+  const defaultTarget = normalizeNavigationTarget(candidate.defaultTarget);
+  const editTarget = normalizeNavigationTarget(candidate.editTarget);
+  const correspondenceAnchor = normalizeNavigationTarget(candidate.correspondenceAnchor);
+  const implementationAnchor = normalizeNavigationTarget(candidate.implementationAnchor);
+  const secondaryTargets = Array.isArray(candidate.secondaryTargets)
+    ? normalizeNavigationTargets(candidate.secondaryTargets)
+    : [];
+  const relatedObjectIds = Array.isArray(candidate.relatedObjectIds)
+    ? candidate.relatedObjectIds
+      .map((value) => normalizeText(value))
+      .filter(Boolean)
+    : [];
   return {
     id,
     label,
@@ -128,6 +248,13 @@ function normalizeNode(node: unknown): GraphNode | null {
     ...(hoverKicker ? { hoverKicker } : {}),
     capabilityItems: normalizeHoverItems(candidate.capabilityItems),
     baseItems: normalizeHoverItems(candidate.baseItems),
+    ...(normalizeText(candidate.objectId) ? { objectId: normalizeText(candidate.objectId) } : {}),
+    ...(defaultTarget ? { defaultTarget } : {}),
+    ...(editTarget ? { editTarget } : {}),
+    ...(correspondenceAnchor ? { correspondenceAnchor } : {}),
+    ...(implementationAnchor ? { implementationAnchor } : {}),
+    ...(secondaryTargets.length ? { secondaryTargets } : {}),
+    ...(relatedObjectIds.length ? { relatedObjectIds } : {}),
     width: size.width,
     height: size.height,
   };
@@ -232,6 +359,8 @@ export class TreeGraphModel {
   readonly frameworkGroupByName: Map<string, GraphFrameworkGroup>;
   readonly levelLabels: Map<number, string>;
   readonly relationCounts: Map<string, number>;
+  readonly objectIndex: Map<string, RuntimeCorrespondenceObject>;
+  readonly validationSummary: RuntimeValidationSummary;
 
   constructor(rawModel: RuntimeTreeModel) {
     this.title = normalizeText(rawModel.title) || "Shelf Tree";
@@ -287,6 +416,8 @@ export class TreeGraphModel {
       });
     this.frameworkGroupByName = new Map(this.frameworkGroups.map((group) => [group.name, group]));
     this.relationCounts = new Map<string, number>();
+    this.objectIndex = new Map<string, RuntimeCorrespondenceObject>();
+    this.validationSummary = normalizeValidationSummary(rawModel.validationSummary);
 
     for (const node of nodes) {
       this.outgoingById.set(node.id, new Set());
@@ -311,6 +442,15 @@ export class TreeGraphModel {
         this.relationCounts.set(relation, Math.max(0, Math.floor(normalizedCount)));
       }
     }
+    if (rawModel.objectIndex && typeof rawModel.objectIndex === "object") {
+      for (const [objectId, candidate] of Object.entries(rawModel.objectIndex)) {
+        const objectValue = normalizeCorrespondenceObject(candidate);
+        if (!objectValue || objectValue.objectId !== objectId) {
+          continue;
+        }
+        this.objectIndex.set(objectId, objectValue);
+      }
+    }
   }
 
   hasNode(nodeId: string): boolean {
@@ -323,6 +463,10 @@ export class TreeGraphModel {
 
   edge(edgeId: string): GraphEdge | null {
     return this.edgeById.get(edgeId) || null;
+  }
+
+  object(objectId: string): RuntimeCorrespondenceObject | null {
+    return this.objectIndex.get(objectId) || null;
   }
 
   outgoingEdges(nodeId: string): GraphEdge[] {

@@ -5,6 +5,7 @@ const frameworkNavigation = require("./framework_navigation");
 const configNavigation = require("./config_navigation");
 const frameworkCompletion = require("./framework_completion");
 const evidenceTree = require("./evidence_tree");
+const correspondenceRuntime = require("./correspondence_runtime");
 const workspaceGuard = require("./guarding");
 const validationRuntime = require("./validation_runtime");
 const intentGate = require("./intent_gate");
@@ -1203,6 +1204,27 @@ function activate(context) {
     return { issues, materializedProjects };
   };
 
+  const readCorrespondenceIssues = (repoRoot) => {
+    try {
+      const snapshot = correspondenceRuntime.loadCorrespondenceSnapshot(repoRoot);
+      if (!snapshot) {
+        return [];
+      }
+      return correspondenceRuntime.buildValidationIssues(
+        snapshot.payload.validation_summary,
+        snapshot.payload.object_index || {}
+      );
+    } catch (error) {
+      return [normalizeIssue({
+        message: `Shelf could not load correspondence summary: ${String(error)}`,
+        file: "projects/*/generated/canonical.json",
+        line: 1,
+        column: 1,
+        code: "SHELF_CORRESPONDENCE",
+      })];
+    }
+  };
+
   const runValidation = async (options = { mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" }) => {
     const task = normalizeValidationOptions(options);
     const folder = vscode.workspace.workspaceFolders?.[0];
@@ -1288,10 +1310,11 @@ function activate(context) {
 
     const parsed = await runParsedCommand("validate", normalizedValidationCommand, repoRoot, parseResult);
     combinedIssues.push(...parsed.errors);
+    const correspondenceIssues = readCorrespondenceIssues(repoRoot);
 
     const combined = {
-      passed: parsed.passed && combinedIssues.length === 0,
-      errors: combinedIssues
+      passed: parsed.passed && combinedIssues.length === 0 && correspondenceIssues.length === 0,
+      errors: correspondenceRuntime.mergeIssueLists(correspondenceIssues, combinedIssues)
     };
 
     lastRunIssues = combined.errors;

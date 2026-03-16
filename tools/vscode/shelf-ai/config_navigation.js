@@ -1,8 +1,10 @@
 const fs = require("fs");
 const path = require("path");
+const correspondenceRuntime = require("./correspondence_runtime");
 const workspaceGuard = require("./guarding");
 
 const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
+const MODULE_ID_PATTERN = /^(?<framework>[A-Za-z][A-Za-z0-9_]*)\.L(?<level>\d+)\.M(?<module>\d+)$/;
 
 function isProjectConfigFile(filePath, repoRoot) {
   const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, filePath));
@@ -68,6 +70,78 @@ function findBoundaryBindingBySection(canonical, sectionName) {
     }
   }
   return null;
+}
+
+function findCorrespondenceObjectBySection(payload, sectionName) {
+  const objectIndex = payload && typeof payload === "object" && payload.object_index && typeof payload.object_index === "object"
+    ? payload.object_index
+    : {};
+  const objects = Array.isArray(payload?.objects) ? payload.objects : [];
+  const scoreForObject = (item) => {
+    if (!item || typeof item !== "object") {
+      return -1;
+    }
+    const ownerModuleId = String(item.owner_module_id || "");
+    const match = MODULE_ID_PATTERN.exec(ownerModuleId);
+    if (!match || !match.groups) {
+      return -1;
+    }
+    const level = Number(match.groups.level || 0);
+    const module = Number(match.groups.module || 0);
+    return level * 100 + module;
+  };
+  const pickBest = (items) => [...items].sort((left, right) => scoreForObject(right) - scoreForObject(left))[0] || null;
+  const staticParamMatches = objects.filter((item) => {
+    if (!item || typeof item !== "object" || String(item.object_kind || "") !== "static_param") {
+      return false;
+    }
+    return Array.isArray(item.navigation_targets)
+      && item.navigation_targets.some((target) =>
+        target
+        && typeof target === "object"
+        && String(target.target_kind || "") === "config_source"
+        && String(target.symbol || "") === sectionName
+      );
+  });
+  const staticParamMatch = pickBest(staticParamMatches);
+  if (staticParamMatch) {
+    const staticObject = objectIndex[String(staticParamMatch.object_id || "")] || staticParamMatch;
+    const boundaryMatch = pickBest(objects.filter((item) => {
+      if (!item || typeof item !== "object" || String(item.object_kind || "") !== "boundary") {
+        return false;
+      }
+      return Array.isArray(item.navigation_targets)
+        && item.navigation_targets.some((target) =>
+          target
+          && typeof target === "object"
+          && String(target.target_kind || "") === "config_source"
+          && String(target.symbol || "") === sectionName
+        );
+    }));
+    return {
+      objectValue: staticObject,
+      boundaryId: boundaryMatch ? String(boundaryMatch.display_name || "") : "",
+    };
+  }
+  const boundaryMatch = pickBest(objects.filter((item) => {
+    if (!item || typeof item !== "object" || String(item.object_kind || "") !== "boundary") {
+      return false;
+    }
+    return Array.isArray(item.navigation_targets)
+      && item.navigation_targets.some((target) =>
+        target
+        && typeof target === "object"
+        && String(target.target_kind || "") === "config_source"
+        && String(target.symbol || "") === sectionName
+      );
+  }));
+  if (!boundaryMatch) {
+    return null;
+  }
+  return {
+    objectValue: objectIndex[String(boundaryMatch.object_id || "")] || boundaryMatch,
+    boundaryId: String(boundaryMatch.display_name || ""),
+  };
 }
 
 function normalizeSourceFilePath(repoRoot, value) {
@@ -140,6 +214,38 @@ function resolveConfigToCodeTarget({ repoRoot, filePath, text, line }) {
   const canonical = readProjectCanonical(filePath);
   if (!canonical) {
     return null;
+  }
+  const correspondence = correspondenceRuntime.readCorrespondenceApi(
+    repoRoot,
+    `${correspondenceRuntime.resolveCorrespondenceApiPaths(canonical).root}`,
+    { projectFilePath: filePath }
+  );
+  if (correspondence && typeof correspondence === "object") {
+    const matched = findCorrespondenceObjectBySection(correspondence, sectionName);
+    if (matched) {
+      const objectValue = matched.objectValue;
+      const anchorTarget = objectValue.correspondence_anchor
+        || correspondenceRuntime.resolveTargetByKind(objectValue, "code_correspondence")
+        || correspondenceRuntime.resolvePrimaryNavigationTarget(objectValue);
+      if (anchorTarget && anchorTarget.file_path) {
+        return {
+          filePath: normalizeSourceFilePath(repoRoot, anchorTarget.file_path),
+          line: Math.max(0, Number(anchorTarget.start_line || 1) - 1),
+          character: 0,
+          length: 1,
+          moduleId: String(objectValue.owner_module_id || ""),
+          boundaryId: matched.boundaryId,
+          objectId: String(objectValue.object_id || ""),
+          targetKind: String(anchorTarget.target_kind || ""),
+          anchorPath: String(anchorTarget.symbol || ""),
+          sourceSymbol: String(anchorTarget.symbol || ""),
+          sectionName,
+          sectionLine: sectionInfo.line,
+          sectionCharacter: sectionInfo.character,
+          sectionLength: sectionInfo.length,
+        };
+      }
+    }
   }
   const mapping = findBoundaryBindingBySection(canonical, sectionName);
   if (!mapping) {

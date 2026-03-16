@@ -268,6 +268,45 @@ def _module_runtime_implementation_target(
     )
 
 
+def _boundary_slot_target(
+    *,
+    code_module: dict[str, Any],
+    boundary_id: str,
+    slot_kind: str,
+    target_kind: str,
+    fallback_symbol: str,
+    fallback_label: str,
+    fallback_target: NavigationTarget,
+    is_primary: bool,
+) -> NavigationTarget:
+    bindings = code_module.get("code_bindings", {})
+    slots = bindings.get("implementation_slots") if isinstance(bindings, dict) else []
+    if isinstance(slots, list):
+        matched_slot = next(
+            (
+                item
+                for item in slots
+                if isinstance(item, dict)
+                and str(item.get("slot_kind") or "") == slot_kind
+                and str(item.get("boundary_id") or "") == boundary_id
+            ),
+            None,
+        )
+        if isinstance(matched_slot, dict):
+            source_ref = matched_slot.get("source_ref")
+            if isinstance(source_ref, dict):
+                return _source_ref_target(
+                    target_kind=target_kind,
+                    layer="code",
+                    source_ref=source_ref,
+                    symbol=str(matched_slot.get("source_symbol") or fallback_symbol),
+                    label=fallback_label,
+                    is_primary=is_primary,
+                    is_editable=True,
+                )
+    return fallback_target
+
+
 def _deprecated_alias_target(alias_path: str, *, is_primary: bool = False) -> NavigationTarget:
     line = _find_line("src/project_runtime/config_layer.py", "deprecated_boundary_anchor_path", fallback=1)
     return _target(
@@ -660,9 +699,29 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 symbol=str(boundary_link.get("static_params_class_symbol") or "project_runtime.code_layer:CodeBoundaryStaticClass"),
                 is_primary=False,
             )
+            correspondence_target = _boundary_slot_target(
+                code_module=code_module,
+                boundary_id=boundary_id,
+                slot_kind="module_static_param",
+                target_kind="code_correspondence",
+                fallback_symbol=str(boundary_link.get("static_params_class_symbol") or "project_runtime.code_layer:CodeBoundaryStaticClass"),
+                fallback_label="Boundary correspondence anchor",
+                fallback_target=correspondence_target,
+                is_primary=False,
+            )
             implementation_target = _module_runtime_implementation_target(
                 code_module=code_module,
                 fallback_symbol=str(boundary_link.get("runtime_params_class_symbol") or "project_runtime.code_layer:build_code_modules"),
+                is_primary=False,
+            )
+            implementation_target = _boundary_slot_target(
+                code_module=code_module,
+                boundary_id=boundary_id,
+                slot_kind="runtime_export",
+                target_kind="code_implementation",
+                fallback_symbol=str(boundary_link.get("runtime_params_class_symbol") or "project_runtime.code_layer:build_code_modules"),
+                fallback_label="Code implementation anchor",
+                fallback_target=implementation_target,
                 is_primary=False,
             )
             deprecated_target = _deprecated_alias_target(
@@ -704,6 +763,16 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 symbol=str(boundary_link.get("static_params_class_symbol") or "project_runtime.code_layer:StaticBoundaryParamsContract"),
                 is_primary=False,
             )
+            static_correspondence_target = _boundary_slot_target(
+                code_module=code_module,
+                boundary_id=boundary_id,
+                slot_kind="module_static_param",
+                target_kind="code_correspondence",
+                fallback_symbol=str(boundary_link.get("static_params_class_symbol") or "project_runtime.code_layer:StaticBoundaryParamsContract"),
+                fallback_label="Static params correspondence anchor",
+                fallback_target=static_correspondence_target,
+                is_primary=False,
+            )
             static_targets = (
                 config_target,
                 static_correspondence_target,
@@ -729,6 +798,16 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 kind="runtime_param",
                 label="Runtime params correspondence anchor",
                 symbol=str(boundary_link.get("runtime_params_class_symbol") or "project_runtime.code_layer:RuntimeBoundaryParamsContract"),
+                is_primary=True,
+            )
+            runtime_correspondence_target = _boundary_slot_target(
+                code_module=code_module,
+                boundary_id=boundary_id,
+                slot_kind="runtime_export",
+                target_kind="code_correspondence",
+                fallback_symbol=str(boundary_link.get("runtime_params_class_symbol") or "project_runtime.code_layer:RuntimeBoundaryParamsContract"),
+                fallback_label="Runtime params correspondence anchor",
+                fallback_target=runtime_correspondence_target,
                 is_primary=True,
             )
             runtime_targets = (

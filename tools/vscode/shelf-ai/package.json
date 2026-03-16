@@ -28,6 +28,7 @@
     "framework_completion.js",
     "framework_navigation.js",
     "config_navigation.js",
+    "correspondence_runtime.js",
     "validation_runtime.js",
     "intent_gate.js",
     "local_settings.js",
@@ -43,7 +44,7 @@
   "scripts": {
     "build:webview": "node scripts/build_tree_webview.mjs",
     "check:webview-types": "tsc --pretty false --noEmit -p webview/tree/tsconfig.json",
-    "test": "node test_guarding.js && node test_framework_navigation.js && node test_config_navigation.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_local_settings.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
+    "test": "node test_guarding.js && node test_framework_navigation.js && node test_config_navigation.js && node test_correspondence_runtime.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_local_settings.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
     "vscode:prepublish": "npm run build:webview"
   },
   "devDependencies": {

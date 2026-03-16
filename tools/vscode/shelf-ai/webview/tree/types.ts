@@ -7,6 +7,48 @@ export interface HoverItem {
   text: string;
 }
 
+export interface RuntimeNavigationTarget {
+  targetKind: string;
+  layer: string;
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  symbol: string;
+  label: string;
+  isPrimary: boolean;
+  isEditable: boolean;
+  isDeprecatedAlias: boolean;
+}
+
+export interface RuntimeCorrespondenceObject {
+  objectKind: string;
+  objectId: string;
+  ownerModuleId: string;
+  displayName: string;
+  materializationKind: string;
+  primaryNavTargetKind: string;
+  primaryEditTargetKind: string;
+  navigationTargets: RuntimeNavigationTarget[];
+  correspondenceAnchor?: RuntimeNavigationTarget;
+  implementationAnchor?: RuntimeNavigationTarget;
+}
+
+export interface RuntimeValidationIssue {
+  issueKind: string;
+  level: string;
+  reason: string;
+  objectIds: string[];
+  primaryObjectId: string;
+}
+
+export interface RuntimeValidationSummary {
+  passed: boolean;
+  ruleCount: number;
+  errorCount: number;
+  issues: RuntimeValidationIssue[];
+  issueCountByObject: Record<string, number>;
+}
+
 export interface RuntimeTreeNode {
   id: string;
   label: string;
@@ -25,6 +67,13 @@ export interface RuntimeTreeNode {
   hoverKicker?: string;
   capabilityItems?: HoverItem[];
   baseItems?: HoverItem[];
+  objectId?: string;
+  defaultTarget?: RuntimeNavigationTarget;
+  editTarget?: RuntimeNavigationTarget;
+  correspondenceAnchor?: RuntimeNavigationTarget;
+  implementationAnchor?: RuntimeNavigationTarget;
+  secondaryTargets?: RuntimeNavigationTarget[];
+  relatedObjectIds?: string[];
 }
 
 export interface RuntimeTreeEdge {
@@ -69,6 +118,8 @@ export interface RuntimeTreeModel {
   levelLabels?: Record<number, string>;
   frameworkGroups?: RuntimeFrameworkGroup[];
   relationCounts?: Record<string, number>;
+  objectIndex?: Record<string, RuntimeCorrespondenceObject>;
+  validationSummary?: RuntimeValidationSummary;
 }
 
 export interface RuntimeTreeBootstrap {

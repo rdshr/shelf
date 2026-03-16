@@ -40,8 +40,25 @@ function main() {
   });
   assert(codeTarget, "config section should resolve to code anchor target");
   assert.strictEqual(codeTarget.boundaryId, "FILESET");
+  assert.strictEqual(codeTarget.objectId, "knowledge_base.L0.M0::static_param::fileset");
+  assert.strictEqual(codeTarget.targetKind, "code_correspondence");
   assert(codeTarget.filePath.endsWith(path.join("src", "project_runtime", "code_layer.py")));
   assert(Number.isInteger(codeTarget.line) && codeTarget.line >= 0, "code target should include valid line");
+
+  const frontendSurfaceLine = findLineBySection(text, "exact.frontend.surface");
+  assert(frontendSurfaceLine >= 0, "exact.frontend.surface section should exist");
+  const frontendTarget = resolveConfigToCodeTarget({
+    repoRoot,
+    filePath: projectFilePath,
+    text,
+    line: frontendSurfaceLine + 1,
+    character: 0,
+  });
+  assert(frontendTarget, "shared frontend surface section should resolve");
+  assert.strictEqual(frontendTarget.moduleId, "frontend.L2.M0");
+  assert.strictEqual(frontendTarget.boundaryId, "SURFACE");
+  assert.strictEqual(frontendTarget.objectId, "frontend.L2.M0::static_param::surface");
+  assert.strictEqual(frontendTarget.line, 187, "frontend surface should prefer the higher-level consumer anchor");
 
   const projectSectionLine = findLineBySection(text, "project");
   assert(projectSectionLine >= 0, "project section should exist");

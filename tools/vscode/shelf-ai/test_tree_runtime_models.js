@@ -30,6 +30,27 @@ function main() {
     "framework model should expose hover metadata arrays"
   );
   assert(
+    frameworkModel.objectIndex && typeof frameworkModel.objectIndex === "object",
+    "framework model should expose correspondence object index"
+  );
+  assert(
+    frameworkModel.validationSummary && typeof frameworkModel.validationSummary === "object",
+    "framework model should expose correspondence validation summary"
+  );
+  const workbenchNode = frameworkModel.nodes.find((node) => node.id === "knowledge_base.L2.M0");
+  assert(workbenchNode, "framework model should include knowledge_base.L2.M0 module node");
+  assert.strictEqual(workbenchNode.objectId, "knowledge_base.L2.M0");
+  assert(workbenchNode.defaultTarget, "module node should expose a primary navigation target");
+  assert.strictEqual(
+    workbenchNode.defaultTarget.target_kind,
+    frameworkModel.objectIndex["knowledge_base.L2.M0"].primary_nav_target_kind,
+    "tree node open target should follow correspondence primary_nav_target_kind"
+  );
+  assert(
+    Array.isArray(workbenchNode.relatedObjectIds) && workbenchNode.relatedObjectIds.includes("knowledge_base.L2.M0.R1"),
+    "module node should expose correspondence-related objects for the existing inspector"
+  );
+  assert(
     frameworkModel.edges.length > 0 || frameworkModel.description.includes("fallback"),
     "framework model should either include canonical edges or clearly mark fallback mode"
   );

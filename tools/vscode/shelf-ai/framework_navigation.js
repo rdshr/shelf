@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const correspondenceRuntime = require("./correspondence_runtime");
 const workspaceGuard = require("./guarding");
 
 const FRAMEWORK_FILE_PATH_PATTERN = /^(framework|framework_drafts)\/([^/]+)\/L(\d+)-M(\d+)-[^/]+\.md$/;
@@ -523,6 +524,22 @@ function readCanonicalBoundaryProjection(canonical, moduleId, token) {
   return boundary.config_projection;
 }
 
+function readCorrespondenceBoundaryObject(repoRoot, projectFilePath, moduleId, token) {
+  const canonical = readProjectCanonical(projectFilePath);
+  if (!canonical) {
+    return null;
+  }
+  const correspondence = correspondenceRuntime.readCorrespondenceApi(
+    repoRoot,
+    correspondenceRuntime.resolveCorrespondenceApiPaths(canonical).root,
+    { projectFilePath }
+  );
+  if (!correspondence || typeof correspondence !== "object" || !correspondence.object_index) {
+    return null;
+  }
+  return correspondence.object_index[`${moduleId}::boundary::${token}`] || null;
+}
+
 function canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token) {
   const projectFilePath = resolvePreferredProjectFile(repoRoot, frameworkName);
   if (!projectFilePath || !moduleId) {
@@ -535,6 +552,26 @@ function canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token
   const canonical = readProjectCanonical(projectFilePath);
   if (!canonical) {
     return null;
+  }
+  const boundaryObject = readCorrespondenceBoundaryObject(repoRoot, projectFilePath, moduleId, token);
+  if (boundaryObject) {
+    const configTarget = correspondenceRuntime.resolveTargetByKind(boundaryObject, "config_source")
+      || correspondenceRuntime.resolvePrimaryNavigationTarget(boundaryObject);
+    if (configTarget && configTarget.target_kind === "config_source") {
+      const primarySection = normalizeConfigSection(String(configTarget.symbol || ""));
+      const projection = readCanonicalBoundaryProjection(canonical, moduleId, token);
+      const relatedSections = Array.isArray(projection?.related_exact_paths)
+        ? projection.related_exact_paths.map((item) => normalizeConfigSection(String(item || ""))).filter(Boolean)
+        : [primarySection];
+      return {
+        projectFilePath,
+        mapping: createBoundaryConfigMapping(primarySection, relatedSections, {
+          mappingMode: String(projection?.mapping_mode || "direct"),
+          note: String(projection?.note || ""),
+        }),
+        objectId: String(boundaryObject.object_id || ""),
+      };
+    }
   }
   const projection = readCanonicalBoundaryProjection(canonical, moduleId, token);
   if (!projection) {
@@ -550,6 +587,7 @@ function canonicalBoundaryConfigMapping(repoRoot, frameworkName, moduleId, token
       mappingMode: String(projection.mapping_mode || "direct"),
       note: String(projection.note || ""),
     }),
+    objectId: "",
   };
 }
 
@@ -634,6 +672,7 @@ function resolveBoundaryConfigTarget(repoRoot, frameworkName, moduleId, token) {
     relatedSections: mapping.relatedSections,
     mappingMode: mapping.mappingMode,
     note: mapping.note,
+    objectId: String(mappingResult.objectId || ""),
   };
 }
 

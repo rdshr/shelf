@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const correspondenceRuntime = require("./correspondence_runtime");
 const evidenceTree = require("./evidence_tree");
 const workspaceGuard = require("./guarding");
 
@@ -31,6 +32,13 @@ const MODULE_FILE_PATTERN = /^L(?<level>\d+)-M(?<module>\d+)-/;
  * @property {string} [hoverKicker]
  * @property {HoverItem[]} [capabilityItems]
  * @property {HoverItem[]} [baseItems]
+ * @property {string} [objectId]
+ * @property {Record<string, unknown>} [defaultTarget]
+ * @property {Record<string, unknown>} [editTarget]
+ * @property {Record<string, unknown>} [correspondenceAnchor]
+ * @property {Record<string, unknown>} [implementationAnchor]
+ * @property {Record<string, unknown>[]} [secondaryTargets]
+ * @property {string[]} [relatedObjectIds]
  */
 
 /**
@@ -65,6 +73,8 @@ const MODULE_FILE_PATTERN = /^L(?<level>\d+)-M(?<module>\d+)-/;
  * @property {Record<number, string>} [levelLabels]
  * @property {RuntimeFrameworkGroup[]} [frameworkGroups]
  * @property {Record<string, number>} [relationCounts]
+ * @property {Record<string, unknown>} [objectIndex]
+ * @property {Record<string, unknown>} [validationSummary]
  */
 
 /**
@@ -212,6 +222,89 @@ function levelLabelsFor(levels) {
 }
 
 /**
+ * @param {Record<string, unknown> | null | undefined} entry
+ * @returns {string[]}
+ */
+function flattenModuleRelatedObjectIds(entry) {
+  if (!entry || typeof entry !== "object") {
+    return [];
+  }
+  const keys = ["bases", "rules", "boundaries", "static_params", "runtime_params"];
+  const values = [];
+  for (const key of keys) {
+    const entries = entry[key];
+    if (!Array.isArray(entries)) {
+      continue;
+    }
+    for (const value of entries) {
+      const objectId = asText(value);
+      if (objectId) {
+        values.push(objectId);
+      }
+    }
+  }
+  return values;
+}
+
+/**
+ * @param {string} repoRoot
+ * @returns {{ payload: Record<string, unknown>, treeEntriesByModuleId: Map<string, Record<string, unknown>> } | null}
+ */
+function loadFrameworkCorrespondenceProjection(repoRoot) {
+  const projectFilePath = correspondenceRuntime.resolvePreferredProjectFile(repoRoot);
+  if (!projectFilePath) {
+    return null;
+  }
+  const canonical = correspondenceRuntime.readProjectCanonical(projectFilePath);
+  if (!canonical || !canonical.correspondence) {
+    return null;
+  }
+  const endpoints = correspondenceRuntime.resolveCorrespondenceApiPaths(canonical);
+  const payload = correspondenceRuntime.readCorrespondenceApi(
+    repoRoot,
+    endpoints.root,
+    { projectFilePath }
+  );
+  const treePayload = correspondenceRuntime.readCorrespondenceApi(
+    repoRoot,
+    endpoints.tree,
+    { projectFilePath }
+  );
+  if (!payload || !treePayload || typeof payload !== "object") {
+    return null;
+  }
+  const treeEntries = Array.isArray(treePayload.tree)
+    ? treePayload.tree.filter((item) => item && typeof item === "object")
+    : [];
+  const treeEntriesByModuleId = new Map();
+  const objectIndex = payload.object_index && typeof payload.object_index === "object"
+    ? { ...payload.object_index }
+    : {};
+  for (const entry of treeEntries) {
+    const moduleId = asText(entry.module_id);
+    if (moduleId) {
+      treeEntriesByModuleId.set(moduleId, entry);
+    }
+    const moduleObjectId = asText(entry.module_object_id);
+    if (moduleObjectId) {
+      const moduleObject = correspondenceRuntime.readCorrespondenceApi(
+        repoRoot,
+        `${endpoints.objectBase}${encodeURIComponent(moduleObjectId)}`,
+        { projectFilePath }
+      );
+      if (moduleObject && typeof moduleObject === "object") {
+        objectIndex[moduleObjectId] = moduleObject;
+      }
+    }
+  }
+  return {
+    payload,
+    objectIndex,
+    treeEntriesByModuleId,
+  };
+}
+
+/**
  * @param {string} repoRoot
  * @returns {{ modules: Record<string, unknown>[], excludedProjectIds: string[] }}
  */
@@ -259,6 +352,12 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
   if (!collected.modules.length) {
     return null;
   }
+  const correspondenceProjection = loadFrameworkCorrespondenceProjection(repoRoot);
+  const objectIndex = correspondenceProjection
+    && correspondenceProjection.objectIndex
+    && typeof correspondenceProjection.objectIndex === "object"
+      ? correspondenceProjection.objectIndex
+      : {};
 
   const orderedModules = collected.modules
     .map((item) => {
@@ -308,6 +407,14 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
     const docLine = moduleSource.line || exportSource.line || 1;
     const sourceLine = exportSource.line || moduleSource.line || 1;
     const title = asText(item.raw.title_cn) || asText(item.raw.title_en) || item.moduleId;
+    const moduleObject = objectIndex && typeof objectIndex === "object"
+      ? objectIndex[item.moduleId]
+      : null;
+    const moduleTreeEntry = correspondenceProjection?.treeEntriesByModuleId.get(item.moduleId) || null;
+    const defaultTarget = correspondenceRuntime.resolvePrimaryNavigationTarget(moduleObject);
+    const editTarget = correspondenceRuntime.resolvePrimaryEditTarget(moduleObject);
+    const secondaryTargets = correspondenceRuntime.resolveSecondaryTargets(moduleObject);
+    const relatedObjectIds = flattenModuleRelatedObjectIds(moduleTreeEntry);
     const capabilities = hoverItems(
       Array.isArray(item.raw.capabilities) ? item.raw.capabilities : [],
       "capability_id",
@@ -353,6 +460,15 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
       hoverKicker: "Framework Module",
       capabilityItems: capabilities,
       baseItems: bases,
+      ...(moduleObject ? {
+        objectId: moduleObject.object_id,
+        defaultTarget,
+        editTarget,
+        correspondenceAnchor: moduleObject.correspondence_anchor || null,
+        implementationAnchor: moduleObject.implementation_anchor || null,
+        secondaryTargets,
+        relatedObjectIds,
+      } : {}),
     });
 
     const exportSurface = item.raw.export_surface && typeof item.raw.export_surface === "object"
@@ -386,6 +502,9 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
     "Runtime projection from fresh canonical framework modules.",
     "Interactive graph only; no persisted tree artifact.",
   ];
+  if (correspondenceProjection) {
+    descriptionParts.push("Correspondence protocol is the primary navigation source; legacy canonical fields remain fallback-only.");
+  }
   if (collected.excludedProjectIds.length) {
     descriptionParts.push(
       `Stale/invalid projects excluded from canonical projection: ${collected.excludedProjectIds.slice(0, 3).join(", ")}.`
@@ -403,6 +522,10 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
     levelLabels: levelLabelsFor(nodes.map((node) => node.depth)),
     frameworkGroups: frameworkGroupsFromCounts(frameworkCounts),
     relationCounts,
+    ...(correspondenceProjection ? {
+      objectIndex,
+      validationSummary: correspondenceProjection.payload.validation_summary || null,
+    } : {}),
   };
 }
 

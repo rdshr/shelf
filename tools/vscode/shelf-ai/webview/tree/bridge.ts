@@ -148,6 +148,18 @@ export function readRuntimeBootstrap(): RuntimeTreeBootstrap {
       relationCounts: model.relationCounts && typeof model.relationCounts === "object"
         ? model.relationCounts
         : {},
+      objectIndex: model.objectIndex && typeof model.objectIndex === "object"
+        ? model.objectIndex
+        : {},
+      validationSummary: model.validationSummary && typeof model.validationSummary === "object"
+        ? model.validationSummary
+        : {
+          passed: false,
+          ruleCount: 0,
+          errorCount: 0,
+          issues: [],
+          issueCountByObject: {},
+        },
     },
   };
 }
