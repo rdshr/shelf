@@ -6,6 +6,9 @@ const frameworkCompletion = require("./framework_completion");
 const evidenceTree = require("./evidence_tree");
 const workspaceGuard = require("./guarding");
 const validationRuntime = require("./validation_runtime");
+const intentGate = require("./intent_gate");
+const treeRuntimeModels = require("./tree_runtime_models");
+const treeWebviewBridge = require("./tree_webview_bridge");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
 const DEFAULT_VALIDATION_FALLBACK_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
@@ -14,8 +17,24 @@ const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.p
 const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
 const DEFAULT_TYPE_CHECK_COMMAND = "uv run mypy";
 const DEFAULT_INSTALL_GIT_HOOKS_COMMAND = "bash scripts/install_git_hooks.sh";
-const GENERATED_EVENT_SUPPRESSION_MS = 2500;
-const MANUAL_STALE_VALIDATION_RESTART_MS = 15 * 1000;
+const DEFAULT_CHANGE_VALIDATION_COMMAND = "uv run python scripts/validate_canonical.py --check-changes";
+const DEFAULT_INTENT_GATE_TTL_MINUTES = 120;
+const DEFAULT_INTENT_GATE_MINIMUM_SCORE = 4;
+const DEFAULT_INTENT_GATE_MAX_MATCHES = 8;
+const INTENT_GATE_GUARD_ALL_TOKEN = "*";
+const DEFAULT_INTENT_GATE_GUARDED_PREFIXES = [INTENT_GATE_GUARD_ALL_TOKEN];
+const DEFAULT_INTENT_GATE_IGNORED_PREFIXES = [
+  ".git/",
+  ".github/",
+  ".venv/",
+  "node_modules/",
+  "dist/",
+  "build/",
+  "out/",
+  ".pytest_cache/",
+  ".mypy_cache/",
+  "__pycache__/",
+];
 const FRAMEWORK_RULE_HINTS = {
   FW002: "@framework 必须无参数",
   FW003: "标题必须为 中文名:EnglishName",
@@ -201,6 +220,7 @@ function activate(context) {
   let lastRepoRoot = "";
   let validationActive = true;
   let treePanel = null;
+  let treePanelKind = "framework";
   let treePanelRepoRoot = "";
   let frameworkSidebarView = null;
   let lastValidationAt = "";
@@ -211,13 +231,89 @@ function activate(context) {
   let gitHooksReady = null;
   let gitHooksDetail = "Not checked in this session";
   let gitHooksPrompted = false;
+  let intentGateSession = null;
   const suppressedGeneratedDirectories = new Map();
   const dirtyWatchedFiles = new Set();
+  const guardedBaselineByPath = new Map();
+  const restoringGuardedFiles = new Set();
   const activeValidationCommand = validationRuntime.createActiveCommandTracker();
   const VALIDATION_SOURCE_PRIORITY = {
     auto: 1,
     save: 2,
     manual: 3
+  };
+  const TREE_WEBVIEW_SETTING_KEYS = [
+    "shelf.frameworkTreeNodeHorizontalGap",
+    "shelf.frameworkTreeLevelVerticalGap",
+    "shelf.treeZoomMinScale",
+    "shelf.treeZoomMaxScale",
+    "shelf.treeWheelSensitivity",
+    "shelf.treeInspectorWidth",
+    "shelf.treeInspectorRailWidth",
+  ];
+  const INTENT_GATE_SETTING_KEYS = [
+    "shelf.intentGateEnabled",
+    "shelf.intentGateEnforcementMode",
+    "shelf.intentGateRequireMappingEcho",
+    "shelf.intentGateRunChangeValidationBeforeGrant",
+    "shelf.intentGateAutoOpenOutput",
+    "shelf.intentGateMinimumScore",
+    "shelf.intentGateMaxMatches",
+    "shelf.intentGateSessionTtlMinutes",
+    "shelf.intentGateGuardedPathPrefixes",
+    "shelf.intentGateIgnoredPathPrefixes",
+  ];
+
+  const clampInt = (value, minimum, maximum, fallback) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(maximum, Math.max(minimum, Math.round(parsed)));
+  };
+
+  const clampNumber = (value, minimum, maximum, fallback) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(maximum, Math.max(minimum, parsed));
+  };
+
+  const readTreeLayoutSettings = () => {
+    const config = vscode.workspace.getConfiguration("shelf");
+    return {
+      frameworkNodeHorizontalGap: clampInt(config.get("frameworkTreeNodeHorizontalGap"), 0, 40, 8),
+      frameworkLevelVerticalGap: clampInt(config.get("frameworkTreeLevelVerticalGap"), 48, 180, 80),
+    };
+  };
+
+  const readTreeViewSettings = () => {
+    const config = vscode.workspace.getConfiguration("shelf");
+    const zoomMinScale = clampNumber(config.get("treeZoomMinScale"), 0.2, 3, 0.68);
+    const zoomMaxScale = clampNumber(config.get("treeZoomMaxScale"), zoomMinScale, 5, 1.55);
+    return {
+      zoomMinScale,
+      zoomMaxScale,
+      wheelSensitivity: clampNumber(config.get("treeWheelSensitivity"), 0.25, 3, 1),
+      inspectorWidth: clampInt(config.get("treeInspectorWidth"), 240, 520, 338),
+      inspectorRailWidth: clampInt(config.get("treeInspectorRailWidth"), 32, 72, 42),
+    };
+  };
+
+  const readValidationTimingSettings = () => {
+    const config = vscode.workspace.getConfiguration("shelf");
+    return {
+      validationCommandTimeoutMs: clampInt(config.get("validationCommandTimeoutMs"), 1_000, 1_800_000, 120_000),
+      generatedEventSuppressionMs: clampInt(config.get("generatedEventSuppressionMs"), 0, 30_000, 2_500),
+      manualValidationRestartThresholdMs: clampInt(
+        config.get("manualValidationRestartThresholdMs"),
+        1_000,
+        300_000,
+        15_000
+      ),
+      validationDebounceMs: clampInt(config.get("validationDebounceMs"), 0, 5_000, 250),
+    };
   };
 
   const getValidationTriggerMode = () => {
@@ -236,6 +332,119 @@ function activate(context) {
     }
     return triggerKind === "save";
   };
+
+  const normalizePrefixList = (value, fallback) => {
+    const source = Array.isArray(value) ? value : fallback;
+    const normalized = [];
+    const seen = new Set();
+    for (const item of source) {
+      const rawText = String(item || "").trim();
+      if (!rawText) {
+        continue;
+      }
+      if (rawText === INTENT_GATE_GUARD_ALL_TOKEN) {
+        return [INTENT_GATE_GUARD_ALL_TOKEN];
+      }
+      const text = workspaceGuard.normalizeRelPath(rawText);
+      if (!text || seen.has(text)) {
+        continue;
+      }
+      seen.add(text);
+      normalized.push(text.endsWith("/") ? text : `${text}/`);
+    }
+    return normalized.length ? normalized : fallback;
+  };
+
+  const readIntentGateSettings = () => {
+    const config = vscode.workspace.getConfiguration("shelf");
+    const rawMode = String(config.get("intentGateEnforcementMode") || "block").trim().toLowerCase();
+    const mode = rawMode === "warn" ? "warn" : "block";
+    return {
+      enabled: Boolean(config.get("intentGateEnabled")),
+      mode,
+      requireMappingEcho: Boolean(config.get("intentGateRequireMappingEcho")),
+      runValidationBeforeGrant: Boolean(config.get("intentGateRunChangeValidationBeforeGrant")),
+      autoOpenOutput: Boolean(config.get("intentGateAutoOpenOutput")),
+      minimumScore: clampInt(
+        config.get("intentGateMinimumScore"),
+        1,
+        20,
+        DEFAULT_INTENT_GATE_MINIMUM_SCORE
+      ),
+      maxMatches: clampInt(
+        config.get("intentGateMaxMatches"),
+        1,
+        20,
+        DEFAULT_INTENT_GATE_MAX_MATCHES
+      ),
+      ttlMinutes: clampInt(
+        config.get("intentGateSessionTtlMinutes"),
+        1,
+        1_440,
+        DEFAULT_INTENT_GATE_TTL_MINUTES
+      ),
+      guardedPrefixes: normalizePrefixList(
+        config.get("intentGateGuardedPathPrefixes"),
+        DEFAULT_INTENT_GATE_GUARDED_PREFIXES
+      ),
+      ignoredPrefixes: normalizePrefixList(
+        config.get("intentGateIgnoredPathPrefixes"),
+        DEFAULT_INTENT_GATE_IGNORED_PREFIXES
+      ),
+    };
+  };
+
+  const clearIntentGateSession = (reason = "") => {
+    if (intentGateSession && reason) {
+      output.appendLine(`[intent-gate] session cleared: ${reason}`);
+    }
+    intentGateSession = null;
+  };
+
+  const pathMatchesPrefix = (relPath, prefix) => (
+    prefix === INTENT_GATE_GUARD_ALL_TOKEN || relPath === prefix || relPath.startsWith(prefix)
+  );
+
+  const isIntentGateGuardedPath = (repoRoot, fsPath, settings) => {
+    if (!repoRoot || !fsPath || !settings.enabled) {
+      return false;
+    }
+    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, fsPath));
+    if (!relPath || relPath.startsWith("..")) {
+      return false;
+    }
+    if (settings.ignoredPrefixes.some((prefix) => pathMatchesPrefix(relPath, prefix))) {
+      return false;
+    }
+    return settings.guardedPrefixes.some((prefix) => pathMatchesPrefix(relPath, prefix));
+  };
+
+  const isIntentGateSessionExpired = (session, settings) => {
+    if (!session || !session.createdAt) {
+      return true;
+    }
+    const createdMs = new Date(session.createdAt).getTime();
+    if (!Number.isFinite(createdMs)) {
+      return true;
+    }
+    const ttlMs = settings.ttlMinutes * 60 * 1000;
+    return (Date.now() - createdMs) > ttlMs;
+  };
+
+  const ensureIntentGateSession = (settings) => {
+    if (!settings.enabled) {
+      return null;
+    }
+    if (!intentGateSession) {
+      return null;
+    }
+    if (isIntentGateSessionExpired(intentGateSession, settings)) {
+      clearIntentGateSession("session ttl exceeded");
+      return null;
+    }
+    return intentGateSession;
+  };
+
   const statusController = createStatusController({
     status,
     getValidationTriggerMode,
@@ -373,7 +582,7 @@ function activate(context) {
   };
 
   const suppressGeneratedEventsForProjects = (repoRoot, projectFiles) => {
-    const expiresAt = Date.now() + GENERATED_EVENT_SUPPRESSION_MS;
+    const expiresAt = Date.now() + readValidationTimingSettings().generatedEventSuppressionMs;
     for (const projectFile of projectFiles) {
       const generatedDir = path.join(path.dirname(projectFile), "generated");
       const generatedRel = workspaceGuard.normalizeRelPath(path.relative(repoRoot, generatedDir));
@@ -385,7 +594,9 @@ function activate(context) {
 
   const runParsedCommand = async (label, command, repoRoot, parseFn) => {
     output.appendLine(`[${label}] ${command}`);
+    const timingSettings = readValidationTimingSettings();
     const execResult = await validationRuntime.execCommand(command, repoRoot, {
+      timeoutMs: timingSettings.validationCommandTimeoutMs,
       onSpawn: (child) => activeValidationCommand.trackChild(label, child),
       onExit: (child) => activeValidationCommand.clearChild(child),
     });
@@ -403,9 +614,213 @@ function activate(context) {
     return parseFn(execResult.stdout, execResult.stderr, execResult.code);
   };
 
+  const appendIntentGateAnalysisLog = (analysis, settings) => {
+    output.appendLine("[intent-gate] mapping summary");
+    output.appendLine(`- intent: ${analysis.intentText}`);
+    output.appendLine(`- query tokens: ${analysis.queryTokens.join(", ")}`);
+    output.appendLine(`- mappings: ${analysis.mappings.length}`);
+    output.appendLine(`- minimum score: ${settings.minimumScore}`);
+    output.appendLine(`- guarded prefixes: ${settings.guardedPrefixes.join(", ")}`);
+    output.appendLine(`- ignored prefixes: ${settings.ignoredPrefixes.join(", ")}`);
+    output.appendLine(intentGate.formatIntentMappingSummary(analysis));
+    if (analysis.errors.length) {
+      output.appendLine(`- canonical read warnings: ${analysis.errors.join(" | ")}`);
+    }
+  };
+
+  const runIntentGateGrantValidation = async (repoRoot, settings) => {
+    if (!settings.runValidationBeforeGrant) {
+      return { passed: true, errors: [] };
+    }
+    const config = vscode.workspace.getConfiguration("shelf");
+    const changeValidationCommand = validationRuntime.normalizeValidationCommand(
+      String(config.get("changeValidationCommand") || DEFAULT_CHANGE_VALIDATION_COMMAND)
+    );
+    return runParsedCommand(
+      "intent-gate-validate",
+      changeValidationCommand,
+      repoRoot,
+      parseResult
+    );
+  };
+
+  const grantIntentGateSession = async ({ repoRoot, intentText }) => {
+    const settings = readIntentGateSettings();
+    const normalizedIntent = String(intentText || "").trim();
+    if (!settings.enabled) {
+      return { passed: false, message: "Shelf intent gate is disabled in settings." };
+    }
+    if (!normalizedIntent) {
+      return { passed: false, message: "Intent text is empty." };
+    }
+
+    const preValidation = await runIntentGateGrantValidation(repoRoot, settings);
+    if (!preValidation.passed) {
+      const firstMessage = preValidation.errors[0]?.message || "validate_canonical --check-changes failed.";
+      return {
+        passed: false,
+        message: `intent gate blocked before mapping: ${firstMessage}`,
+      };
+    }
+
+    const analysis = intentGate.analyzeIntentMapping({
+      repoRoot,
+      intentText: normalizedIntent,
+      minimumScore: settings.minimumScore,
+      maxResults: settings.maxMatches,
+    });
+    appendIntentGateAnalysisLog(analysis, settings);
+    if (settings.autoOpenOutput) {
+      output.show(true);
+    }
+
+    if (!analysis.passed) {
+      clearIntentGateSession("mapping not found");
+      return {
+        passed: false,
+        analysis,
+        message: "No framework mapping reached threshold. Ask a human to update framework first.",
+      };
+    }
+
+    if (settings.requireMappingEcho) {
+      const picks = analysis.mappings.slice(0, 6).map((item) => ({
+        label: `${item.moduleId} / ${item.boundaryId}`,
+        description: item.exactPaths.join(", "),
+        detail: `score=${item.score} · ${item.note || "projection from canonical"}`,
+      }));
+      const selected = await vscode.window.showQuickPick(
+        [
+          {
+            label: "Confirm Mapping (Recommended)",
+            description: "Grant this governed task session.",
+            detail: "Use the top canonical-backed mappings and unlock guarded saves.",
+            keepOpen: true,
+          },
+          ...picks,
+        ],
+        {
+          title: "Shelf Governed Task Mapping",
+          canPickMany: false,
+          placeHolder: "Confirm mapping, or cancel to keep implementation edits blocked.",
+        }
+      );
+      if (!selected || !selected.keepOpen) {
+        return {
+          passed: false,
+          analysis,
+          message: "Mapping confirmation was cancelled.",
+        };
+      }
+    }
+
+    intentGateSession = {
+      id: `intent-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      repoRoot,
+      intentText: normalizedIntent,
+      analysis,
+      allowedExactPaths: analysis.allowedExactPaths,
+      allowedCommunicationPaths: analysis.allowedCommunicationPaths,
+      matchedModuleIds: analysis.matchedModuleIds,
+      lastTouchedAt: new Date().toISOString(),
+    };
+    refreshSidebarHome();
+    return { passed: true, analysis, message: "Governed task session granted." };
+  };
+
+  const restoreGuardedDocumentFromBaseline = async (doc, baselineText) => {
+    if (!doc || typeof baselineText !== "string") {
+      return false;
+    }
+    const targetPath = doc.uri?.fsPath || "";
+    if (!targetPath) {
+      return false;
+    }
+    restoringGuardedFiles.add(targetPath);
+    try {
+      const fullRange = new vscode.Range(
+        doc.positionAt(0),
+        doc.positionAt(doc.getText().length)
+      );
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(doc.uri, fullRange, baselineText);
+      const applied = await vscode.workspace.applyEdit(edit);
+      if (!applied) {
+        return false;
+      }
+      await doc.save();
+      return true;
+    } finally {
+      restoringGuardedFiles.delete(targetPath);
+    }
+  };
+
+  const enforceIntentGateOnSave = async (doc) => {
+    const settings = readIntentGateSettings();
+    if (!settings.enabled) {
+      return { allow: true };
+    }
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder || !doc?.uri?.fsPath) {
+      return { allow: true };
+    }
+    const repoRoot = folder.uri.fsPath;
+    const docPath = doc.uri.fsPath;
+
+    if (restoringGuardedFiles.has(docPath)) {
+      guardedBaselineByPath.delete(docPath);
+      return { allow: true };
+    }
+
+    if (!isIntentGateGuardedPath(repoRoot, docPath, settings)) {
+      guardedBaselineByPath.delete(docPath);
+      return { allow: true };
+    }
+
+    const session = ensureIntentGateSession(settings);
+    if (session && session.repoRoot === repoRoot) {
+      guardedBaselineByPath.delete(docPath);
+      session.lastTouchedAt = new Date().toISOString();
+      return { allow: true };
+    }
+
+    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, docPath));
+    const blockedMessage = session && session.repoRoot !== repoRoot
+      ? "guarded save blocked: active intent session belongs to a different workspace."
+      : "guarded save blocked: start a governed task and confirm framework mapping first.";
+
+    if (settings.mode === "warn") {
+      vscode.window.showWarningMessage(`Shelf intent gate warning (${relPath}): ${blockedMessage}`);
+      return { allow: true };
+    }
+
+    const baselineText = guardedBaselineByPath.get(docPath);
+    if (typeof baselineText !== "string") {
+      vscode.window.showErrorMessage(
+        `Shelf intent gate blocked save for ${relPath}, but no baseline snapshot was available to restore.`
+      );
+      return { allow: false };
+    }
+
+    const restored = await restoreGuardedDocumentFromBaseline(doc, baselineText);
+    if (restored) {
+      vscode.window.showErrorMessage(
+        `Shelf intent gate blocked and reverted ${relPath}. Run "Shelf: Start Governed Task" first.`
+      );
+    } else {
+      vscode.window.showErrorMessage(
+        `Shelf intent gate blocked ${relPath}, but automatic restore failed.`
+      );
+    }
+    return { allow: false };
+  };
+
   const requestManualValidation = () => {
     if (running) {
-      const restarted = activeValidationCommand.restartIfStale(MANUAL_STALE_VALIDATION_RESTART_MS);
+      const restarted = activeValidationCommand.restartIfStale(
+        readValidationTimingSettings().manualValidationRestartThresholdMs
+      );
       if (restarted.restarted) {
         output.appendLine(
           `[validate] restarted stale ${restarted.label} command after ${Math.round(restarted.elapsedMs / 1000)}s`
@@ -857,7 +1272,7 @@ function activate(context) {
           scheduleValidation(pending);
         }
       }
-    }, 250);
+    }, readValidationTimingSettings().validationDebounceMs);
   };
 
   const openFrameworkTreeSource = async (repoRoot, relFile, line) => {
@@ -892,11 +1307,13 @@ function activate(context) {
         vscode.ViewColumn.Active,
         {
           enableScripts: true,
-          retainContextWhenHidden: true
+          retainContextWhenHidden: true,
+          localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, "media")],
         }
       );
       treePanel.onDidDispose(() => {
         treePanel = null;
+        treePanelKind = "framework";
         treePanelRepoRoot = "";
       });
       treePanel.webview.onDidReceiveMessage(async (message) => {
@@ -912,6 +1329,7 @@ function activate(context) {
     } else {
       treePanel.reveal(vscode.ViewColumn.Active, true);
     }
+    treePanelKind = kind;
     treePanel.title = treeTitleForKind(kind);
     return treePanel;
   };
@@ -947,10 +1365,37 @@ function activate(context) {
 
     const panel = ensureTreePanel(kind);
     try {
-      const model = kind === "evidence"
-        ? buildRuntimeEvidenceTreeModel(repoRoot)
-        : buildRuntimeFrameworkTreeModel(repoRoot);
-      panel.webview.html = buildRuntimeTreeHtml(model, kind);
+      const scriptPath = path.join(context.extensionPath, "media", "tree_view_bundle.js");
+      const stylePath = path.join(context.extensionPath, "media", "tree_view.css");
+      if (!fs.existsSync(scriptPath)) {
+        panel.webview.html = buildTreeFallbackHtml(
+          "Tree webview bundle is missing: media/tree_view_bundle.js",
+          "npm run build:webview",
+          treeTitleForKind(kind)
+        );
+        return;
+      }
+      if (!fs.existsSync(stylePath)) {
+        panel.webview.html = buildTreeFallbackHtml(
+          "Tree webview stylesheet is missing: media/tree_view.css",
+          "Shelf: Run Codegen Preflight",
+          treeTitleForKind(kind)
+        );
+        return;
+      }
+
+      const model = treeRuntimeModels.buildRuntimeTreeModel(repoRoot, kind);
+      const scriptUri = panel.webview.asWebviewUri(vscode.Uri.file(scriptPath)).toString();
+      const styleUri = panel.webview.asWebviewUri(vscode.Uri.file(stylePath)).toString();
+      panel.webview.html = treeWebviewBridge.buildRuntimeTreeHtml({
+        kind,
+        model,
+        layoutSettings: readTreeLayoutSettings(),
+        viewSettings: readTreeViewSettings(),
+        scriptUri,
+        styleUri,
+        cspSource: panel.webview.cspSource,
+      });
     } catch (error) {
       panel.webview.html = buildTreeFallbackHtml(
         `Failed to render ${kind === "evidence" ? "evidence" : "framework"} tree runtime projection: ${String(error)}`,
@@ -994,6 +1439,24 @@ function activate(context) {
 
   const renderSidebarHome = () => {
     const defaultActionItems = [
+      {
+        action: "startGovernedTask",
+        label: "启动受控任务会话",
+        description: "先做需求到 framework 的显式映射，通过后再改实现层代码。",
+        tone: "primary"
+      },
+      {
+        action: "showGovernedTaskSession",
+        label: "查看当前门禁会话",
+        description: "查看当前会话的 module/boundary/exact 映射结果。",
+        tone: "ghost"
+      },
+      {
+        action: "clearGovernedTaskSession",
+        label: "清空门禁会话",
+        description: "清空当前授权会话，恢复到默认阻断状态。",
+        tone: "ghost"
+      },
       {
         action: "openTree",
         label: "打开框架树",
@@ -1096,6 +1559,12 @@ function activate(context) {
             note: "打开工作区后检查 .githooks 是否已启用。"
           },
           {
+            label: "会话门禁",
+            value: "未知",
+            tone: "unknown",
+            note: "打开工作区后读取 shelf.intentGate* 设置并展示会话状态。"
+          },
+          {
             label: "严格校验",
             value: "等待工作区",
             tone: "unknown",
@@ -1122,6 +1591,8 @@ function activate(context) {
 
     const repoRoot = folder.uri.fsPath;
     const config = vscode.workspace.getConfiguration("shelf");
+    const intentGateSettings = readIntentGateSettings();
+    const activeIntentSession = ensureIntentGateSession(intentGateSettings);
     const validationTriggerMode = getValidationTriggerMode();
     const standardsExists = hasStandardsTree(repoRoot);
     const validationEnabled = standardsExists && validationActive;
@@ -1130,6 +1601,19 @@ function activate(context) {
     const frameworkTreeReady = fs.existsSync(path.join(repoRoot, "framework"));
     const evidenceTreeReady = !freshnessState.hasBlocking;
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
+    const intentGateStatus = !intentGateSettings.enabled
+      ? "Disabled"
+      : (activeIntentSession ? "Granted" : "Required");
+    const intentGateTone = !intentGateSettings.enabled
+      ? "unknown"
+      : (activeIntentSession ? "ok" : "error");
+    const intentGateNote = !intentGateSettings.enabled
+      ? "shelf.intentGateEnabled = false"
+      : (
+        activeIntentSession
+          ? `${activeIntentSession.analysis.mappings.length} mappings · ${new Date(activeIntentSession.createdAt).toLocaleString()}`
+          : "先执行 “Shelf: Start Governed Task”，确认映射后再改实现层文件。"
+      );
     const issueCount = lastRunIssues.length;
     const issueSummary = validationEnabled
       ? (lastValidationPassed === null ? "Not run yet" : (issueCount ? `${issueCount} issue(s)` : "No issues"))
@@ -1237,6 +1721,14 @@ function activate(context) {
         action: "installHooks",
         label: "安装 Git Hooks"
       };
+    } else if (intentGateSettings.enabled && !activeIntentSession) {
+      calloutTone = "error";
+      calloutTitle = "先开启受控任务会话";
+      calloutBody = "实现层修改前，先执行需求到 framework 映射门禁。未授权会话下，受保护路径保存会被阻断或回滚。";
+      calloutAction = {
+        action: "startGovernedTask",
+        label: "启动受控任务会话"
+      };
     }
 
     const healthItems = [
@@ -1285,6 +1777,12 @@ function activate(context) {
         note: gitHooksReady
           ? gitHooksDetail
           : `需要指向 .githooks。当前状态：${gitHooksDetail}`
+      },
+      {
+        label: "会话门禁",
+        value: intentGateStatus,
+        tone: intentGateTone,
+        note: intentGateNote
       },
       {
         label: "严格校验",
@@ -1399,6 +1897,18 @@ function activate(context) {
 
         if (message.type === "shelf.sidebar.openTree") {
           await openFrameworkTree();
+          return;
+        }
+        if (message.type === "shelf.sidebar.startGovernedTask") {
+          await vscode.commands.executeCommand("shelf.startGovernedTask");
+          return;
+        }
+        if (message.type === "shelf.sidebar.showGovernedTaskSession") {
+          await vscode.commands.executeCommand("shelf.showGovernedTaskSession");
+          return;
+        }
+        if (message.type === "shelf.sidebar.clearGovernedTaskSession") {
+          await vscode.commands.executeCommand("shelf.clearGovernedTaskSession");
           return;
         }
         if (message.type === "shelf.sidebar.refreshTree") {
@@ -1611,6 +2121,76 @@ function activate(context) {
     "-",
     "`",
     "."
+  );
+
+  const startGovernedTaskDisposable = vscode.commands.registerCommand(
+    "shelf.startGovernedTask",
+    async () => {
+      const folder = vscode.workspace.workspaceFolders?.[0];
+      if (!folder) {
+        vscode.window.showWarningMessage("Shelf: no workspace is open.");
+        return;
+      }
+
+      const settings = readIntentGateSettings();
+      if (!settings.enabled) {
+        vscode.window.showWarningMessage("Shelf: intent gate is disabled. Enable `shelf.intentGateEnabled` first.");
+        return;
+      }
+
+      const intentText = await vscode.window.showInputBox({
+        title: "Shelf Governed Task",
+        prompt: "Describe the requested change. Shelf will map it to framework paths before code edits.",
+        placeHolder: "例如：给知识库聊天页增加 @ 文档引用，并新增动态图展示页",
+        ignoreFocusOut: true,
+      });
+      if (!intentText) {
+        return;
+      }
+
+      const result = await grantIntentGateSession({
+        repoRoot: folder.uri.fsPath,
+        intentText,
+      });
+      if (!result.passed) {
+        vscode.window.showErrorMessage(`Shelf intent gate denied: ${result.message}`);
+        return;
+      }
+
+      const preview = result.analysis.mappings.slice(0, 2)
+        .map((item) => `${item.moduleId}/${item.boundaryId}`)
+        .join(" | ");
+      vscode.window.showInformationMessage(
+        `Shelf governed task granted (${result.analysis.mappings.length} mappings): ${preview}`
+      );
+    }
+  );
+
+  const showGovernedTaskSessionDisposable = vscode.commands.registerCommand(
+    "shelf.showGovernedTaskSession",
+    async () => {
+      const settings = readIntentGateSettings();
+      const session = ensureIntentGateSession(settings);
+      if (!session) {
+        vscode.window.showInformationMessage("Shelf: no active governed task session.");
+        return;
+      }
+      output.appendLine("[intent-gate] active session");
+      output.appendLine(`- id: ${session.id}`);
+      output.appendLine(`- createdAt: ${session.createdAt}`);
+      output.appendLine(`- intent: ${session.intentText}`);
+      output.appendLine(intentGate.formatIntentMappingSummary(session.analysis));
+      output.show(true);
+    }
+  );
+
+  const clearGovernedTaskSessionDisposable = vscode.commands.registerCommand(
+    "shelf.clearGovernedTaskSession",
+    async () => {
+      clearIntentGateSession("manual clear");
+      refreshSidebarHome();
+      vscode.window.showInformationMessage("Shelf: governed task session cleared.");
+    }
   );
 
   const validateNowDisposable = vscode.commands.registerCommand("shelf.validateNow", async () => {
@@ -1829,7 +2409,30 @@ function activate(context) {
     vscode.window.showInformationMessage("Shelf: evidence tree runtime projection refreshed.");
   });
 
+  const configurationDisposable = vscode.workspace.onDidChangeConfiguration(async (event) => {
+    if (INTENT_GATE_SETTING_KEYS.some((key) => event.affectsConfiguration(key))) {
+      const settings = readIntentGateSettings();
+      if (!settings.enabled) {
+        clearIntentGateSession("intent gate disabled by configuration");
+      } else {
+        ensureIntentGateSession(settings);
+      }
+      refreshSidebarHome();
+    }
+    if (!TREE_WEBVIEW_SETTING_KEYS.some((key) => event.affectsConfiguration(key))) {
+      return;
+    }
+    if (!treePanel) {
+      return;
+    }
+    await openTreeView(treePanelKind);
+  });
+
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
+    const gateDecision = await enforceIntentGateOnSave(doc);
+    if (!gateDecision.allow) {
+      return;
+    }
     const config = vscode.workspace.getConfiguration("shelf");
     if (!config.get("enableOnSave") || !shouldRunValidationTrigger("save")) {
       return;
@@ -1857,6 +2460,21 @@ function activate(context) {
     const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, event.document.uri.fsPath));
     if (!workspaceGuard.isWatchedPath(relPath) || isSuppressedGeneratedPath(relPath)) {
       return;
+    }
+
+    const intentSettings = readIntentGateSettings();
+    if (intentSettings.enabled && isIntentGateGuardedPath(folder.uri.fsPath, event.document.uri.fsPath, intentSettings)) {
+      const fsPath = event.document.uri.fsPath;
+      if (event.document.isDirty && !guardedBaselineByPath.has(fsPath) && !restoringGuardedFiles.has(fsPath)) {
+        try {
+          guardedBaselineByPath.set(fsPath, fs.readFileSync(fsPath, "utf8"));
+        } catch (error) {
+          output.appendLine(`[intent-gate] baseline snapshot failed for ${relPath}: ${String(error)}`);
+        }
+      }
+      if (!event.document.isDirty) {
+        guardedBaselineByPath.delete(fsPath);
+      }
     }
 
     if (event.document.isDirty) {
@@ -1945,6 +2563,9 @@ function activate(context) {
     frameworkReferenceDisposable,
     frameworkCompletionDisposable,
     insertFrameworkTemplateDisposable,
+    startGovernedTaskDisposable,
+    showGovernedTaskSessionDisposable,
+    clearGovernedTaskSessionDisposable,
     validateNowDisposable,
     codegenPreflightDisposable,
     publishFrameworkDraftDisposable,
@@ -1954,6 +2575,7 @@ function activate(context) {
     refreshFrameworkTreeDisposable,
     openEvidenceTreeDisposable,
     refreshEvidenceTreeDisposable,
+    configurationDisposable,
     changeDisposable,
     saveDisposable,
     createDisposable,
@@ -2195,901 +2817,6 @@ function resolveIssueFile(file, repoRoot) {
     return file;
   }
   return path.join(repoRoot, file);
-}
-
-function firstMarkdownHeading(filePath) {
-  try {
-    const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
-    for (const lineText of lines) {
-      const match = /^\s*#\s+(.+)\s*$/.exec(lineText);
-      if (match) {
-        return match[1].trim();
-      }
-    }
-  } catch {
-    return "";
-  }
-  return "";
-}
-
-function parseModuleRefFromFileName(fileName) {
-  const match = /^L(\d+)-M(\d+)-/.exec(fileName);
-  if (!match) {
-    return "";
-  }
-  return `L${match[1]}.M${match[2]}`;
-}
-
-function buildRuntimeFrameworkTreeModel(repoRoot) {
-  const frameworkRoot = path.join(repoRoot, "framework");
-  if (!fs.existsSync(frameworkRoot) || !fs.statSync(frameworkRoot).isDirectory()) {
-    throw new Error("framework/ directory is missing");
-  }
-
-  const nodes = [];
-  const edges = [];
-  const rootNodeId = "framework:root";
-  nodes.push({
-    id: rootNodeId,
-    label: "framework",
-    detail: "author source",
-    file: "",
-    line: 1,
-    depth: 0,
-    kind: "framework_root",
-  });
-  const frameworkDirs = fs.readdirSync(frameworkRoot)
-    .map((entry) => ({
-      name: entry,
-      absPath: path.join(frameworkRoot, entry),
-    }))
-    .filter((entry) => fs.existsSync(entry.absPath) && fs.statSync(entry.absPath).isDirectory())
-    .sort((left, right) => left.name.localeCompare(right.name));
-
-  for (const frameworkDir of frameworkDirs) {
-    const moduleFiles = fs.readdirSync(frameworkDir.absPath)
-      .filter((entry) => entry.endsWith(".md"))
-      .sort((left, right) => left.localeCompare(right));
-    const groupNodeId = `framework-group:${frameworkDir.name}`;
-    nodes.push({
-      id: groupNodeId,
-      label: frameworkDir.name,
-      detail: `${moduleFiles.length} module(s)`,
-      file: "",
-      line: 1,
-      depth: 1,
-      kind: "framework_group",
-    });
-    edges.push({
-      id: `${rootNodeId}->${groupNodeId}`,
-      from: rootNodeId,
-      to: groupNodeId,
-      relation: "tree_child",
-    });
-    for (const fileName of moduleFiles) {
-      const absPath = path.join(frameworkDir.absPath, fileName);
-      const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, absPath));
-      const moduleRef = parseModuleRefFromFileName(fileName);
-      const heading = firstMarkdownHeading(absPath);
-      const moduleNodeId = `framework-module:${relPath}`;
-      nodes.push({
-        id: moduleNodeId,
-        label: moduleRef ? `${frameworkDir.name}.${moduleRef}` : `${frameworkDir.name}.${fileName}`,
-        detail: heading || fileName,
-        file: relPath,
-        line: 1,
-        depth: 2,
-        kind: "framework_module",
-      });
-      edges.push({
-        id: `${groupNodeId}->${moduleNodeId}`,
-        from: groupNodeId,
-        to: moduleNodeId,
-        relation: "tree_child",
-      });
-    }
-  }
-
-  return {
-    title: "Shelf Framework Tree",
-    description: "Runtime projection from framework author source. Interactive graph, no persisted tree artifact.",
-    nodes,
-    edges,
-  };
-}
-
-function buildRuntimeEvidenceTreeModel(repoRoot) {
-  const payload = evidenceTree.readEvidenceTree(repoRoot, "");
-  const rawNodes = Array.isArray(payload?.root?.nodes) ? payload.root.nodes : [];
-  const nodes = rawNodes
-    .filter((node) => node && typeof node === "object")
-    .map((node) => ({
-      id: String(node.id || ""),
-      label: String(node.label || node.id || "node"),
-      detail: String(node.description || node.node_kind || ""),
-      file: typeof node.source_file === "string" ? workspaceGuard.normalizeRelPath(node.source_file) : "",
-      line: 1,
-      depth: Math.max(0, Number(node.level || 0)),
-      kind: String(node.node_kind || "evidence_node"),
-    }))
-    .filter((node) => node.id)
-    .sort((left, right) => {
-      if (left.depth !== right.depth) {
-        return left.depth - right.depth;
-      }
-      return left.label.localeCompare(right.label);
-    });
-  const nodeIds = new Set(nodes.map((node) => node.id));
-  const rawEdges = Array.isArray(payload?.root?.edges) ? payload.root.edges : [];
-  const edges = rawEdges
-    .filter((edge) => edge && String(edge.relation || "") === "tree_child")
-    .map((edge, index) => ({
-      id: String(edge.id || `${index}:${String(edge.from || "")}->${String(edge.to || "")}`),
-      from: String(edge.from || ""),
-      to: String(edge.to || ""),
-      relation: "tree_child",
-    }))
-    .filter((edge) => edge.from && edge.to && nodeIds.has(edge.from) && nodeIds.has(edge.to));
-
-  return {
-    title: "Shelf Evidence Tree",
-    description: "Runtime projection from canonical graph. Interactive graph, no persisted tree artifact.",
-    nodes,
-    edges,
-  };
-}
-
-function buildRuntimeTreeHtml(model, kind) {
-  const title = escapeHtml(model?.title || "Shelf Tree");
-  const description = escapeHtml(model?.description || "");
-  const graphPayload = {
-    nodes: Array.isArray(model?.nodes) ? model.nodes : [],
-    edges: Array.isArray(model?.edges) ? model.edges : [],
-  };
-  const graphJson = safeJsonForScript(graphPayload);
-  const refreshCommandLabel = kind === "evidence"
-    ? "Shelf: Refresh Evidence Tree"
-    : "Shelf: Refresh Framework Tree";
-
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${title}</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --bg: var(--vscode-editor-background, #1e1e1e);
-      --surface: var(--vscode-editorWidget-background, rgba(37, 37, 38, 0.96));
-      --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.3));
-      --text: var(--vscode-editor-foreground, var(--vscode-foreground, #cccccc));
-      --muted: var(--vscode-descriptionForeground, #9da1a6);
-      --accent: var(--vscode-textLink-foreground, var(--vscode-button-background, #0e639c));
-      --ok: #4ca25f;
-      --warn: #c9952a;
-      --err: #cf4d54;
-      --node-root: #2f7dd6;
-      --node-group: #2f8a66;
-      --node-module: #685fd1;
-      --node-evidence: #865ec9;
-      --node-generic: #58627a;
-      --node-text: #f5f7fa;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      color: var(--text);
-      background: var(--bg);
-      font-family: var(--vscode-font-family, "Segoe WPC", "Segoe UI", sans-serif);
-    }
-    .shell {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 100vh;
-      padding: 14px;
-      gap: 12px;
-    }
-    .topbar {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
-      padding: 10px 12px;
-      display: grid;
-      gap: 10px;
-    }
-    .title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .title {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .desc {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .command {
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .btn {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 5px 10px;
-      background: transparent;
-      color: var(--text);
-      font-size: 11px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-    .main {
-      min-height: 0;
-      display: flex;
-      gap: 12px;
-    }
-    .canvas {
-      flex: 1 1 auto;
-      min-width: 0;
-      min-height: 520px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.045), transparent 42%),
-        radial-gradient(circle at 80% 78%, rgba(255, 255, 255, 0.035), transparent 40%),
-        var(--surface);
-      overflow: hidden;
-      position: relative;
-    }
-    .canvas svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: grab;
-    }
-    .canvas svg.panning {
-      cursor: grabbing;
-    }
-    .legend {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(2px);
-      padding: 6px 8px;
-      display: grid;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .legend strong {
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .legend ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 2px;
-    }
-    .side {
-      width: min(320px, 36%);
-      min-width: 240px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
-      padding: 10px 12px;
-      display: grid;
-      gap: 8px;
-      align-content: start;
-    }
-    .side-title {
-      margin: 0;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .kv {
-      display: grid;
-      grid-template-columns: 56px 1fr;
-      gap: 6px 8px;
-      align-items: start;
-      font-size: 12px;
-    }
-    .key {
-      color: var(--muted);
-      user-select: none;
-    }
-    .value {
-      word-break: break-word;
-      color: var(--text);
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 11px;
-      color: var(--muted);
-      width: fit-content;
-    }
-    .pill::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--node-generic);
-    }
-    .pill.root::before { background: var(--node-root); }
-    .pill.group::before { background: var(--node-group); }
-    .pill.module::before { background: var(--node-module); }
-    .pill.evidence::before { background: var(--node-evidence); }
-    .hint {
-      font-size: 11px;
-      line-height: 1.5;
-      color: var(--muted);
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 8px;
-    }
-    .hint strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-    .edge {
-      fill: none;
-      stroke: rgba(185, 195, 210, 0.55);
-      stroke-width: 1.35;
-      stroke-linecap: round;
-      pointer-events: none;
-    }
-    .node {
-      cursor: pointer;
-      user-select: none;
-    }
-    .node rect {
-      stroke: rgba(255, 255, 255, 0.18);
-      stroke-width: 1;
-      rx: 10;
-      ry: 10;
-    }
-    .node text {
-      fill: var(--node-text);
-      pointer-events: none;
-    }
-    .node .title {
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .node .detail {
-      font-size: 10px;
-      opacity: 0.9;
-    }
-    .node.root rect {
-      fill: color-mix(in srgb, var(--node-root) 76%, black);
-    }
-    .node.group rect {
-      fill: color-mix(in srgb, var(--node-group) 70%, black);
-    }
-    .node.module rect {
-      fill: color-mix(in srgb, var(--node-module) 68%, black);
-    }
-    .node.evidence rect {
-      fill: color-mix(in srgb, var(--node-evidence) 68%, black);
-    }
-    .node.generic rect {
-      fill: color-mix(in srgb, var(--node-generic) 74%, black);
-    }
-    .node.selected rect {
-      stroke: #ffffff;
-      stroke-width: 2.1;
-    }
-    .empty {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--warn);
-    }
-    @media (max-width: 980px) {
-      .main {
-        flex-direction: column;
-      }
-      .side {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <section class="topbar">
-      <div class="title-row">
-        <h1 class="title">${title}</h1>
-        <span class="command">Refresh: <code>${escapeHtml(refreshCommandLabel)}</code></span>
-      </div>
-      <p class="desc">${description}</p>
-      <div class="tools">
-        <button id="layoutBtn" type="button" class="btn">Reset Layout</button>
-        <button id="fitBtn" type="button" class="btn">Fit View</button>
-        <button id="zoomInBtn" type="button" class="btn">Zoom +</button>
-        <button id="zoomOutBtn" type="button" class="btn">Zoom -</button>
-      </div>
-    </section>
-    <section class="main">
-      <div class="canvas">
-        <div class="legend">
-          <strong>Interaction</strong>
-          <ul>
-            <li>Drag node: move local structure</li>
-            <li>Drag blank canvas: pan</li>
-            <li>Wheel: zoom</li>
-            <li>Double click node: open source</li>
-          </ul>
-        </div>
-        <svg id="graphSvg" role="img" aria-label="${title}">
-          <g id="viewport">
-            <g id="edgeLayer"></g>
-            <g id="nodeLayer"></g>
-          </g>
-        </svg>
-      </div>
-      <aside class="side">
-        <h2 class="side-title">Node Inspector</h2>
-        <span id="kindPill" class="pill generic">none</span>
-        <div class="kv">
-          <span class="key">ID</span><span id="nodeId" class="value">-</span>
-          <span class="key">Label</span><span id="nodeLabel" class="value">Select a node</span>
-          <span class="key">Detail</span><span id="nodeDetail" class="value">-</span>
-          <span class="key">Source</span><span id="nodeSource" class="value">-</span>
-        </div>
-        <button id="openSourceBtn" type="button" class="btn" disabled>Open Source</button>
-        <div class="hint">
-          <strong>Contract:</strong> this view is runtime projection only.
-          Nodes and edges come from framework author files or canonical graph at runtime;
-          no tree JSON/HTML artifact is persisted.
-        </div>
-        <div id="emptyText" class="empty" hidden>No nodes to render.</div>
-      </aside>
-    </section>
-  </div>
-  <script>
-    const vscode = acquireVsCodeApi();
-    const graph = ${graphJson};
-    const svg = document.getElementById("graphSvg");
-    const viewport = document.getElementById("viewport");
-    const edgeLayer = document.getElementById("edgeLayer");
-    const nodeLayer = document.getElementById("nodeLayer");
-    const nodeIdEl = document.getElementById("nodeId");
-    const nodeLabelEl = document.getElementById("nodeLabel");
-    const nodeDetailEl = document.getElementById("nodeDetail");
-    const nodeSourceEl = document.getElementById("nodeSource");
-    const kindPillEl = document.getElementById("kindPill");
-    const openSourceBtn = document.getElementById("openSourceBtn");
-    const emptyText = document.getElementById("emptyText");
-    const NS = "http://www.w3.org/2000/svg";
-
-    const state = {
-      tx: 36,
-      ty: 36,
-      scale: 1,
-      mode: "none",
-      pointerId: null,
-      panStartX: 0,
-      panStartY: 0,
-      dragNodeId: "",
-      dragOffsetX: 0,
-      dragOffsetY: 0,
-      selectedId: "",
-    };
-
-    const nodeById = new Map();
-    const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
-    const edges = (Array.isArray(graph.edges) ? graph.edges : [])
-      .filter((edge) => edge && typeof edge === "object")
-      .map((edge, index) => ({
-        id: String(edge.id || index),
-        from: String(edge.from || ""),
-        to: String(edge.to || ""),
-      }))
-      .filter((edge) => edge.from && edge.to);
-
-    for (const rawNode of nodes) {
-      if (!rawNode || typeof rawNode !== "object") {
-        continue;
-      }
-      const nodeId = String(rawNode.id || "");
-      if (!nodeId) {
-        continue;
-      }
-      const node = {
-        id: nodeId,
-        label: String(rawNode.label || nodeId),
-        detail: String(rawNode.detail || ""),
-        file: String(rawNode.file || ""),
-        line: Math.max(1, Number(rawNode.line || 1)),
-        depth: Math.max(0, Number(rawNode.depth || 0)),
-        kind: String(rawNode.kind || "generic"),
-        width: 220,
-        height: 58,
-        x: 0,
-        y: 0,
-      };
-      if (node.kind.includes("root")) {
-        node.width = 176;
-        node.height = 48;
-      } else if (node.kind.includes("group")) {
-        node.width = 188;
-        node.height = 52;
-      }
-      nodeById.set(node.id, node);
-    }
-
-    const edgeElements = new Map();
-    const nodeElements = new Map();
-
-    function kindClassForNode(node) {
-      if (!node) {
-        return "generic";
-      }
-      if (node.kind.includes("root")) {
-        return "root";
-      }
-      if (node.kind.includes("group")) {
-        return "group";
-      }
-      if (node.kind.includes("module")) {
-        return "module";
-      }
-      if (node.kind.includes("evidence")) {
-        return "evidence";
-      }
-      return "generic";
-    }
-
-    function shortText(value, maxLen) {
-      const text = String(value || "");
-      if (text.length <= maxLen) {
-        return text;
-      }
-      return text.slice(0, Math.max(0, maxLen - 1)) + "…";
-    }
-
-    function applyTransform() {
-      viewport.setAttribute("transform", "translate(" + state.tx + " " + state.ty + ") scale(" + state.scale + ")");
-    }
-
-    function worldPoint(clientX, clientY) {
-      const rect = svg.getBoundingClientRect();
-      return {
-        x: (clientX - rect.left - state.tx) / state.scale,
-        y: (clientY - rect.top - state.ty) / state.scale,
-      };
-    }
-
-    function resetLayout() {
-      const levelMap = new Map();
-      for (const node of nodeById.values()) {
-        const depth = Math.max(0, Number(node.depth || 0));
-        if (!levelMap.has(depth)) {
-          levelMap.set(depth, []);
-        }
-        levelMap.get(depth).push(node);
-      }
-      const depths = [...levelMap.keys()].sort((a, b) => a - b);
-      const layerGap = 270;
-      const rowGap = 96;
-      for (const depth of depths) {
-        const levelNodes = levelMap.get(depth) || [];
-        levelNodes.sort((left, right) => left.label.localeCompare(right.label));
-        const totalHeight = Math.max(0, (levelNodes.length - 1) * rowGap);
-        const startY = -totalHeight / 2;
-        for (let i = 0; i < levelNodes.length; i += 1) {
-          const node = levelNodes[i];
-          node.x = depth * layerGap;
-          node.y = startY + i * rowGap;
-        }
-      }
-    }
-
-    function fitView() {
-      const nodeList = [...nodeById.values()];
-      if (!nodeList.length) {
-        applyTransform();
-        return;
-      }
-      let minX = Number.POSITIVE_INFINITY;
-      let minY = Number.POSITIVE_INFINITY;
-      let maxX = Number.NEGATIVE_INFINITY;
-      let maxY = Number.NEGATIVE_INFINITY;
-      for (const node of nodeList) {
-        minX = Math.min(minX, node.x - node.width / 2);
-        minY = Math.min(minY, node.y - node.height / 2);
-        maxX = Math.max(maxX, node.x + node.width / 2);
-        maxY = Math.max(maxY, node.y + node.height / 2);
-      }
-      const boxWidth = Math.max(1, maxX - minX);
-      const boxHeight = Math.max(1, maxY - minY);
-      const viewWidth = Math.max(200, svg.clientWidth);
-      const viewHeight = Math.max(160, svg.clientHeight);
-      const pad = 34;
-      const scaleX = (viewWidth - pad * 2) / boxWidth;
-      const scaleY = (viewHeight - pad * 2) / boxHeight;
-      state.scale = Math.max(0.25, Math.min(1.6, Math.min(scaleX, scaleY)));
-      state.tx = (viewWidth - boxWidth * state.scale) / 2 - minX * state.scale;
-      state.ty = (viewHeight - boxHeight * state.scale) / 2 - minY * state.scale;
-      applyTransform();
-    }
-
-    function buildEdgePath(fromNode, toNode) {
-      const dx = toNode.x - fromNode.x;
-      const bend = Math.max(46, Math.abs(dx) * 0.42);
-      const c1x = fromNode.x + (dx >= 0 ? bend : -bend);
-      const c2x = toNode.x - (dx >= 0 ? bend : -bend);
-      return "M " + fromNode.x + " " + fromNode.y
-        + " C " + c1x + " " + fromNode.y
-        + ", " + c2x + " " + toNode.y
-        + ", " + toNode.x + " " + toNode.y;
-    }
-
-    function updateGeometry() {
-      for (const edge of edges) {
-        const edgeEl = edgeElements.get(edge.id);
-        const fromNode = nodeById.get(edge.from);
-        const toNode = nodeById.get(edge.to);
-        if (!edgeEl || !fromNode || !toNode) {
-          continue;
-        }
-        edgeEl.setAttribute("d", buildEdgePath(fromNode, toNode));
-      }
-      for (const node of nodeById.values()) {
-        const group = nodeElements.get(node.id);
-        if (!group) {
-          continue;
-        }
-        group.setAttribute("transform", "translate(" + node.x + " " + node.y + ")");
-      }
-      applyTransform();
-    }
-
-    function selectNode(nodeId) {
-      state.selectedId = nodeById.has(nodeId) ? nodeId : "";
-      for (const [id, group] of nodeElements.entries()) {
-        if (state.selectedId && id === state.selectedId) {
-          group.classList.add("selected");
-        } else {
-          group.classList.remove("selected");
-        }
-      }
-      const node = state.selectedId ? nodeById.get(state.selectedId) : null;
-      if (!node) {
-        nodeIdEl.textContent = "-";
-        nodeLabelEl.textContent = "Select a node";
-        nodeDetailEl.textContent = "-";
-        nodeSourceEl.textContent = "-";
-        kindPillEl.textContent = "none";
-        kindPillEl.className = "pill generic";
-        openSourceBtn.disabled = true;
-        return;
-      }
-      nodeIdEl.textContent = node.id;
-      nodeLabelEl.textContent = node.label;
-      nodeDetailEl.textContent = node.detail || "(empty)";
-      nodeSourceEl.textContent = node.file ? (node.file + ":" + node.line) : "(none)";
-      const kindClass = kindClassForNode(node);
-      kindPillEl.textContent = node.kind;
-      kindPillEl.className = "pill " + kindClass;
-      openSourceBtn.disabled = !node.file;
-    }
-
-    function openNodeSource(node) {
-      if (!node || !node.file) {
-        return;
-      }
-      vscode.postMessage({
-        type: "shelf.openSource",
-        file: node.file,
-        line: node.line,
-      });
-    }
-
-    function renderGraph() {
-      while (edgeLayer.firstChild) {
-        edgeLayer.removeChild(edgeLayer.firstChild);
-      }
-      while (nodeLayer.firstChild) {
-        nodeLayer.removeChild(nodeLayer.firstChild);
-      }
-      edgeElements.clear();
-      nodeElements.clear();
-      for (const edge of edges) {
-        const fromNode = nodeById.get(edge.from);
-        const toNode = nodeById.get(edge.to);
-        if (!fromNode || !toNode) {
-          continue;
-        }
-        const pathEl = document.createElementNS(NS, "path");
-        pathEl.setAttribute("class", "edge");
-        edgeLayer.appendChild(pathEl);
-        edgeElements.set(edge.id, pathEl);
-      }
-      for (const node of nodeById.values()) {
-        const group = document.createElementNS(NS, "g");
-        const kindClass = kindClassForNode(node);
-        group.setAttribute("class", "node " + kindClass);
-        group.setAttribute("data-id", node.id);
-
-        const rect = document.createElementNS(NS, "rect");
-        rect.setAttribute("x", String(-node.width / 2));
-        rect.setAttribute("y", String(-node.height / 2));
-        rect.setAttribute("width", String(node.width));
-        rect.setAttribute("height", String(node.height));
-        group.appendChild(rect);
-
-        const titleText = document.createElementNS(NS, "text");
-        titleText.setAttribute("class", "title");
-        titleText.setAttribute("x", String(-node.width / 2 + 10));
-        titleText.setAttribute("y", String(-6));
-        titleText.textContent = shortText(node.label, 36);
-        group.appendChild(titleText);
-
-        const detailText = document.createElementNS(NS, "text");
-        detailText.setAttribute("class", "detail");
-        detailText.setAttribute("x", String(-node.width / 2 + 10));
-        detailText.setAttribute("y", String(13));
-        detailText.textContent = shortText(node.detail, 50);
-        group.appendChild(detailText);
-
-        group.addEventListener("pointerdown", (event) => {
-          event.stopPropagation();
-          state.mode = "drag-node";
-          state.pointerId = event.pointerId;
-          state.dragNodeId = node.id;
-          const pointer = worldPoint(event.clientX, event.clientY);
-          state.dragOffsetX = node.x - pointer.x;
-          state.dragOffsetY = node.y - pointer.y;
-          svg.classList.remove("panning");
-        });
-
-        group.addEventListener("click", (event) => {
-          event.stopPropagation();
-          selectNode(node.id);
-        });
-
-        group.addEventListener("dblclick", (event) => {
-          event.stopPropagation();
-          selectNode(node.id);
-          openNodeSource(node);
-        });
-
-        nodeLayer.appendChild(group);
-        nodeElements.set(node.id, group);
-      }
-      updateGeometry();
-      if (!state.selectedId && nodeById.size) {
-        selectNode([...nodeById.keys()][0]);
-      } else {
-        selectNode(state.selectedId);
-      }
-    }
-
-    svg.addEventListener("pointerdown", (event) => {
-      state.mode = "pan";
-      state.pointerId = event.pointerId;
-      state.panStartX = event.clientX - state.tx;
-      state.panStartY = event.clientY - state.ty;
-      svg.classList.add("panning");
-      selectNode("");
-    });
-
-    window.addEventListener("pointermove", (event) => {
-      if (state.mode === "none" || state.pointerId !== event.pointerId) {
-        return;
-      }
-      if (state.mode === "pan") {
-        state.tx = event.clientX - state.panStartX;
-        state.ty = event.clientY - state.panStartY;
-        applyTransform();
-        return;
-      }
-      if (state.mode === "drag-node" && state.dragNodeId) {
-        const node = nodeById.get(state.dragNodeId);
-        if (!node) {
-          return;
-        }
-        const pointer = worldPoint(event.clientX, event.clientY);
-        node.x = pointer.x + state.dragOffsetX;
-        node.y = pointer.y + state.dragOffsetY;
-        updateGeometry();
-      }
-    });
-
-    window.addEventListener("pointerup", (event) => {
-      if (state.pointerId !== event.pointerId) {
-        return;
-      }
-      state.mode = "none";
-      state.pointerId = null;
-      state.dragNodeId = "";
-      svg.classList.remove("panning");
-    });
-
-    svg.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      const scaleFactor = event.deltaY < 0 ? 1.09 : 0.92;
-      const oldScale = state.scale;
-      const nextScale = Math.max(0.2, Math.min(3.2, oldScale * scaleFactor));
-      if (Math.abs(nextScale - oldScale) < 1e-6) {
-        return;
-      }
-      const rect = svg.getBoundingClientRect();
-      const px = event.clientX - rect.left;
-      const py = event.clientY - rect.top;
-      const worldX = (px - state.tx) / oldScale;
-      const worldY = (py - state.ty) / oldScale;
-      state.scale = nextScale;
-      state.tx = px - worldX * nextScale;
-      state.ty = py - worldY * nextScale;
-      applyTransform();
-    }, { passive: false });
-
-    document.getElementById("layoutBtn").addEventListener("click", () => {
-      resetLayout();
-      updateGeometry();
-      fitView();
-    });
-    document.getElementById("fitBtn").addEventListener("click", () => {
-      fitView();
-    });
-    document.getElementById("zoomInBtn").addEventListener("click", () => {
-      state.scale = Math.min(3.2, state.scale * 1.14);
-      applyTransform();
-    });
-    document.getElementById("zoomOutBtn").addEventListener("click", () => {
-      state.scale = Math.max(0.2, state.scale * 0.86);
-      applyTransform();
-    });
-    openSourceBtn.addEventListener("click", () => {
-      const node = state.selectedId ? nodeById.get(state.selectedId) : null;
-      openNodeSource(node);
-    });
-
-    if (!nodeById.size) {
-      emptyText.hidden = false;
-      emptyText.textContent = "No nodes to render.";
-    } else {
-      resetLayout();
-      renderGraph();
-      fitView();
-    }
-  </script>
-</body>
-</html>`;
-}
-
-function safeJsonForScript(value) {
-  return JSON.stringify(value)
-    .replaceAll("<", "\\u003c")
-    .replaceAll(">", "\\u003e")
-    .replaceAll("&", "\\u0026")
-    .replaceAll("\u2028", "\\u2028")
-    .replaceAll("\u2029", "\\u2029");
 }
 
 function toWorkspaceRelative(filePath, repoRoot) {

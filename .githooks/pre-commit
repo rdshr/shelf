@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "[pre-commit] blocked: uv is required but was not found in PATH." >&2
+  exit 1
+fi
+
+staged_paths="$(git diff --cached --name-only --diff-filter=ACMR)"
+if [[ -z "${staged_paths}" ]]; then
+  exit 0
+fi
+
+needs_canonical_check=0
+while IFS= read -r rel_path; do
+  if [[ "${rel_path}" == src/* ]] \
+    || [[ "${rel_path}" == framework/* ]] \
+    || [[ "${rel_path}" == scripts/* ]] \
+    || [[ "${rel_path}" == projects/*/project.toml ]]; then
+    needs_canonical_check=1
+    break
+  fi
+done <<< "${staged_paths}"
+
+if [[ "${needs_canonical_check}" -eq 0 ]]; then
+  exit 0
+fi
+
+echo "[pre-commit] change-gate: running canonical change validation..."
+uv run python scripts/validate_canonical.py --check-changes
+echo "[pre-commit] canonical change-gate passed."

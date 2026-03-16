@@ -14,6 +14,8 @@
 - Treats stale / missing / invalid canonical as non-authoritative: formal config jumps and the evidence tree wait for fresh canonical.
 - Runs canonical validation and optionally `mypy` from the extension.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
+- Adds a governed-task intent gate: map request text to canonical framework paths (`module_id / boundary_id / exact.*`) before guarded implementation saves.
+- Blocks or warns on guarded saves (`src/`, `projects/`, `tools/` by default) when no active governed-task session is granted.
 
 ## Contract
 
@@ -23,15 +25,22 @@
 
 ## Install (Local)
 
-1. Package and install the current source version:
+1. Install extension development dependencies:
+   `cd tools/vscode/shelf-ai && npm install`
+2. Build tree webview bundle:
+   `npm run build:webview`
+3. Package and install the current source version:
    `bash tools/vscode/shelf-ai/install_local.sh`
-2. If your VSCode CLI is not `code`, set it explicitly:
+4. If your VSCode CLI is not `code`, set it explicitly:
    `CODE_BIN=code-insiders bash tools/vscode/shelf-ai/install_local.sh`
 
 ## Commands
 
 - `Shelf: Insert Framework Module Template`
 - `Shelf: Install Git Hooks`
+- `Shelf: Start Governed Task`
+- `Shelf: Show Governed Task Session`
+- `Shelf: Clear Governed Task Session`
 - `Shelf: Validate Canonical Now`
 - `Shelf: Run Codegen Preflight`
 - `Shelf: Publish Current Framework Draft`
@@ -44,6 +53,39 @@
 ## Configuration
 
 - `shelf.guardMode = strict`
+- `shelf.intentGateEnabled = true`
+- `shelf.intentGateEnforcementMode = block`
+- `shelf.intentGateRequireMappingEcho = true`
+- `shelf.intentGateRunChangeValidationBeforeGrant = true`
+- `shelf.intentGateAutoOpenOutput = true`
+- `shelf.intentGateMinimumScore = 4`
+- `shelf.intentGateMaxMatches = 8`
+- `shelf.intentGateSessionTtlMinutes = 120`
+- `shelf.intentGateGuardedPathPrefixes = [\"*\"]`
+- `shelf.intentGateIgnoredPathPrefixes = [\".git/\", \".github/\", \".venv/\", \"node_modules/\", \"dist/\", \"build/\", \"out/\", \".pytest_cache/\", \".mypy_cache/\", \"__pycache__/\"]`
+- `shelf.frameworkTreeNodeHorizontalGap = 8`
+- `shelf.frameworkTreeLevelVerticalGap = 80`
+- `shelf.treeZoomMinScale = 0.68`
+- `shelf.treeZoomMaxScale = 1.55`
+- `shelf.treeWheelSensitivity = 1`
+- `shelf.treeInspectorWidth = 338`
+- `shelf.treeInspectorRailWidth = 42`
+- `shelf.validationCommandTimeoutMs = 120000`
+- `shelf.generatedEventSuppressionMs = 2500`
+- `shelf.manualValidationRestartThresholdMs = 15000`
+- `shelf.validationDebounceMs = 250`
+
+Changing tree webview settings will re-render the currently open tree panel automatically. If no tree panel is open, the next open/refresh will use the new values. Validation timing settings take effect on the next scheduled or manual validation run without requiring reload.
+
+## Governed Task Flow
+
+1. Run `Shelf: Start Governed Task`.
+2. Enter the requested change text.
+3. Shelf runs `validate_canonical.py --check-changes` (configurable), computes canonical-backed mapping candidates, and asks for confirmation.
+4. Once granted, guarded implementation saves are allowed until the session expires or is cleared.
+5. Without a granted session, guarded saves are warned or blocked/reverted (depending on `shelf.intentGateEnforcementMode`).
+
+Default governed-path strategy is `["*"]`, so Shelf intercepts all workspace code paths unless a prefix is explicitly listed in `shelf.intentGateIgnoredPathPrefixes`.
 
 ## Validation
 
@@ -63,7 +105,8 @@ The `@framework` template entry is a repository-side hard authoring contract and
 The framework tree is the authoring view.
 The evidence tree is the canonical-derived workspace evidence view.
 No persisted tree artifact is used for these views; both trees are runtime projections.
-Both tree views render as interactive webview graphs (drag node, pan canvas, wheel zoom, inspector + open source).
+Both tree views render as interactive webview graphs (dagre layout + d3-zoom runtime interaction), and framework nodes stay layer-fixed with layout-engine auto sorting.
+Tree interactions include search, upstream/downstream focus, keyboard navigation (arrow keys + Enter), and viewport/selection state persistence.
 When canonical is stale, missing, or invalid, Shelf blocks the formal evidence tree until you materialize again.
 
 ## Project Config Navigation
@@ -84,4 +127,4 @@ The extension no longer treats the removed dual-track config files as live autho
 Public release notes live at:
 
 - `tools/vscode/shelf-ai/CHANGELOG.md`
-- `tools/vscode/shelf-ai/release-notes/0.1.5.md`
+- `tools/vscode/shelf-ai/release-notes/0.1.8.md`

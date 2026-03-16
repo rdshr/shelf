@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -21,11 +21,14 @@
     "LICENSE.txt",
     "README.md",
     "extension.js",
+    "tree_runtime_models.js",
+    "tree_webview_bridge.js",
     "guarding.js",
     "evidence_tree.js",
     "framework_completion.js",
     "framework_navigation.js",
     "validation_runtime.js",
+    "intent_gate.js",
     "media/**",
     "snippets/**"
   ],
@@ -33,11 +36,30 @@
     "Linters",
     "Other"
   ],
+  "scripts": {
+    "build:webview": "node scripts/build_tree_webview.mjs",
+    "check:webview-types": "tsc --pretty false --noEmit -p webview/tree/tsconfig.json",
+    "test": "node test_guarding.js && node test_framework_navigation.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
+    "vscode:prepublish": "npm run build:webview"
+  },
+  "devDependencies": {
+    "@types/d3-selection": "^3.0.11",
+    "@types/d3-zoom": "^3.0.8",
+    "@types/dagre": "^0.7.52",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0",
+    "dagre": "^0.8.5",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2"
+  },
   "activationEvents": [
     "onStartupFinished",
     "onView:shelf.sidebarHome",
     "onCommand:shelf.insertFrameworkModuleTemplate",
     "onCommand:shelf.installGitHooks",
+    "onCommand:shelf.startGovernedTask",
+    "onCommand:shelf.showGovernedTaskSession",
+    "onCommand:shelf.clearGovernedTaskSession",
     "onCommand:shelf.validateNow",
     "onCommand:shelf.codegenPreflight",
     "onCommand:shelf.publishFrameworkDraft",
@@ -74,6 +96,18 @@
       {
         "command": "shelf.installGitHooks",
         "title": "Shelf: Install Git Hooks"
+      },
+      {
+        "command": "shelf.startGovernedTask",
+        "title": "Shelf: Start Governed Task"
+      },
+      {
+        "command": "shelf.showGovernedTaskSession",
+        "title": "Shelf: Show Governed Task Session"
+      },
+      {
+        "command": "shelf.clearGovernedTaskSession",
+        "title": "Shelf: Clear Governed Task Session"
       },
       {
         "command": "shelf.showIssues",
@@ -126,44 +160,49 @@
     "menus": {
       "view/title": [
         {
-          "command": "shelf.openFrameworkTree",
+          "command": "shelf.startGovernedTask",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@1"
         },
         {
-          "command": "shelf.refreshFrameworkTree",
+          "command": "shelf.openFrameworkTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@2"
         },
         {
-          "command": "shelf.openEvidenceTree",
+          "command": "shelf.refreshFrameworkTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@3"
         },
         {
-          "command": "shelf.refreshEvidenceTree",
+          "command": "shelf.openEvidenceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@4"
         },
         {
-          "command": "shelf.validateNow",
+          "command": "shelf.refreshEvidenceTree",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@5"
         },
         {
-          "command": "shelf.codegenPreflight",
+          "command": "shelf.validateNow",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@6"
         },
         {
-          "command": "shelf.publishFrameworkDraft",
+          "command": "shelf.codegenPreflight",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@7"
         },
         {
-          "command": "shelf.installGitHooks",
+          "command": "shelf.publishFrameworkDraft",
           "when": "view == shelf.sidebarHome",
           "group": "navigation@8"
+        },
+        {
+          "command": "shelf.installGitHooks",
+          "when": "view == shelf.sidebarHome",
+          "group": "navigation@9"
         }
       ]
     },
@@ -219,6 +258,85 @@
           "default": true,
           "description": "Prompt once per session to enable the repository .githooks path when missing."
         },
+        "shelf.intentGateEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the governed-task intent gate. Guarded implementation saves require an active mapping-confirmed task session."
+        },
+        "shelf.intentGateEnforcementMode": {
+          "type": "string",
+          "enum": [
+            "warn",
+            "block"
+          ],
+          "default": "block",
+          "description": "Choose whether guarded saves only warn or are blocked/reverted when no active governed-task session exists."
+        },
+        "shelf.intentGateRequireMappingEcho": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require an explicit QuickPick confirmation of canonical mappings before granting a governed-task session."
+        },
+        "shelf.intentGateRunChangeValidationBeforeGrant": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run `validate_canonical.py --check-changes` before granting a governed-task session."
+        },
+        "shelf.intentGateAutoOpenOutput": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-open the Shelf output channel after intent-to-framework mapping analysis."
+        },
+        "shelf.intentGateMinimumScore": {
+          "type": "integer",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Minimum mapping score threshold for intent-to-framework gate matching."
+        },
+        "shelf.intentGateMaxMatches": {
+          "type": "integer",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum number of canonical mapping candidates retained in a governed-task session."
+        },
+        "shelf.intentGateSessionTtlMinutes": {
+          "type": "integer",
+          "default": 120,
+          "minimum": 1,
+          "maximum": 1440,
+          "description": "Time-to-live for a governed-task session. Expired sessions are cleared and guarded saves are blocked again."
+        },
+        "shelf.intentGateGuardedPathPrefixes": {
+          "type": "array",
+          "default": [
+            "*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace-relative path prefixes guarded by the intent gate on save. Use `*` to guard all workspace code paths."
+        },
+        "shelf.intentGateIgnoredPathPrefixes": {
+          "type": "array",
+          "default": [
+            ".git/",
+            ".github/",
+            ".venv/",
+            "node_modules/",
+            "dist/",
+            "build/",
+            "out/",
+            ".pytest_cache/",
+            ".mypy_cache/",
+            "__pycache__/"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace-relative path prefixes excluded from intent-gate save interception."
+        },
         "shelf.changeValidationCommand": {
           "type": "string",
           "default": "uv run python scripts/validate_canonical.py --check-changes",
@@ -238,6 +356,83 @@
           "type": "string",
           "default": "uv run mypy",
           "description": "Command used when Shelf runs Python type checks after relevant source changes."
+        },
+        "shelf.frameworkTreeNodeHorizontalGap": {
+          "type": "integer",
+          "default": 8,
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Horizontal gap, in pixels, between framework tree nodes within the same level."
+        },
+        "shelf.frameworkTreeLevelVerticalGap": {
+          "type": "integer",
+          "default": 80,
+          "minimum": 48,
+          "maximum": 180,
+          "description": "Vertical gap, in pixels, between framework tree levels."
+        },
+        "shelf.treeZoomMinScale": {
+          "type": "number",
+          "default": 0.68,
+          "minimum": 0.2,
+          "maximum": 3,
+          "description": "Minimum zoom scale for Shelf tree webviews."
+        },
+        "shelf.treeZoomMaxScale": {
+          "type": "number",
+          "default": 1.55,
+          "minimum": 0.2,
+          "maximum": 5,
+          "description": "Maximum zoom scale for Shelf tree webviews."
+        },
+        "shelf.treeWheelSensitivity": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.25,
+          "maximum": 3,
+          "description": "Wheel zoom sensitivity multiplier for Shelf tree webviews."
+        },
+        "shelf.treeInspectorWidth": {
+          "type": "integer",
+          "default": 338,
+          "minimum": 240,
+          "maximum": 520,
+          "description": "Preferred inspector panel width, in pixels, for Shelf tree webviews."
+        },
+        "shelf.treeInspectorRailWidth": {
+          "type": "integer",
+          "default": 42,
+          "minimum": 32,
+          "maximum": 72,
+          "description": "Collapsed inspector rail width, in pixels, for Shelf tree webviews."
+        },
+        "shelf.validationCommandTimeoutMs": {
+          "type": "integer",
+          "default": 120000,
+          "minimum": 1000,
+          "maximum": 1800000,
+          "description": "Timeout, in milliseconds, for Shelf validation and preflight commands."
+        },
+        "shelf.generatedEventSuppressionMs": {
+          "type": "integer",
+          "default": 2500,
+          "minimum": 0,
+          "maximum": 30000,
+          "description": "Suppression window, in milliseconds, for generated file watcher events right after materialization."
+        },
+        "shelf.manualValidationRestartThresholdMs": {
+          "type": "integer",
+          "default": 15000,
+          "minimum": 1000,
+          "maximum": 300000,
+          "description": "Elapsed time threshold, in milliseconds, before Shelf can restart a stale validation command on manual retrigger."
+        },
+        "shelf.validationDebounceMs": {
+          "type": "integer",
+          "default": 250,
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "Debounce delay, in milliseconds, before Shelf starts a queued validation run."
         }
       }
     }
