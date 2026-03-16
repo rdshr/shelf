@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7 - 2026-03-16
+
+- Rebuilt Shelf AI tree views into a dedicated runtime webview subsystem with explicit model/layout/render/bridge layering instead of a monolithic extension-side renderer.
+- Restored the framework tree to the denser round-node visual baseline with layer-fixed auto layout, hover metadata, edge inspection, and collapsible inspector behavior.
+- Added settings-first runtime tuning for framework tree spacing, tree zoom and inspector sizing, plus validation timeout/debounce/suppression thresholds, then repackaged and reinstalled the local VSIX.
+
 ## 0.1.6 - 2026-03-15
 
 - Tightened framework-to-config navigation so boundary jumps now resolve from canonical-backed framework exports instead of extension-side inferred fallback tables.
