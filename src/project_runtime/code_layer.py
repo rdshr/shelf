@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from knowledge_base_runtime.runtime_profile import load_knowledge_base_runtime_profile
@@ -19,6 +21,8 @@ class CodeModuleClass:
     exact_export: dict[str, Any]
     code_exports: dict[str, Any]
     code_bindings: dict[str, Any]
+    boundary_static_classes: tuple[type["CodeBoundaryStaticClass"], ...]
+    boundary_runtime_classes: tuple[type["CodeBoundaryRuntimeClass"], ...]
 
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
@@ -30,6 +34,74 @@ class CodeModuleClass:
             "exact_export": cls.exact_export,
             "code_exports": cls.code_exports,
             "code_bindings": cls.code_bindings,
+            "boundary_static_classes": [item.to_dict() for item in cls.boundary_static_classes],
+            "boundary_runtime_classes": [item.to_dict() for item in cls.boundary_runtime_classes],
+            "class_name": cls.__name__,
+        }
+
+
+@lru_cache(maxsize=1)
+def _code_layer_lines() -> tuple[str, ...]:
+    return tuple(Path(__file__).read_text(encoding="utf-8").splitlines())
+
+
+def _find_code_line(needle: str, *, fallback: int = 1) -> int:
+    if not needle:
+        return fallback
+    for index, line_text in enumerate(_code_layer_lines(), start=1):
+        if needle in line_text:
+            return index
+    return fallback
+
+
+class CodeBoundaryStaticClass:
+    class_id: str
+    canonical_id: str
+    module_id: str
+    boundary_id: str
+    owner_id: str
+    source_symbol: str
+    anchor_path: str
+    projection_paths: list[str]
+    source_ref: dict[str, Any]
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
+        return {
+            "class_id": cls.class_id,
+            "canonical_id": cls.canonical_id,
+            "module_id": cls.module_id,
+            "boundary_id": cls.boundary_id,
+            "owner_id": cls.owner_id,
+            "source_symbol": cls.source_symbol,
+            "anchor_path": cls.anchor_path,
+            "projection_paths": list(cls.projection_paths),
+            "source_ref": dict(cls.source_ref),
+            "class_name": cls.__name__,
+        }
+
+
+class CodeBoundaryRuntimeClass:
+    class_id: str
+    canonical_id: str
+    module_id: str
+    boundary_id: str
+    owner_id: str
+    static_class_id: str
+    runtime_slots: list[dict[str, Any]]
+    source_ref: dict[str, Any]
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
+        return {
+            "class_id": cls.class_id,
+            "canonical_id": cls.canonical_id,
+            "module_id": cls.module_id,
+            "boundary_id": cls.boundary_id,
+            "owner_id": cls.owner_id,
+            "static_class_id": cls.static_class_id,
+            "runtime_slots": list(cls.runtime_slots),
+            "source_ref": dict(cls.source_ref),
             "class_name": cls.__name__,
         }
 
@@ -473,6 +545,50 @@ def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) ->
     return {}
 
 
+def _boundary_slot_source_ref(
+    module_id: str,
+    boundary_id: str,
+    *,
+    root_module_ids: dict[str, str],
+) -> dict[str, Any]:
+    fallback_line = _find_code_line("def _build_implementation_slots(", fallback=1)
+    needle = ""
+    section = "implementation_slots"
+    if module_id == root_module_ids.get("frontend"):
+        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        section = "compile_frontend_app_spec"
+    elif module_id == root_module_ids.get("knowledge_base"):
+        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        section = "compile_knowledge_base_domain_spec"
+    elif module_id == root_module_ids.get("backend"):
+        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        section = "compile_backend_service_spec"
+    line = _find_code_line(needle, fallback=fallback_line)
+    return {
+        "file_path": "src/project_runtime/code_layer.py",
+        "line": line,
+        "section": section,
+        "anchor": f"{module_id}:{boundary_id}",
+        "token": boundary_id,
+    }
+
+
+def _runtime_slot_source_ref(
+    module_id: str,
+    boundary_id: str,
+    anchor_path: str,
+) -> dict[str, Any]:
+    fallback_line = _find_code_line("def _module_runtime_slot_map(", fallback=1)
+    line = _find_code_line(f'"{anchor_path}"', fallback=fallback_line)
+    return {
+        "file_path": "src/project_runtime/code_layer.py",
+        "line": line,
+        "section": "runtime_slot_map",
+        "anchor": f"{module_id}:{boundary_id}:{anchor_path}",
+        "token": boundary_id,
+    }
+
+
 def _build_implementation_slots(
     binding: ConfigModuleBinding,
     *,
@@ -499,6 +615,11 @@ def _build_implementation_slots(
                 "source_symbol": f"{binding.framework_module.module_id}.exact_export.boundaries.{boundary.boundary_id}",
                 "anchor_path": f"exact_export.boundaries.{boundary.boundary_id}",
                 "projection_paths": list(dict.fromkeys(related_exact_paths)),
+                "source_ref": _boundary_slot_source_ref(
+                    binding.framework_module.module_id,
+                    boundary.boundary_id,
+                    root_module_ids=root_module_ids,
+                ),
             }
         )
         for anchor_path in runtime_slot_map.get(boundary.boundary_id, ()):
@@ -511,9 +632,82 @@ def _build_implementation_slots(
                     "source_symbol": f"{compile_symbol}->{anchor_path}",
                     "anchor_path": anchor_path,
                     "projection_paths": list(dict.fromkeys(related_exact_paths)),
+                    "source_ref": _runtime_slot_source_ref(
+                        binding.framework_module.module_id,
+                        boundary.boundary_id,
+                        anchor_path,
+                    ),
                 }
             )
     return slots
+
+
+def _build_boundary_code_classes(
+    binding: ConfigModuleBinding,
+    *,
+    implementation_slots: list[dict[str, Any]],
+) -> tuple[tuple[type[CodeBoundaryStaticClass], ...], tuple[type[CodeBoundaryRuntimeClass], ...]]:
+    boundary_slots: dict[str, list[dict[str, Any]]] = {}
+    for slot in implementation_slots:
+        boundary_id = str(slot.get("boundary_id") or "").strip()
+        if not boundary_id:
+            continue
+        boundary_slots.setdefault(boundary_id, []).append(slot)
+    static_classes: list[type[CodeBoundaryStaticClass]] = []
+    runtime_classes: list[type[CodeBoundaryRuntimeClass]] = []
+    class_prefix = binding.framework_module.__name__.replace("FrameworkModule", "")
+    for boundary in binding.framework_module.boundaries:
+        boundary_id = boundary.boundary_id
+        slots = boundary_slots.get(boundary_id, [])
+        exact_slot = next((slot for slot in slots if slot.get("slot_kind") == "exact_boundary"), None)
+        if not exact_slot:
+            continue
+        static_class_name = f"{class_prefix}{boundary_id}BoundaryStaticCode"
+        static_class_id = f"code_boundary_static_class::{binding.framework_module.module_id}::{boundary_id}"
+        static_class = type(
+            static_class_name,
+            (CodeBoundaryStaticClass,),
+            {
+                "class_id": static_class_id,
+                "canonical_id": f"code_boundary_static::{binding.framework_module.module_id}::{boundary_id}",
+                "module_id": binding.framework_module.module_id,
+                "boundary_id": boundary_id,
+                "owner_id": str(exact_slot.get("owner_id") or ""),
+                "source_symbol": str(exact_slot.get("source_symbol") or ""),
+                "anchor_path": str(exact_slot.get("anchor_path") or ""),
+                "projection_paths": list(exact_slot.get("projection_paths") or []),
+                "source_ref": dict(exact_slot.get("source_ref") or {}),
+            },
+        )
+        static_classes.append(static_class)
+        runtime_slots = [
+            {
+                "slot_id": str(slot.get("slot_id") or ""),
+                "source_symbol": str(slot.get("source_symbol") or ""),
+                "anchor_path": str(slot.get("anchor_path") or ""),
+                "slot_kind": str(slot.get("slot_kind") or ""),
+            }
+            for slot in slots
+            if slot.get("slot_kind") == "runtime_export"
+        ]
+        runtime_class_name = f"{class_prefix}{boundary_id}BoundaryRuntimeCode"
+        runtime_classes.append(
+            type(
+                runtime_class_name,
+                (CodeBoundaryRuntimeClass,),
+                {
+                    "class_id": f"code_boundary_runtime_class::{binding.framework_module.module_id}::{boundary_id}",
+                    "canonical_id": f"code_boundary_runtime::{binding.framework_module.module_id}::{boundary_id}",
+                    "module_id": binding.framework_module.module_id,
+                    "boundary_id": boundary_id,
+                    "owner_id": str(exact_slot.get("owner_id") or ""),
+                    "static_class_id": static_class_id,
+                    "runtime_slots": runtime_slots,
+                    "source_ref": dict(exact_slot.get("source_ref") or {}),
+                },
+            )
+        )
+    return tuple(static_classes), tuple(runtime_classes)
 
 
 def _base_binding_records(
@@ -599,6 +793,10 @@ def build_code_modules(
             code_exports["backend_service_spec"] = backend_service_spec
         class_name = binding.framework_module.__name__.replace("FrameworkModule", "CodeModule")
         implementation_slots = _build_implementation_slots(binding, root_module_ids=root_module_ids)
+        boundary_static_classes, boundary_runtime_classes = _build_boundary_code_classes(
+            binding,
+            implementation_slots=implementation_slots,
+        )
         base_bindings = _base_binding_records(
             binding,
             class_name=class_name,
@@ -634,6 +832,8 @@ def build_code_modules(
                     "implementation_slots": implementation_slots,
                     "base_bindings": base_bindings,
                 },
+                "boundary_static_classes": boundary_static_classes,
+                "boundary_runtime_classes": boundary_runtime_classes,
             },
         )
         bindings.append(

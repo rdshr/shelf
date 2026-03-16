@@ -14,6 +14,9 @@ description = "A ChatGPT-style knowledge chat client rebuilt on the Framework ->
 version = "0.5.0"
 
 [framework]
+# 当前项目按严格一对一边界映射运行：
+# 每个 framework 边界项必须映射到唯一 static config 路径（exact/communication 主路径），
+# 并在代码层由 BoundarySpecClass + BoundaryRuntimeClass 双 class 承接。
 
 [[framework.modules]]
 role = "frontend"
@@ -335,3 +338,620 @@ retrieval_strategy = "retrieval_stub"
 
 [exact.evidence.artifacts]
 canonical_json = "canonical.json"
+
+# ---- Shelf 一对一边界补齐（自动生成） ----
+# 每个 boundary_id 对应 communication.<framework>.<boundary_lc> 与 exact.<framework>.<boundary_lc>。
+
+[communication.backend.chat]
+citation_mode = "inline_refs"
+answer_shape = "source_first concise structure"
+
+[communication.backend.chatapi]
+boundary_id = "CHATAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.citation]
+boundary_id = "CITATION"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.consist]
+boundary_id = "CONSIST"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.error]
+boundary_id = "ERROR"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.file]
+boundary_id = "FILE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.libapi]
+boundary_id = "LIBAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.library]
+knowledge_scope = "single curated workspace library"
+mutation_policy = ["create", "delete"]
+
+[communication.backend.preview]
+preview_style = "drawer first"
+context_expectation = "section anchored"
+
+[communication.backend.previewapi]
+boundary_id = "PREVIEWAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.backend.valid]
+boundary_id = "VALID"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.action]
+boundary_id = "ACTION"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.area]
+boundary_id = "AREA"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.bubble]
+boundary_id = "BUBBLE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.density]
+boundary_id = "DENSITY"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.empty]
+boundary_id = "EMPTY"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.event]
+boundary_id = "EVENT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.feedback]
+boundary_id = "FEEDBACK"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.field]
+boundary_id = "FIELD"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.focus]
+boundary_id = "FOCUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.host]
+boundary_id = "HOST"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.item]
+boundary_id = "ITEM"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.list]
+boundary_id = "LIST"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.meta]
+boundary_id = "META"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.nav]
+boundary_id = "NAV"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.option]
+boundary_id = "OPTION"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.panel]
+boundary_id = "PANEL"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.pick]
+boundary_id = "PICK"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.prop]
+boundary_id = "PROP"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.reset]
+boundary_id = "RESET"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.slot]
+boundary_id = "SLOT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.status]
+boundary_id = "STATUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.submit]
+boundary_id = "SUBMIT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.tag]
+boundary_id = "TAG"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.text]
+boundary_id = "TEXT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.theme]
+boundary_id = "THEME"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.token]
+boundary_id = "TOKEN"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.tone]
+boundary_id = "TONE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.transfer]
+boundary_id = "TRANSFER"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.tree]
+boundary_id = "TREE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.trigger]
+boundary_id = "TRIGGER"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.value]
+boundary_id = "VALUE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.frontend.viewport]
+boundary_id = "VIEWPORT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.a11y]
+boundary_id = "A11Y"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.anchor]
+boundary_id = "ANCHOR"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.citation]
+boundary_id = "CITATION"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.classify]
+boundary_id = "CLASSIFY"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.docview]
+boundary_id = "DOCVIEW"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.empty]
+boundary_id = "EMPTY"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.entry]
+boundary_id = "ENTRY"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.fileset]
+boundary_id = "FILESET"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.focus]
+boundary_id = "FOCUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.ingest]
+boundary_id = "INGEST"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.input]
+boundary_id = "INPUT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.limit]
+boundary_id = "LIMIT"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.meta]
+boundary_id = "META"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.region]
+boundary_id = "REGION"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.responsive]
+boundary_id = "RESPONSIVE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.scope]
+boundary_id = "SCOPE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.status]
+boundary_id = "STATUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.surface]
+product_shape = "conversation_sidebar_shell"
+interaction_mode = "chat_first"
+secondary_pages = ["knowledge_list", "knowledge_detail", "document_detail"]
+
+[communication.knowledge_base.toc]
+boundary_id = "TOC"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.trace]
+boundary_id = "TRACE"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.turn]
+boundary_id = "TURN"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.turnlink]
+boundary_id = "TURNLINK"
+mapping_mode = "one_to_one_boundary_static"
+
+[communication.knowledge_base.visibility]
+boundary_id = "VISIBILITY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.chat]
+enabled = true
+citations_enabled = true
+mode = "retrieval_stub"
+citation_style = "inline_refs"
+bubble_variant = "assistant_soft"
+composer_variant = "chatgpt_compact"
+system_prompt = "Answer with concise structure-first guidance grounded in the selected knowledge base and cite concrete sections."
+placeholder = "询问制度、方案、文档内容，系统会结合知识库回答…"
+welcome = "像用 ChatGPT 一样直接提问。回答会嵌入知识库引用，点开后可查看来源片段和文档详情。"
+max_citations = 3
+return_targets = ["citation_drawer", "document_detail"]
+anchor_restore = true
+
+[exact.backend.chatapi]
+enabled = true
+boundary_id = "CHATAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.citation]
+enabled = true
+boundary_id = "CITATION"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.consist]
+enabled = true
+boundary_id = "CONSIST"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.error]
+enabled = true
+boundary_id = "ERROR"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.file]
+enabled = true
+boundary_id = "FILE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.libapi]
+enabled = true
+boundary_id = "LIBAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.library]
+knowledge_base_id = "research-and-standards"
+knowledge_base_name = "研发规范知识库"
+knowledge_base_description = "Framework standards, implementation rules, and generated project discipline for the shelf repository."
+enabled = true
+source_types = ["markdown"]
+metadata_fields = ["title", "tags", "updated_at"]
+default_focus = "current_knowledge_base"
+list_variant = "conversation_companion"
+allow_create = true
+allow_delete = true
+search_placeholder = "Search knowledge files and snippets"
+
+[exact.backend.preview]
+enabled = true
+renderers = ["markdown"]
+anchor_mode = "heading"
+show_toc = true
+preview_variant = "citation_drawer"
+max_preview_sections = 10
+
+[exact.backend.previewapi]
+enabled = true
+boundary_id = "PREVIEWAPI"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.backend.valid]
+enabled = true
+boundary_id = "VALID"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.action]
+enabled = true
+boundary_id = "ACTION"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.area]
+enabled = true
+boundary_id = "AREA"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.bubble]
+enabled = true
+boundary_id = "BUBBLE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.density]
+enabled = true
+boundary_id = "DENSITY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.empty]
+enabled = true
+boundary_id = "EMPTY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.event]
+enabled = true
+boundary_id = "EVENT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.feedback]
+enabled = true
+boundary_id = "FEEDBACK"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.field]
+enabled = true
+boundary_id = "FIELD"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.focus]
+enabled = true
+boundary_id = "FOCUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.host]
+enabled = true
+boundary_id = "HOST"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.item]
+enabled = true
+boundary_id = "ITEM"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.list]
+enabled = true
+boundary_id = "LIST"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.meta]
+enabled = true
+boundary_id = "META"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.nav]
+enabled = true
+boundary_id = "NAV"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.option]
+enabled = true
+boundary_id = "OPTION"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.panel]
+enabled = true
+boundary_id = "PANEL"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.pick]
+enabled = true
+boundary_id = "PICK"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.prop]
+enabled = true
+boundary_id = "PROP"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.reset]
+enabled = true
+boundary_id = "RESET"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.slot]
+enabled = true
+boundary_id = "SLOT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.status]
+enabled = true
+boundary_id = "STATUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.submit]
+enabled = true
+boundary_id = "SUBMIT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.tag]
+enabled = true
+boundary_id = "TAG"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.text]
+enabled = true
+boundary_id = "TEXT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.theme]
+enabled = true
+boundary_id = "THEME"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.token]
+enabled = true
+boundary_id = "TOKEN"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.tone]
+enabled = true
+boundary_id = "TONE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.transfer]
+enabled = true
+boundary_id = "TRANSFER"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.tree]
+enabled = true
+boundary_id = "TREE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.trigger]
+enabled = true
+boundary_id = "TRIGGER"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.value]
+enabled = true
+boundary_id = "VALUE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.frontend.viewport]
+enabled = true
+boundary_id = "VIEWPORT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.a11y]
+enabled = true
+boundary_id = "A11Y"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.anchor]
+enabled = true
+boundary_id = "ANCHOR"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.citation]
+enabled = true
+boundary_id = "CITATION"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.classify]
+enabled = true
+boundary_id = "CLASSIFY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.docview]
+enabled = true
+boundary_id = "DOCVIEW"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.empty]
+enabled = true
+boundary_id = "EMPTY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.entry]
+enabled = true
+boundary_id = "ENTRY"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.fileset]
+enabled = true
+boundary_id = "FILESET"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.focus]
+enabled = true
+boundary_id = "FOCUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.ingest]
+enabled = true
+boundary_id = "INGEST"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.input]
+enabled = true
+boundary_id = "INPUT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.limit]
+enabled = true
+boundary_id = "LIMIT"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.meta]
+enabled = true
+boundary_id = "META"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.region]
+enabled = true
+boundary_id = "REGION"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.responsive]
+enabled = true
+boundary_id = "RESPONSIVE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.scope]
+enabled = true
+boundary_id = "SCOPE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.status]
+enabled = true
+boundary_id = "STATUS"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.surface]
+layout_variant = "chatgpt_knowledge_client"
+preview_mode = "drawer"
+
+[exact.knowledge_base.toc]
+enabled = true
+boundary_id = "TOC"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.trace]
+enabled = true
+boundary_id = "TRACE"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.turn]
+enabled = true
+boundary_id = "TURN"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.turnlink]
+enabled = true
+boundary_id = "TURNLINK"
+mapping_mode = "one_to_one_boundary_static"
+
+[exact.knowledge_base.visibility]
+enabled = true
+boundary_id = "VISIBILITY"
+mapping_mode = "one_to_one_boundary_static"
