@@ -306,16 +306,22 @@ function loadFrameworkCorrespondenceProjection(repoRoot) {
 
 /**
  * @param {string} repoRoot
- * @returns {{ modules: Record<string, unknown>[], excludedProjectIds: string[] }}
+ * @returns {{ modules: Record<string, unknown>[], staleProjectIds: string[], excludedProjectIds: string[] }}
  */
-function collectFreshCanonicalFrameworkModules(repoRoot) {
+function collectCanonicalFrameworkModulesForTree(repoRoot) {
   const freshnessSummary = workspaceGuard.summarizeCanonicalFreshness(repoRoot);
   /** @type {Map<string, Record<string, unknown>>} */
   const moduleById = new Map();
+  const staleProjectIds = new Set();
+  const excludedProjectIds = new Set();
 
   for (const project of freshnessSummary.projects) {
-    if (project.status !== "fresh") {
+    if (project.status === "missing" || project.status === "invalid") {
+      excludedProjectIds.add(String(project.projectId || ""));
       continue;
+    }
+    if (project.status === "stale") {
+      staleProjectIds.add(String(project.projectId || ""));
     }
     try {
       const canonical = JSON.parse(fs.readFileSync(project.canonicalPath, "utf8"));
@@ -333,13 +339,15 @@ function collectFreshCanonicalFrameworkModules(repoRoot) {
         moduleById.set(moduleId, rawModule);
       }
     } catch {
-      // Freshness guards parseability, but ignore unexpected runtime read failures.
+      staleProjectIds.delete(String(project.projectId || ""));
+      excludedProjectIds.add(String(project.projectId || ""));
     }
   }
 
   return {
     modules: [...moduleById.values()],
-    excludedProjectIds: freshnessSummary.blockingProjects.map((project) => String(project.projectId || "")),
+    staleProjectIds: [...staleProjectIds].filter(Boolean).sort(),
+    excludedProjectIds: [...excludedProjectIds].filter(Boolean).sort(),
   };
 }
 
@@ -348,7 +356,7 @@ function collectFreshCanonicalFrameworkModules(repoRoot) {
  * @returns {RuntimeTreeModel | null}
  */
 function buildCanonicalFrameworkTreeModel(repoRoot) {
-  const collected = collectFreshCanonicalFrameworkModules(repoRoot);
+  const collected = collectCanonicalFrameworkModulesForTree(repoRoot);
   if (!collected.modules.length) {
     return null;
   }
@@ -505,9 +513,17 @@ function buildCanonicalFrameworkTreeModel(repoRoot) {
   if (correspondenceProjection) {
     descriptionParts.push("Correspondence protocol is the primary navigation source; legacy canonical fields remain fallback-only.");
   }
+  if (collected.staleProjectIds.length) {
+    descriptionParts.push(
+      `Stale canonical topology is shown for framework authoring (projects: ${collected.staleProjectIds.slice(0, 3).join(", ")}).`
+    );
+    if (!correspondenceProjection) {
+      descriptionParts.push("Cross-layer correspondence targets are temporarily disabled until canonical becomes fresh.");
+    }
+  }
   if (collected.excludedProjectIds.length) {
     descriptionParts.push(
-      `Stale/invalid projects excluded from canonical projection: ${collected.excludedProjectIds.slice(0, 3).join(", ")}.`
+      `Projects excluded from canonical projection (missing/invalid): ${collected.excludedProjectIds.slice(0, 3).join(", ")}.`
     );
   }
 
