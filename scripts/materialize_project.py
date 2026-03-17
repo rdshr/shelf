@@ -1,56 +1,43 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_runtime.knowledge_base import materialize_knowledge_base_project
+from project_runtime import DEFAULT_PROJECT_FILE, materialize_project_runtime
 
 
-def discover_product_spec_files() -> list[Path]:
-    return sorted((REPO_ROOT / "projects").glob("*/product_spec.toml"))
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Materialize the project under the new Framework -> Config -> Code -> Evidence architecture."
+    )
+    parser.add_argument(
+        "--project-file",
+        default=str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT)),
+        help="path to the project.toml file",
+    )
+    return parser
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Materialize generated project artifacts from framework markdown, product spec, and implementation config."
+    args = _build_parser().parse_args()
+    assembly = materialize_project_runtime(args.project_file)
+    artifacts = assembly.generated_artifacts
+    if artifacts is None:
+        raise ValueError("generated artifact paths are required after materialization")
+    print(f"[materialize] project={assembly.metadata.project_id}")
+    print(f"[materialize] canonical={artifacts.canonical_json}")
+    print(
+        "[materialize] validation="
+        f"passed={assembly.validation_reports.passed} "
+        f"rules={assembly.validation_reports.rule_count}"
     )
-    parser.add_argument(
-        "--project",
-        action="append",
-        dest="projects",
-        help="product spec file to materialize; repeatable. Defaults to every projects/*/product_spec.toml.",
-    )
-    args = parser.parse_args()
-
-    requested = args.projects or []
-    product_spec_files = [
-        (REPO_ROOT / item).resolve() if not Path(item).is_absolute() else Path(item).resolve()
-        for item in requested
-    ]
-    if not product_spec_files:
-        product_spec_files = [path.resolve() for path in discover_product_spec_files()]
-
-    if not product_spec_files:
-        print("[FAIL] no product spec files found")
-        return 1
-
-    for product_spec_file in product_spec_files:
-        project = materialize_knowledge_base_project(product_spec_file)
-        assert project.generated_artifacts is not None
-        print(
-            "[OK] materialized",
-            project.metadata.project_id,
-            "->",
-            project.generated_artifacts.directory,
-        )
-
-    return 0
+    return 0 if assembly.validation_reports.passed else 1
 
 
 if __name__ == "__main__":

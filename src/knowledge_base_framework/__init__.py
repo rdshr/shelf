@@ -1,8 +1,6 @@
-from knowledge_base_framework.validators import summarize_workbench_rules, validate_workbench_rules
-from knowledge_base_framework.workbench import build_workbench_contract
+from .validators import summarize_workbench_rules, validate_workbench_rules
 
 __all__ = [
-    "build_workbench_contract",
     "summarize_workbench_rules",
     "validate_workbench_rules",
 ]

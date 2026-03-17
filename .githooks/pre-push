@@ -9,11 +9,11 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "[pre-push] strict mapping validation..."
+echo "[pre-push] canonical validation..."
 echo "[pre-push] static type check..."
 uv run mypy
 echo "[pre-push] materialize project artifacts..."
 uv run python scripts/materialize_project.py
-uv run python scripts/validate_strict_mapping.py
-uv run python scripts/validate_strict_mapping.py --check-changes
-echo "[pre-push] strict mapping checks passed."
+uv run python scripts/validate_canonical.py
+uv run python scripts/validate_canonical.py --check-changes
+echo "[pre-push] canonical checks passed."

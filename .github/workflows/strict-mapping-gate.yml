@@ -1,4 +1,4 @@
-name: Strict Mapping Gate
+name: Canonical Gate
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  strict-mapping:
+  canonical-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,8 +24,8 @@ jobs:
       - name: Materialize project artifacts
         run: uv run python scripts/materialize_project.py
 
-      - name: Validate strict mapping
-        run: uv run python scripts/validate_strict_mapping.py
+      - name: Validate canonical
+        run: uv run python scripts/validate_canonical.py
 
       - name: Validate change propagation
-        run: uv run python scripts/validate_strict_mapping.py --check-changes
+        run: uv run python scripts/validate_canonical.py --check-changes

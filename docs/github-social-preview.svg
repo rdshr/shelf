@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Shelf social preview</title>
+  <desc id="desc">Structure-first AI coding framework with the convergence chain Framework to Config to Code to Evidence.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5efe4"/>
+      <stop offset="100%" stop-color="#e9dfcf"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect x="54" y="54" width="1172" height="532" rx="28" fill="#fffdf8" filter="url(#shadow)"/>
+  <rect x="54" y="54" width="1172" height="10" rx="5" fill="url(#bar)"/>
+
+  <g opacity="0.12" stroke="#1e293b" stroke-width="1">
+    <path d="M118 126 H1160"/>
+    <path d="M118 176 H1160"/>
+    <path d="M118 226 H1160"/>
+    <path d="M118 276 H1160"/>
+    <path d="M118 326 H1160"/>
+    <path d="M118 376 H1160"/>
+    <path d="M118 426 H1160"/>
+    <path d="M118 476 H1160"/>
+    <path d="M118 526 H1160"/>
+  </g>
+
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" fill="#0f172a">
+    <text x="118" y="164" font-size="80" font-weight="700" letter-spacing="-2">Shelf</text>
+    <text x="118" y="216" font-size="28" font-weight="600" fill="#1d4ed8">Structure-First AI Coding</text>
+    <text x="118" y="266" font-size="28" font-weight="400" fill="#334155">
+      Turn design into a verifiable engineering system.
+    </text>
+    <text x="118" y="312" font-size="22" font-weight="400" fill="#475569">
+      Framework markdown, structured config, runtime code, and evidence stay in one chain.
+    </text>
+  </g>
+
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">
+    <rect x="118" y="394" width="176" height="60" rx="16" fill="#dbeafe"/>
+    <text x="206" y="431" fill="#1e3a8a">Framework</text>
+
+    <rect x="332" y="394" width="176" height="60" rx="16" fill="#d1fae5"/>
+    <text x="420" y="431" fill="#065f46">Config</text>
+
+    <rect x="546" y="394" width="214" height="60" rx="16" fill="#fef3c7"/>
+    <text x="653" y="431" fill="#92400e">Code</text>
+
+    <rect x="798" y="394" width="128" height="60" rx="16" fill="#fee2e2"/>
+    <text x="862" y="431" fill="#991b1b">Evidence</text>
+
+    <rect x="964" y="394" width="176" height="60" rx="16" fill="#ede9fe"/>
+    <text x="1052" y="431" fill="#5b21b6">Canonical</text>
+  </g>
+
+  <g stroke="#0f172a" stroke-width="3" stroke-linecap="round" opacity="0.6">
+    <path d="M294 424 H332"/>
+    <path d="M508 424 H546"/>
+    <path d="M760 424 H798"/>
+    <path d="M926 424 H964"/>
+  </g>
+
+  <g fill="#0f172a" opacity="0.6">
+    <path d="M324 418 l10 6 -10 6 z"/>
+    <path d="M538 418 l10 6 -10 6 z"/>
+    <path d="M790 418 l10 6 -10 6 z"/>
+    <path d="M956 418 l10 6 -10 6 z"/>
+  </g>
+
+  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" fill="#475569">
+    <text x="118" y="534" font-size="20" font-weight="600">framework-native language for AI coding</text>
+    <text x="118" y="566" font-size="18" font-weight="400">github.com/xueyu888/shelf</text>
+  </g>
+</svg>

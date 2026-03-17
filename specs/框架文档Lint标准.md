@@ -1,70 +1,66 @@
 # 框架文档Lint标准
 
 ## 0. 定位
-本文件定义框架标准文档的表达协议与 lint 合同，不定义框架设计的语义核心。
 
-关系边界：
-- `specs/框架设计核心标准.md` 负责定义“什么结构成立、什么组合合法、哪些边界允许变化”。
-- 本文件负责定义这些结构在 Markdown、树注册与治理校验中必须如何表达、如何编号、如何被 lint。
-- `scripts/validate_strict_mapping.py` 是本文件的主要自动执行器，但脚本不是第一性事实来源；规则本体以本文件为准。
+本文件定义 framework Markdown 的表达协议，以及它与 Config、Code、Evidence 的对齐约束。
 
 ## 1. 适用范围
 
-- `specs/` 下承载 L0/L1 标准的 Markdown 文件。
-- `framework/<module>/Lx-Mn-*.md` 下承载领域模块标准的 Markdown 文件。
-- `mapping/mapping_registry.json` 承载的标准树、映射注册与变更传导元数据。
-- `projects/<project_id>/generated/` 的生成产物一致性校验。
+- `specs/*.md`
+- `framework/<domain>/Lx-Mn-*.md`
+- `framework_drafts/<domain>/Lx-Mn-*.md`
+- `projects/*/generated/*` 的派生一致性校验
 
-## 2. 文档表达规则
+## 2. Framework Markdown 规则
 
-### 2.1 路径、层级与文件命名
-
-- `L0/L1` 标准文件必须位于 `specs/`。
-- `L2` 标准文件必须位于 `framework/<module>/Lx-Mn-*.md`。
-- `L3` 注册文件必须位于 `mapping/`。
-- 模块是文件级单元：一个 `framework/<domain>/Lx-Mn-*.md` 文件对应一个模块。
-- 当同层存在多个模块文件时，文件名必须使用 `Lx-Mn-*.md` 表示模块编号（例如 `L1-M0-...md`）。
-- 模块别名（若需要）是文件级信息，不得绑定到单个 `B*`。
-
-### 2.2 框架 Markdown 必备结构
-
-- 面向 `framework/*.md` 的标准模块文档必须保留 plain `@framework` 指令对应的标准模板起手入口。
-- `@framework` 入口属于框架作者起手约束，不得删除；若未来替换实现方式，必须提供同等直接、默认可用且可回归测试的替代入口。
-- 框架模块文档应按顺序提供以下主 section：
+- 每个正式 framework 文件必须使用 `framework/<domain>/Lx-Mn-*.md` 命名。
+- 每个文件必须保留 plain `@framework` 起手入口。
+- 每个文件必须包含以下主 section：
   - `## 1. 能力声明`
   - `## 2. 边界定义`
   - `## 3. 最小可行基`
   - `## 4. 基组合原则`
   - `## 5. 验证`
+- `C* / N* / B* / R* / V*` 编号必须稳定、唯一、可解析。
+- `B*` 的上游模块引用必须写在主句中，不得使用 `上游模块：...`。
+- framework 模块正文不得直接写入 `project.toml` 路径、已删除的双轨配置文件名、已删除的旧映射清单名或旧配置 section 语法。
 
-### 2.3 编号与表达格式
+## 3. 项目配置边界
 
-- `C*`、`B*`、`R*`、`V*` 必须使用稳定、连续且可解析的编号。
-- 每个基必须具备 `B{n}` 标识，并可规范化映射为 `L{X}.M{m}.B{n}`。
-- `B*` 行格式应为 `B* 名称：<结构定义或 Lx.My[...] 或 framework.Lx.My[...]>。来源：\`...\``。
-- 若引用本框架更低层模块或外部更基础通用框架，模块引用必须直接内联写在 `B*` 主句中。
-- 禁止使用 `上游模块：...` 这类追加字段表达模块依赖。
-- 外部框架引用可写为 `frontend.L1.M0[R1,R2]` 这类显式形式；本地框架引用可写为 `L1.M0[R1,R2]`。
+- framework 文档只能描述结构语义，不得直接写入项目实例值。
+- 项目配置唯一入口是 `projects/<project_id>/project.toml`。
+- 边界跳转或实例落点必须回到 `project.toml` 的显式 section，例如：
+  - `[communication.frontend.surface]`
+  - `[communication.knowledge_base.chat]`
+  - `[exact.frontend.surface]`
+  - `[exact.backend.result]`
+- `project.toml` 必须可解析，并能被编译器按 contract 切片分发。
 
-## 3. 自动 Lint 与治理校验
+## 4. 模块编译与 Contract 对齐
 
-- 路径与层级 lint：校验 `L0/L1/L2/L3` 文件路径是否落在合法目录。
-- 文档结构 lint：校验 `@framework` 文档是否具备必备主 section、标题与可解析条目。
-- 编号与语法 lint：校验 `C/B/R/V` 编号、`B*` 表达格式、inline ref 语法以及禁用的遗留写法。
-- 引用图 lint：校验模块依赖方向、无环性、显式引用可解释性与根层自足性。
-- 树注册 lint：校验 `mapping/mapping_registry.json` 的标准树节点、唯一挂载关系与 L0-L3 落点。
-- 变更传导 lint：校验 `L0 -> L1 -> L2 -> L3` 的变更传播是否闭合。
-- 生成产物 lint：校验项目生成产物是否可由框架、`product_spec.toml` 与 `implementation_config.toml` 重新物化并保持一致。
+- 每个 framework 文件都必须被编译成唯一 `FrameworkModule` class。
+- 每个 `B*` 都必须被编译成独立 `Base` class。
+- 每个 `R*` 都必须被编译成独立 `Rule` class。
+- `ConfigModule` 必须只消费对应 `FrameworkModule` export。
+- `CodeModule` 必须只消费对应 `ConfigModule.exact_export`。
+- `EvidenceModule` 必须只消费对应 `CodeModule` export。
 
-## 4. 非自动审查边界
+## 5. Canonical 与派生视图
 
-- lint 不替代 `specs/框架设计核心标准.md` 的语义判断。
-- “这个基是否真的是结构”“这个边界是否真正服务能力成立”“这个组合是否导出声明能力”仍以核心标准为准。
-- 当表达格式合法但语义不成立时，应先按核心标准修正文档结构定义，而不是放宽 lint。
+- `projects/*/generated/canonical.json` 是唯一机器真相源。
+- 层级树、证据树、运行时快照和验证输出都必须明确是 canonical 派生视图。
+- 直接编辑 `projects/*/generated/*` 必须被视为违规。
 
-## 5. 外部关联
+## 6. 自动检查必须覆盖的内容
 
-- `specs/规范总纲与树形结构.md`
-- `specs/框架设计核心标准.md`
-- `mapping/mapping_registry.json`
-- `scripts/validate_strict_mapping.py`
+- framework Markdown 结构完整性
+- Framework / Base / Rule class 物化完整性
+- `project.toml` 可解析性
+- contract 切片与四层 compile 结果一致性
+- canonical 可重新物化
+- derived views 明确回指 canonical
+- `--check-changes` 下的变更传导闭包
+
+## 7. 与执行器关系
+
+`scripts/validate_canonical.py` 是当前主要自动执行器，但脚本不是第一性事实来源；若 lint 合同要变，必须先改本文，再同步执行器。

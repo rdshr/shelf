@@ -32,3 +32,9 @@ projects/*/generated/
 tools/vscode/archsync/releases/
 tools/vscode/archsync/media/archsync-candidate-*.svg
 tools/vscode/archsync/media/archsync-icon-preview.html
+
+# Shelf AI local packaging artifacts
+tools/vscode/shelf-ai/releases/
+
+# Local presentation exports
+docs/presentations/*.pptx
