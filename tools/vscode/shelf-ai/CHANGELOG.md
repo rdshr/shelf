@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.10 - 2026-03-17
+
+- Kept framework tree module edges visible even when canonical is `stale`, so the authoring graph no longer drops arrows just because correspondence freshness is temporarily unavailable.
+- Added branch-scoped git-hook enforcement in repository hooks and install flow, with default protected branches set to `framework` and `main` (other branches now skip hook blocking by default).
+- Added explicit ignore coverage for `projects/knowledge_base_basic/generated/canonical.json`, keeping local canonical regeneration out of tracked diffs in fresh plugin/repo setups.
+
 ## 0.1.9 - 2026-03-17
 
 - Removed redundant `boundary_id` / `mapping_mode` mirror keys from `projects/knowledge_base_basic/project.toml` so project config no longer repeats boundary identity already derived from framework and canonical.

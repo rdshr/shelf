@@ -91,7 +91,6 @@ class CodeBoundaryStaticClass:
     anchor_path: str
     projection_paths: list[str]
     field_name: str
-    deprecated_boundary_anchor_path: str
     source_ref: dict[str, Any]
 
     @classmethod
@@ -106,7 +105,6 @@ class CodeBoundaryStaticClass:
             "anchor_path": cls.anchor_path,
             "projection_paths": list(cls.projection_paths),
             "field_name": cls.field_name,
-            "deprecated_boundary_anchor_path": cls.deprecated_boundary_anchor_path,
             "source_ref": dict(cls.source_ref),
             "class_name": cls.__name__,
         }
@@ -150,13 +148,16 @@ class CodeModuleBinding:
         return payload
 
 
-def _require_boundary(exact_export: dict[str, Any], boundary_id: str) -> dict[str, Any]:
-    boundaries = exact_export.get("boundaries")
-    if not isinstance(boundaries, dict):
-        raise ValueError("exact_export.boundaries must be a dict")
-    value = boundaries.get(boundary_id)
+def _require_boundary_context_value(
+    boundary_context: dict[str, dict[str, Any]],
+    boundary_id: str,
+) -> dict[str, Any]:
+    payload = boundary_context.get(boundary_id)
+    if not isinstance(payload, dict):
+        raise ValueError(f"missing module boundary context: {boundary_id}")
+    value = payload.get("value")
     if not isinstance(value, dict):
-        raise ValueError(f"missing exact boundary: {boundary_id}")
+        raise ValueError(f"boundary context value must be dict: {boundary_id}")
     return value
 
 
@@ -180,18 +181,19 @@ def _section_summaries(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _compile_frontend_app_spec(
-    exact_export: dict[str, Any],
     *,
+    boundary_context: dict[str, dict[str, Any]],
+    exact_export: dict[str, Any],
     root_module_ids: dict[str, str],
 ) -> dict[str, Any]:
     profile = load_knowledge_base_runtime_profile()
-    surface = _require_boundary(exact_export, "SURFACE")
-    visual = _require_boundary(exact_export, "VISUAL")
-    interact = _require_boundary(exact_export, "INTERACT")
-    route = _require_boundary(exact_export, "ROUTE")
-    a11y = _require_boundary(exact_export, "A11Y")
-    state = _require_boundary(exact_export, "STATE")
-    extend = _require_boundary(exact_export, "EXTEND")
+    surface = _require_boundary_context_value(boundary_context, "SURFACE")
+    visual = _require_boundary_context_value(boundary_context, "VISUAL")
+    interact = _require_boundary_context_value(boundary_context, "INTERACT")
+    route = _require_boundary_context_value(boundary_context, "ROUTE")
+    a11y = _require_boundary_context_value(boundary_context, "A11Y")
+    state = _require_boundary_context_value(boundary_context, "STATE")
+    extend = _require_boundary_context_value(boundary_context, "EXTEND")
     implementation = _overlay(exact_export, "frontend", default={})
     copy = surface.get("copy", {})
     showcase = route.get("showcase_page", {})
@@ -387,17 +389,18 @@ def _compile_runtime_documents(exact_export: dict[str, Any]) -> list[dict[str, A
 
 
 def _compile_knowledge_base_domain_spec(
-    exact_export: dict[str, Any],
     *,
+    boundary_context: dict[str, dict[str, Any]],
+    exact_export: dict[str, Any],
     runtime_documents: list[dict[str, Any]],
 ) -> dict[str, Any]:
     profile = load_knowledge_base_runtime_profile()
-    surface = _require_boundary(exact_export, "SURFACE")
-    library = _require_boundary(exact_export, "LIBRARY")
-    preview = _require_boundary(exact_export, "PREVIEW")
-    chat = _require_boundary(exact_export, "CHAT")
-    context = _require_boundary(exact_export, "CONTEXT")
-    return_policy = _require_boundary(exact_export, "RETURN")
+    surface = _require_boundary_context_value(boundary_context, "SURFACE")
+    library = _require_boundary_context_value(boundary_context, "LIBRARY")
+    preview = _require_boundary_context_value(boundary_context, "PREVIEW")
+    chat = _require_boundary_context_value(boundary_context, "CHAT")
+    context = _require_boundary_context_value(boundary_context, "CONTEXT")
+    return_policy = _require_boundary_context_value(boundary_context, "RETURN")
     allow_create = bool(library.get("allow_create"))
     allow_delete = bool(library.get("allow_delete"))
     return {
@@ -435,17 +438,18 @@ def _compile_knowledge_base_domain_spec(
 
 
 def _compile_backend_service_spec(
-    exact_export: dict[str, Any],
     *,
+    boundary_context: dict[str, dict[str, Any]],
+    exact_export: dict[str, Any],
     route_contract: dict[str, Any],
 ) -> dict[str, Any]:
     profile = load_knowledge_base_runtime_profile()
-    library = _require_boundary(exact_export, "LIBRARY")
-    preview = _require_boundary(exact_export, "PREVIEW")
-    chat = _require_boundary(exact_export, "CHAT")
-    result = _require_boundary(exact_export, "RESULT")
-    auth = _require_boundary(exact_export, "AUTH")
-    trace = _require_boundary(exact_export, "TRACE")
+    library = _require_boundary_context_value(boundary_context, "LIBRARY")
+    preview = _require_boundary_context_value(boundary_context, "PREVIEW")
+    chat = _require_boundary_context_value(boundary_context, "CHAT")
+    result = _require_boundary_context_value(boundary_context, "RESULT")
+    auth = _require_boundary_context_value(boundary_context, "AUTH")
+    trace = _require_boundary_context_value(boundary_context, "TRACE")
     implementation = _overlay(exact_export, "backend", default={})
     return {
         "implementation": {
@@ -713,6 +717,86 @@ def _build_module_contract_type(
     )
 
 
+@dataclass(frozen=True)
+class ModuleContractState:
+    module_id: str
+    module_key: str
+    module_name_fragment: str
+    field_bindings: tuple[dict[str, str], ...]
+    static_params_type: type[StaticBoundaryParamsContract]
+    runtime_params_type: type[RuntimeBoundaryParamsContract]
+    base_types: tuple[type[BaseContract], ...]
+    rule_types: tuple[type[RuleContract], ...]
+    module_type: type[ModuleContract]
+    static_params: StaticBoundaryParamsContract
+    runtime_params: RuntimeBoundaryParamsContract
+    boundary_context: dict[str, dict[str, Any]]
+
+
+def _build_module_contract_state(binding: ConfigModuleBinding) -> ModuleContractState:
+    module_id = binding.framework_module.module_id
+    module_key = module_key_from_id(module_id)
+    module_name_fragment = module_class_name_fragment(module_id)
+    field_bindings = tuple(_module_field_bindings(binding))
+    static_params_type = _build_static_params_type(
+        module_id=module_id,
+        module_key=module_key,
+        module_name_fragment=module_name_fragment,
+        field_bindings=list(field_bindings),
+    )
+    runtime_params_type = _build_runtime_params_type(
+        module_id=module_id,
+        module_key=module_key,
+        module_name_fragment=module_name_fragment,
+        field_bindings=list(field_bindings),
+    )
+    base_types = _build_base_contract_types(
+        binding,
+        module_name_fragment=module_name_fragment,
+    )
+    rule_types = _build_rule_contract_types(
+        binding,
+        module_name_fragment=module_name_fragment,
+    )
+    module_type = _build_module_contract_type(
+        module_id=module_id,
+        module_key=module_key,
+        module_name_fragment=module_name_fragment,
+        static_params_type=static_params_type,
+        runtime_params_type=runtime_params_type,
+        base_types=base_types,
+        rule_types=rule_types,
+        field_bindings=list(field_bindings),
+    )
+    raw_static_payload = _module_static_payload(binding.config_module.exact_export, module_key=module_key)
+    static_payload: dict[str, Any] = {}
+    for item in field_bindings:
+        static_field = item["static_field_name"]
+        if static_field not in raw_static_payload:
+            raise ValueError(
+                "missing static boundary value for "
+                f"{module_id}:{item['boundary_id']} ({static_field})"
+            )
+        static_payload[static_field] = raw_static_payload[static_field]
+    static_params = module_type.static_params_from_mapping(static_payload)
+    runtime_params = module_type.runtime_params_default()
+    boundary_context = module_type.build_boundary_context(static_params, runtime_params)
+    return ModuleContractState(
+        module_id=module_id,
+        module_key=module_key,
+        module_name_fragment=module_name_fragment,
+        field_bindings=field_bindings,
+        static_params_type=static_params_type,
+        runtime_params_type=runtime_params_type,
+        base_types=base_types,
+        rule_types=rule_types,
+        module_type=module_type,
+        static_params=static_params,
+        runtime_params=runtime_params,
+        boundary_context=boundary_context,
+    )
+
+
 def _module_compile_symbol(module_id: str, root_module_ids: dict[str, str]) -> str:
     if module_id == root_module_ids.get("frontend"):
         return "project_runtime.code_layer:_compile_frontend_app_spec"
@@ -800,13 +884,13 @@ def _boundary_slot_source_ref(
     needle = ""
     section = "implementation_slots"
     if module_id == root_module_ids.get("frontend"):
-        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_frontend_app_spec"
     elif module_id == root_module_ids.get("knowledge_base"):
-        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_knowledge_base_domain_spec"
     elif module_id == root_module_ids.get("backend"):
-        needle = f'_require_boundary(exact_export, "{boundary_id}")'
+        needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_backend_service_spec"
     line = _find_code_line(needle, fallback=fallback_line)
     return {
@@ -868,10 +952,9 @@ def _build_implementation_slots(
                 f"static_params.{static_field_name}"
             )
         )
-        deprecated_anchor_path = f"exact_export.boundaries.{boundary.boundary_id}"
         projection_paths = list(
             dict.fromkeys(
-                [*related_exact_paths, exact_export_static_path, deprecated_anchor_path]
+                [*related_exact_paths, exact_export_static_path]
             )
         )
         slots.append(
@@ -892,7 +975,6 @@ def _build_implementation_slots(
                 ),
                 "anchor_path": exact_export_static_path,
                 "projection_paths": projection_paths,
-                "deprecated_boundary_anchor_path": deprecated_anchor_path,
                 "source_ref": _boundary_slot_source_ref(
                     binding.framework_module.module_id,
                     boundary.boundary_id,
@@ -941,7 +1023,7 @@ def _build_boundary_code_classes(
             (
                 slot
                 for slot in slots
-                if slot.get("slot_kind") in {"module_static_param", "exact_boundary"}
+                if slot.get("slot_kind") == "module_static_param"
             ),
             None,
         )
@@ -962,9 +1044,6 @@ def _build_boundary_code_classes(
                 "anchor_path": str(exact_slot.get("anchor_path") or ""),
                 "projection_paths": list(exact_slot.get("projection_paths") or []),
                 "field_name": str(exact_slot.get("field_name") or ""),
-                "deprecated_boundary_anchor_path": str(
-                    exact_slot.get("deprecated_boundary_anchor_path") or ""
-                ),
                 "source_ref": dict(exact_slot.get("source_ref") or {}),
             },
         )
@@ -1085,6 +1164,10 @@ def build_code_modules(
 ) -> tuple[tuple[CodeModuleBinding, ...], dict[str, Any]]:
     bindings: list[CodeModuleBinding] = []
     runtime_exports: dict[str, Any] = {}
+    contract_state_by_module = {
+        binding.framework_module.module_id: _build_module_contract_state(binding)
+        for binding in config_modules
+    }
     binding_by_module_id = {
         binding.framework_module.module_id: binding
         for binding in config_modules
@@ -1094,15 +1177,24 @@ def build_code_modules(
     backend_root = binding_by_module_id.get(root_module_ids.get("backend", ""))
     if frontend_root is None or knowledge_root is None or backend_root is None:
         raise ValueError("frontend, knowledge_base, and backend root modules are required")
-    frontend_app_spec = _compile_frontend_app_spec(frontend_root.config_module.exact_export, root_module_ids=root_module_ids)
+    frontend_state = contract_state_by_module[frontend_root.framework_module.module_id]
+    knowledge_state = contract_state_by_module[knowledge_root.framework_module.module_id]
+    backend_state = contract_state_by_module[backend_root.framework_module.module_id]
+    frontend_app_spec = _compile_frontend_app_spec(
+        boundary_context=frontend_state.boundary_context,
+        exact_export=frontend_root.config_module.exact_export,
+        root_module_ids=root_module_ids,
+    )
     route_contract = frontend_app_spec["contract"]["route_contract"]
     runtime_documents = _compile_runtime_documents(knowledge_root.config_module.exact_export)
     knowledge_base_domain_spec = _compile_knowledge_base_domain_spec(
-        knowledge_root.config_module.exact_export,
+        boundary_context=knowledge_state.boundary_context,
+        exact_export=knowledge_root.config_module.exact_export,
         runtime_documents=runtime_documents,
     )
     backend_service_spec = _compile_backend_service_spec(
-        backend_root.config_module.exact_export,
+        boundary_context=backend_state.boundary_context,
+        exact_export=backend_root.config_module.exact_export,
         route_contract=route_contract,
     )
     runtime_exports["frontend_app_spec"] = frontend_app_spec
@@ -1111,7 +1203,8 @@ def build_code_modules(
     runtime_exports["backend_service_spec"] = backend_service_spec
     for binding in config_modules:
         module_id = binding.framework_module.module_id
-        module_key = module_key_from_id(module_id)
+        state = contract_state_by_module[module_id]
+        module_key = state.module_key
         exact_export = binding.config_module.exact_export
         code_exports: dict[str, Any] = {}
         if module_id == root_module_ids.get("frontend"):
@@ -1121,64 +1214,18 @@ def build_code_modules(
             code_exports["runtime_documents"] = runtime_documents
         if module_id == root_module_ids.get("backend"):
             code_exports["backend_service_spec"] = backend_service_spec
-        module_name_fragment = module_class_name_fragment(module_id)
+        module_name_fragment = state.module_name_fragment
         class_name = f"{module_name_fragment}CodeModule"
         implementation_slots = _build_implementation_slots(binding, root_module_ids=root_module_ids)
-        field_bindings = _module_field_bindings(binding)
-        static_params_type = _build_static_params_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            field_bindings=field_bindings,
-        )
-        runtime_params_type = _build_runtime_params_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            field_bindings=field_bindings,
-        )
-        base_types = _build_base_contract_types(
-            binding,
-            module_name_fragment=module_name_fragment,
-        )
-        rule_types = _build_rule_contract_types(
-            binding,
-            module_name_fragment=module_name_fragment,
-        )
-        module_type = _build_module_contract_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            static_params_type=static_params_type,
-            runtime_params_type=runtime_params_type,
-            base_types=base_types,
-            rule_types=rule_types,
-            field_bindings=field_bindings,
-        )
-        raw_static_payload = _module_static_payload(exact_export, module_key=module_key)
-        boundary_aliases = exact_export.get("boundaries")
-        if not isinstance(boundary_aliases, dict):
-            boundary_aliases = {}
-        static_payload: dict[str, Any] = {}
-        for item in field_bindings:
-            boundary_id = item["boundary_id"]
-            static_field = item["static_field_name"]
-            if static_field in raw_static_payload:
-                static_payload[static_field] = raw_static_payload[static_field]
-                continue
-            alias_payload = boundary_aliases.get(boundary_id)
-            if alias_payload is None:
-                raise ValueError(
-                    "missing static boundary value for "
-                    f"{module_id}:{boundary_id} ({static_field})"
-                )
-            static_payload[static_field] = alias_payload
-        static_params = module_type.static_params_from_mapping(static_payload)
-        runtime_params = module_type.runtime_params_default()
-        merged_boundary_context = module_type.build_boundary_context(
-            static_params,
-            runtime_params,
-        )
+        field_bindings = list(state.field_bindings)
+        static_params_type = state.static_params_type
+        runtime_params_type = state.runtime_params_type
+        base_types = state.base_types
+        rule_types = state.rule_types
+        module_type = state.module_type
+        static_params = state.static_params
+        runtime_params = state.runtime_params
+        merged_boundary_context = state.boundary_context
         boundary_static_classes, boundary_runtime_classes = _build_boundary_code_classes(
             binding,
             implementation_slots=implementation_slots,
@@ -1239,10 +1286,6 @@ def build_code_modules(
                     "static_field_name": item["static_field_name"],
                     "runtime_field_name": item["runtime_field_name"],
                     "merge_policy": item["merge_policy"],
-                    "deprecated_boundary_anchor_path": str(
-                        config_record.get("deprecated_boundary_anchor_path")
-                        or f"exact_export.boundaries.{boundary_id}"
-                    ),
                 }
             )
         module_class_binding = {

@@ -77,10 +77,10 @@ Framework -> Config -> Code -> Evidence
 - `exact_export.modules.<module_key>.static_params.<field_name>`
 - `communication_export.modules.<module_key>.static_params.<field_name>`
 
-兼容层：
+强约束：
 
-- `exact_export.boundaries.<BOUNDARY>` 可短期保留为别名
-- 但 canonical 中 primary code-facing anchor 必须切到 module static params path
+- `exact_export.boundaries.<BOUNDARY>` 已下线，不再作为导出或兼容别名
+- canonical 中 primary code-facing anchor 只能使用 module static params path
 
 ### 4.2 Code 层
 
@@ -109,7 +109,6 @@ Framework -> Config -> Code -> Evidence
 - static/runtime params class symbol
 - static/runtime field name
 - merge policy（当前固定：`runtime_override_else_static`）
-- 兼容别名（若仍保留旧 boundary anchor）
 
 ## 6. 必须可检测的 Invariants
 
@@ -121,7 +120,7 @@ Framework -> Config -> Code -> Evidence
 4. `B/R` 未被 `M` 显式装配
 5. config path -> module static param field 无法闭合
 6. code 直接消费 `communication_export` 或直接读取 framework markdown
-7. 仍仅依赖旧 boundary slot 而缺失 module params 主绑定
+7. 出现 `exact_export.boundaries.*` 或其他旧 boundary slot 依赖
 
 ## 7. 命名与标识规则
 
@@ -136,11 +135,10 @@ Framework -> Config -> Code -> Evidence
 
 分阶段执行，避免一次性破坏旧链路：
 
-1. 先补对象模型与 canonical 绑定（保留旧 boundary slot）
+1. 先补对象模型与 canonical 绑定
 2. 再补 static/runtime params classes 与字段映射
-3. 再把 code 主锚点切到 module params
-4. 再接入 correspondence validator 为必跑校验
-5. 最后按兼容情况清理旧别名
+3. 把 code 主锚点切到 module params
+4. 让 correspondence validator 把旧 slot 依赖判定为失败
 
 ## 9. 实施边界说明
 
@@ -208,7 +206,7 @@ Framework -> Config -> Code -> Evidence
 
 每个导航目标最小字段：
 
-- `target_kind`（`framework_definition | config_source | code_correspondence | code_implementation | evidence_report | deprecated_alias`）
+- `target_kind`（`framework_definition | config_source | code_correspondence | code_implementation | evidence_report`）
 - `layer`（`framework | config | code | evidence`）
 - `file_path`
 - `start_line`
@@ -217,12 +215,10 @@ Framework -> Config -> Code -> Evidence
 - `label`
 - `is_primary`
 - `is_editable`
-- `is_deprecated_alias`
 
 强约束：
 
 - 不能只有 symbol，必须有 `file_path/start_line/end_line`
-- `deprecated_alias` 不能是 primary
 - `runtime_dynamic_type` 对象必须至少有一个非动态 fallback target（`framework_definition/config_source/code_correspondence` 之一）
 
 ### 12.3 Anchor 语义拆分

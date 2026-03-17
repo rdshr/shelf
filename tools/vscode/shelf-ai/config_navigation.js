@@ -170,7 +170,7 @@ function findCodeAnchorTarget(canonical, repoRoot, mapping) {
     (item) => item
       && typeof item === "object"
       && String(item.boundary_id || "") === mapping.boundaryId
-      && String(item.slot_kind || "") === "exact_boundary"
+      && String(item.slot_kind || "") === "module_static_param"
   );
   const sourceRef = boundarySlot?.source_ref && typeof boundarySlot.source_ref === "object"
     ? boundarySlot.source_ref

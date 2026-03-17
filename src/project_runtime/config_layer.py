@@ -81,7 +81,6 @@ class ConfigBoundaryRuntimeClass:
     static_field_name: str
     runtime_field_name: str
     merge_policy: str
-    deprecated_boundary_anchor_path: str
     source_ref: dict[str, Any]
 
     @classmethod
@@ -100,7 +99,6 @@ class ConfigBoundaryRuntimeClass:
             "static_field_name": cls.static_field_name,
             "runtime_field_name": cls.runtime_field_name,
             "merge_policy": cls.merge_policy,
-            "deprecated_boundary_anchor_path": cls.deprecated_boundary_anchor_path,
             "source_ref": dict(cls.source_ref),
             "class_name": cls.__name__,
         }
@@ -200,8 +198,6 @@ def build_config_modules(
     for module_class in framework_modules:
         module_key = module_key_from_id(module_class.module_id)
         boundary_pairs: list[dict[str, Any]] = []
-        communication_boundaries: dict[str, Any] = {}
-        exact_boundaries: dict[str, Any] = {}
         module_static_communication: dict[str, Any] = {}
         module_static_exact: dict[str, Any] = {}
         module_static_param_bindings: list[dict[str, Any]] = []
@@ -239,8 +235,6 @@ def build_config_modules(
                 lookup_dotted_path(project_payload, exact_path),
                 path=exact_path,
             )
-            communication_boundaries[boundary.boundary_id] = communication_payload
-            exact_boundaries[boundary.boundary_id] = exact_payload
             module_static_communication[static_field] = communication_payload
             module_static_exact[static_field] = exact_payload
             boundary_projection_map[boundary.boundary_id] = dict(projection)
@@ -264,7 +258,6 @@ def build_config_modules(
                     "static_field_name": static_field,
                     "runtime_field_name": runtime_field,
                     "merge_policy": merge_policy,
-                    "deprecated_boundary_anchor_path": f"exact_export.boundaries.{boundary.boundary_id}",
                     "mapping_mode": str(projection.get("mapping_mode") or ""),
                     "projection_id": str(projection.get("projection_id") or ""),
                 }
@@ -321,7 +314,6 @@ def build_config_modules(
                         "static_field_name": static_field,
                         "runtime_field_name": runtime_field,
                         "merge_policy": merge_policy,
-                        "deprecated_boundary_anchor_path": f"exact_export.boundaries.{boundary.boundary_id}",
                         "source_ref": {
                             "file_path": project_config.project_file,
                             "section": "config_boundary_runtime",
@@ -340,7 +332,6 @@ def build_config_modules(
             "module_key": module_key,
             "source_ref": dict(module_class.source_ref),
             "boundary_projections": boundary_projection_map,
-            "boundaries": communication_boundaries,
             "modules": {
                 module_key: {
                     "module_id": module_class.module_id,
@@ -354,7 +345,6 @@ def build_config_modules(
             "module_key": module_key,
             "source_ref": dict(module_class.source_ref),
             "boundary_projections": boundary_projection_map,
-            "boundaries": exact_boundaries,
             "modules": {
                 module_key: {
                     "module_id": module_class.module_id,

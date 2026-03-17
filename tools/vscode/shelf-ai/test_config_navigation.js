@@ -20,6 +20,16 @@ function findLineBySection(text, sectionName) {
   return -1;
 }
 
+function findLineContaining(text, token) {
+  const lines = String(text || "").split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index].includes(token)) {
+      return index + 1;
+    }
+  }
+  return -1;
+}
+
 function main() {
   assert(isProjectConfigFile(projectFilePath, repoRoot), "project.toml should be recognized as project config file");
 
@@ -58,7 +68,18 @@ function main() {
   assert.strictEqual(frontendTarget.moduleId, "frontend.L2.M0");
   assert.strictEqual(frontendTarget.boundaryId, "SURFACE");
   assert.strictEqual(frontendTarget.objectId, "frontend.L2.M0::static_param::surface");
-  assert.strictEqual(frontendTarget.line, 187, "frontend surface should prefer the higher-level consumer anchor");
+  const codeLayerPath = path.join(repoRoot, "src", "project_runtime", "code_layer.py");
+  const codeLayerText = fs.readFileSync(codeLayerPath, "utf8");
+  const expectedSurfaceLine = findLineContaining(
+    codeLayerText,
+    '_require_boundary_context_value(boundary_context, "SURFACE")'
+  );
+  assert(expectedSurfaceLine > 0, "code layer should expose SURFACE boundary context anchor");
+  assert.strictEqual(
+    frontendTarget.line,
+    expectedSurfaceLine - 1,
+    "frontend surface should resolve to module static params consumer anchor"
+  );
 
   const projectSectionLine = findLineBySection(text, "project");
   assert(projectSectionLine >= 0, "project section should exist");

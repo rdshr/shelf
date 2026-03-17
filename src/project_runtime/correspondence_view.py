@@ -307,22 +307,6 @@ def _boundary_slot_target(
     return fallback_target
 
 
-def _deprecated_alias_target(alias_path: str, *, is_primary: bool = False) -> NavigationTarget:
-    line = _find_line("src/project_runtime/config_layer.py", "deprecated_boundary_anchor_path", fallback=1)
-    return _target(
-        target_kind="deprecated_alias",
-        layer="code",
-        file_path="src/project_runtime/config_layer.py",
-        start_line=line,
-        end_line=line,
-        symbol=alias_path,
-        label="Deprecated boundary alias",
-        is_primary=is_primary,
-        is_editable=True,
-        is_deprecated_alias=True,
-    )
-
-
 _MODULE_BOUNDARY_PAIR_PATTERN = re.compile(r"(?P<module>[A-Za-z0-9_]+\.[A-Za-z0-9_]+\.[A-Za-z0-9_]+):(?P<boundary>[A-Z0-9_]+)")
 
 
@@ -724,16 +708,11 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 fallback_target=implementation_target,
                 is_primary=False,
             )
-            deprecated_target = _deprecated_alias_target(
-                str(boundary_link.get("deprecated_boundary_anchor_path") or f"exact_export.boundaries.{boundary_id}"),
-                is_primary=False,
-            )
             boundary_targets = (
                 config_target,
                 framework_target,
                 correspondence_target,
                 implementation_target,
-                deprecated_target,
             )
             objects.append(
                 CorrespondenceNode(
@@ -777,7 +756,6 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 config_target,
                 static_correspondence_target,
                 implementation_target,
-                deprecated_target,
             )
             objects.append(
                 CorrespondenceNode(
