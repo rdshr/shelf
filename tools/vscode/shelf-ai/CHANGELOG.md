@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.11 - 2026-03-17
+
+- Refreshed Shelf AI branding with a new duck icon set: the extension now ships a colorful README/Marketplace icon together with a dedicated monochrome Activity Bar glyph tuned for VS Code's sidebar constraints.
+- Added the icon working assets under `tools/vscode/shelf-ai/design/` so the final shipped icon remains traceable to its design iterations.
+- Repackaged and reinstalled the local VSIX after the icon refresh so the published asset matches the validated workspace.
+
 ## 0.1.10 - 2026-03-17
 
 - Kept framework tree module edges visible even when canonical is `stale`, so the authoring graph no longer drops arrows just because correspondence freshness is temporarily unavailable.

@@ -1,5 +1,9 @@
 # Shelf AI (VSCode Extension)
 
+<p align="center">
+  <img src="./media/shelf-duck-tight-transparent.png" alt="Shelf AI icon" width="168">
+</p>
+
 ## What It Does
 
 - Opens the framework tree and workspace evidence tree from the sidebar.

@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -13,6 +13,7 @@
     "url": "https://github.com/xueyu888/shelf/issues"
   },
   "homepage": "https://github.com/xueyu888/shelf/tree/main/tools/vscode/shelf-ai",
+  "icon": "media/shelf-duck-tight-transparent.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -135,21 +136,12 @@
         "title": "Shelf: Refresh Evidence Tree"
       }
     ],
-    "icons": {
-      "shelf-logo": {
-        "description": "Shelf AI Activity Bar icon",
-        "default": {
-          "fontPath": "media/shelf-ai-icons.woff2",
-          "fontCharacter": "\\ea01"
-        }
-      }
-    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "shelfSidebar",
           "title": "Shelf",
-          "icon": "$(shelf-logo)"
+          "icon": "media/shelf-activitybar-duck.svg"
         }
       ]
     },
