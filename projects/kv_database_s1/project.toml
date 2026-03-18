@@ -1,0 +1,81 @@
+# Config 主层唯一入口。
+# 这份配置把 `framework/KV_Database_S1/L0-M0-KV_Database_S1.md` 的结构空间，
+# 具体化成：
+# 1. communication：面向人与 AI 协作时讨论边界的结构化要求
+# 2. exact：面向 Code 层精确消费的字段、参数与路径
+#
+# 当前文件先作为 KV Database S1 的最小项目草案。
+# 它的目标不是立刻跑通现有 runtime，而是先把 framework -> config 的映射固定下来，
+# 供后续 Code / Evidence 承接使用。
+
+[project]
+project_id = "kv_database_s1"
+runtime_scene = "kv_database_memory_wal"
+display_name = "KV Database S1"
+description = "A minimal in-memory KV database with WAL-backed recovery, driven by the four-layer framework/config mainline."
+version = "0.1.0"
+
+[framework]
+# 当前项目只装配一个 root framework 模块：
+# KV_Database_S1.L0.M0
+#
+# 该模块当前可解析出的 boundary_id 为：
+# OPERATION / KEY / VALUE / PATH / LOG
+#
+# 对应 projection 已由 framework 导出固定为一对一：
+# communication.KV_Database_S1.<boundary_lower>
+# exact.KV_Database_S1.<boundary_lower>
+
+[[framework.modules]]
+role = "kv_database"
+framework_file = "framework/KV_Database_S1/L0-M0-KV_Database_S1.md"
+
+[communication.KV_Database_S1.operation]
+intent = "put get delete only"
+discussion_focus = "clarify allowed operations and failure semantics before implementation"
+
+[communication.KV_Database_S1.key]
+intent = "single string key per operation"
+discussion_focus = "key domain stays string-only and maps to exactly one value"
+
+[communication.KV_Database_S1.value]
+intent = "value payload remains unconstrained at framework level"
+discussion_focus = "exact runtime serialization and in-memory representation must be chosen in code layer"
+
+[communication.KV_Database_S1.path]
+intent = "WAL storage path and filename must be explicit"
+discussion_focus = "separate runtime location choice from framework semantics"
+
+[communication.KV_Database_S1.log]
+intent = "WAL record keeps operation key value ordering"
+discussion_focus = "log line shape, serialization, and replay assumptions stay explicit"
+
+[exact.KV_Database_S1.operation]
+allowed_operations = ["put", "get", "delete"]
+write_operations = ["put", "delete"]
+read_operation = "get"
+missing_key_policy = "raise_key_error"
+
+[exact.KV_Database_S1.key]
+python_type = "str"
+empty_key_allowed = false
+normalization = "identity"
+
+[exact.KV_Database_S1.value]
+python_type = "Any"
+serialization = "repr"
+nullable = true
+
+[exact.KV_Database_S1.path]
+wal_directory = "runtime_data/kv_database_s1"
+wal_filename = "wal.log"
+create_parent_on_boot = true
+
+[exact.KV_Database_S1.log]
+record_format = "operation key value"
+field_order = ["operation", "key", "value"]
+line_delimiter = "\\n"
+replay_strategy = "append_only_replay"
+
+[exact.evidence.artifacts]
+canonical_json = "canonical.json"

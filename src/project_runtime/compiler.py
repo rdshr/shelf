@@ -248,7 +248,9 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
     )
     evidence_modules, evidence_exports, validation_reports = build_evidence_modules(draft_assembly, code_modules)
     runtime_exports = dict(code_exports)
-    runtime_exports["runtime_blueprint"] = evidence_exports["runtime_blueprint"]
+    runtime_blueprint = evidence_exports.get("runtime_blueprint")
+    if isinstance(runtime_blueprint, dict):
+        runtime_exports["runtime_blueprint"] = runtime_blueprint
     assembly = ProjectRuntimeAssembly(
         project_file=draft_assembly.project_file,
         metadata=draft_assembly.metadata,

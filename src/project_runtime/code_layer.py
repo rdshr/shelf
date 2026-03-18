@@ -180,6 +180,81 @@ def _section_summaries(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+def _compile_kv_database_runtime_spec(
+    *,
+    boundary_context: dict[str, dict[str, Any]],
+    exact_export: dict[str, Any],
+) -> dict[str, Any]:
+    operation = _require_boundary_context_value(boundary_context, "OPERATION")
+    key = _require_boundary_context_value(boundary_context, "KEY")
+    value = _require_boundary_context_value(boundary_context, "VALUE")
+    wal_path = _require_boundary_context_value(boundary_context, "PATH")
+    wal_log = _require_boundary_context_value(boundary_context, "LOG")
+    wal_directory = Path(str(wal_path["wal_directory"]))
+    wal_filename = str(wal_path["wal_filename"])
+    implementation = {
+        "database_class": "kv_database_runtime.store:MemoryKvDatabase",
+        "config_class": "kv_database_runtime.store:MemoryKvDatabaseConfig",
+        "log_class": "kv_database_runtime.store:WriteAheadLog",
+        "record_class": "kv_database_runtime.store:WalRecord",
+        "summary_factory": "kv_database_runtime.runtime_exports:project_runtime_public_summary",
+    }
+    return {
+        "contract": {
+            "operation": {
+                "allowed_operations": list(operation["allowed_operations"]),
+                "write_operations": list(operation["write_operations"]),
+                "read_operation": str(operation["read_operation"]),
+                "missing_key_policy": str(operation["missing_key_policy"]),
+            },
+            "key": {
+                "python_type": str(key["python_type"]),
+                "empty_key_allowed": bool(key["empty_key_allowed"]),
+                "normalization": str(key["normalization"]),
+            },
+            "value": {
+                "python_type": str(value["python_type"]),
+                "serialization": str(value["serialization"]),
+                "nullable": bool(value["nullable"]),
+            },
+        },
+        "wal": {
+            "directory": wal_directory.as_posix(),
+            "filename": wal_filename,
+            "path": (wal_directory / wal_filename).as_posix(),
+            "create_parent_on_boot": bool(wal_path["create_parent_on_boot"]),
+            "record_format": str(wal_log["record_format"]),
+            "field_order": list(wal_log["field_order"]),
+            "line_delimiter": str(wal_log["line_delimiter"]),
+            "replay_strategy": str(wal_log["replay_strategy"]),
+        },
+        "runtime": {
+            "config": {
+                "allowed_operations": list(operation["allowed_operations"]),
+                "read_operation": str(operation["read_operation"]),
+                "write_operations": list(operation["write_operations"]),
+                "missing_key_policy": str(operation["missing_key_policy"]),
+                "key_python_type": str(key["python_type"]),
+                "value_python_type": str(value["python_type"]),
+                "value_serialization": str(value["serialization"]),
+                "wal_directory": wal_directory.as_posix(),
+                "wal_filename": wal_filename,
+                "create_parent_on_boot": bool(wal_path["create_parent_on_boot"]),
+                "record_format": str(wal_log["record_format"]),
+                "field_order": list(wal_log["field_order"]),
+                "line_delimiter": str(wal_log["line_delimiter"]),
+                "replay_strategy": str(wal_log["replay_strategy"]),
+            },
+            "implementation": implementation,
+            "api": {
+                "factory": "kv_database_runtime.store:MemoryKvDatabase.from_config",
+                "methods": ["put", "get", "delete", "recover", "snapshot"],
+            },
+        },
+        "source_overlays": exact_export.get("overlays", {}),
+    }
+
+
 def _compile_frontend_app_spec(
     *,
     boundary_context: dict[str, dict[str, Any]],
@@ -798,6 +873,8 @@ def _build_module_contract_state(binding: ConfigModuleBinding) -> ModuleContract
 
 
 def _module_compile_symbol(module_id: str, root_module_ids: dict[str, str]) -> str:
+    if module_id == root_module_ids.get("kv_database"):
+        return "project_runtime.code_layer:_compile_kv_database_runtime_spec"
     if module_id == root_module_ids.get("frontend"):
         return "project_runtime.code_layer:_compile_frontend_app_spec"
     if module_id == root_module_ids.get("knowledge_base"):
@@ -808,6 +885,26 @@ def _module_compile_symbol(module_id: str, root_module_ids: dict[str, str]) -> s
 
 
 def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) -> dict[str, tuple[str, ...]]:
+    if module_id == root_module_ids.get("kv_database"):
+        return {
+            "OPERATION": (
+                "kv_database_runtime_spec.contract.operation",
+                "kv_database_runtime_spec.runtime.api",
+            ),
+            "KEY": ("kv_database_runtime_spec.contract.key",),
+            "VALUE": (
+                "kv_database_runtime_spec.contract.value",
+                "kv_database_runtime_spec.runtime.config.value_serialization",
+            ),
+            "PATH": (
+                "kv_database_runtime_spec.wal.directory",
+                "kv_database_runtime_spec.wal.path",
+            ),
+            "LOG": (
+                "kv_database_runtime_spec.wal.record_format",
+                "kv_database_runtime_spec.wal.replay_strategy",
+            ),
+        }
     if module_id == root_module_ids.get("frontend"):
         return {
             "SURFACE": (
@@ -886,6 +983,9 @@ def _boundary_slot_source_ref(
     if module_id == root_module_ids.get("frontend"):
         needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_frontend_app_spec"
+    elif module_id == root_module_ids.get("kv_database"):
+        needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
+        section = "compile_kv_database_runtime_spec"
     elif module_id == root_module_ids.get("knowledge_base"):
         needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_knowledge_base_domain_spec"
@@ -1175,38 +1275,50 @@ def build_code_modules(
     frontend_root = binding_by_module_id.get(root_module_ids.get("frontend", ""))
     knowledge_root = binding_by_module_id.get(root_module_ids.get("knowledge_base", ""))
     backend_root = binding_by_module_id.get(root_module_ids.get("backend", ""))
-    if frontend_root is None or knowledge_root is None or backend_root is None:
-        raise ValueError("frontend, knowledge_base, and backend root modules are required")
-    frontend_state = contract_state_by_module[frontend_root.framework_module.module_id]
-    knowledge_state = contract_state_by_module[knowledge_root.framework_module.module_id]
-    backend_state = contract_state_by_module[backend_root.framework_module.module_id]
-    frontend_app_spec = _compile_frontend_app_spec(
-        boundary_context=frontend_state.boundary_context,
-        exact_export=frontend_root.config_module.exact_export,
-        root_module_ids=root_module_ids,
-    )
-    route_contract = frontend_app_spec["contract"]["route_contract"]
-    runtime_documents = _compile_runtime_documents(knowledge_root.config_module.exact_export)
-    knowledge_base_domain_spec = _compile_knowledge_base_domain_spec(
-        boundary_context=knowledge_state.boundary_context,
-        exact_export=knowledge_root.config_module.exact_export,
-        runtime_documents=runtime_documents,
-    )
-    backend_service_spec = _compile_backend_service_spec(
-        boundary_context=backend_state.boundary_context,
-        exact_export=backend_root.config_module.exact_export,
-        route_contract=route_contract,
-    )
-    runtime_exports["frontend_app_spec"] = frontend_app_spec
-    runtime_exports["knowledge_base_domain_spec"] = knowledge_base_domain_spec
-    runtime_exports["runtime_documents"] = runtime_documents
-    runtime_exports["backend_service_spec"] = backend_service_spec
+    kv_database_root = binding_by_module_id.get(root_module_ids.get("kv_database", ""))
+    if frontend_root is not None and knowledge_root is not None and backend_root is not None:
+        frontend_state = contract_state_by_module[frontend_root.framework_module.module_id]
+        knowledge_state = contract_state_by_module[knowledge_root.framework_module.module_id]
+        backend_state = contract_state_by_module[backend_root.framework_module.module_id]
+        frontend_app_spec = _compile_frontend_app_spec(
+            boundary_context=frontend_state.boundary_context,
+            exact_export=frontend_root.config_module.exact_export,
+            root_module_ids=root_module_ids,
+        )
+        route_contract = frontend_app_spec["contract"]["route_contract"]
+        runtime_documents = _compile_runtime_documents(knowledge_root.config_module.exact_export)
+        knowledge_base_domain_spec = _compile_knowledge_base_domain_spec(
+            boundary_context=knowledge_state.boundary_context,
+            exact_export=knowledge_root.config_module.exact_export,
+            runtime_documents=runtime_documents,
+        )
+        backend_service_spec = _compile_backend_service_spec(
+            boundary_context=backend_state.boundary_context,
+            exact_export=backend_root.config_module.exact_export,
+            route_contract=route_contract,
+        )
+        runtime_exports["frontend_app_spec"] = frontend_app_spec
+        runtime_exports["knowledge_base_domain_spec"] = knowledge_base_domain_spec
+        runtime_exports["runtime_documents"] = runtime_documents
+        runtime_exports["backend_service_spec"] = backend_service_spec
+    elif kv_database_root is not None and len(binding_by_module_id) == 1:
+        kv_database_state = contract_state_by_module[kv_database_root.framework_module.module_id]
+        runtime_exports["kv_database_runtime_spec"] = _compile_kv_database_runtime_spec(
+            boundary_context=kv_database_state.boundary_context,
+            exact_export=kv_database_root.config_module.exact_export,
+        )
+    else:
+        raise ValueError(
+            "supported root module sets are either frontend+knowledge_base+backend or kv_database"
+        )
     for binding in config_modules:
         module_id = binding.framework_module.module_id
         state = contract_state_by_module[module_id]
         module_key = state.module_key
         exact_export = binding.config_module.exact_export
         code_exports: dict[str, Any] = {}
+        if module_id == root_module_ids.get("kv_database"):
+            code_exports["kv_database_runtime_spec"] = runtime_exports["kv_database_runtime_spec"]
         if module_id == root_module_ids.get("frontend"):
             code_exports["frontend_app_spec"] = frontend_app_spec
         if module_id == root_module_ids.get("knowledge_base"):
