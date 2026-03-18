@@ -63,6 +63,46 @@ def _find_line(file_path: str, needle: str, *, fallback: int = 1) -> int:
     return fallback
 
 
+def _python_module_file_path(module_name: str) -> str:
+    normalized = str(module_name).strip().replace(".", "/")
+    if not normalized:
+        return ""
+    src_candidate = f"src/{normalized}.py"
+    if (REPO_ROOT / src_candidate).exists():
+        return src_candidate
+    candidate = f"{normalized}.py"
+    if (REPO_ROOT / candidate).exists():
+        return candidate
+    return ""
+
+
+def _symbol_anchor(symbol: str) -> tuple[str, int]:
+    module_name, _, symbol_name = str(symbol or "").partition(":")
+    file_path = _python_module_file_path(module_name)
+    if not file_path or not symbol_name:
+        return "", 0
+    class_name = symbol_name.split(".", 1)[0]
+    method_name = symbol_name.rsplit(".", 1)[-1]
+    class_line = _find_line(file_path, f"class {class_name}(", fallback=0)
+    if class_line:
+        return file_path, class_line
+    method_line = _find_line(file_path, f"def {method_name}(", fallback=0)
+    if method_line:
+        return file_path, method_line
+    return "", 0
+
+
+def _materialization_kind_from_symbol(
+    symbol: str,
+    *,
+    fallback: str = "runtime_dynamic_type",
+) -> str:
+    file_path, line = _symbol_anchor(symbol)
+    if file_path and line > 0:
+        return "static_python_class"
+    return fallback
+
+
 def _line_range(start_line: Any, end_line: Any | None = None) -> tuple[int, int]:
     try:
         start = int(start_line)
@@ -157,19 +197,24 @@ def _code_correspondence_target(
     symbol: str,
     is_primary: bool,
 ) -> NavigationTarget:
-    file_path = "src/project_runtime/code_layer.py"
-    if kind == "module":
-        line = _find_line(file_path, "def _build_module_contract_type(", fallback=1)
-    elif kind == "base":
-        line = _find_line(file_path, "def _build_base_contract_types(", fallback=1)
-    elif kind == "rule":
-        line = _find_line(file_path, "def _build_rule_contract_types(", fallback=1)
-    elif kind == "static_param":
-        line = _find_line(file_path, "def _build_static_params_type(", fallback=1)
-    elif kind == "runtime_param":
-        line = _find_line(file_path, "def _build_runtime_params_type(", fallback=1)
+    symbol_file_path, symbol_line = _symbol_anchor(symbol)
+    if symbol_file_path and symbol_line:
+        file_path = symbol_file_path
+        line = symbol_line
     else:
-        line = _find_line(file_path, "def _build_implementation_slots(", fallback=1)
+        file_path = "src/project_runtime/code_layer.py"
+        if kind == "module":
+            line = _find_line(file_path, "def _build_module_contract_type(", fallback=1)
+        elif kind == "base":
+            line = _find_line(file_path, "def _build_base_contract_types(", fallback=1)
+        elif kind == "rule":
+            line = _find_line(file_path, "def _build_rule_contract_types(", fallback=1)
+        elif kind == "static_param":
+            line = _find_line(file_path, "def _build_static_params_type(", fallback=1)
+        elif kind == "runtime_param":
+            line = _find_line(file_path, "def _build_runtime_params_type(", fallback=1)
+        else:
+            line = _find_line(file_path, "def _build_implementation_slots(", fallback=1)
     return _target(
         target_kind="code_correspondence",
         layer="code",
@@ -513,7 +558,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 object_id=module_object_id,
                 owner_module_id=module_id,
                 display_name=module_display,
-                materialization_kind="runtime_dynamic_type",
+                materialization_kind=_materialization_kind_from_symbol(
+                    module_symbol,
+                    fallback="runtime_dynamic_type",
+                ),
                 primary_nav_target_kind="code_correspondence",
                 primary_edit_target_kind="framework_definition",
                 correspondence_anchor=module_correspondence_target.to_dict(),
@@ -572,7 +620,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=base_id,
                     owner_module_id=module_id,
                     display_name=_display_name_from_symbol(base_symbol, short_base_id),
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        base_symbol,
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="framework_definition",
                     primary_edit_target_kind="framework_definition",
                     correspondence_anchor=base_code_correspondence_target.to_dict(),
@@ -625,7 +676,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=rule_id,
                     owner_module_id=module_id,
                     display_name=_display_name_from_symbol(rule_symbol, short_rule_id),
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        rule_symbol,
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="framework_definition",
                     primary_edit_target_kind="framework_definition",
                     correspondence_anchor=rule_code_correspondence_target.to_dict(),
@@ -763,7 +817,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=static_object_id,
                     owner_module_id=module_id,
                     display_name=static_field,
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        str(boundary_link.get("static_params_class_symbol") or ""),
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="config_source",
                     primary_edit_target_kind="config_source",
                     correspondence_anchor=static_correspondence_target.to_dict(),
@@ -799,7 +856,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=runtime_object_id,
                     owner_module_id=module_id,
                     display_name=runtime_field,
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        str(boundary_link.get("runtime_params_class_symbol") or ""),
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="code_correspondence",
                     primary_edit_target_kind="code_correspondence",
                     correspondence_anchor=runtime_correspondence_target.to_dict(),
