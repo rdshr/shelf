@@ -416,13 +416,22 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
     reports = canonical.get("evidence", {}).get("validation_reports", {})
     if not isinstance(reports, dict):
         return {"passed": False, "issues": [], "rule_count": 0}
-    scope = reports.get("correspondence_guard", {})
-    if not isinstance(scope, dict):
-        return {"passed": False, "issues": [], "rule_count": 0}
-    rules = scope.get("rules")
+    scope_names = ("correspondence_guard", "codegen_consistency_guard")
     module_ids, base_ids, rule_ids, _, boundary_object_ids = _collect_known_object_ids(object_payload)
     issues: list[dict[str, Any]] = []
-    if isinstance(rules, list):
+    scope_count = 0
+    scope_passed = True
+    scope_rule_count = 0
+    for scope_name in scope_names:
+        scope = reports.get(scope_name, {})
+        if not isinstance(scope, dict):
+            continue
+        scope_count += 1
+        scope_passed = scope_passed and bool(scope.get("passed"))
+        scope_rule_count += int(scope.get("rule_count") or 0)
+        rules = scope.get("rules")
+        if not isinstance(rules, list):
+            continue
         for rule in rules:
             if not isinstance(rule, dict):
                 continue
@@ -442,6 +451,7 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
                             "issue_kind": "guard_reason",
                             "level": "error",
                             "reason": reason_text,
+                            "scope": scope_name,
                             "object_ids": object_ids,
                             "primary_object_id": object_ids[0] if object_ids else "",
                         }
@@ -452,7 +462,9 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
                 if isinstance(object_issues, list):
                     for item in object_issues:
                         if isinstance(item, dict):
-                            issues.append(dict(item))
+                            merged = dict(item)
+                            merged.setdefault("scope", scope_name)
+                            issues.append(merged)
     issue_count_by_object: dict[str, int] = {}
     for issue in issues:
         raw_object_ids = issue.get("object_ids")
@@ -461,13 +473,26 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
         for object_id in raw_object_ids:
             key = str(object_id)
             issue_count_by_object[key] = issue_count_by_object.get(key, 0) + 1
+    error_count = sum(1 for item in issues if str(item.get("level") or "").lower() == "error")
+    warning_count = sum(1 for item in issues if str(item.get("level") or "").lower() == "warning")
     return {
-        "passed": bool(scope.get("passed")),
-        "rule_count": int(scope.get("rule_count") or 0),
-        "error_count": len(issues),
+        "passed": scope_passed if scope_count else False,
+        "rule_count": scope_rule_count,
+        "error_count": error_count,
+        "warning_count": warning_count,
         "issues": issues,
         "issue_count_by_object": issue_count_by_object,
     }
+
+
+def _codegen_consistency_payload(canonical: dict[str, Any]) -> dict[str, Any]:
+    exports = canonical.get("evidence", {}).get("exports", {})
+    if not isinstance(exports, dict):
+        return {}
+    payload = exports.get("codegen_consistency")
+    if not isinstance(payload, dict):
+        return {}
+    return payload
 
 
 def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
@@ -887,5 +912,6 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
         "objects": object_payload,
         "object_index": object_index,
         "tree": tree,
+        "codegen_consistency": _codegen_consistency_payload(canonical),
         "validation_summary": _guard_summary(canonical, object_payload),
     }

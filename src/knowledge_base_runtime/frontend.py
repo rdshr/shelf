@@ -752,7 +752,7 @@ def compose_knowledge_base_page(
 
 def build_knowledge_base_page_handler(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None = None,
+    repository: KnowledgeRepository | None = None,
 ) -> Any:
     def handler() -> str:
         return compose_knowledge_base_page(project)
@@ -762,7 +762,7 @@ def build_knowledge_base_page_handler(
 
 def build_basketball_showcase_page_handler(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None = None,
+    repository: KnowledgeRepository | None = None,
 ) -> Any:
     def handler() -> str:
         return compose_basketball_showcase_page(project)
@@ -772,7 +772,7 @@ def build_basketball_showcase_page_handler(
 
 def build_knowledge_base_list_page_handler(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None = None,
+    repository: KnowledgeRepository | None = None,
 ) -> Any:
     resolved_repository = _require_repository(project, repository)
 
@@ -784,7 +784,7 @@ def build_knowledge_base_list_page_handler(
 
 def build_knowledge_base_detail_page_handler(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None = None,
+    repository: KnowledgeRepository | None = None,
 ) -> Any:
     resolved_repository = _require_repository(project, repository)
 
@@ -799,7 +799,7 @@ def build_knowledge_base_detail_page_handler(
 
 def build_document_detail_page_handler(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None = None,
+    repository: KnowledgeRepository | None = None,
 ) -> Any:
     resolved_repository = _require_repository(project, repository)
 
@@ -814,8 +814,8 @@ def build_document_detail_page_handler(
 
 def _require_repository(
     project: ProjectRuntimeAssembly,
-    repository: "KnowledgeRepository" | None,
-) -> "KnowledgeRepository":
+    repository: KnowledgeRepository | None,
+) -> KnowledgeRepository:
     if repository is not None:
         return repository
     from knowledge_base_runtime.backend import KnowledgeRepository

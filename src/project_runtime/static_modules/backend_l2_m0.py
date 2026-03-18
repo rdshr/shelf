@@ -275,23 +275,14 @@ class BackendL2M0R4Rule(RuleContract):
 class BackendL2M0Module(ModuleContract):
     framework_module_id: ClassVar[str] = BACKEND_L2_M0_MODULE_ID
     module_key: ClassVar[str] = BACKEND_L2_M0_MODULE_KEY
-    StaticBoundaryParams: ClassVar[type[BackendL2M0StaticBoundaryParams]] = BackendL2M0StaticBoundaryParams
-    RuntimeBoundaryParams: ClassVar[type[BackendL2M0DynamicBoundaryParams]] = BackendL2M0DynamicBoundaryParams
-    BaseTypes: ClassVar[
-        tuple[type[BackendL2M0B1Base], type[BackendL2M0B2Base], type[BackendL2M0B3Base]]
-    ] = (
+    StaticBoundaryParams: ClassVar[type[StaticBoundaryParamsContract]] = BackendL2M0StaticBoundaryParams
+    RuntimeBoundaryParams: ClassVar[type[RuntimeBoundaryParamsContract]] = BackendL2M0DynamicBoundaryParams
+    BaseTypes: ClassVar[tuple[type[BaseContract], ...]] = (
         BackendL2M0B1Base,
         BackendL2M0B2Base,
         BackendL2M0B3Base,
     )
-    RuleTypes: ClassVar[
-        tuple[
-            type[BackendL2M0R1Rule],
-            type[BackendL2M0R2Rule],
-            type[BackendL2M0R3Rule],
-            type[BackendL2M0R4Rule],
-        ]
-    ] = (
+    RuleTypes: ClassVar[tuple[type[RuleContract], ...]] = (
         BackendL2M0R1Rule,
         BackendL2M0R2Rule,
         BackendL2M0R3Rule,
