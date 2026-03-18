@@ -2,7 +2,13 @@ import { WebviewBridge, readRuntimeBootstrap } from "./bridge";
 import { computeTreeLayout } from "./layout";
 import { TreeGraphModel } from "./model";
 import { TreeCanvasRenderer, type CanvasElements } from "./render";
-import type { FocusMode, TreeSelection } from "./types";
+import type {
+  FocusMode,
+  GraphNode,
+  RuntimeCorrespondenceObject,
+  RuntimeNavigationTarget,
+  TreeSelection,
+} from "./types";
 
 function requiredElementById<T extends Element>(elementId: string, ctor: { new(...args: never[]): T }): T {
   const element = document.getElementById(elementId);
@@ -31,6 +37,53 @@ function detailList(items: string[]): string {
     return '<li class="detail-item">无</li>';
   }
   return items.map((item) => `<li class="detail-item">${escapeHtml(item)}</li>`).join("");
+}
+
+function targetSignature(target: RuntimeNavigationTarget | null | undefined): string {
+  if (!target) {
+    return "";
+  }
+  return [
+    target.targetKind,
+    target.filePath,
+    String(target.startLine),
+    target.symbol,
+  ].join("|");
+}
+
+function actionButton(
+  label: string,
+  target: RuntimeNavigationTarget | null | undefined,
+  options?: { muted?: boolean }
+): string {
+  if (!target) {
+    return '<span class="detail-value">无</span>';
+  }
+  const classes = ["detail-action"];
+  if (options?.muted) {
+    classes.push("ghost");
+  }
+  return `<button type="button" class="${classes.join(" ")}" data-open-source="1" data-file="${escapeHtml(target.filePath)}" data-line="${target.startLine}">${escapeHtml(label)}</button>`;
+}
+
+function relatedObjectButton(objectId: string, label: string): string {
+  return `<button type="button" class="detail-action ghost" data-show-object="1" data-object-id="${escapeHtml(objectId)}">${escapeHtml(label)}</button>`;
+}
+
+function targetSummary(target: RuntimeNavigationTarget | null | undefined): string {
+  if (!target) {
+    return "无";
+  }
+  return `${target.targetKind} · ${target.filePath}:${target.startLine}`;
+}
+
+function formatTargetList(targets: RuntimeNavigationTarget[]): string {
+  if (!targets.length) {
+    return '<li class="detail-item">无</li>';
+  }
+  return targets
+    .map((target) => `<li class="detail-item">${actionButton(target.label || target.targetKind, target, { muted: true })} <span class="mono">${escapeHtml(target.targetKind)}</span> · <span class="mono">${escapeHtml(target.filePath)}:${target.startLine}</span></li>`)
+    .join("");
 }
 
 function main(): void {
@@ -109,6 +162,51 @@ function main(): void {
     }
   };
 
+  let currentSelection: TreeSelection = { kind: "none" };
+
+  const openTarget = (target: RuntimeNavigationTarget | null | undefined): void => {
+    if (!target?.filePath) {
+      return;
+    }
+    bridge.openSource(target.filePath, target.startLine);
+  };
+
+  const nodeDefaultTarget = (node: GraphNode | null): RuntimeNavigationTarget | null => {
+    if (!node) {
+      return null;
+    }
+    return node.defaultTarget || node.editTarget || null;
+  };
+
+  const objectSecondaryTargets = (objectValue: RuntimeCorrespondenceObject): RuntimeNavigationTarget[] => {
+    const excluded = new Set(
+      [
+        objectValue.navigationTargets.find((target) => target.targetKind === objectValue.primaryNavTargetKind) || null,
+        objectValue.navigationTargets.find((target) => target.targetKind === objectValue.primaryEditTargetKind) || null,
+        objectValue.correspondenceAnchor || null,
+        objectValue.implementationAnchor || null,
+      ]
+        .map((target) => targetSignature(target))
+        .filter(Boolean)
+    );
+    return objectValue.navigationTargets.filter((target) => !excluded.has(targetSignature(target)));
+  };
+
+  const renderObjectLinkList = (objectIds: string[]): string => {
+    if (!objectIds.length) {
+      return '<li class="detail-item">无</li>';
+    }
+    return objectIds
+      .map((objectId) => {
+        const objectValue = model.object(objectId);
+        const label = objectValue?.displayName || objectId;
+        const issueCount = model.validationSummary.issueCountByObject[objectId] || 0;
+        const suffix = issueCount > 0 ? ` · ${issueCount} issue(s)` : "";
+        return `<li class="detail-item">${relatedObjectButton(objectId, label)}${suffix ? ` <span class="mono">${escapeHtml(suffix)}</span>` : ""}</li>`;
+      })
+      .join("");
+  };
+
   const attachDetailActions = (): void => {
     inspectorDetailBox.querySelectorAll<HTMLElement>("[data-open-source='1']").forEach((element) => {
       element.addEventListener("click", (event) => {
@@ -118,6 +216,21 @@ function main(): void {
         if (filePath) {
           bridge.openSource(filePath, lineNumber);
         }
+      });
+    });
+    inspectorDetailBox.querySelectorAll<HTMLElement>("[data-show-object='1']").forEach((element) => {
+      element.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const objectId = element.getAttribute("data-object-id") || "";
+        if (objectId) {
+          renderCorrespondenceObjectDetail(objectId);
+        }
+      });
+    });
+    inspectorDetailBox.querySelectorAll<HTMLElement>("[data-reset-inspector='1']").forEach((element) => {
+      element.addEventListener("click", (event) => {
+        event.stopPropagation();
+        updateInspector(currentSelection);
       });
     });
   };
@@ -133,6 +246,66 @@ function main(): void {
         Click a node or edge to inspect details. Search, focus mode, hover, and source jumps stay available while the canvas remains primary.
       </p>
     `;
+  };
+
+  const renderCorrespondenceObjectDetail = (objectId: string): void => {
+    const objectValue = model.object(objectId);
+    if (!objectValue) {
+      renderEmptyDetail();
+      return;
+    }
+    const primaryNavTarget = objectValue.navigationTargets.find(
+      (target) => target.targetKind === objectValue.primaryNavTargetKind
+    ) || null;
+    const primaryEditTarget = objectValue.navigationTargets.find(
+      (target) => target.targetKind === objectValue.primaryEditTargetKind
+    ) || null;
+    const secondaryTargets = objectSecondaryTargets(objectValue);
+    const issueCount = model.validationSummary.issueCountByObject[objectValue.objectId] || 0;
+    const ownerModuleObject = objectValue.ownerModuleId
+      ? model.object(objectValue.ownerModuleId)
+      : null;
+
+    selectionKindPill.textContent = objectValue.objectKind;
+    selectionKindPill.className = `pill kind-pill ${objectValue.objectKind.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    inspectorRailValue.textContent = objectValue.displayName;
+    inspectorRailValue.title = objectValue.displayName;
+    inspectorSummaryValue.textContent = `${objectValue.objectId} · nav=${objectValue.primaryNavTargetKind}`;
+    inspectorDetailBox.innerHTML = `
+      <section class="detail-group">
+        <h3 class="detail-section-title">对象概览</h3>
+        <div class="detail-kv"><span class="detail-key">Object ID</span><span class="detail-value mono">${escapeHtml(objectValue.objectId)}</span></div>
+        <div class="detail-kv"><span class="detail-key">类型</span><span class="detail-value">${escapeHtml(objectValue.objectKind)}</span></div>
+        <div class="detail-kv"><span class="detail-key">显示名</span><span class="detail-value">${escapeHtml(objectValue.displayName)}</span></div>
+        <div class="detail-kv"><span class="detail-key">Materialization</span><span class="detail-value mono">${escapeHtml(objectValue.materializationKind || "unknown")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Owner Module</span><span class="detail-value">${ownerModuleObject ? relatedObjectButton(ownerModuleObject.objectId, ownerModuleObject.displayName) : escapeHtml(objectValue.ownerModuleId || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Issues</span><span class="detail-value">${issueCount ? `${issueCount} issue(s)` : "0"}</span></div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">默认跳转</h3>
+        <div class="detail-kv"><span class="detail-key">Primary Nav</span><span class="detail-value mono">${escapeHtml(targetSummary(primaryNavTarget))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Primary Edit</span><span class="detail-value mono">${escapeHtml(targetSummary(primaryEditTarget))}</span></div>
+        <div class="action-row">
+          ${actionButton("默认打开", primaryNavTarget)}
+          ${targetSignature(primaryEditTarget) && targetSignature(primaryEditTarget) !== targetSignature(primaryNavTarget) ? actionButton("编辑落点", primaryEditTarget, { muted: true }) : ""}
+          <button type="button" class="detail-action ghost" data-reset-inspector="1">返回节点</button>
+        </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">结构与实现锚点</h3>
+        <div class="detail-kv"><span class="detail-key">Correspondence</span><span class="detail-value mono">${escapeHtml(targetSummary(objectValue.correspondenceAnchor))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Implementation</span><span class="detail-value mono">${escapeHtml(targetSummary(objectValue.implementationAnchor))}</span></div>
+        <div class="action-row">
+          ${actionButton("结构锚点", objectValue.correspondenceAnchor, { muted: true })}
+          ${actionButton("实现锚点", objectValue.implementationAnchor, { muted: true })}
+        </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">次级跳转</h3>
+        <ul class="detail-list">${formatTargetList(secondaryTargets)}</ul>
+      </section>
+    `;
+    attachDetailActions();
   };
 
   const renderNodeDetail = (nodeId: string): void => {
@@ -152,9 +325,13 @@ function main(): void {
     const sourceFile = node.file;
     const docLine = node.docLine || node.line;
     const sourceLine = node.sourceLine || node.line;
+    const defaultTarget = nodeDefaultTarget(node);
     const levelLabel = node.moduleName
       ? `${node.moduleName} · ${model.levelLabel(node.depth)}`
       : model.levelLabel(node.depth);
+    const objectValue = node.objectId ? model.object(node.objectId) : null;
+    const issueCount = node.objectId ? (model.validationSummary.issueCountByObject[node.objectId] || 0) : 0;
+    const secondaryTargets = node.secondaryTargets || [];
 
     selectionKindPill.textContent = node.kind;
     selectionKindPill.className = `pill kind-pill ${node.kind.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
@@ -171,14 +348,40 @@ function main(): void {
         <div class="detail-kv"><span class="detail-key">层级</span><span class="detail-value">${escapeHtml(levelLabel)}</span></div>
         <div class="detail-kv"><span class="detail-key">标签</span><span class="detail-value">${escapeHtml(node.label)}</span></div>
         <div class="detail-kv"><span class="detail-key">描述</span><span class="detail-value">${escapeHtml(node.detail || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Object ID</span><span class="detail-value mono">${escapeHtml(node.objectId || "无")}</span></div>
+        <div class="detail-kv"><span class="detail-key">Issue Count</span><span class="detail-value">${issueCount}</span></div>
       </section>
       <section class="detail-group">
         <h3 class="detail-section-title">来源与跳转</h3>
         <div class="detail-kv"><span class="detail-key">文档位置</span><span class="detail-value mono">${sourceFile ? `${escapeHtml(sourceFile)}:${docLine}` : "无"}</span></div>
         <div class="detail-kv"><span class="detail-key">结构来源</span><span class="detail-value mono">${sourceFile ? `${escapeHtml(sourceFile)}:${sourceLine}` : "无"}</span></div>
+        <div class="detail-kv"><span class="detail-key">默认跳转</span><span class="detail-value mono">${escapeHtml(targetSummary(defaultTarget))}</span></div>
         <div class="action-row">
-          ${sourceFile ? `<button type="button" class="detail-action" data-open-source="1" data-file="${escapeHtml(sourceFile)}" data-line="${docLine}">打开文档</button>` : "无"}
+          ${actionButton("默认打开", defaultTarget)}
+          ${actionButton("打开文档", sourceFile ? {
+            targetKind: "framework_definition",
+            layer: "framework",
+            filePath: sourceFile,
+            startLine: docLine,
+            endLine: docLine,
+            symbol: node.id,
+            label: "Framework definition",
+            isPrimary: false,
+            isEditable: true,
+            isDeprecatedAlias: false,
+          } : null, { muted: true })}
+          ${objectValue ? relatedObjectButton(objectValue.objectId, "查看对象详情") : ""}
         </div>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">锚点与次级跳转</h3>
+        <div class="detail-kv"><span class="detail-key">Correspondence</span><span class="detail-value mono">${escapeHtml(targetSummary(node.correspondenceAnchor || objectValue?.correspondenceAnchor))}</span></div>
+        <div class="detail-kv"><span class="detail-key">Implementation</span><span class="detail-value mono">${escapeHtml(targetSummary(node.implementationAnchor || objectValue?.implementationAnchor))}</span></div>
+        <ul class="detail-list">${formatTargetList(secondaryTargets)}</ul>
+      </section>
+      <section class="detail-group">
+        <h3 class="detail-section-title">关联对象</h3>
+        <ul class="detail-list">${renderObjectLinkList(node.relatedObjectIds || [])}</ul>
       </section>
       <section class="detail-group">
         <h3 class="detail-section-title">上游节点</h3>
@@ -232,6 +435,7 @@ function main(): void {
   };
 
   const updateInspector = (selection: TreeSelection): void => {
+    currentSelection = selection;
     if (selection.kind === "node") {
       renderNodeDetail(selection.nodeId);
       return;
@@ -253,6 +457,11 @@ function main(): void {
     },
     onNodeOpened: (nodeId) => {
       const node = layout.nodes.get(nodeId);
+      const target = nodeDefaultTarget(node || null);
+      if (target) {
+        openTarget(target);
+        return;
+      }
       if (node?.file) {
         bridge.openSource(node.file, node.docLine || node.line);
       }
@@ -278,7 +487,12 @@ function main(): void {
       });
       renderer.applyFilter(filter);
       const selectedNodeId = renderer.selectedNodeIdOrEmpty();
-      elements.statusElement.textContent = selectedNodeId ? `Selected ${selectedNodeId}` : "Ready";
+      const validationSuffix = model.validationSummary.errorCount
+        ? ` · ${model.validationSummary.errorCount} correspondence issue(s)`
+        : "";
+      elements.statusElement.textContent = selectedNodeId
+        ? `Selected ${selectedNodeId}${validationSuffix}`
+        : `Ready${validationSuffix}`;
       schedulePersist();
     } finally {
       isApplyingFilters = false;

@@ -4,6 +4,13 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
+source "$repo_root/.githooks/_branch_scope.sh"
+if ! shelf_hook_should_run_for_current_branch; then
+  current_branch="$(shelf_hook_current_branch)"
+  echo "[pre-commit] skipped on branch '${current_branch:-DETACHED_HEAD}' ($(shelf_hook_scope_message))."
+  exit 0
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
   echo "[pre-commit] blocked: uv is required but was not found in PATH." >&2
   exit 1

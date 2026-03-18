@@ -57,6 +57,43 @@ def _collect_allowed_communication_paths(
     return allowed
 
 
+def _collect_non_one_to_one_projection_violations(
+    framework_modules: Sequence[type[FrameworkModuleClass]],
+) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
+    for module in framework_modules:
+        module_id = str(getattr(module, "module_id", "") or "")
+        boundary_map = getattr(module, "boundary_projection_map", {}) or {}
+        if not isinstance(boundary_map, Mapping):
+            continue
+        for boundary_id, projection in boundary_map.items():
+            if not isinstance(projection, Mapping):
+                continue
+            boundary_text = str(boundary_id or "").strip()
+            primary_exact = _clean_path(projection.get("primary_exact_path"))
+            related_exact = _iter_projection_paths(projection.get("related_exact_paths"))
+            primary_communication = _clean_path(projection.get("primary_communication_path"))
+            related_communication = _iter_projection_paths(projection.get("related_communication_paths"))
+            exact_is_one_to_one = bool(primary_exact) and related_exact == [primary_exact]
+            communication_is_one_to_one = (
+                bool(primary_communication)
+                and related_communication == [primary_communication]
+            )
+            if exact_is_one_to_one and communication_is_one_to_one:
+                continue
+            violations.append(
+                {
+                    "module_id": module_id,
+                    "boundary_id": boundary_text,
+                    "primary_exact_path": primary_exact,
+                    "related_exact_paths": related_exact,
+                    "primary_communication_path": primary_communication,
+                    "related_communication_paths": related_communication,
+                }
+            )
+    return violations
+
+
 def _collect_config_paths(payload: Mapping[str, Any], root_prefix: str) -> set[str]:
     paths: set[str] = {root_prefix}
 
@@ -123,6 +160,7 @@ def summarize_framework_violation_guard(
             if path != "communication" and not _path_is_allowed(path, allowed_communication_paths)
         ]
     )
+    non_one_to_one_violations = _collect_non_one_to_one_projection_violations(framework_modules)
 
     reasons: list[str] = []
     for path in invalid_exact_paths:
@@ -133,6 +171,16 @@ def summarize_framework_violation_guard(
     for path in invalid_communication_paths:
         reasons.append(
             f"FRAMEWORK_VIOLATION: {path} is outside framework projected communication paths; "
+            "update framework first, then materialize."
+        )
+    for violation in non_one_to_one_violations:
+        reasons.append(
+            "FRAMEWORK_VIOLATION: boundary projection must be one-to-one: "
+            f"{violation['module_id']}/{violation['boundary_id']} "
+            f"primary_exact={violation['primary_exact_path']} "
+            f"related_exact={violation['related_exact_paths']} "
+            f"primary_communication={violation['primary_communication_path']} "
+            f"related_communication={violation['related_communication_paths']}; "
             "update framework first, then materialize."
         )
 
@@ -146,6 +194,8 @@ def summarize_framework_violation_guard(
             "allowed_communication_paths": sorted(allowed_communication_paths),
             "invalid_exact_paths": invalid_exact_paths,
             "invalid_communication_paths": invalid_communication_paths,
+            "non_one_to_one_projection_count": len(non_one_to_one_violations),
+            "non_one_to_one_projections": non_one_to_one_violations[:_MAX_REASONS],
         },
     )
     return RuleValidationSummary(module_id="framework.guard", rules=(outcome,))

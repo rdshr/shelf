@@ -82,6 +82,7 @@ function main() {
   assert(boundaryConfigResult, "boundary config ref should resolve");
   assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/project.toml"));
   assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[exact.knowledge_base.chat]");
+  assert.strictEqual(boundaryConfigResult.objectId, "knowledge_base.L2.M0::boundary::CHAT");
 
   const boundaryHover = resolveHoverTarget({
     repoRoot,

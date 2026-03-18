@@ -4,10 +4,11 @@ from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Callable
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 
 from project_runtime.compiler import load_project_runtime
+from project_runtime.correspondence_view import build_correspondence_view
 from project_runtime.models import ProjectRuntimeAssembly
 
 
@@ -34,6 +35,8 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
     assembly = project or load_project_runtime()
     blueprint = _load_runtime_blueprint(assembly)
     root_path = _load_root_path(assembly)
+    _api_prefix, correspondence_endpoint = _resolve_correspondence_endpoint(assembly, blueprint)
+    correspondence_view = _resolve_correspondence_view(assembly)
     app = FastAPI(
         title=assembly.metadata.display_name,
         summary=assembly.metadata.description,
@@ -54,6 +57,7 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
             "project": summary_factory(assembly),
             "frontend": blueprint.landing_path,
             "project_config": blueprint.project_config_endpoint,
+            "correspondence": correspondence_endpoint,
         }
 
     for route_spec in blueprint.page_routes:
@@ -72,6 +76,28 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
     @app.get(blueprint.project_config_endpoint)
     def project_config() -> dict[str, object]:
         return assembly.project_config_view
+
+    @app.get(correspondence_endpoint)
+    def correspondence() -> dict[str, object]:
+        return correspondence_view
+
+    @app.get(f"{correspondence_endpoint}/tree")
+    def correspondence_tree() -> dict[str, object]:
+        return {
+            "correspondence_schema_version": correspondence_view.get("correspondence_schema_version"),
+            "tree": correspondence_view.get("tree", []),
+            "validation_summary": correspondence_view.get("validation_summary", {}),
+        }
+
+    @app.get(f"{correspondence_endpoint}/object/{{object_id:path}}")
+    def correspondence_object(object_id: str) -> dict[str, object]:
+        index = correspondence_view.get("object_index")
+        if not isinstance(index, dict):
+            raise HTTPException(status_code=500, detail="correspondence object index is missing")
+        payload = index.get(object_id)
+        if not isinstance(payload, dict):
+            raise HTTPException(status_code=404, detail=f"correspondence object not found: {object_id}")
+        return payload
 
     return app
 
@@ -141,6 +167,35 @@ def _resolve_response_class(response_class: str | None) -> type[Any] | None:
     if response_class == "html":
         return HTMLResponse
     raise ValueError(f"unsupported runtime response class: {response_class}")
+
+
+def _resolve_correspondence_endpoint(
+    project: ProjectRuntimeAssembly,
+    blueprint: RuntimeBlueprint,
+) -> tuple[str, str]:
+    backend_spec = project.require_runtime_export("backend_service_spec")
+    if not isinstance(backend_spec, dict):
+        raise ValueError("backend_service_spec export is required for correspondence endpoint")
+    transport = backend_spec.get("transport")
+    if not isinstance(transport, dict):
+        raise ValueError("backend_service_spec.transport must be a dict")
+    api_prefix = transport.get("api_prefix")
+    if not isinstance(api_prefix, str) or not api_prefix.startswith("/"):
+        raise ValueError("backend_service_spec.transport.api_prefix must be an absolute path")
+    endpoint = f"{api_prefix}/correspondence"
+    if endpoint == blueprint.project_config_endpoint:
+        raise ValueError("correspondence endpoint conflicts with project_config endpoint")
+    return api_prefix, endpoint
+
+
+def _resolve_correspondence_view(project: ProjectRuntimeAssembly) -> dict[str, Any]:
+    canonical = project.canonical
+    if not isinstance(canonical, dict):
+        return {}
+    view = canonical.get("correspondence")
+    if isinstance(view, dict):
+        return view
+    return build_correspondence_view(canonical)
 
 
 def _load_callable(path: str) -> Callable[..., Any]:

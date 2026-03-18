@@ -4,6 +4,26 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
+source "$repo_root/.githooks/_branch_scope.sh"
+
+run_checks=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [[ -z "${remote_ref}" ]] && continue
+  if [[ "${remote_ref}" != refs/heads/* ]]; then
+    continue
+  fi
+  remote_branch="${remote_ref#refs/heads/}"
+  if shelf_hook_branch_is_protected "${remote_branch}"; then
+    run_checks=1
+    break
+  fi
+done
+
+if [[ "${run_checks}" -ne 1 ]]; then
+  echo "[pre-push] skipped ($(shelf_hook_scope_message))."
+  exit 0
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
   echo "[pre-push] blocked: uv is required but was not found in PATH." >&2
   exit 1

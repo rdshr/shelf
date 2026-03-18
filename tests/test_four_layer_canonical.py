@@ -7,6 +7,8 @@ import unittest
 
 from project_runtime.compiler import compile_project_runtime
 from project_runtime.config_layer import build_config_modules, load_project_config
+from project_runtime.correspondence_validator import summarize_correspondence_guard
+from project_runtime.code_layer import build_code_modules
 from project_runtime.framework_violation_guard import summarize_framework_violation_guard
 from project_runtime.framework_layer import resolve_selected_framework_modules
 from project_runtime.path_scope_guard import summarize_path_scope_guard
@@ -132,6 +134,10 @@ class FourLayerCanonicalTest(unittest.TestCase):
         self.assertEqual(link_roles["code_to_evidence"], "mainline")
         self.assertEqual(link_roles["boundary_bindings"], "trace_view")
         self.assertEqual(link_roles["base_bindings"], "trace_view")
+        self.assertEqual(link_roles["module_class_bindings"], "correspondence")
+        self.assertEqual(link_roles["base_class_bindings"], "correspondence")
+        self.assertEqual(link_roles["rule_class_bindings"], "correspondence")
+        self.assertEqual(link_roles["boundary_param_bindings"], "correspondence")
 
     def test_layers_only_consume_neighbor_exports(self) -> None:
         canonical = compile_project_runtime().canonical
@@ -179,15 +185,295 @@ class FourLayerCanonicalTest(unittest.TestCase):
             )
         )
 
+    def test_boundary_payloads_strip_projection_mirror_keys(self) -> None:
+        canonical = compile_project_runtime().canonical
+        config_modules = {
+            str(module["module_id"]): module
+            for module in canonical["config"]["modules"]
+            if isinstance(module, dict)
+        }
+        frontend_module = config_modules["frontend.L2.M0"]
+        module_key = str(frontend_module["module_key"])
+        exact_boundary = frontend_module["exact_export"]["modules"][module_key]["static_params"]["surface"]
+        communication_boundary = frontend_module["communication_export"]["modules"][module_key]["static_params"]["surface"]
+        self.assertNotIn("boundary_id", exact_boundary)
+        self.assertNotIn("mapping_mode", exact_boundary)
+        self.assertNotIn("boundary_id", communication_boundary)
+        self.assertNotIn("mapping_mode", communication_boundary)
+
     def test_framework_guard_scope_is_included_and_passes_on_current_project(self) -> None:
         canonical = compile_project_runtime().canonical
         validation_reports = canonical["evidence"]["validation_reports"]
         self.assertIn("framework_guard", validation_reports)
         self.assertTrue(validation_reports["framework_guard"]["passed"])
         self.assertEqual(validation_reports["framework_guard"]["rule_count"], 1)
+        self.assertIn("correspondence_guard", validation_reports)
+        self.assertTrue(validation_reports["correspondence_guard"]["passed"])
+        self.assertEqual(validation_reports["correspondence_guard"]["rule_count"], 1)
         self.assertIn("path_scope_guard", validation_reports)
         self.assertTrue(validation_reports["path_scope_guard"]["passed"])
         self.assertEqual(validation_reports["path_scope_guard"]["rule_count"], 1)
+
+    def test_module_scoped_static_params_exports_and_correspondence_links(self) -> None:
+        canonical = compile_project_runtime().canonical
+        config_modules = {
+            str(module["module_id"]): module
+            for module in canonical["config"]["modules"]
+            if isinstance(module, dict)
+        }
+        knowledge_module = config_modules["knowledge_base.L2.M0"]
+        module_key = str(knowledge_module["module_key"])
+        static_params = knowledge_module["exact_export"]["modules"][module_key]["static_params"]
+        self.assertIn("chat", static_params)
+        self.assertNotIn("boundaries", knowledge_module["exact_export"])
+
+        links = canonical["links"]
+        module_bindings = [
+            item
+            for item in links["module_class_bindings"]
+            if isinstance(item, dict) and str(item.get("module_id")) == "knowledge_base.L2.M0"
+        ]
+        boundary_param_bindings = [
+            item
+            for item in links["boundary_param_bindings"]
+            if isinstance(item, dict) and str(item.get("owner_module_id")) == "knowledge_base.L2.M0"
+        ]
+        self.assertTrue(module_bindings)
+        self.assertTrue(boundary_param_bindings)
+        self.assertTrue(
+            all(
+                ".modules.knowledge_base__L2__M0.static_params." in str(item["exact_export_static_path"])
+                for item in boundary_param_bindings
+            )
+        )
+        self.assertTrue(all(str(item["static_params_class_symbol"]) for item in boundary_param_bindings))
+        self.assertTrue(all(str(item["runtime_params_class_symbol"]) for item in boundary_param_bindings))
+
+    def test_correspondence_view_protocol_is_plugin_consumable(self) -> None:
+        canonical = compile_project_runtime().canonical
+        correspondence = canonical.get("correspondence")
+        self.assertIsInstance(correspondence, dict)
+        self.assertEqual(correspondence.get("correspondence_schema_version"), 1)
+
+        objects = correspondence.get("objects")
+        self.assertIsInstance(objects, list)
+        self.assertTrue(objects)
+        object_index = correspondence.get("object_index")
+        self.assertIsInstance(object_index, dict)
+        tree = correspondence.get("tree")
+        self.assertIsInstance(tree, list)
+        self.assertTrue(tree)
+
+        for item in objects:
+            self.assertIsInstance(item, dict)
+            self.assertIn(item["object_kind"], {"module", "base", "rule", "boundary", "static_param", "runtime_param"})
+            self.assertTrue(str(item.get("object_id") or ""))
+            self.assertTrue(str(item.get("owner_module_id") or ""))
+            self.assertTrue(str(item.get("display_name") or ""))
+            self.assertIn(
+                item["materialization_kind"],
+                {"runtime_dynamic_type", "source_symbol", "generated_readonly"},
+            )
+            self.assertIn(
+                item["primary_nav_target_kind"],
+                {"framework_definition", "config_source", "code_correspondence", "code_implementation", "evidence_report"},
+            )
+            self.assertIn(
+                item["primary_edit_target_kind"],
+                {"framework_definition", "config_source", "code_correspondence", "code_implementation", "evidence_report"},
+            )
+
+            targets = item.get("navigation_targets")
+            self.assertIsInstance(targets, list)
+            self.assertTrue(targets)
+            target_kinds = {target["target_kind"] for target in targets if isinstance(target, dict)}
+            self.assertIn(item["primary_nav_target_kind"], target_kinds)
+            self.assertIn(item["primary_edit_target_kind"], target_kinds)
+
+            primary_targets = [target for target in targets if isinstance(target, dict) and bool(target.get("is_primary"))]
+            self.assertTrue(primary_targets)
+            self.assertTrue(
+                any(
+                    str(target.get("target_kind") or "") == str(item["primary_nav_target_kind"])
+                    for target in primary_targets
+                )
+            )
+            self.assertTrue(
+                any(
+                    str(target.get("target_kind") or "") == str(item["primary_edit_target_kind"])
+                    and bool(target.get("is_editable"))
+                    for target in targets
+                    if isinstance(target, dict)
+                )
+            )
+
+            for target in targets:
+                self.assertIsInstance(target, dict)
+                self.assertIn(
+                    target["target_kind"],
+                    {
+                        "framework_definition",
+                        "config_source",
+                        "code_correspondence",
+                        "code_implementation",
+                        "evidence_report",
+                    },
+                )
+                self.assertIn(target["layer"], {"framework", "config", "code", "evidence"})
+                self.assertTrue(str(target.get("file_path") or ""))
+                self.assertGreaterEqual(int(target["start_line"]), 1)
+                self.assertGreaterEqual(int(target["end_line"]), int(target["start_line"]))
+
+            if item["materialization_kind"] == "runtime_dynamic_type":
+                self.assertTrue(
+                    {"framework_definition", "config_source", "code_correspondence"}.intersection(target_kinds),
+                )
+
+            anchor = item.get("correspondence_anchor")
+            self.assertIsInstance(anchor, dict)
+            self.assertEqual(anchor.get("target_kind"), "code_correspondence")
+            implementation_anchor = item.get("implementation_anchor")
+            self.assertIsInstance(implementation_anchor, dict)
+            self.assertEqual(implementation_anchor.get("target_kind"), "code_implementation")
+
+        validation_summary = correspondence.get("validation_summary")
+        self.assertIsInstance(validation_summary, dict)
+        self.assertIn("issue_count_by_object", validation_summary)
+        self.assertIn("issues", validation_summary)
+        self.assertIn("error_count", validation_summary)
+        issues = validation_summary["issues"]
+        self.assertIsInstance(issues, list)
+        for issue in issues:
+            self.assertIsInstance(issue, dict)
+            object_ids = issue.get("object_ids", [])
+            self.assertIsInstance(object_ids, list)
+            for object_id in object_ids:
+                self.assertIn(object_id, object_index)
+
+    def test_correspondence_guard_fails_when_rule_boundary_mapping_is_missing(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        target = next(
+            item
+            for item in code_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        setattr(target.code_module.ModuleType, "boundary_field_map", {})
+
+        summary = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("module boundary field missing" in reason for reason in reasons))
+
+    def test_correspondence_guard_fails_when_module_base_or_rule_not_fully_assembled(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        target = next(
+            item
+            for item in code_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        setattr(target.code_module, "BaseTypes", target.code_module.BaseTypes[:-1])
+        setattr(target.code_module, "RuleTypes", target.code_module.RuleTypes[:-1])
+
+        summary = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("base class set mismatch" in reason for reason in reasons))
+        self.assertTrue(any("rule class set mismatch" in reason for reason in reasons))
+
+    def test_correspondence_guard_fails_when_rule_declares_invalid_base_or_boundary(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        target = next(
+            item
+            for item in code_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        first_rule = target.code_module.RuleTypes[0]
+        setattr(first_rule, "base_ids", ("knowledge_base.L2.M0.B999",))
+        setattr(first_rule, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
+
+        summary = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("rule base id not in owner module" in reason for reason in reasons))
+        self.assertTrue(any("rule boundary id not in owner module" in reason for reason in reasons))
+
+    def test_correspondence_guard_fails_when_config_mapping_missing(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        config_target = next(
+            item
+            for item in config_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        records = config_target.config_module.compiled_config_export["module_static_param_bindings"]
+        config_target.config_module.compiled_config_export["module_static_param_bindings"] = records[1:]
+
+        summary = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("config mapping missing" in reason for reason in reasons))
+
+    def test_correspondence_guard_fails_when_legacy_boundary_slot_or_export_reappears(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        config_target = next(
+            item
+            for item in config_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        code_target = next(
+            item
+            for item in code_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        config_target.config_module.exact_export["boundaries"] = {"SURFACE": {}}
+        first_slot = code_target.code_module.code_bindings["implementation_slots"][0]
+        first_slot["anchor_path"] = "exact_export.boundaries.SURFACE"
+        first_slot["source_symbol"] = "knowledge_base.L2.M0.exact_export.boundaries.SURFACE"
+
+        summary = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary.passed)
+        reasons = summary.rules[0].reasons
+        self.assertTrue(any("legacy exact_export.boundaries is not allowed" in reason for reason in reasons))
+        self.assertTrue(any("legacy boundary slot reference is not allowed" in reason for reason in reasons))
 
     def test_framework_guard_reports_out_of_projection_paths(self) -> None:
         project_config = load_project_config("projects/knowledge_base_basic/project.toml")

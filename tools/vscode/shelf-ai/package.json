@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
-  "version": "0.1.8",
+  "version": "0.1.12",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -13,6 +13,7 @@
     "url": "https://github.com/xueyu888/shelf/issues"
   },
   "homepage": "https://github.com/xueyu888/shelf/tree/main/tools/vscode/shelf-ai",
+  "icon": "media/shelf-duck-tight-transparent.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -27,10 +28,15 @@
     "evidence_tree.js",
     "framework_completion.js",
     "framework_navigation.js",
+    "config_navigation.js",
+    "correspondence_runtime.js",
     "validation_runtime.js",
     "intent_gate.js",
+    "local_settings.js",
     "media/**",
-    "snippets/**"
+    "snippets/**",
+    "package.nls.json",
+    "package.nls.zh-cn.json"
   ],
   "categories": [
     "Linters",
@@ -39,7 +45,7 @@
   "scripts": {
     "build:webview": "node scripts/build_tree_webview.mjs",
     "check:webview-types": "tsc --pretty false --noEmit -p webview/tree/tsconfig.json",
-    "test": "node test_guarding.js && node test_framework_navigation.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
+    "test": "node test_guarding.js && node test_framework_navigation.js && node test_config_navigation.js && node test_correspondence_runtime.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_local_settings.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
     "vscode:prepublish": "npm run build:webview"
   },
   "devDependencies": {
@@ -130,21 +136,12 @@
         "title": "Shelf: Refresh Evidence Tree"
       }
     ],
-    "icons": {
-      "shelf-logo": {
-        "description": "Shelf AI Activity Bar icon",
-        "default": {
-          "fontPath": "media/shelf-ai-icons.woff2",
-          "fontCharacter": "\\ea01"
-        }
-      }
-    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "shelfSidebar",
           "title": "Shelf",
-          "icon": "$(shelf-logo)"
+          "icon": "media/shelf-activitybar-duck.svg"
         }
       ]
     },
@@ -207,12 +204,12 @@
       ]
     },
     "configuration": {
-      "title": "Shelf",
+      "title": "%configuration.title%",
       "properties": {
         "shelf.enableOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Run canonical validation when a relevant file is saved."
+          "description": "%configuration.shelf.enableOnSave.description%"
         },
         "shelf.validationTriggerMode": {
           "type": "string",
@@ -222,12 +219,12 @@
             "all"
           ],
           "default": "all",
-          "description": "Choose whether Shelf validates only on demand, only on save, or on all watched workspace events."
+          "description": "%configuration.shelf.validationTriggerMode.description%"
         },
         "shelf.notifyOnAutoFail": {
           "type": "boolean",
           "default": true,
-          "description": "Show notification when auto validation detects canonical issues."
+          "description": "%configuration.shelf.notifyOnAutoFail.description%"
         },
         "shelf.guardMode": {
           "type": "string",
@@ -236,32 +233,32 @@
             "strict"
           ],
           "default": "normal",
-          "description": "Choose whether Shelf only reports generated-artifact edits or automatically restores them."
+          "description": "%configuration.shelf.guardMode.description%"
         },
         "shelf.autoMaterialize": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically run project materialization when framework markdown or project.toml changes."
+          "description": "%configuration.shelf.autoMaterialize.description%"
         },
         "shelf.runMypyOnPythonChanges": {
           "type": "boolean",
           "default": true,
-          "description": "Run mypy after relevant Python changes under src/, scripts/, or tests/."
+          "description": "%configuration.shelf.runMypyOnPythonChanges.description%"
         },
         "shelf.protectGeneratedFiles": {
           "type": "boolean",
           "default": true,
-          "description": "Guard projects/*/generated/* from direct edits."
+          "description": "%configuration.shelf.protectGeneratedFiles.description%"
         },
         "shelf.promptInstallGitHooks": {
           "type": "boolean",
           "default": true,
-          "description": "Prompt once per session to enable the repository .githooks path when missing."
+          "description": "%configuration.shelf.promptInstallGitHooks.description%"
         },
         "shelf.intentGateEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable the governed-task intent gate. Guarded implementation saves require an active mapping-confirmed task session."
+          "description": "%configuration.shelf.intentGateEnabled.description%"
         },
         "shelf.intentGateEnforcementMode": {
           "type": "string",
@@ -270,53 +267,58 @@
             "block"
           ],
           "default": "block",
-          "description": "Choose whether guarded saves only warn or are blocked/reverted when no active governed-task session exists."
+          "description": "%configuration.shelf.intentGateEnforcementMode.description%"
         },
         "shelf.intentGateRequireMappingEcho": {
           "type": "boolean",
           "default": true,
-          "description": "Require an explicit QuickPick confirmation of canonical mappings before granting a governed-task session."
+          "description": "%configuration.shelf.intentGateRequireMappingEcho.description%"
         },
         "shelf.intentGateRunChangeValidationBeforeGrant": {
           "type": "boolean",
           "default": true,
-          "description": "Run `validate_canonical.py --check-changes` before granting a governed-task session."
+          "description": "%configuration.shelf.intentGateRunChangeValidationBeforeGrant.description%"
         },
         "shelf.intentGateAutoOpenOutput": {
           "type": "boolean",
           "default": true,
-          "description": "Auto-open the Shelf output channel after intent-to-framework mapping analysis."
+          "description": "%configuration.shelf.intentGateAutoOpenOutput.description%"
         },
         "shelf.intentGateMinimumScore": {
           "type": "integer",
           "default": 4,
           "minimum": 1,
           "maximum": 20,
-          "description": "Minimum mapping score threshold for intent-to-framework gate matching."
+          "description": "%configuration.shelf.intentGateMinimumScore.description%"
         },
         "shelf.intentGateMaxMatches": {
           "type": "integer",
           "default": 8,
           "minimum": 1,
           "maximum": 20,
-          "description": "Maximum number of canonical mapping candidates retained in a governed-task session."
+          "description": "%configuration.shelf.intentGateMaxMatches.description%"
         },
         "shelf.intentGateSessionTtlMinutes": {
           "type": "integer",
           "default": 120,
           "minimum": 1,
           "maximum": 1440,
-          "description": "Time-to-live for a governed-task session. Expired sessions are cleared and guarded saves are blocked again."
+          "description": "%configuration.shelf.intentGateSessionTtlMinutes.description%"
         },
         "shelf.intentGateGuardedPathPrefixes": {
           "type": "array",
           "default": [
-            "*"
+            "framework/",
+            "framework_drafts/",
+            "projects/",
+            "src/project_runtime/",
+            "scripts/",
+            "tools/vscode/shelf-ai/"
           ],
           "items": {
             "type": "string"
           },
-          "description": "Workspace-relative path prefixes guarded by the intent gate on save. Use `*` to guard all workspace code paths."
+          "description": "%configuration.shelf.intentGateGuardedPathPrefixes.description%"
         },
         "shelf.intentGateIgnoredPathPrefixes": {
           "type": "array",
@@ -335,104 +337,119 @@
           "items": {
             "type": "string"
           },
-          "description": "Workspace-relative path prefixes excluded from intent-gate save interception."
+          "description": "%configuration.shelf.intentGateIgnoredPathPrefixes.description%"
+        },
+        "shelf.intentGateTemporaryBypasses": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string",
+            "enum": [
+              "*",
+              "save_guard",
+              "grant_pre_validation",
+              "mapping_echo",
+              "one_to_one_check"
+            ]
+          },
+          "description": "%configuration.shelf.intentGateTemporaryBypasses.description%"
         },
         "shelf.changeValidationCommand": {
           "type": "string",
           "default": "uv run python scripts/validate_canonical.py --check-changes",
-          "description": "Command used for save-triggered validation."
+          "description": "%configuration.shelf.changeValidationCommand.description%"
         },
         "shelf.fullValidationCommand": {
           "type": "string",
           "default": "uv run python scripts/validate_canonical.py",
-          "description": "Command used for manual full validation."
+          "description": "%configuration.shelf.fullValidationCommand.description%"
         },
         "shelf.materializeCommand": {
           "type": "string",
           "default": "uv run python scripts/materialize_project.py",
-          "description": "Base command used for Shelf auto-materialization. Shelf appends --project-file arguments for affected project.toml files."
+          "description": "%configuration.shelf.materializeCommand.description%"
         },
         "shelf.typeCheckCommand": {
           "type": "string",
           "default": "uv run mypy",
-          "description": "Command used when Shelf runs Python type checks after relevant source changes."
+          "description": "%configuration.shelf.typeCheckCommand.description%"
         },
         "shelf.frameworkTreeNodeHorizontalGap": {
           "type": "integer",
           "default": 8,
           "minimum": 0,
           "maximum": 40,
-          "description": "Horizontal gap, in pixels, between framework tree nodes within the same level."
+          "description": "%configuration.shelf.frameworkTreeNodeHorizontalGap.description%"
         },
         "shelf.frameworkTreeLevelVerticalGap": {
           "type": "integer",
           "default": 80,
           "minimum": 48,
           "maximum": 180,
-          "description": "Vertical gap, in pixels, between framework tree levels."
+          "description": "%configuration.shelf.frameworkTreeLevelVerticalGap.description%"
         },
         "shelf.treeZoomMinScale": {
           "type": "number",
           "default": 0.68,
           "minimum": 0.2,
           "maximum": 3,
-          "description": "Minimum zoom scale for Shelf tree webviews."
+          "description": "%configuration.shelf.treeZoomMinScale.description%"
         },
         "shelf.treeZoomMaxScale": {
           "type": "number",
           "default": 1.55,
           "minimum": 0.2,
           "maximum": 5,
-          "description": "Maximum zoom scale for Shelf tree webviews."
+          "description": "%configuration.shelf.treeZoomMaxScale.description%"
         },
         "shelf.treeWheelSensitivity": {
           "type": "number",
           "default": 1,
           "minimum": 0.25,
           "maximum": 3,
-          "description": "Wheel zoom sensitivity multiplier for Shelf tree webviews."
+          "description": "%configuration.shelf.treeWheelSensitivity.description%"
         },
         "shelf.treeInspectorWidth": {
           "type": "integer",
           "default": 338,
           "minimum": 240,
           "maximum": 520,
-          "description": "Preferred inspector panel width, in pixels, for Shelf tree webviews."
+          "description": "%configuration.shelf.treeInspectorWidth.description%"
         },
         "shelf.treeInspectorRailWidth": {
           "type": "integer",
           "default": 42,
           "minimum": 32,
           "maximum": 72,
-          "description": "Collapsed inspector rail width, in pixels, for Shelf tree webviews."
+          "description": "%configuration.shelf.treeInspectorRailWidth.description%"
         },
         "shelf.validationCommandTimeoutMs": {
           "type": "integer",
           "default": 120000,
           "minimum": 1000,
           "maximum": 1800000,
-          "description": "Timeout, in milliseconds, for Shelf validation and preflight commands."
+          "description": "%configuration.shelf.validationCommandTimeoutMs.description%"
         },
         "shelf.generatedEventSuppressionMs": {
           "type": "integer",
           "default": 2500,
           "minimum": 0,
           "maximum": 30000,
-          "description": "Suppression window, in milliseconds, for generated file watcher events right after materialization."
+          "description": "%configuration.shelf.generatedEventSuppressionMs.description%"
         },
         "shelf.manualValidationRestartThresholdMs": {
           "type": "integer",
           "default": 15000,
           "minimum": 1000,
           "maximum": 300000,
-          "description": "Elapsed time threshold, in milliseconds, before Shelf can restart a stale validation command on manual retrigger."
+          "description": "%configuration.shelf.manualValidationRestartThresholdMs.description%"
         },
         "shelf.validationDebounceMs": {
           "type": "integer",
           "default": 250,
           "minimum": 0,
           "maximum": 5000,
-          "description": "Debounce delay, in milliseconds, before Shelf starts a queued validation run."
+          "description": "%configuration.shelf.validationDebounceMs.description%"
         }
       }
     }

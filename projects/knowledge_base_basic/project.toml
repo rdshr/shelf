@@ -14,6 +14,9 @@ description = "A ChatGPT-style knowledge chat client rebuilt on the Framework ->
 version = "0.5.0"
 
 [framework]
+# 当前项目按严格一对一边界映射运行：
+# 每个 framework 边界项必须映射到唯一 static config 路径（exact/communication 主路径），
+# 并在代码层由 BoundarySpecClass + BoundaryRuntimeClass 双 class 承接。
 
 [[framework.modules]]
 role = "frontend"
@@ -335,3 +338,373 @@ retrieval_strategy = "retrieval_stub"
 
 [exact.evidence.artifacts]
 canonical_json = "canonical.json"
+
+# ---- Shelf 一对一边界补齐（自动生成） ----
+# 以下 boundary section 只承载实际 communication / exact 值。
+# 边界标识与映射模式由 framework / canonical 派生，不再在 project.toml 中重复声明。
+
+[communication.backend.chat]
+citation_mode = "inline_refs"
+answer_shape = "source_first concise structure"
+
+[communication.backend.chatapi]
+
+[communication.backend.citation]
+
+[communication.backend.consist]
+
+[communication.backend.error]
+
+[communication.backend.file]
+
+[communication.backend.libapi]
+
+[communication.backend.library]
+knowledge_scope = "single curated workspace library"
+mutation_policy = ["create", "delete"]
+
+[communication.backend.preview]
+preview_style = "drawer first"
+context_expectation = "section anchored"
+
+[communication.backend.previewapi]
+
+[communication.backend.valid]
+
+[communication.frontend.action]
+
+[communication.frontend.area]
+
+[communication.frontend.bubble]
+
+[communication.frontend.density]
+
+[communication.frontend.empty]
+
+[communication.frontend.event]
+
+[communication.frontend.feedback]
+
+[communication.frontend.field]
+
+[communication.frontend.focus]
+
+[communication.frontend.host]
+
+[communication.frontend.item]
+
+[communication.frontend.list]
+
+[communication.frontend.meta]
+
+[communication.frontend.nav]
+
+[communication.frontend.option]
+
+[communication.frontend.panel]
+
+[communication.frontend.pick]
+
+[communication.frontend.prop]
+
+[communication.frontend.reset]
+
+[communication.frontend.slot]
+
+[communication.frontend.status]
+
+[communication.frontend.submit]
+
+[communication.frontend.tag]
+
+[communication.frontend.text]
+
+[communication.frontend.theme]
+
+[communication.frontend.token]
+
+[communication.frontend.tone]
+
+[communication.frontend.transfer]
+
+[communication.frontend.tree]
+
+[communication.frontend.trigger]
+
+[communication.frontend.value]
+
+[communication.frontend.viewport]
+
+[communication.knowledge_base.a11y]
+
+[communication.knowledge_base.anchor]
+
+[communication.knowledge_base.citation]
+
+[communication.knowledge_base.classify]
+
+[communication.knowledge_base.docview]
+
+[communication.knowledge_base.empty]
+
+[communication.knowledge_base.entry]
+
+[communication.knowledge_base.fileset]
+
+[communication.knowledge_base.focus]
+
+[communication.knowledge_base.ingest]
+
+[communication.knowledge_base.input]
+
+[communication.knowledge_base.limit]
+
+[communication.knowledge_base.meta]
+
+[communication.knowledge_base.region]
+
+[communication.knowledge_base.responsive]
+
+[communication.knowledge_base.scope]
+
+[communication.knowledge_base.status]
+
+[communication.knowledge_base.surface]
+product_shape = "conversation_sidebar_shell"
+interaction_mode = "chat_first"
+secondary_pages = ["knowledge_list", "knowledge_detail", "document_detail"]
+
+[communication.knowledge_base.toc]
+
+[communication.knowledge_base.trace]
+
+[communication.knowledge_base.turn]
+
+[communication.knowledge_base.turnlink]
+
+[communication.knowledge_base.visibility]
+
+[exact.backend.chat]
+enabled = true
+citations_enabled = true
+mode = "retrieval_stub"
+citation_style = "inline_refs"
+bubble_variant = "assistant_soft"
+composer_variant = "chatgpt_compact"
+system_prompt = "Answer with concise structure-first guidance grounded in the selected knowledge base and cite concrete sections."
+placeholder = "询问制度、方案、文档内容，系统会结合知识库回答…"
+welcome = "像用 ChatGPT 一样直接提问。回答会嵌入知识库引用，点开后可查看来源片段和文档详情。"
+max_citations = 3
+return_targets = ["citation_drawer", "document_detail"]
+anchor_restore = true
+
+[exact.backend.chatapi]
+enabled = true
+
+[exact.backend.citation]
+enabled = true
+
+[exact.backend.consist]
+enabled = true
+
+[exact.backend.error]
+enabled = true
+
+[exact.backend.file]
+enabled = true
+
+[exact.backend.libapi]
+enabled = true
+
+[exact.backend.library]
+knowledge_base_id = "research-and-standards"
+knowledge_base_name = "研发规范知识库"
+knowledge_base_description = "Framework standards, implementation rules, and generated project discipline for the shelf repository."
+enabled = true
+source_types = ["markdown"]
+metadata_fields = ["title", "tags", "updated_at"]
+default_focus = "current_knowledge_base"
+list_variant = "conversation_companion"
+allow_create = true
+allow_delete = true
+search_placeholder = "Search knowledge files and snippets"
+
+[exact.backend.preview]
+enabled = true
+renderers = ["markdown"]
+anchor_mode = "heading"
+show_toc = true
+preview_variant = "citation_drawer"
+max_preview_sections = 10
+
+[exact.backend.previewapi]
+enabled = true
+
+[exact.backend.valid]
+enabled = true
+
+[exact.frontend.action]
+enabled = true
+
+[exact.frontend.area]
+enabled = true
+
+[exact.frontend.bubble]
+enabled = true
+
+[exact.frontend.density]
+enabled = true
+
+[exact.frontend.empty]
+enabled = true
+
+[exact.frontend.event]
+enabled = true
+
+[exact.frontend.feedback]
+enabled = true
+
+[exact.frontend.field]
+enabled = true
+
+[exact.frontend.focus]
+enabled = true
+
+[exact.frontend.host]
+enabled = true
+
+[exact.frontend.item]
+enabled = true
+
+[exact.frontend.list]
+enabled = true
+
+[exact.frontend.meta]
+enabled = true
+
+[exact.frontend.nav]
+enabled = true
+
+[exact.frontend.option]
+enabled = true
+
+[exact.frontend.panel]
+enabled = true
+
+[exact.frontend.pick]
+enabled = true
+
+[exact.frontend.prop]
+enabled = true
+
+[exact.frontend.reset]
+enabled = true
+
+[exact.frontend.slot]
+enabled = true
+
+[exact.frontend.status]
+enabled = true
+
+[exact.frontend.submit]
+enabled = true
+
+[exact.frontend.tag]
+enabled = true
+
+[exact.frontend.text]
+enabled = true
+
+[exact.frontend.theme]
+enabled = true
+
+[exact.frontend.token]
+enabled = true
+
+[exact.frontend.tone]
+enabled = true
+
+[exact.frontend.transfer]
+enabled = true
+
+[exact.frontend.tree]
+enabled = true
+
+[exact.frontend.trigger]
+enabled = true
+
+[exact.frontend.value]
+enabled = true
+
+[exact.frontend.viewport]
+enabled = true
+
+[exact.knowledge_base.a11y]
+enabled = true
+
+[exact.knowledge_base.anchor]
+enabled = true
+
+[exact.knowledge_base.citation]
+enabled = true
+
+[exact.knowledge_base.classify]
+enabled = true
+
+[exact.knowledge_base.docview]
+enabled = true
+
+[exact.knowledge_base.empty]
+enabled = true
+
+[exact.knowledge_base.entry]
+enabled = true
+
+[exact.knowledge_base.fileset]
+enabled = true
+
+[exact.knowledge_base.focus]
+enabled = true
+
+[exact.knowledge_base.ingest]
+enabled = true
+
+[exact.knowledge_base.input]
+enabled = true
+
+[exact.knowledge_base.limit]
+enabled = true
+
+[exact.knowledge_base.meta]
+enabled = true
+
+[exact.knowledge_base.region]
+enabled = true
+
+[exact.knowledge_base.responsive]
+enabled = true
+
+[exact.knowledge_base.scope]
+enabled = true
+
+[exact.knowledge_base.status]
+enabled = true
+
+[exact.knowledge_base.surface]
+layout_variant = "chatgpt_knowledge_client"
+preview_mode = "drawer"
+
+[exact.knowledge_base.toc]
+enabled = true
+
+[exact.knowledge_base.trace]
+enabled = true
+
+[exact.knowledge_base.turn]
+enabled = true
+
+[exact.knowledge_base.turnlink]
+enabled = true
+
+[exact.knowledge_base.visibility]
+enabled = true

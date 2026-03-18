@@ -38,6 +38,31 @@ class KnowledgeBaseRuntimeTest(unittest.TestCase):
         payload = knowledge_bases.json()
         self.assertEqual(payload[0]["knowledge_base_id"], "research-and-standards")
 
+    def test_correspondence_endpoints_expose_stable_protocol(self) -> None:
+        response = self.client.get("/api/knowledge/correspondence")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["correspondence_schema_version"], 1)
+        self.assertIn("objects", payload)
+        self.assertIn("tree", payload)
+        self.assertIn("validation_summary", payload)
+
+        tree_response = self.client.get("/api/knowledge/correspondence/tree")
+        self.assertEqual(tree_response.status_code, 200)
+        tree_payload = tree_response.json()
+        self.assertEqual(tree_payload["correspondence_schema_version"], 1)
+        self.assertIn("tree", tree_payload)
+        self.assertIn("validation_summary", tree_payload)
+
+        module_response = self.client.get("/api/knowledge/correspondence/object/knowledge_base.L2.M0")
+        self.assertEqual(module_response.status_code, 200)
+        module_payload = module_response.json()
+        self.assertEqual(module_payload["object_kind"], "module")
+        self.assertEqual(module_payload["object_id"], "knowledge_base.L2.M0")
+
+        not_found = self.client.get("/api/knowledge/correspondence/object/not-existing")
+        self.assertEqual(not_found.status_code, 404)
+
     @mock.patch("project_runtime.runtime_app.load_project_runtime")
     def test_runtime_app_builds_from_loaded_assembly_without_materialization_side_effect(self, load_project_runtime: mock.Mock) -> None:
         from project_runtime import load_project_runtime as load_runtime

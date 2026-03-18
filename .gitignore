@@ -11,6 +11,8 @@ __pycache__/
 node_modules/
 .vscode-test/
 
+projects/knowledge_base_basic/generated/canonical.json
+
 # Local temporary files
 *~
 *.swp

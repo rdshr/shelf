@@ -80,6 +80,9 @@ def project_runtime_routes(project: ProjectRuntimeAssembly) -> dict[str, dict[st
             "tags": f"{api_prefix}/tags",
             "chat_turns": f"{api_prefix}/chat/turns",
             "project_config": project_config_endpoint,
+            "correspondence": f"{api_prefix}/correspondence",
+            "correspondence_tree": f"{api_prefix}/correspondence/tree",
+            "correspondence_object": f"{api_prefix}/correspondence/object/{{object_id}}",
         },
     }
 

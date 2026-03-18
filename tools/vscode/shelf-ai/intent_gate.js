@@ -3,6 +3,15 @@ const path = require("path");
 const workspaceGuard = require("./guarding");
 
 const MAX_MATCH_COUNT = 8;
+const NON_ONE_TO_ONE_MAPPING_PREFIX = "non one-to-one boundary mapping";
+const TEMP_BYPASS_ALL_TOKEN = "*";
+const TEMP_BYPASS_SCOPES = Object.freeze([
+  "save_guard",
+  "grant_pre_validation",
+  "mapping_echo",
+  "one_to_one_check",
+]);
+const TEMP_BYPASS_SCOPE_SET = new Set(TEMP_BYPASS_SCOPES);
 
 /** @typedef {{
  * projectId: string,
@@ -16,8 +25,10 @@ const MAX_MATCH_COUNT = 8;
  * note: string,
  * primaryExactPath: string,
  * exactPaths: string[],
+ * relatedExactPaths: string[],
  * primaryCommunicationPath: string,
  * communicationPaths: string[],
+ * relatedCommunicationPaths: string[],
  * keywordTokens: string[]
  * }} IntentBoundaryEntry */
 
@@ -34,8 +45,10 @@ const MAX_MATCH_COUNT = 8;
  * scoreReasons: string[],
  * primaryExactPath: string,
  * exactPaths: string[],
+ * relatedExactPaths: string[],
  * primaryCommunicationPath: string,
- * communicationPaths: string[]
+ * communicationPaths: string[],
+ * relatedCommunicationPaths: string[]
  * }} IntentMappingItem */
 
 const TOKEN_ALIAS_RULES = [
@@ -87,6 +100,36 @@ function normalizePathList(values) {
   return [...unique].sort();
 }
 
+function normalizeTemporaryBypassScopes(value) {
+  const source = Array.isArray(value) ? value : [];
+  const normalized = [];
+  const seen = new Set();
+  for (const item of source) {
+    const token = String(item || "").trim().toLowerCase();
+    if (!token) {
+      continue;
+    }
+    if (token === TEMP_BYPASS_ALL_TOKEN || token === "all") {
+      return [TEMP_BYPASS_ALL_TOKEN];
+    }
+    if (!TEMP_BYPASS_SCOPE_SET.has(token) || seen.has(token)) {
+      continue;
+    }
+    seen.add(token);
+    normalized.push(token);
+  }
+  return normalized.sort();
+}
+
+function isTemporaryBypassScopeEnabled(scopes, scope) {
+  const normalizedScope = String(scope || "").trim().toLowerCase();
+  if (!TEMP_BYPASS_SCOPE_SET.has(normalizedScope)) {
+    return false;
+  }
+  const normalizedScopes = normalizeTemporaryBypassScopes(scopes);
+  return normalizedScopes.includes(TEMP_BYPASS_ALL_TOKEN) || normalizedScopes.includes(normalizedScope);
+}
+
 function safeReadCanonical(canonicalPath) {
   try {
     const payload = JSON.parse(fs.readFileSync(canonicalPath, "utf8"));
@@ -102,7 +145,15 @@ function safeReadCanonical(canonicalPath) {
   }
 }
 
-function collectKeywordTokens({ moduleId, boundaryId, exactPaths, communicationPaths, note }) {
+function collectKeywordTokens({
+  moduleId,
+  boundaryId,
+  exactPaths,
+  relatedExactPaths,
+  communicationPaths,
+  relatedCommunicationPaths,
+  note,
+}) {
   const tokens = new Set();
   for (const token of splitSymbolTokens(moduleId)) {
     tokens.add(token);
@@ -115,7 +166,17 @@ function collectKeywordTokens({ moduleId, boundaryId, exactPaths, communicationP
       tokens.add(token);
     }
   }
+  for (const exactPath of relatedExactPaths) {
+    for (const token of splitSymbolTokens(exactPath)) {
+      tokens.add(token);
+    }
+  }
   for (const communicationPath of communicationPaths) {
+    for (const token of splitSymbolTokens(communicationPath)) {
+      tokens.add(token);
+    }
+  }
+  for (const communicationPath of relatedCommunicationPaths) {
     for (const token of splitSymbolTokens(communicationPath)) {
       tokens.add(token);
     }
@@ -169,11 +230,12 @@ function readCanonicalForProject(repoRoot, projectFilePath) {
   };
 }
 
-function collectBoundaryEntries(repoRoot) {
+function collectBoundaryEntries(repoRoot, { allowNonOneToOneMapping = false } = {}) {
   const projectFiles = workspaceGuard.discoverProjectFiles(repoRoot);
   const entries = [];
   const sources = [];
   const errors = [];
+  const boundaryPrimaryMap = new Map();
 
   for (const projectFilePath of projectFiles) {
     const canonicalResult = readCanonicalForProject(repoRoot, projectFilePath);
@@ -206,14 +268,58 @@ function collectBoundaryEntries(repoRoot) {
         if (!boundaryId) {
           continue;
         }
-        const exactPaths = normalizePathList([
-          binding?.primary_exact_path,
+        const primaryExactPath = String(binding?.primary_exact_path || "").trim();
+        const primaryCommunicationPath = String(binding?.primary_communication_path || "").trim();
+        if (!primaryExactPath || !primaryCommunicationPath) {
+          errors.push(
+            `incomplete boundary mapping: ${canonicalResult.projectFileRelPath} ${moduleId}/${boundaryId} missing primary path`
+          );
+          continue;
+        }
+        const boundaryKey = `${canonicalResult.projectId}|${moduleId}|${boundaryId}`;
+        const seenPrimary = boundaryPrimaryMap.get(boundaryKey);
+        if (seenPrimary) {
+          if (
+            seenPrimary.primaryExactPath !== primaryExactPath
+            || seenPrimary.primaryCommunicationPath !== primaryCommunicationPath
+          ) {
+            errors.push(
+              `ambiguous primary mapping: ${canonicalResult.projectFileRelPath} ${moduleId}/${boundaryId} -> ${seenPrimary.primaryExactPath} vs ${primaryExactPath}`
+            );
+          }
+          continue;
+        }
+        boundaryPrimaryMap.set(boundaryKey, {
+          primaryExactPath,
+          primaryCommunicationPath,
+        });
+        const exactPaths = [primaryExactPath];
+        const communicationPaths = [primaryCommunicationPath];
+        const relatedExactPaths = normalizePathList([
+          primaryExactPath,
           ...(Array.isArray(binding?.related_exact_paths) ? binding.related_exact_paths : []),
         ]);
-        const communicationPaths = normalizePathList([
-          binding?.primary_communication_path,
+        const relatedCommunicationPaths = normalizePathList([
+          primaryCommunicationPath,
           ...(Array.isArray(binding?.related_communication_paths) ? binding.related_communication_paths : []),
         ]);
+        if (
+          relatedExactPaths.length !== 1
+          || relatedExactPaths[0] !== primaryExactPath
+          || relatedCommunicationPaths.length !== 1
+          || relatedCommunicationPaths[0] !== primaryCommunicationPath
+        ) {
+          errors.push(
+            `${NON_ONE_TO_ONE_MAPPING_PREFIX}: ${canonicalResult.projectFileRelPath} `
+            + `${moduleId}/${boundaryId} `
+            + `primary_exact=${primaryExactPath} related_exact=[${relatedExactPaths.join(", ")}] `
+            + `primary_communication=${primaryCommunicationPath} `
+            + `related_communication=[${relatedCommunicationPaths.join(", ")}]`
+          );
+          if (!allowNonOneToOneMapping) {
+            continue;
+          }
+        }
 
         const entry = {
           projectId: canonicalResult.projectId,
@@ -225,10 +331,12 @@ function collectBoundaryEntries(repoRoot) {
           boundaryId,
           mappingMode: String(binding?.mapping_mode || "").trim() || "unknown",
           note: String(binding?.note || "").trim(),
-          primaryExactPath: String(binding?.primary_exact_path || "").trim(),
+          primaryExactPath,
           exactPaths,
-          primaryCommunicationPath: String(binding?.primary_communication_path || "").trim(),
+          relatedExactPaths,
+          primaryCommunicationPath,
           communicationPaths,
+          relatedCommunicationPaths,
           keywordTokens: [],
         };
         entry.keywordTokens = collectKeywordTokens(entry);
@@ -307,7 +415,13 @@ function uniqueMappingItems(items) {
   return unique;
 }
 
-function analyzeIntentMapping({ repoRoot, intentText, minimumScore = 4, maxResults = MAX_MATCH_COUNT }) {
+function analyzeIntentMapping({
+  repoRoot,
+  intentText,
+  minimumScore = 4,
+  maxResults = MAX_MATCH_COUNT,
+  allowNonOneToOneMapping = false,
+}) {
   const text = normalizeText(intentText);
   const safeRepoRoot = String(repoRoot || "").trim();
   if (!safeRepoRoot) {
@@ -341,7 +455,25 @@ function analyzeIntentMapping({ repoRoot, intentText, minimumScore = 4, maxResul
     };
   }
 
-  const { entries, sources, errors } = collectBoundaryEntries(safeRepoRoot);
+  const { entries, sources, errors } = collectBoundaryEntries(safeRepoRoot, {
+    allowNonOneToOneMapping: Boolean(allowNonOneToOneMapping),
+  });
+  const nonOneToOneErrors = errors.filter((item) => item.startsWith(`${NON_ONE_TO_ONE_MAPPING_PREFIX}:`));
+  if (nonOneToOneErrors.length && !allowNonOneToOneMapping) {
+    return {
+      passed: false,
+      intentText: text,
+      minimumScore,
+      queryTokens: augmentIntentTokens(text),
+      mappings: [],
+      reason: "framework boundary mapping is not one-to-one; ask a human to update framework first.",
+      sources,
+      errors,
+      allowedExactPaths: [],
+      allowedCommunicationPaths: [],
+      matchedModuleIds: [],
+    };
+  }
   if (!entries.length) {
     return {
       passed: false,
@@ -378,8 +510,10 @@ function analyzeIntentMapping({ repoRoot, intentText, minimumScore = 4, maxResul
       scoreReasons: reasons,
       primaryExactPath: entry.primaryExactPath,
       exactPaths: entry.exactPaths,
+      relatedExactPaths: entry.relatedExactPaths,
       primaryCommunicationPath: entry.primaryCommunicationPath,
       communicationPaths: entry.communicationPaths,
+      relatedCommunicationPaths: entry.relatedCommunicationPaths,
     });
   }
 
@@ -429,16 +563,21 @@ function formatIntentMappingSummary(analysisResult) {
     return "(no mapping)";
   }
   return mappings.map((item, index) => {
-    const exactList = item.exactPaths.join(", ");
-    return `${index + 1}. ${item.moduleId} / ${item.boundaryId} -> ${exactList}`;
+    const relatedExactList = item.relatedExactPaths.join(", ");
+    return `${index + 1}. ${item.moduleId} / ${item.boundaryId} -> ${item.primaryExactPath} (related: ${relatedExactList})`;
   }).join("\n");
 }
 
 module.exports = {
   MAX_MATCH_COUNT,
+  NON_ONE_TO_ONE_MAPPING_PREFIX,
+  TEMP_BYPASS_ALL_TOKEN,
+  TEMP_BYPASS_SCOPES,
   TOKEN_ALIAS_RULES,
   analyzeIntentMapping,
   augmentIntentTokens,
   collectBoundaryEntries,
   formatIntentMappingSummary,
+  isTemporaryBypassScopeEnabled,
+  normalizeTemporaryBypassScopes,
 };

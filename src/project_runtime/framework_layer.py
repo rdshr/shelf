@@ -7,6 +7,11 @@ from typing import Any
 from framework_ir import FrameworkModule as ParsedFrameworkModule
 from framework_ir import load_framework_catalog
 
+from project_runtime.correspondence_contracts import (
+    boundary_field_name,
+    module_class_name_fragment,
+    module_key_from_id,
+)
 from project_runtime.models import SelectedFrameworkModule
 
 
@@ -74,6 +79,60 @@ class FrameworkRuleClass:
         }
 
 
+class FrameworkBoundarySpecClass:
+    class_id: str
+    canonical_id: str
+    module_id: str
+    boundary_id: str
+    name: str
+    statement: str
+    source_tokens: tuple[str, ...]
+    source_ref: dict[str, Any]
+    projection: dict[str, Any]
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
+        return {
+            "class_id": cls.class_id,
+            "canonical_id": cls.canonical_id,
+            "module_id": cls.module_id,
+            "boundary_id": cls.boundary_id,
+            "name": cls.name,
+            "statement": cls.statement,
+            "source_tokens": list(cls.source_tokens),
+            "source_ref": dict(cls.source_ref),
+            "projection": dict(cls.projection),
+            "class_name": cls.__name__,
+        }
+
+
+class FrameworkBoundaryRuntimeClass:
+    class_id: str
+    canonical_id: str
+    module_id: str
+    boundary_id: str
+    primary_exact_path: str
+    primary_communication_path: str
+    mapping_mode: str
+    note: str
+    source_ref: dict[str, Any]
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
+        return {
+            "class_id": cls.class_id,
+            "canonical_id": cls.canonical_id,
+            "module_id": cls.module_id,
+            "boundary_id": cls.boundary_id,
+            "primary_exact_path": cls.primary_exact_path,
+            "primary_communication_path": cls.primary_communication_path,
+            "mapping_mode": cls.mapping_mode,
+            "note": cls.note,
+            "source_ref": dict(cls.source_ref),
+            "class_name": cls.__name__,
+        }
+
+
 class FrameworkModuleClass:
     class_id: str
     framework: str
@@ -87,6 +146,8 @@ class FrameworkModuleClass:
     capabilities: tuple[Any, ...]
     boundaries: tuple[Any, ...]
     verifications: tuple[Any, ...]
+    boundary_spec_classes: tuple[type[FrameworkBoundarySpecClass], ...]
+    boundary_runtime_classes: tuple[type[FrameworkBoundaryRuntimeClass], ...]
     base_classes: tuple[type[FrameworkBaseClass], ...]
     rule_classes: tuple[type[FrameworkRuleClass], ...]
     upstream_module_ids: tuple[str, ...]
@@ -105,6 +166,8 @@ class FrameworkModuleClass:
             "intro": cls.intro,
             "source_ref": dict(cls.source_ref),
             "boundary_ids": [item.boundary_id for item in cls.boundaries],
+            "boundary_spec_ids": [item.boundary_id for item in cls.boundary_spec_classes],
+            "boundary_runtime_ids": [item.boundary_id for item in cls.boundary_runtime_classes],
             "base_ids": [item.base_id for item in cls.base_classes],
             "rule_ids": [item.rule_id for item in cls.rule_classes],
             "capability_ids": [item.capability_id for item in cls.capabilities],
@@ -131,6 +194,8 @@ class FrameworkModuleClass:
             "source_ref": dict(cls.source_ref),
             "capabilities": [item.to_dict() for item in cls.capabilities],
             "boundaries": [_serialize_boundary(item, cls.boundary_projection_map) for item in cls.boundaries],
+            "boundary_specs": [item.to_dict() for item in cls.boundary_spec_classes],
+            "boundary_runtimes": [item.to_dict() for item in cls.boundary_runtime_classes],
             "bases": [item.to_dict() for item in cls.base_classes],
             "rules": [item.to_dict() for item in cls.rule_classes],
             "verifications": [item.to_dict() for item in cls.verifications],
@@ -139,7 +204,8 @@ class FrameworkModuleClass:
 
 
 def _module_name_fragment(module: ParsedFrameworkModule) -> str:
-    return f"{module.framework.capitalize()}L{module.level}M{module.module}"
+    module_id = f"{module.framework}.L{module.level}.M{module.module}"
+    return module_class_name_fragment(module_id)
 
 
 def _class_id(kind: str, *parts: str) -> str:
@@ -154,27 +220,19 @@ def _exact_to_communication_path(path: str) -> str:
     return ".".join(("communication", parts[1], parts[2]))
 
 
-def _related_communication_paths(paths: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(
-        communication_path
-        for path in paths
-        for communication_path in (_exact_to_communication_path(path),)
-        if communication_path
-    )
-
-
 def _boundary_projection(
     module: ParsedFrameworkModule,
     boundary_id: str,
     *,
     primary_exact_path: str,
-    related_exact_paths: tuple[str, ...] = tuple(),
     mapping_mode: str = "direct",
     note: str = "",
 ) -> dict[str, Any]:
-    related_exact = tuple(dict.fromkeys((primary_exact_path, *related_exact_paths)))
+    # Framework projection is one-to-one by contract: each boundary maps to one exact path.
+    # Keep related fields for trace compatibility, but force them to mirror primary only.
+    related_exact = (primary_exact_path,)
     primary_communication = _exact_to_communication_path(primary_exact_path)
-    related_communication = _related_communication_paths(related_exact)
+    related_communication = (primary_communication,) if primary_communication else tuple()
     return {
         "projection_id": _class_id("framework_boundary_projection", module.module_id, boundary_id),
         "projection_source": "framework_export",
@@ -189,332 +247,34 @@ def _boundary_projection(
     }
 
 
-def _frontend_boundary_projection(module: ParsedFrameworkModule, boundary_id: str) -> dict[str, Any]:
-    direct_paths: dict[str, tuple[str, tuple[str, ...]]] = {
-        "SURFACE": ("exact.frontend.surface", ("exact.frontend.surface.copy",)),
-        "VISUAL": ("exact.frontend.visual", tuple()),
-        "INTERACT": ("exact.frontend.interact", ("exact.frontend.interact.aux_nav",)),
-        "STATE": (
-            "exact.frontend.state",
-            ("exact.frontend.state.role_labels", "exact.frontend.state.relative_groups"),
-        ),
-        "EXTEND": ("exact.frontend.extend", tuple()),
-        "ROUTE": ("exact.frontend.route", ("exact.frontend.route.showcase_page",)),
-        "A11Y": ("exact.frontend.a11y", tuple()),
-    }
-    if boundary_id in direct_paths:
-        primary_exact_path, related_exact_paths = direct_paths[boundary_id]
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path=primary_exact_path,
-            related_exact_paths=related_exact_paths,
-        )
-    if boundary_id in {"A11Y", "READ", "ORDER", "FOCUS"} or boundary_id.endswith("A11Y"):
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.a11y",
-            mapping_mode="derived",
-            note="该边界按可访问与阅读路径归属到项目配置。",
-        )
-    if boundary_id in {"ROUTE", "NAV", "ENTRY", "RETURN", "PAGESET", "SCENE", "STEP", "REF"}:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.route",
-            mapping_mode="derived",
-            note="该边界按导航与返回路径归属到项目配置。",
-        )
-    visual_boundaries = {
-        "VISUAL",
-        "TOKEN",
-        "THEME",
-        "DENSITY",
-        "ALERT",
-        "TAG",
-        "BUBBLE",
-        "TEXTTONE",
-        "TEXTTYPO",
-        "BTNCHROME",
-        "PANELTONE",
-        "FEEDBACK",
-    }
-    if boundary_id in visual_boundaries or "TONE" in boundary_id or "TYPO" in boundary_id or "CHROME" in boundary_id:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.visual",
-            mapping_mode="derived",
-            note="该边界按视觉与主题语义归属到项目配置。",
-        )
+def _boundary_name_to_section(boundary_id: str) -> str:
+    return str(boundary_id).strip().lower()
+
+
+def _module_boundary_projection(module: ParsedFrameworkModule, boundary_id: str) -> dict[str, Any]:
+    section = _boundary_name_to_section(boundary_id)
+    module_id = module.module_id
+    module_key = module_key_from_id(module_id)
+    field_name = boundary_field_name(boundary_id)
     return _boundary_projection(
         module,
         boundary_id,
-        primary_exact_path="exact.frontend.surface",
-        related_exact_paths=("exact.frontend.surface.copy",),
-        mapping_mode="derived",
-        note="该边界按界面承载与组件装配归属到项目配置。",
-    )
-
-
-def _knowledge_base_boundary_projection(module: ParsedFrameworkModule, boundary_id: str) -> dict[str, Any]:
-    direct_paths: dict[str, tuple[str, tuple[str, ...]]] = {
-        "SURFACE": ("exact.frontend.surface", ("exact.frontend.surface.copy",)),
-        "LIBRARY": ("exact.knowledge_base.library", tuple()),
-        "PREVIEW": ("exact.knowledge_base.preview", tuple()),
-        "CHAT": ("exact.knowledge_base.chat", tuple()),
-        "CONTEXT": ("exact.knowledge_base.context", tuple()),
-        "RETURN": ("exact.knowledge_base.return", tuple()),
+        primary_exact_path=f"exact.{module.framework}.{section}",
+        mapping_mode="direct",
+        note="边界一对一映射：boundary_id 与 config/code 锚点同名。",
+    ) | {
+        "module_key": module_key,
+        "static_field_name": field_name,
+        "runtime_field_name": field_name,
+        "exact_export_static_path": f"exact_export.modules.{module_key}.static_params.{field_name}",
+        "communication_export_static_path": f"communication_export.modules.{module_key}.static_params.{field_name}",
+        "merge_policy": "runtime_override_else_static",
     }
-    if boundary_id in direct_paths:
-        primary_exact_path, related_exact_paths = direct_paths[boundary_id]
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path=primary_exact_path,
-            related_exact_paths=related_exact_paths,
-        )
-    if boundary_id == "A11Y" or boundary_id.endswith("A11Y"):
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.a11y",
-            mapping_mode="derived",
-            note="该边界由工作台可访问切片承接。",
-        )
-    if boundary_id in {"FILESET", "INGEST", "CLASSIFY", "LIMIT"}:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.library",
-            mapping_mode="derived",
-            note="该边界由知识库配置承接。",
-        )
-    if boundary_id == "VISIBILITY":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.library",
-            related_exact_paths=("exact.knowledge_base.preview",),
-            mapping_mode="derived",
-            note="该边界由知识库入口与来源预览配置共同承接。",
-        )
-    if boundary_id == "ENTRY":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.library",
-            related_exact_paths=("exact.frontend.route",),
-            mapping_mode="derived",
-            note="该边界由知识库入口配置与工作台路由共同承接。",
-        )
-    if boundary_id in {"DOCVIEW", "TOC", "META"}:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.preview",
-            mapping_mode="derived",
-            note="该边界由来源预览配置承接。",
-        )
-    if boundary_id == "FOCUS":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.preview",
-            related_exact_paths=("exact.frontend.a11y",),
-            mapping_mode="derived",
-            note="该边界由来源预览与可访问配置共同承接。",
-        )
-    if boundary_id == "ANCHOR":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.preview",
-            related_exact_paths=("exact.knowledge_base.return",),
-            mapping_mode="derived",
-            note="该边界由来源锚点与返回路径配置共同承接。",
-        )
-    if boundary_id in {"TURN", "INPUT"}:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.chat",
-            mapping_mode="derived",
-            note="该边界由对话项目配置承接。",
-        )
-    if boundary_id == "STATUS":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.chat",
-            related_exact_paths=("exact.knowledge_base.preview",),
-            mapping_mode="derived",
-            note="该边界由对话输出与来源状态配置共同承接。",
-        )
-    if boundary_id == "CITATION":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.chat",
-            related_exact_paths=(
-                "exact.knowledge_base.context",
-                "exact.knowledge_base.return",
-                "exact.knowledge_base.preview",
-            ),
-            mapping_mode="derived",
-            note="该边界由对话、上下文、返回与来源预览配置共同承接。",
-        )
-    if boundary_id == "SCOPE":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.context",
-            related_exact_paths=("exact.knowledge_base.preview",),
-            mapping_mode="derived",
-            note="该边界由上下文选择与来源预览配置共同承接。",
-        )
-    if boundary_id == "TURNLINK":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.return",
-            related_exact_paths=("exact.knowledge_base.chat", "exact.knowledge_base.context"),
-            mapping_mode="derived",
-            note="该边界由回合返回链路与上下文配置共同承接。",
-        )
-    if boundary_id == "TRACE":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.context",
-            related_exact_paths=("exact.knowledge_base.preview", "exact.knowledge_base.return"),
-            mapping_mode="derived",
-            note="该边界由上下文、来源追踪与返回链路配置共同承接。",
-        )
-    if boundary_id == "EMPTY":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.chat",
-            related_exact_paths=("exact.knowledge_base.preview", "exact.knowledge_base.library"),
-            mapping_mode="derived",
-            note="该边界由聊天、预览与知识库空态配置共同承接。",
-        )
-    if boundary_id == "REGION":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.surface",
-            related_exact_paths=("exact.frontend.surface.copy",),
-            mapping_mode="derived",
-            note="该边界由工作台界面承载配置承接。",
-        )
-    if boundary_id == "RESPONSIVE":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.frontend.surface",
-            related_exact_paths=("exact.frontend.visual",),
-            mapping_mode="derived",
-            note="该边界由界面承载与视觉配置共同承接。",
-        )
-    return _boundary_projection(
-        module,
-        boundary_id,
-        primary_exact_path="exact.knowledge_base.chat",
-        related_exact_paths=("exact.knowledge_base.context", "exact.knowledge_base.return"),
-        mapping_mode="derived",
-        note="该边界由知识库工作台主链配置承接。",
-    )
-
-
-def _backend_boundary_projection(module: ParsedFrameworkModule, boundary_id: str) -> dict[str, Any]:
-    direct_paths: dict[str, tuple[str, tuple[str, ...]]] = {
-        "RESULT": ("exact.backend.result", tuple()),
-        "AUTH": ("exact.backend.auth", tuple()),
-        "TRACE": ("exact.backend.trace", tuple()),
-    }
-    if boundary_id in direct_paths:
-        primary_exact_path, related_exact_paths = direct_paths[boundary_id]
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path=primary_exact_path,
-            related_exact_paths=related_exact_paths,
-        )
-    if boundary_id.startswith("LIB") or boundary_id in {"FILE", "LIBRARY"}:
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.library",
-            mapping_mode="derived",
-            note="该边界由知识库项目配置承接。",
-        )
-    if boundary_id.startswith("PREVIEW") or boundary_id == "PREVIEW":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.preview",
-            mapping_mode="derived",
-            note="该边界由来源预览配置承接。",
-        )
-    if boundary_id.startswith("CHAT") or boundary_id == "CITATION":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.knowledge_base.chat",
-            related_exact_paths=(
-                "exact.knowledge_base.context",
-                "exact.knowledge_base.return",
-                "exact.knowledge_base.preview",
-            ),
-            mapping_mode="derived",
-            note="该边界由对话、返回与来源预览配置共同承接。",
-        )
-    if boundary_id == "TRACE":
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path="exact.backend.trace",
-            related_exact_paths=("exact.knowledge_base.return",),
-            mapping_mode="derived",
-            note="该边界由追踪与返回链路配置共同承接。",
-        )
-    if boundary_id in {"RESULT", "AUTH", "ERROR", "VALID", "CONSIST"}:
-        primary_exact = "exact.backend.auth" if boundary_id in {"AUTH", "VALID"} else "exact.backend.result"
-        return _boundary_projection(
-            module,
-            boundary_id,
-            primary_exact_path=primary_exact,
-            related_exact_paths=(
-                "exact.knowledge_base.chat",
-                "exact.knowledge_base.library",
-                "exact.knowledge_base.preview",
-            ),
-            mapping_mode="derived",
-            note="该边界由统一返回结构与跨接口约束配置共同承接。",
-        )
-    return _boundary_projection(
-        module,
-        boundary_id,
-        primary_exact_path="exact.backend.result",
-        related_exact_paths=("exact.knowledge_base.chat",),
-        mapping_mode="derived",
-        note="该边界由后端结果与工作台主链配置共同承接。",
-    )
 
 
 def _boundary_projection_map(module: ParsedFrameworkModule) -> dict[str, dict[str, Any]]:
-    resolver = {
-        "frontend": _frontend_boundary_projection,
-        "knowledge_base": _knowledge_base_boundary_projection,
-        "backend": _backend_boundary_projection,
-    }.get(module.framework)
-    if resolver is None:
-        return {}
     return {
-        boundary.boundary_id: resolver(module, boundary.boundary_id)
+        boundary.boundary_id: _module_boundary_projection(module, boundary.boundary_id)
         for boundary in module.boundaries
     }
 
@@ -597,10 +357,68 @@ def _build_rule_class(module: ParsedFrameworkModule, index: int) -> type[Framewo
     )
 
 
+def _build_boundary_spec_class(
+    module: ParsedFrameworkModule,
+    index: int,
+    boundary_projection_map: dict[str, dict[str, Any]],
+) -> type[FrameworkBoundarySpecClass]:
+    boundary = module.boundaries[index]
+    class_name = f"{_module_name_fragment(module)}{boundary.boundary_id}BoundarySpec"
+    projection = boundary_projection_map.get(boundary.boundary_id, {})
+    return type(
+        class_name,
+        (FrameworkBoundarySpecClass,),
+        {
+            "class_id": _class_id("framework_boundary_spec_class", module.module_id, boundary.boundary_id),
+            "canonical_id": _class_id("framework_boundary_spec", module.module_id, boundary.boundary_id),
+            "module_id": module.module_id,
+            "boundary_id": boundary.boundary_id,
+            "name": boundary.name,
+            "statement": boundary.statement,
+            "source_tokens": boundary.source_tokens,
+            "source_ref": boundary.source_ref.to_dict(),
+            "projection": dict(projection),
+        },
+    )
+
+
+def _build_boundary_runtime_class(
+    module: ParsedFrameworkModule,
+    index: int,
+    boundary_projection_map: dict[str, dict[str, Any]],
+) -> type[FrameworkBoundaryRuntimeClass]:
+    boundary = module.boundaries[index]
+    class_name = f"{_module_name_fragment(module)}{boundary.boundary_id}BoundaryRuntime"
+    projection = boundary_projection_map.get(boundary.boundary_id, {})
+    return type(
+        class_name,
+        (FrameworkBoundaryRuntimeClass,),
+        {
+            "class_id": _class_id("framework_boundary_runtime_class", module.module_id, boundary.boundary_id),
+            "canonical_id": _class_id("framework_boundary_runtime", module.module_id, boundary.boundary_id),
+            "module_id": module.module_id,
+            "boundary_id": boundary.boundary_id,
+            "primary_exact_path": str(projection.get("primary_exact_path") or ""),
+            "primary_communication_path": str(projection.get("primary_communication_path") or ""),
+            "mapping_mode": str(projection.get("mapping_mode") or ""),
+            "note": str(projection.get("note") or ""),
+            "source_ref": boundary.source_ref.to_dict(),
+        },
+    )
+
+
 def _build_module_class(module: ParsedFrameworkModule) -> type[FrameworkModuleClass]:
+    boundary_projection_map = _boundary_projection_map(module)
+    boundary_spec_classes = tuple(
+        _build_boundary_spec_class(module, index, boundary_projection_map)
+        for index in range(len(module.boundaries))
+    )
+    boundary_runtime_classes = tuple(
+        _build_boundary_runtime_class(module, index, boundary_projection_map)
+        for index in range(len(module.boundaries))
+    )
     base_classes = tuple(_build_base_class(module, index) for index in range(len(module.bases)))
     rule_classes = tuple(_build_rule_class(module, index) for index in range(len(module.rules)))
-    boundary_projection_map = _boundary_projection_map(module)
     class_name = f"{_module_name_fragment(module)}FrameworkModule"
     return type(
         class_name,
@@ -618,6 +436,8 @@ def _build_module_class(module: ParsedFrameworkModule) -> type[FrameworkModuleCl
             "capabilities": module.capabilities,
             "boundaries": module.boundaries,
             "verifications": module.verifications,
+            "boundary_spec_classes": boundary_spec_classes,
+            "boundary_runtime_classes": boundary_runtime_classes,
             "base_classes": base_classes,
             "rule_classes": rule_classes,
             "upstream_module_ids": tuple(sorted({link.module_id for base in module.bases for link in base.upstream_links})),

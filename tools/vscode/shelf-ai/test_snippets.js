@@ -31,6 +31,10 @@ function main() {
     (packageJson.files || []).includes("guarding.js"),
     "package.json must package guarding.js"
   );
+  assert(
+    (packageJson.files || []).includes("local_settings.js"),
+    "package.json must package local_settings.js"
+  );
 
   const commandContribution = (packageJson.contributes?.commands || []).find(
     (item) => item.command === "shelf.insertFrameworkModuleTemplate"
@@ -170,6 +174,14 @@ function main() {
   assert(
     readme.includes("shelf.guardMode = strict"),
     "README must document strict guard mode"
+  );
+  assert(
+    readme.includes(".shelf/settings.jsonc"),
+    "README must document the local .shelf settings entrypoint"
+  );
+  assert(
+    readme.includes("VSCode `shelf.*` setting has highest priority"),
+    "README must document local settings precedence"
   );
   assert(
     readme.includes("uv run python scripts/validate_canonical.py --check-changes"),
