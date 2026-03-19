@@ -63,6 +63,46 @@ def _find_line(file_path: str, needle: str, *, fallback: int = 1) -> int:
     return fallback
 
 
+def _python_module_file_path(module_name: str) -> str:
+    normalized = str(module_name).strip().replace(".", "/")
+    if not normalized:
+        return ""
+    src_candidate = f"src/{normalized}.py"
+    if (REPO_ROOT / src_candidate).exists():
+        return src_candidate
+    candidate = f"{normalized}.py"
+    if (REPO_ROOT / candidate).exists():
+        return candidate
+    return ""
+
+
+def _symbol_anchor(symbol: str) -> tuple[str, int]:
+    module_name, _, symbol_name = str(symbol or "").partition(":")
+    file_path = _python_module_file_path(module_name)
+    if not file_path or not symbol_name:
+        return "", 0
+    class_name = symbol_name.split(".", 1)[0]
+    method_name = symbol_name.rsplit(".", 1)[-1]
+    class_line = _find_line(file_path, f"class {class_name}(", fallback=0)
+    if class_line:
+        return file_path, class_line
+    method_line = _find_line(file_path, f"def {method_name}(", fallback=0)
+    if method_line:
+        return file_path, method_line
+    return "", 0
+
+
+def _materialization_kind_from_symbol(
+    symbol: str,
+    *,
+    fallback: str = "runtime_dynamic_type",
+) -> str:
+    file_path, line = _symbol_anchor(symbol)
+    if file_path and line > 0:
+        return "static_python_class"
+    return fallback
+
+
 def _line_range(start_line: Any, end_line: Any | None = None) -> tuple[int, int]:
     try:
         start = int(start_line)
@@ -157,19 +197,24 @@ def _code_correspondence_target(
     symbol: str,
     is_primary: bool,
 ) -> NavigationTarget:
-    file_path = "src/project_runtime/code_layer.py"
-    if kind == "module":
-        line = _find_line(file_path, "def _build_module_contract_type(", fallback=1)
-    elif kind == "base":
-        line = _find_line(file_path, "def _build_base_contract_types(", fallback=1)
-    elif kind == "rule":
-        line = _find_line(file_path, "def _build_rule_contract_types(", fallback=1)
-    elif kind == "static_param":
-        line = _find_line(file_path, "def _build_static_params_type(", fallback=1)
-    elif kind == "runtime_param":
-        line = _find_line(file_path, "def _build_runtime_params_type(", fallback=1)
+    symbol_file_path, symbol_line = _symbol_anchor(symbol)
+    if symbol_file_path and symbol_line:
+        file_path = symbol_file_path
+        line = symbol_line
     else:
-        line = _find_line(file_path, "def _build_implementation_slots(", fallback=1)
+        file_path = "src/project_runtime/code_layer.py"
+        if kind == "module":
+            line = _find_line(file_path, "def _build_module_contract_type(", fallback=1)
+        elif kind == "base":
+            line = _find_line(file_path, "def _build_base_contract_types(", fallback=1)
+        elif kind == "rule":
+            line = _find_line(file_path, "def _build_rule_contract_types(", fallback=1)
+        elif kind == "static_param":
+            line = _find_line(file_path, "def _build_static_params_type(", fallback=1)
+        elif kind == "runtime_param":
+            line = _find_line(file_path, "def _build_runtime_params_type(", fallback=1)
+        else:
+            line = _find_line(file_path, "def _build_implementation_slots(", fallback=1)
     return _target(
         target_kind="code_correspondence",
         layer="code",
@@ -371,13 +416,22 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
     reports = canonical.get("evidence", {}).get("validation_reports", {})
     if not isinstance(reports, dict):
         return {"passed": False, "issues": [], "rule_count": 0}
-    scope = reports.get("correspondence_guard", {})
-    if not isinstance(scope, dict):
-        return {"passed": False, "issues": [], "rule_count": 0}
-    rules = scope.get("rules")
+    scope_names = ("correspondence_guard", "codegen_consistency_guard")
     module_ids, base_ids, rule_ids, _, boundary_object_ids = _collect_known_object_ids(object_payload)
     issues: list[dict[str, Any]] = []
-    if isinstance(rules, list):
+    scope_count = 0
+    scope_passed = True
+    scope_rule_count = 0
+    for scope_name in scope_names:
+        scope = reports.get(scope_name, {})
+        if not isinstance(scope, dict):
+            continue
+        scope_count += 1
+        scope_passed = scope_passed and bool(scope.get("passed"))
+        scope_rule_count += int(scope.get("rule_count") or 0)
+        rules = scope.get("rules")
+        if not isinstance(rules, list):
+            continue
         for rule in rules:
             if not isinstance(rule, dict):
                 continue
@@ -397,6 +451,7 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
                             "issue_kind": "guard_reason",
                             "level": "error",
                             "reason": reason_text,
+                            "scope": scope_name,
                             "object_ids": object_ids,
                             "primary_object_id": object_ids[0] if object_ids else "",
                         }
@@ -407,7 +462,9 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
                 if isinstance(object_issues, list):
                     for item in object_issues:
                         if isinstance(item, dict):
-                            issues.append(dict(item))
+                            merged = dict(item)
+                            merged.setdefault("scope", scope_name)
+                            issues.append(merged)
     issue_count_by_object: dict[str, int] = {}
     for issue in issues:
         raw_object_ids = issue.get("object_ids")
@@ -416,13 +473,26 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
         for object_id in raw_object_ids:
             key = str(object_id)
             issue_count_by_object[key] = issue_count_by_object.get(key, 0) + 1
+    error_count = sum(1 for item in issues if str(item.get("level") or "").lower() == "error")
+    warning_count = sum(1 for item in issues if str(item.get("level") or "").lower() == "warning")
     return {
-        "passed": bool(scope.get("passed")),
-        "rule_count": int(scope.get("rule_count") or 0),
-        "error_count": len(issues),
+        "passed": scope_passed if scope_count else False,
+        "rule_count": scope_rule_count,
+        "error_count": error_count,
+        "warning_count": warning_count,
         "issues": issues,
         "issue_count_by_object": issue_count_by_object,
     }
+
+
+def _codegen_consistency_payload(canonical: dict[str, Any]) -> dict[str, Any]:
+    exports = canonical.get("evidence", {}).get("exports", {})
+    if not isinstance(exports, dict):
+        return {}
+    payload = exports.get("codegen_consistency")
+    if not isinstance(payload, dict):
+        return {}
+    return payload
 
 
 def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
@@ -513,7 +583,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 object_id=module_object_id,
                 owner_module_id=module_id,
                 display_name=module_display,
-                materialization_kind="runtime_dynamic_type",
+                materialization_kind=_materialization_kind_from_symbol(
+                    module_symbol,
+                    fallback="runtime_dynamic_type",
+                ),
                 primary_nav_target_kind="code_correspondence",
                 primary_edit_target_kind="framework_definition",
                 correspondence_anchor=module_correspondence_target.to_dict(),
@@ -572,7 +645,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=base_id,
                     owner_module_id=module_id,
                     display_name=_display_name_from_symbol(base_symbol, short_base_id),
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        base_symbol,
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="framework_definition",
                     primary_edit_target_kind="framework_definition",
                     correspondence_anchor=base_code_correspondence_target.to_dict(),
@@ -625,7 +701,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=rule_id,
                     owner_module_id=module_id,
                     display_name=_display_name_from_symbol(rule_symbol, short_rule_id),
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        rule_symbol,
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="framework_definition",
                     primary_edit_target_kind="framework_definition",
                     correspondence_anchor=rule_code_correspondence_target.to_dict(),
@@ -763,7 +842,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=static_object_id,
                     owner_module_id=module_id,
                     display_name=static_field,
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        str(boundary_link.get("static_params_class_symbol") or ""),
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="config_source",
                     primary_edit_target_kind="config_source",
                     correspondence_anchor=static_correspondence_target.to_dict(),
@@ -799,7 +881,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                     object_id=runtime_object_id,
                     owner_module_id=module_id,
                     display_name=runtime_field,
-                    materialization_kind="runtime_dynamic_type",
+                    materialization_kind=_materialization_kind_from_symbol(
+                        str(boundary_link.get("runtime_params_class_symbol") or ""),
+                        fallback="runtime_dynamic_type",
+                    ),
                     primary_nav_target_kind="code_correspondence",
                     primary_edit_target_kind="code_correspondence",
                     correspondence_anchor=runtime_correspondence_target.to_dict(),
@@ -827,5 +912,6 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
         "objects": object_payload,
         "object_index": object_index,
         "tree": tree,
+        "codegen_consistency": _codegen_consistency_payload(canonical),
         "validation_summary": _guard_summary(canonical, object_payload),
     }

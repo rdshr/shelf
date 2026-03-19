@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="duck" x1="136" y1="54" x2="410" y2="476" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF1A2"/>
+      <stop offset="0.58" stop-color="#FFD060"/>
+      <stop offset="1" stop-color="#FFA43A"/>
+    </linearGradient>
+    <linearGradient id="beak" x1="392" y1="228" x2="482" y2="278" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB347"/>
+      <stop offset="1" stop-color="#FF6F18"/>
+    </linearGradient>
+    <linearGradient id="belly" x1="154" y1="282" x2="360" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB43D"/>
+      <stop offset="1" stop-color="#F79A1D"/>
+    </linearGradient>
+    <clipPath id="bellyClip">
+      <rect x="142" y="282" width="228" height="142" rx="42"/>
+    </clipPath>
+  </defs>
+
+  <ellipse cx="435" cy="252" rx="42" ry="40" fill="url(#beak)"/>
+  <ellipse cx="258" cy="124" rx="112" ry="112" fill="url(#duck)"/>
+  <rect x="74" y="156" width="364" height="338" rx="168" fill="url(#duck)"/>
+  <path d="M184 60C205.331 38.6755 238.274 30.6404 267.324 39.2223C295.169 47.448 316.869 69.1992 324.373 97H170C172.684 83.4016 177.275 70.901 184 60Z" fill="white" fill-opacity="0.84"/>
+  <circle cx="298" cy="170" r="15" fill="#17355B"/>
+
+  <g opacity="0.95">
+    <path d="M60 226C78.2132 208.629 106.36 221.532 106.36 246.701V361.299C106.36 386.468 78.2132 399.371 60 382V226Z" fill="#DCEBFF"/>
+    <rect x="76" y="198" width="45" height="182" rx="22.5" fill="white"/>
+  </g>
+
+  <rect x="142" y="282" width="228" height="142" rx="42" fill="url(#belly)"/>
+  <g clip-path="url(#bellyClip)">
+    <rect x="140" y="329" width="236" height="11" rx="5.5" fill="#FFF3D0" fill-opacity="0.92"/>
+    <rect x="140" y="376" width="236" height="11" rx="5.5" fill="#FFF3D0" fill-opacity="0.92"/>
+    <rect x="221" y="272" width="12" height="170" rx="6" fill="#FFD06A"/>
+    <rect x="281" y="272" width="12" height="170" rx="6" fill="#FFD06A"/>
+  </g>
+
+  <path d="M128 468C168.227 491.334 210.411 503 254 503C318.503 503 379.918 477.445 428 431.938V462C394.114 493.428 350.292 512 304 512H207C176.472 512 148.314 504.006 124 490.283L128 468Z" fill="#F59E2F" fill-opacity="0.28"/>
+</svg>

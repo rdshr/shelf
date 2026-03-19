@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shelf AI Icon Direction</title>
+    <style>
+      :root {
+        --page-bg: #f3efe7;
+        --panel-bg: #fbf8f2;
+        --panel-border: #d8d1c5;
+        --text-main: #0f172a;
+        --text-muted: #5b6472;
+        --chip-bg: #ebe4d7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        color: var(--text-main);
+        background: linear-gradient(180deg, #faf6ef 0%, var(--page-bg) 100%);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 42px 24px 56px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 38px;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+
+      .lead {
+        max-width: 720px;
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .hero {
+        border: 1px solid var(--panel-border);
+        border-radius: 28px;
+        padding: 24px;
+        background: var(--panel-bg);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+        margin-top: 30px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .preview {
+        display: grid;
+        place-items: center;
+        min-height: 520px;
+        border-radius: 22px;
+        border: 1px solid var(--panel-border);
+        background:
+          linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+          linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+          #f7f2e9;
+        background-size: 24px 24px;
+      }
+
+      .preview img {
+        width: min(100%, 520px);
+        height: auto;
+      }
+
+      .meta h2 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        line-height: 1.1;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 16px;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--chip-bg);
+        font-size: 12px;
+        color: var(--text-main);
+      }
+
+      .meta p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .thumb-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .thumb {
+        display: grid;
+        place-items: center;
+        width: 88px;
+        height: 88px;
+        border-radius: 18px;
+        border: 1px solid var(--panel-border);
+        background: white;
+      }
+
+      .thumb.small {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+      }
+
+      .thumb img {
+        width: 80%;
+        height: 80%;
+      }
+
+      .footer {
+        margin-top: 24px;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 860px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .preview {
+          min-height: 380px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Shelf AI current icon direction</h1>
+      <p class="lead">
+        Current revision: remove the blue square background, keep only the duck body, and scale the
+        subject up so it nearly fills the full icon bounds.
+      </p>
+      <section class="hero">
+        <div class="hero-grid">
+          <div class="preview">
+            <img src="shelf-duck-tight-transparent.svg" alt="Current transparent duck icon">
+          </div>
+          <div class="meta">
+            <h2>Transparent duck, tighter crop</h2>
+            <div class="chips">
+              <span class="chip">no background</span>
+              <span class="chip">single subject</span>
+              <span class="chip">fills the canvas</span>
+              <span class="chip">marketplace-ready</span>
+            </div>
+            <p>
+              This version keeps the frontal duck shape and the shelf detail on the belly, but removes
+              the square backing plate entirely. The head, wing, beak, and body are all scaled outward
+              so the subject feels like the icon itself, not a drawing inside a tile.
+            </p>
+            <div class="thumb-row">
+              <div class="thumb">
+                <img src="shelf-duck-tight-transparent.svg" alt="">
+              </div>
+              <div class="thumb small">
+                <img src="shelf-duck-tight-transparent.svg" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <p class="footer">
+        Source file: <code>shelf-duck-tight-transparent.svg</code>
+      </p>
+    </main>
+  </body>
+</html>

@@ -672,7 +672,7 @@ def iter_framework_layer_markdown() -> list[tuple[str, int, Path]]:
         if not module_dir.is_dir():
             continue
         module_name = module_dir.name
-        for markdown_file in sorted(module_dir.glob("*.md")):
+        for markdown_file in sorted(module_dir.rglob("*.md")):
             layer_match = FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(markdown_file.name)
             if layer_match is None:
                 continue
@@ -802,29 +802,18 @@ def validate_framework_layers() -> tuple[list[Issue], set[str]]:
         module_name = module_dir.name
         module_levels.setdefault(module_name, set())
 
-        for entry in sorted(module_dir.iterdir()):
-            if entry.is_file() and entry.suffix == ".md":
-                if FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(entry.name) is not None:
-                    continue
-                rel = entry.relative_to(REPO_ROOT).as_posix()
-                issues.append(
-                    make_issue(
-                        "framework markdown filename must use Lx-Mn- prefix, e.g. L2-M0-xxx.md",
-                        rel,
-                        1,
-                        code="FRAMEWORK_FILE_LEVEL_PREFIX_INVALID",
-                    )
+        for entry in sorted(module_dir.rglob("*.md")):
+            if FRAMEWORK_FILE_LEVEL_PREFIX_PATTERN.fullmatch(entry.name) is not None:
+                continue
+            rel = entry.relative_to(REPO_ROOT).as_posix()
+            issues.append(
+                make_issue(
+                    "framework markdown filename must use Lx-Mn- prefix, e.g. L2-M0-xxx.md",
+                    rel,
+                    1,
+                    code="FRAMEWORK_FILE_LEVEL_PREFIX_INVALID",
                 )
-            if entry.is_dir():
-                rel = entry.relative_to(REPO_ROOT).as_posix()
-                issues.append(
-                    make_issue(
-                        "framework module must store markdown directly under module directory; use Lx-Mn-*.md files",
-                        rel,
-                        1,
-                        code="FRAMEWORK_SUBDIR_FORBIDDEN",
-                    )
-                )
+            )
 
     framework_docs = iter_framework_layer_markdown()
     for module_name, level_num, markdown_file in framework_docs:

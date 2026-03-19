@@ -40,3 +40,4 @@ tools/vscode/shelf-ai/releases/
 
 # Local presentation exports
 docs/presentations/*.pptx
+.shelf/

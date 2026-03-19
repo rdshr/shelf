@@ -6,6 +6,7 @@ from typing import Any
 from rule_validation_models import ValidationReports
 
 from project_runtime.config_layer import ConfigModuleBinding
+from project_runtime.codegen_consistency_guard import summarize_codegen_consistency_guard
 from project_runtime.correspondence_validator import summarize_correspondence_guard
 from project_runtime.code_layer import CodeModuleBinding
 from project_runtime.framework_violation_guard import summarize_framework_violation_guard
@@ -130,6 +131,17 @@ def build_evidence_modules(
         ),
         code_modules=code_modules,
     )
+    codegen_consistency_summary, codegen_consistency_report = summarize_codegen_consistency_guard(
+        framework_modules=tuple(binding.framework_module for binding in code_modules),
+        config_modules=tuple(
+            ConfigModuleBinding(
+                framework_module=binding.framework_module,
+                config_module=binding.config_module,
+            )
+            for binding in code_modules
+        ),
+        code_modules=code_modules,
+    )
     guarded_prefixes, ignored_prefixes = _read_path_scope_overrides(assembly.config.communication)
     path_scope_summary = summarize_path_scope_guard(
         repo_root=REPO_ROOT,
@@ -142,6 +154,7 @@ def build_evidence_modules(
             "knowledge_base": knowledge_summary,
             "framework_guard": framework_summary,
             "correspondence_guard": correspondence_summary,
+            "codegen_consistency_guard": codegen_consistency_summary,
             "path_scope_guard": path_scope_summary,
         }
     )
@@ -151,6 +164,7 @@ def build_evidence_modules(
     evidence_exports = {
         "runtime_blueprint": _runtime_blueprint(assembly),
         "document_digests": _document_digests(runtime_documents),
+        "codegen_consistency": codegen_consistency_report,
         "validation_reports": validation_reports.to_dict(),
     }
     evidence_modules: list[type[EvidenceModuleClass]] = []
