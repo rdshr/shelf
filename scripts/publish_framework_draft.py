@@ -17,7 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--draft",
         required=True,
-        help="Draft markdown file under framework_drafts/, e.g. framework_drafts/frontend/L2-M1-xxx.md",
+        help="Draft markdown file under framework_drafts/, e.g. framework_drafts/frontend/L3-M1-xxx.md",
     )
     parser.add_argument(
         "--force",

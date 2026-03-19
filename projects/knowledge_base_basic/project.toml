@@ -17,7 +17,7 @@ version = "0.5.0"
 
 [[framework.modules]]
 role = "frontend"
-framework_file = "framework/frontend/L2-M0-前端框架标准模块.md"
+framework_file = "framework/frontend/L3-M0-前端框架标准模块.md"
 
 [[framework.modules]]
 role = "knowledge_base"

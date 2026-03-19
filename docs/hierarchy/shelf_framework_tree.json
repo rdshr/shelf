@@ -33,7 +33,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发与选择原子模块.md",
+        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M0",
         "target_ref": "frontend.L1.M0",
@@ -46,7 +46,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发与选择原子模块.md",
+        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M1",
         "target_ref": "frontend.L1.M0",
@@ -59,7 +59,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发与选择原子模块.md",
+        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M2",
         "target_ref": "frontend.L1.M0",
@@ -150,7 +150,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合与导航原子模块.md",
+        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M0",
         "target_ref": "frontend.L1.M3",
@@ -163,7 +163,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合与导航原子模块.md",
+        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M1",
         "target_ref": "frontend.L1.M3",
@@ -176,7 +176,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合与导航原子模块.md",
+        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M2",
         "target_ref": "frontend.L1.M3",
@@ -228,7 +228,7 @@
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M0",
         "target_ref": "frontend.L2.M0",
@@ -237,24 +237,11 @@
         "to_level": "L2"
       },
       {
-        "from": "frontend.L1.M1",
-        "from_level": "L1",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M1",
-        "target_ref": "frontend.L2.M0",
-        "terms": "frontend.L1.M1",
-        "to": "frontend.L2.M0",
-        "to_level": "L2"
-      },
-      {
         "from": "frontend.L1.M2",
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M2",
         "target_ref": "frontend.L2.M0",
@@ -267,7 +254,7 @@
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M3",
         "target_ref": "frontend.L2.M0",
@@ -280,13 +267,91 @@
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M4",
         "target_ref": "frontend.L2.M0",
         "terms": "frontend.L1.M4",
         "to": "frontend.L2.M0",
         "to_level": "L2"
+      },
+      {
+        "from": "frontend.L1.M0",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M0",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M0",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L1.M1",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M1",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M1",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L1.M2",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M2",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M2",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L1.M3",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M3",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M3",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L1.M4",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M4",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M4",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L2.M0",
+        "from_level": "L2",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L2.M0",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L2.M0",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
       },
       {
         "from": "frontend.L1.M0",
@@ -556,12 +621,14 @@
         "level_node_counts": {
           "0": 3,
           "1": 5,
-          "2": 1
+          "2": 1,
+          "3": 1
         },
         "local_levels": [
           0,
           1,
-          2
+          2,
+          3
         ],
         "name": "frontend",
         "order": 1
@@ -585,7 +652,8 @@
     "level_labels": {
       "0": "L0 标准层",
       "1": "L1 标准层",
-      "2": "L2 标准层"
+      "2": "L2 标准层",
+      "3": "L3 标准层"
     },
     "nodes": [
       {
@@ -841,7 +909,7 @@
             "token": "B1"
           },
           {
-            "text": "选择承接结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1,R2]",
+            "text": "动作反馈结构基：L0.M0[R2] + L0.M1[R2] + L0.M2[R1,R2]",
             "token": "B2"
           }
         ],
@@ -851,15 +919,15 @@
             "token": "C1"
           },
           {
-            "text": "选择结果承接能力：把候选项、选择结果与文件收纳入口收敛为稳定选择结构",
+            "text": "动作出口承接能力：把提交、回退、开关切换与确认出口收敛为稳定动作结果结构",
             "token": "C2"
           },
           {
-            "text": "绑定反馈承接能力：把动作出口、状态出口与可访问提示收敛为稳定框架接口",
+            "text": "触发反馈与可达能力：把状态出口、禁用关系与可访问提示收敛为稳定触发接口",
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-触发与选择原子模块.md | title=前端触发与选择原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-触发原子模块.md | title=前端触发原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
         "id": "frontend.L1.M0",
@@ -867,10 +935,10 @@
         "level": 1,
         "module_name": "frontend",
         "module_ref": "L1.M0",
-        "module_title": "前端触发与选择原子模块",
+        "module_title": "前端触发原子模块",
         "node_kind": "framework_module",
         "order": 0,
-        "source_file": "framework/frontend/L1-M0-触发与选择原子模块.md",
+        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
         "source_line": 1
       },
       {
@@ -958,7 +1026,7 @@
             "token": "B1"
           },
           {
-            "text": "节点导航结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1]",
+            "text": "当前项浏览结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1]",
             "token": "B2"
           }
         ],
@@ -968,7 +1036,7 @@
             "token": "C1"
           },
           {
-            "text": "节点导航能力：把当前选中节点、展开路径与跳转出口收敛为稳定导航结构",
+            "text": "当前项浏览能力：把当前项、展开关系与集合内移动收敛为稳定浏览结构",
             "token": "C2"
           },
           {
@@ -976,7 +1044,7 @@
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M3 | file=framework/frontend/L1-M3-集合与导航原子模块.md | title=前端集合与导航原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M3 | file=framework/frontend/L1-M3-集合浏览原子模块.md | title=前端集合浏览原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
         "id": "frontend.L1.M3",
@@ -984,10 +1052,10 @@
         "level": 1,
         "module_name": "frontend",
         "module_ref": "L1.M3",
-        "module_title": "前端集合与导航原子模块",
+        "module_title": "前端集合浏览原子模块",
         "node_kind": "framework_module",
         "order": 3,
-        "source_file": "framework/frontend/L1-M3-集合与导航原子模块.md",
+        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
         "source_line": 1
       },
       {
@@ -1032,29 +1100,37 @@
       {
         "base_items": [
           {
-            "text": "承载交互契约基：L1.M0[R2] + L1.M1[R2] + L1.M2[R1,R2]",
+            "text": "二维承载结构基：L1.M2[R2] + L1.M3[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "导航反馈扩展契约基：L1.M3[R1,R2] + L1.M4[R1,R2]",
+            "text": "列语义操作结构基：L1.M0[R2] + L1.M3[R2]",
             "token": "B2"
+          },
+          {
+            "text": "状态反馈闭合结构基：L1.M2[R2] + L1.M4[R1,R2]",
+            "token": "B3"
           }
         ],
         "capability_items": [
           {
-            "text": "通用界面契约能力：把输入、展示、导航与反馈原子收敛为稳定前端界面骨架",
+            "text": "二维集合承载能力：把行集合、列定义与网格化承载面收敛为稳定二维浏览结构",
             "token": "C1"
           },
           {
-            "text": "跨场景交互承接能力：以统一结构承接聊天、来源验证、知识库浏览与详情页跳转等不同场景交互",
+            "text": "列语义与单元格映射能力：把表头、列语义、单元格坐标与行列对应关系收敛为稳定映射结构",
             "token": "C2"
           },
           {
-            "text": "领域框架承接能力：为更高层的领域通用框架输出稳定 UI 承接面，而不泄漏底层实现细节",
+            "text": "二维浏览操作能力：把排序、筛选、行选择、列操作与局部跳转出口收敛为稳定浏览交互结构",
             "token": "C3"
+          },
+          {
+            "text": "二维浏览反馈与可达能力：把空态、加载、错误、选中提示与行列阅读关系收敛为稳定反馈可达结构",
+            "token": "C4"
           }
         ],
-        "description": "module=frontend | level=L2 | node=L2.M0 | file=framework/frontend/L2-M0-前端框架标准模块.md | title=前端框架标准模块",
+        "description": "module=frontend | level=L2 | node=L2.M0 | file=framework/frontend/L2-M0-规则化二维集合浏览标准模块.md | title=前端规则化二维集合浏览标准模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
         "id": "frontend.L2.M0",
@@ -1062,10 +1138,53 @@
         "level": 2,
         "module_name": "frontend",
         "module_ref": "L2.M0",
+        "module_title": "前端规则化二维集合浏览标准模块",
+        "node_kind": "framework_module",
+        "order": 0,
+        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "承载交互契约基：L1.M0[R2] + L1.M1[R2] + L1.M2[R1,R2]",
+            "token": "B1"
+          },
+          {
+            "text": "导航反馈扩展契约基：L1.M3[R1,R2] + L1.M4[R1,R2]",
+            "token": "B2"
+          },
+          {
+            "text": "复合结构承接基：L2.M0[R2,R3,R4]",
+            "token": "B3"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "通用界面契约能力：把输入、展示、导航、反馈、局部任务接管、互斥视图切换与二维集合浏览等结构收敛为稳定前端界面骨架",
+            "token": "C1"
+          },
+          {
+            "text": "跨场景交互承接能力：以统一结构承接聊天、来源验证、知识库浏览、详情页跳转、局部任务流切换以及结构化浏览工作面等不同场景交互",
+            "token": "C2"
+          },
+          {
+            "text": "领域框架承接能力：为更高层的领域通用框架输出稳定 UI 承接面，而不泄漏底层实现细节",
+            "token": "C3"
+          }
+        ],
+        "description": "module=frontend | level=L3 | node=L3.M0 | file=framework/frontend/L3-M0-前端框架标准模块.md | title=前端框架标准模块",
+        "doc_line": 1,
+        "hover_kicker": "Framework Module",
+        "id": "frontend.L3.M0",
+        "label": "L3.frontend.M0",
+        "level": 3,
+        "module_name": "frontend",
+        "module_ref": "L3.M0",
         "module_title": "前端框架标准模块",
         "node_kind": "framework_module",
         "order": 0,
-        "source_file": "framework/frontend/L2-M0-前端框架标准模块.md",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
         "source_line": 1
       },
       {

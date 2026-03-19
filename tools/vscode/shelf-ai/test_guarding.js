@@ -7,6 +7,7 @@ const {
   inferConfiguredFrameworks,
   isProtectedGeneratedPath,
   isWatchedPath,
+  normalizeRelPath,
   resolveProjectFilePath,
   shouldRunMypyForRelPath,
 } = require("./guarding");
@@ -39,13 +40,16 @@ function main() {
   );
 
   const projectFiles = discoverProjectFiles(repoRoot);
-  assert(projectFiles.some((item) => item.endsWith("projects/knowledge_base_basic/project.toml")));
+  assert(
+    projectFiles.some(
+      (item) => normalizeRelPath(path.relative(repoRoot, item)) === "projects/knowledge_base_basic/project.toml"
+    )
+  );
 
   const frameworks = inferConfiguredFrameworks(`
 [[framework.modules]]
 role = "frontend"
-framework_file = "framework/frontend/L2-M0-前端框架标准模块.md"
-
+framework_file = "framework/frontend/L3-M0-前端框架标准模块.md"
 [[framework.modules]]
 role = "knowledge_base"
 framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.md"
@@ -61,12 +65,17 @@ framework_file = "framework/backend/L2-M0-知识库接口框架标准模块.md"
   const projectPlan = classifyWorkspaceChanges(repoRoot, ["projects/knowledge_base_basic/project.toml"]);
   assert(projectPlan.shouldMaterialize, "project config changes should trigger materialization");
   assert.strictEqual(projectPlan.materializeProjects.length, 1);
-  assert(projectPlan.materializeProjects[0].endsWith("projects/knowledge_base_basic/project.toml"));
+  assert.strictEqual(
+    normalizeRelPath(path.relative(repoRoot, projectPlan.materializeProjects[0])),
+    "projects/knowledge_base_basic/project.toml"
+  );
 
   const frameworkPlan = classifyWorkspaceChanges(repoRoot, ["framework/knowledge_base/L1-M0-知识库界面骨架模块.md"]);
   assert(frameworkPlan.shouldMaterialize, "framework changes should trigger materialization");
   assert(
-    frameworkPlan.materializeProjects.some((item) => item.endsWith("projects/knowledge_base_basic/project.toml")),
+    frameworkPlan.materializeProjects.some(
+      (item) => normalizeRelPath(path.relative(repoRoot, item)) === "projects/knowledge_base_basic/project.toml"
+    ),
     "knowledge_base framework changes should materialize the matching project"
   );
 
