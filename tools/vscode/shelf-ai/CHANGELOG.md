@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.13 - 2026-03-19
+
+- Renamed the framework authoring term from `Boundary` to `Parameter` across current framework docs, Shelf AI snippets, completion entries, and author-facing plugin documentation.
+- Kept parser and navigation compatibility for legacy framework files by accepting both the new `参数定义 / 参数绑定` syntax and the previous `边界定义 / 边界绑定` wording during the transition.
+- Revalidated the repository, reran plugin tests, and repackaged the local VSIX so the shipped extension matches the current validated workspace and terminology baseline.
+
 ## 0.1.12 - 2026-03-17
 
 - Refined the dedicated monochrome Activity Bar duck glyph so the icon now fills the sidebar slot more decisively while keeping thinner, cleaner inner lines.
