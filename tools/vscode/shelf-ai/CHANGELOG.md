@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.14 - 2026-03-19
+
+- Removed extension-side normalization that silently stripped stale `--json` from validation commands; Shelf now executes the configured validation command as-is.
+- Hardened tree webview HTML escaping for both text nodes and attribute values (`"`, `'`, `<`, `>`, `&`) and added regression tests for attribute-injection payloads.
+- Added `check:webview-types` and extension test execution to the `Publish Shelf AI` workflow before VSIX packaging.
+
 ## 0.1.13 - 2026-03-19
 
 - Renamed the framework authoring term from `Boundary` to `Parameter` across current framework docs, Shelf AI snippets, completion entries, and author-facing plugin documentation.

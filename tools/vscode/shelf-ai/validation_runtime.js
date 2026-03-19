@@ -2,17 +2,6 @@ const cp = require("child_process");
 
 const DEFAULT_COMMAND_TIMEOUT_MS = 120 * 1000;
 
-function normalizeValidationCommand(command) {
-  const raw = String(command || "").trim();
-  if (!raw || !/scripts\/validate_canonical\.py\b/.test(raw)) {
-    return raw;
-  }
-  if (!/(^|\s)--json(?=\s|$)/.test(raw)) {
-    return raw;
-  }
-  return raw.replace(/(^|\s)--json(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function execCommand(command, cwd, options = {}) {
   const timeoutMs = Number.isFinite(Number(options.timeoutMs))
     ? Math.max(1, Number(options.timeoutMs))
@@ -131,5 +120,4 @@ module.exports = {
   DEFAULT_COMMAND_TIMEOUT_MS,
   createActiveCommandTracker,
   execCommand,
-  normalizeValidationCommand,
 };

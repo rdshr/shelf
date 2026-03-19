@@ -5,7 +5,6 @@ const {
   DEFAULT_COMMAND_TIMEOUT_MS,
   createActiveCommandTracker,
   execCommand,
-  normalizeValidationCommand,
 } = require("./validation_runtime");
 
 async function testExecCommandTimesOut() {
@@ -41,26 +40,10 @@ function testTrackerRestartsOnlyWhenStale() {
   assert.strictEqual(tracker.snapshot(), null);
 }
 
-function testNormalizeValidationCommand() {
-  assert.strictEqual(
-    normalizeValidationCommand("uv run python scripts/validate_canonical.py --check-changes --json"),
-    "uv run python scripts/validate_canonical.py --check-changes"
-  );
-  assert.strictEqual(
-    normalizeValidationCommand("uv run python scripts/validate_canonical.py --json"),
-    "uv run python scripts/validate_canonical.py"
-  );
-  assert.strictEqual(
-    normalizeValidationCommand("uv run python scripts/other.py --json"),
-    "uv run python scripts/other.py --json"
-  );
-}
-
 async function main() {
   assert(DEFAULT_COMMAND_TIMEOUT_MS >= 60_000);
   await testExecCommandTimesOut();
   testTrackerRestartsOnlyWhenStale();
-  testNormalizeValidationCommand();
 }
 
 main().catch((error) => {

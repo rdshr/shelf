@@ -72,6 +72,47 @@ function main() {
     !html.includes("<script>alert(1)</script>"),
     "html should not accidentally include arbitrary script content"
   );
+
+  const escapedHtml = buildRuntimeTreeHtml({
+    kind: "framework",
+    model: {
+      title: "Demo \"Framework\"",
+      description: "Quote ' and tag <unsafe>",
+      kind: "framework",
+      nodes: [],
+      edges: [],
+    },
+    layoutSettings: {
+      frameworkNodeHorizontalGap: 8,
+      frameworkLevelVerticalGap: 80,
+    },
+    viewSettings: {
+      zoomMinScale: 0.68,
+      zoomMaxScale: 1.55,
+      wheelSensitivity: 1,
+      inspectorWidth: 338,
+      inspectorRailWidth: 42,
+    },
+    scriptUri: "vscode-resource://tree_view_bundle.js\" onerror=\"alert(1)",
+    styleUri: "vscode-resource://tree_view.css",
+    cspSource: "vscode-webview-resource:",
+  });
+  assert(
+    escapedHtml.includes("Demo &quot;Framework&quot;"),
+    "html should escape double quotes in text nodes"
+  );
+  assert(
+    escapedHtml.includes("Quote &#39; and tag &lt;unsafe&gt;"),
+    "html should escape apostrophe and angle brackets in text nodes"
+  );
+  assert(
+    escapedHtml.includes('src="vscode-resource://tree_view_bundle.js&quot; onerror=&quot;alert(1)"'),
+    "html should escape quotes in attribute values"
+  );
+  assert(
+    !escapedHtml.includes('src="vscode-resource://tree_view_bundle.js" onerror="alert(1)"'),
+    "html should not allow attribute breaking payloads"
+  );
 }
 
 main();

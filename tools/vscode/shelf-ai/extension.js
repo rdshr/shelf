@@ -739,9 +739,9 @@ function activate(context) {
       return { passed: true, errors: [] };
     }
     const config = getShelfConfig();
-    const changeValidationCommand = validationRuntime.normalizeValidationCommand(
-      String(config.get("changeValidationCommand") || DEFAULT_CHANGE_VALIDATION_COMMAND)
-    );
+    const changeValidationCommand = String(
+      config.get("changeValidationCommand") || DEFAULT_CHANGE_VALIDATION_COMMAND
+    ).trim();
     return runParsedCommand(
       "intent-gate-validate",
       changeValidationCommand,
@@ -1290,12 +1290,7 @@ function activate(context) {
     if (!command || typeof command !== "string") {
       return;
     }
-    const normalizedValidationCommand = validationRuntime.normalizeValidationCommand(command);
-    if (normalizedValidationCommand !== String(command).trim()) {
-      output.appendLine(
-        `[validate] removed unsupported --json flag from canonical validation command: ${normalizedValidationCommand}`
-      );
-    }
+    const validationCommand = String(command).trim();
 
     const showProgressStatus = task.source === "manual";
     if (showProgressStatus) {
@@ -1342,7 +1337,7 @@ function activate(context) {
       combinedIssues.push(...mypyResult.errors);
     }
 
-    const parsed = await runParsedCommand("validate", normalizedValidationCommand, repoRoot, parseResult);
+    const parsed = await runParsedCommand("validate", validationCommand, repoRoot, parseResult);
     combinedIssues.push(...parsed.errors);
     const correspondenceIssues = readCorrespondenceIssues(repoRoot);
 
