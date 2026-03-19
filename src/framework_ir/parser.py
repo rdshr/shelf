@@ -33,6 +33,11 @@ SOURCE_EXPR_PATTERN = re.compile(r"来源[：:]\s*`(?P<expr>[^`]+)`")
 INLINE_REF_PATTERN = re.compile(
     r"^(?:(?P<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?P<level>\d+)\.M(?P<module>\d+)(?:\[(?P<rules>[^\]]*)\])?$"
 )
+PARAMETER_SECTION_TITLES = (
+    "## 2. 参数定义（Parameter）",
+    "## 2. 边界定义（Boundary / 参数）",
+)
+RULE_PARAMETER_BINDING_PREFIXES = ("参数绑定：", "边界绑定：")
 
 
 def _split_sections(text: str) -> dict[str, list[tuple[int, str]]]:
@@ -305,10 +310,21 @@ def _parse_rules(
             outputs = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
         elif body.startswith("失效结论："):
             invalids = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
-        elif body.startswith("边界绑定："):
+        elif any(body.startswith(prefix) for prefix in RULE_PARAMETER_BINDING_PREFIXES):
             bindings = tuple(item.strip() for item in body.split("：", 1)[1].replace("`", "").split("+"))
     flush()
     return tuple(items)
+
+
+def _section_lines(
+    sections: dict[str, list[tuple[int, str]]],
+    *titles: str,
+) -> list[tuple[int, str]]:
+    for title in titles:
+        lines = sections.get(title)
+        if lines is not None:
+            return lines
+    return []
 
 
 def _parse_verifications(
@@ -376,7 +392,7 @@ def parse_framework_module(path: str | Path) -> FrameworkModule:
             relative_file=relative_file,
         ),
         boundaries=_parse_boundaries(
-            sections.get("## 2. 边界定义（Boundary / 参数）", []),
+            _section_lines(sections, *PARAMETER_SECTION_TITLES),
             relative_file=relative_file,
         ),
         bases=_parse_bases(

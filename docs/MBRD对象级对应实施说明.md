@@ -16,6 +16,11 @@ Framework -> Config -> Code -> Evidence
 - `projects/*/project.toml` 是唯一项目配置入口
 - `projects/*/generated/canonical.json` 是唯一机器持久化真相源
 
+说明：
+
+- 作者侧术语现统一把 `D` 记为 `Parameter`。
+- 当前实现与 canonical 为兼容既有链路，仍保留 `boundary_*` 字段、`boundary_ids` 以及 `StaticBoundaryParams / RuntimeBoundaryParams` 等历史命名。
+
 ## 1. 本阶段对象范围
 
 本阶段只纳入以下对象：
@@ -23,7 +28,7 @@ Framework -> Config -> Code -> Evidence
 - `M`：Module
 - `B`：Base
 - `R`：Rule
-- `D`：Boundary（作为 `M` 的参数化边界面）
+- `D`：Parameter（作为 `M` 的参数面）
 
 本阶段不纳入：
 
@@ -45,7 +50,7 @@ Framework -> Config -> Code -> Evidence
 
 ### 2.2 语义要求
 
-- `M` 必须是模块装配入口，持有并装配自己的 `BaseTypes/RuleTypes`，并负责边界合成。
+- `M` 必须是模块装配入口，持有并装配自己的 `BaseTypes/RuleTypes`，并负责参数合成。
 - `B` 必须是结构单元承载类，具备 `framework_base_id` 与 `owner_module_id`。
 - `R` 必须是规则承载类，具备 `framework_rule_id`、`owner_module_id`、`base_ids`、`boundary_ids`。
 - `D` 不作为独立装配对象；静态与动态参数必须通过两个参数类承接，再由 `M` 合并后下发。
@@ -65,7 +70,7 @@ Framework -> Config -> Code -> Evidence
 - runtime 字段为 `UNSET`：回退到 static 值
 - runtime 字段为显式值：覆盖 static 值
 
-## 4. Config 与 Code 的边界参数模型
+## 4. Config 与 Code 的参数模型
 
 ### 4.1 Config 层
 
@@ -89,8 +94,8 @@ Framework -> Config -> Code -> Evidence
 - `StaticBoundaryParams`
 - `RuntimeBoundaryParams`
 
-并在 `M` 内完成 merged boundary context 生成。  
-`B/R` 不得直接读取 config，不得绕过 `M` 获取边界值。
+并在 `M` 内完成 merged parameter context 生成。  
+`B/R` 不得直接读取 config，不得绕过 `M` 获取参数值。
 
 ## 5. Canonical 扩展
 
@@ -145,7 +150,7 @@ Framework -> Config -> Code -> Evidence
 以下做法禁止：
 
 - 仅靠文件名或路径命名做 correspondence
-- 用裸 `dict[str, Any]` 作为边界参数公开 contract
+- 用裸 `dict[str, Any]` 作为参数公开 contract
 - 让 `R` 退化为函数集合、`B` 退化为 helper 集合
 - 让 `M` 变成空壳而不持有 `B/R`
 
@@ -159,7 +164,7 @@ Framework -> Config -> Code -> Evidence
 验收必须同时满足：
 
 - canonical 中存在 `M/B/R/D` 对应绑定
-- config 仍只承载静态值，且每个 boundary 可映射到 module-scoped static params
+- config 仍只承载静态值，且每个 parameter 可映射到 module-scoped static params
 - code 中每个 module 具备 module/static/runtime/base/rule 的 class 挂接
 - correspondence validator 能对“缺失/错挂/伪挂接”给出失败结果
 
@@ -173,7 +178,7 @@ Framework -> Config -> Code -> Evidence
 - 校验接入点：`src/project_runtime/evidence_layer.py`
 - canonical links 汇总：`src/project_runtime/compiler.py`
 
-说明：boundary field 名由 `boundary_id` 稳定派生，并对关键字/非法标识符做标准化，保证可作为 Python class 字段名与 canonical 可逆映射字段使用。
+说明：parameter field 名当前仍由兼容字段 `boundary_id` 稳定派生，并对关键字/非法标识符做标准化，保证可作为 Python class 字段名与 canonical 可逆映射字段使用。
 
 ## 12. Phase 1 插件消费导航协议
 

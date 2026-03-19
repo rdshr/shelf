@@ -17,6 +17,7 @@ const DEFAULT_PROJECT_FILE = path.join("projects", "knowledge_base_basic", "proj
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],
+  ["## 2. 参数定义", "boundary"],
   ["## 2. 边界定义", "boundary"],
   ["## 3. 最小可行基", "base"],
   ["## 4. 基组合原则", "rule"],
@@ -737,7 +738,7 @@ function pushRuleSummary(parts, rule) {
     parts.push(`  输出能力：${rule.output}`);
   }
   if (rule.boundary) {
-    parts.push(`  边界绑定：${rule.boundary}`);
+    parts.push(`  参数绑定：${rule.boundary}`);
   }
 }
 
@@ -789,7 +790,7 @@ function buildRuleHoverMarkdown(moduleInfo, rule) {
     parts.push(`输出能力：${rule.output}`);
   }
   if (rule.boundary) {
-    parts.push(`边界绑定：${rule.boundary}`);
+    parts.push(`参数绑定：${rule.boundary}`);
   }
 
   return parts.join("\n");

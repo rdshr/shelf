@@ -16,7 +16,7 @@
 - 每个 framework markdown 文件必须对应一个独立 `FrameworkModule` class
 - 每个 `B*` 必须对应一个独立 `Base` class
 - 每个 `R*` 必须对应一个独立 `Rule` class
-- Framework 只定义结构空间、边界、基、规则、能力与验证，不落地项目实例值
+- Framework 只定义结构空间、参数、基、规则、能力与验证，不落地项目实例值
 
 ### Config
 
@@ -63,7 +63,7 @@
   - `FrameworkModule -> ConfigModule -> CodeModule -> EvidenceModule`
 - 若某个功能需要代码绑定，必须在 canonical JSON 中留下正式绑定：
   - 模块绑定
-  - 边界绑定
+  - 参数绑定
   - 基绑定
 
 ## 5. 当前仓库落地要求

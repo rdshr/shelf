@@ -17,10 +17,11 @@
 - 每个文件必须保留 plain `@framework` 起手入口。
 - 每个文件必须包含以下主 section：
   - `## 1. 能力声明`
-  - `## 2. 边界定义`
+  - `## 2. 参数定义`
   - `## 3. 最小可行基`
   - `## 4. 基组合原则`
   - `## 5. 验证`
+- 当前作者语法统一使用 `参数定义 / 参数绑定`；迁移期允许旧文档继续使用 legacy `边界定义 / 边界绑定`，但新文档不再新增旧术语。
 - `C* / N* / B* / R* / V*` 编号必须稳定、唯一、可解析。
 - `B*` 的上游模块引用必须写在主句中，不得使用 `上游模块：...`。
 - framework 模块正文不得直接写入 `project.toml` 路径、已删除的双轨配置文件名、已删除的旧映射清单名或旧配置 section 语法。
@@ -29,7 +30,7 @@
 
 - framework 文档只能描述结构语义，不得直接写入项目实例值。
 - 项目配置唯一入口是 `projects/<project_id>/project.toml`。
-- 边界跳转或实例落点必须回到 `project.toml` 的显式 section，例如：
+- 参数跳转或实例落点必须回到 `project.toml` 的显式 section，例如：
   - `[communication.frontend.surface]`
   - `[communication.knowledge_base.chat]`
   - `[exact.frontend.surface]`

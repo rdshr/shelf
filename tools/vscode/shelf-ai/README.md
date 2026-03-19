@@ -6,20 +6,25 @@
 
 ## What It Does
 
+Authoring-term note:
+
+- framework 作者源中的 `Boundary` 现统一改称 `Parameter`
+- 当前 canonical / runtime 为兼容既有主链，仍保留 `boundary_id`、`boundary projection` 等历史机器字段名
+
 - Opens the framework tree and workspace evidence tree from the sidebar.
 - Treats the repository mainline as:
   `Framework -> Config -> Code -> Evidence`.
 - Treats `projects/*/generated/canonical.json` as the only machine truth.
 - Treats framework tree and evidence tree as canonical-derived views.
-- Supports framework-markdown navigation for `B/C/R/V`, boundaries, module refs, and rule refs.
-- Maps framework boundaries back to `projects/*/project.toml` sections such as `[exact.knowledge_base.chat]` and `[exact.frontend.surface]`.
+- Supports framework-markdown navigation for `B/C/R/V`, parameters, module refs, and rule refs.
+- Maps framework parameters back to `projects/*/project.toml` sections such as `[exact.knowledge_base.chat]` and `[exact.frontend.surface]`.
 - Auto-materializes affected projects when `framework/*.md` or `projects/*/project.toml` changes.
 - Guards `projects/*/generated/*` from direct edits.
 - Treats stale / missing / invalid canonical as non-authoritative: formal config jumps and the evidence tree wait for fresh canonical.
 - Runs canonical validation and optionally `mypy` from the extension.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
 - Adds a governed-task intent gate: map request text to canonical framework paths (`module_id / boundary_id / exact.*`) before guarded implementation saves.
-- Enforces one-to-one boundary mapping for governed-task sessions: if any canonical boundary still projects to multiple related paths, session grant is rejected until framework is clarified.
+- Enforces one-to-one parameter mapping for governed-task sessions: if any canonical parameter still projects to multiple related paths, session grant is rejected until framework is clarified.
 - Blocks or warns on guarded saves within framework-document-related paths by default (`framework/`, `framework_drafts/`, `projects/`, `src/project_runtime/`, `scripts/`, `tools/vscode/shelf-ai/`) when no active governed-task session is granted.
 
 ## Contract
@@ -158,4 +163,4 @@ The extension no longer treats the removed dual-track config files as live autho
 Public release notes live at:
 
 - `tools/vscode/shelf-ai/CHANGELOG.md`
-- `tools/vscode/shelf-ai/release-notes/0.1.8.md`
+- `tools/vscode/shelf-ai/release-notes/0.1.13.md`

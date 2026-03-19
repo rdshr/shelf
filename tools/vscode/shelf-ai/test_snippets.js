@@ -103,8 +103,8 @@ function main() {
     "@framework snippet must include capability statement section"
   );
   assert(
-    frameworkSnippet.body.includes("## 2. 边界定义（Boundary / 参数）"),
-    "@framework snippet must include boundary section"
+    frameworkSnippet.body.includes("## 2. 参数定义（Parameter）"),
+    "@framework snippet must include parameter section"
   );
   assert(
     frameworkSnippet.body.includes("## 3. 最小可行基（Minimum Viable Bases）"),
@@ -236,7 +236,7 @@ function main() {
     "rule child completion must include R*.1"
   );
   assert(
-    ruleChildEntries.some((entry) => entry.label === "R*.4 边界绑定"),
+    ruleChildEntries.some((entry) => entry.label === "R*.4 参数绑定"),
     "rule child completion must include R*.4"
   );
 }
