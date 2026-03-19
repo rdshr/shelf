@@ -1,5 +1,10 @@
 """Static per-module implementations used by the runtime compiler."""
 
+from project_runtime.static_modules.all_module_contracts import (
+    STATIC_MODULE_CONTRACTS,
+    StaticModuleContractBundle,
+    get_static_module_contract_bundle,
+)
 from project_runtime.static_modules.backend_l2_m0 import (
     BackendL2M0B1Base,
     BackendL2M0B2Base,
@@ -24,4 +29,7 @@ __all__ = [
     "BackendL2M0R3Rule",
     "BackendL2M0R4Rule",
     "BackendL2M0StaticBoundaryParams",
+    "STATIC_MODULE_CONTRACTS",
+    "StaticModuleContractBundle",
+    "get_static_module_contract_bundle",
 ]

@@ -203,16 +203,8 @@ def _code_correspondence_target(
         line = symbol_line
     else:
         file_path = "src/project_runtime/code_layer.py"
-        if kind == "module":
-            line = _find_line(file_path, "def _build_module_contract_type(", fallback=1)
-        elif kind == "base":
-            line = _find_line(file_path, "def _build_base_contract_types(", fallback=1)
-        elif kind == "rule":
-            line = _find_line(file_path, "def _build_rule_contract_types(", fallback=1)
-        elif kind == "static_param":
-            line = _find_line(file_path, "def _build_static_params_type(", fallback=1)
-        elif kind == "runtime_param":
-            line = _find_line(file_path, "def _build_runtime_params_type(", fallback=1)
+        if kind in {"module", "base", "rule", "static_param", "runtime_param"}:
+            line = _find_line(file_path, "def _build_module_contract_state(", fallback=1)
         else:
             line = _find_line(file_path, "def _build_implementation_slots(", fallback=1)
     return _target(
@@ -465,6 +457,24 @@ def _guard_summary(canonical: dict[str, Any], object_payload: list[dict[str, Any
                             merged = dict(item)
                             merged.setdefault("scope", scope_name)
                             issues.append(merged)
+    deduped_issues: list[dict[str, Any]] = []
+    seen_issue_keys: set[tuple[str, str, str]] = set()
+    for issue in issues:
+        normalized_reason = str(issue.get("reason") or "")
+        for prefix in ("CONFORMANCE_ERROR: ", "UNDECLARED_USAGE: ", "AUDIT_DRIFT: "):
+            if normalized_reason.startswith(prefix):
+                normalized_reason = normalized_reason[len(prefix):]
+                break
+        issue_key = (
+            str(issue.get("level") or ""),
+            normalized_reason,
+            str(issue.get("primary_object_id") or ""),
+        )
+        if issue_key in seen_issue_keys:
+            continue
+        seen_issue_keys.add(issue_key)
+        deduped_issues.append(issue)
+    issues = deduped_issues
     issue_count_by_object: dict[str, int] = {}
     for issue in issues:
         raw_object_ids = issue.get("object_ids")

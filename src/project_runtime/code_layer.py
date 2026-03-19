@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, make_dataclass
+from dataclasses import dataclass
 from functools import lru_cache
+import importlib
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +15,7 @@ from project_runtime.correspondence_contracts import (
     RuleContract,
     RuntimeBoundaryParamsContract,
     StaticBoundaryParamsContract,
-    UNSET,
     boundary_field_name,
-    module_class_name_fragment,
     module_key_from_id,
 )
 from project_runtime.documents import export_documents
@@ -24,17 +23,11 @@ from project_runtime.framework_layer import FrameworkModuleClass
 from project_runtime.models import KnowledgeDocument, SeedDocumentSource
 from project_runtime.static_modules.backend_l2_m0 import (
     BACKEND_L2_M0_MODULE_ID,
-    BackendL2M0B1Base,
-    BackendL2M0B2Base,
-    BackendL2M0B3Base,
     BackendL2M0DynamicBoundaryParams,
     BackendL2M0Module,
-    BackendL2M0R1Rule,
-    BackendL2M0R2Rule,
-    BackendL2M0R3Rule,
-    BackendL2M0R4Rule,
     BackendL2M0StaticBoundaryParams,
 )
+from project_runtime.static_modules import all_module_contracts as static_module_contracts
 
 
 class CodeModuleClass:
@@ -104,6 +97,21 @@ def _find_backend_l2_m0_line(needle: str, *, fallback: int = 1) -> int:
     if not needle:
         return fallback
     for index, line_text in enumerate(_backend_l2_m0_module_lines(), start=1):
+        if needle in line_text:
+            return index
+    return fallback
+
+
+@lru_cache(maxsize=1)
+def _all_module_contract_lines() -> tuple[str, ...]:
+    module_file = Path(__file__).resolve().parent / "static_modules" / "all_module_contracts.py"
+    return tuple(module_file.read_text(encoding="utf-8").splitlines())
+
+
+def _find_all_module_contract_line(needle: str, *, fallback: int = 1) -> int:
+    if not needle:
+        return fallback
+    for index, line_text in enumerate(_all_module_contract_lines(), start=1):
         if needle in line_text:
             return index
     return fallback
@@ -595,156 +603,6 @@ def _module_static_payload(
     return static_params
 
 
-def _build_static_params_type(
-    *,
-    module_id: str,
-    module_key: str,
-    module_name_fragment: str,
-    field_bindings: list[dict[str, str]],
-) -> type[StaticBoundaryParamsContract]:
-    field_defs = [
-        (binding["static_field_name"], object, field(default=None))
-        for binding in field_bindings
-    ]
-    class_name = f"{module_name_fragment}StaticBoundaryParams"
-    class_type = make_dataclass(
-        class_name,
-        field_defs,
-        bases=(StaticBoundaryParamsContract,),
-        frozen=True,
-        slots=True,
-    )
-    setattr(class_type, "__module__", __name__)
-    setattr(class_type, "framework_module_id", module_id)
-    setattr(class_type, "module_key", module_key)
-    setattr(
-        class_type,
-        "boundary_field_map",
-        {binding["boundary_id"]: binding["static_field_name"] for binding in field_bindings},
-    )
-    return class_type
-
-
-def _build_runtime_params_type(
-    *,
-    module_id: str,
-    module_key: str,
-    module_name_fragment: str,
-    field_bindings: list[dict[str, str]],
-) -> type[RuntimeBoundaryParamsContract]:
-    field_defs = [
-        (
-            binding["runtime_field_name"],
-            object,
-            field(default=UNSET),
-        )
-        for binding in field_bindings
-    ]
-    class_name = f"{module_name_fragment}RuntimeBoundaryParams"
-    class_type = make_dataclass(
-        class_name,
-        field_defs,
-        bases=(RuntimeBoundaryParamsContract,),
-        frozen=True,
-        slots=True,
-    )
-    setattr(class_type, "__module__", __name__)
-    setattr(class_type, "framework_module_id", module_id)
-    setattr(class_type, "module_key", module_key)
-    setattr(
-        class_type,
-        "boundary_field_map",
-        {binding["boundary_id"]: binding["runtime_field_name"] for binding in field_bindings},
-    )
-    return class_type
-
-
-def _build_base_contract_types(
-    binding: ConfigModuleBinding,
-    *,
-    module_name_fragment: str,
-) -> tuple[type[BaseContract], ...]:
-    module_id = binding.framework_module.module_id
-    records: list[type[BaseContract]] = []
-    for base_class in binding.framework_module.base_classes:
-        class_name = f"{module_name_fragment}{base_class.base_id}Base"
-        records.append(
-            type(
-                class_name,
-                (BaseContract,),
-                {
-                    "__module__": __name__,
-                    "framework_base_id": f"{module_id}.{base_class.base_id}",
-                    "framework_base_short_id": base_class.base_id,
-                    "owner_module_id": module_id,
-                    "boundary_ids": tuple(base_class.boundary_bindings),
-                },
-            )
-        )
-    return tuple(records)
-
-
-def _build_rule_contract_types(
-    binding: ConfigModuleBinding,
-    *,
-    module_name_fragment: str,
-) -> tuple[type[RuleContract], ...]:
-    module_id = binding.framework_module.module_id
-    records: list[type[RuleContract]] = []
-    for rule_class in binding.framework_module.rule_classes:
-        class_name = f"{module_name_fragment}{rule_class.rule_id}Rule"
-        records.append(
-            type(
-                class_name,
-                (RuleContract,),
-                {
-                    "__module__": __name__,
-                    "framework_rule_id": f"{module_id}.{rule_class.rule_id}",
-                    "framework_rule_short_id": rule_class.rule_id,
-                    "owner_module_id": module_id,
-                    "base_ids": tuple(
-                        f"{module_id}.{base_id}"
-                        for base_id in rule_class.participant_bases
-                    ),
-                    "boundary_ids": tuple(rule_class.boundary_bindings),
-                },
-            )
-        )
-    return tuple(records)
-
-
-def _build_module_contract_type(
-    *,
-    module_id: str,
-    module_key: str,
-    module_name_fragment: str,
-    static_params_type: type[StaticBoundaryParamsContract],
-    runtime_params_type: type[RuntimeBoundaryParamsContract],
-    base_types: tuple[type[BaseContract], ...],
-    rule_types: tuple[type[RuleContract], ...],
-    field_bindings: list[dict[str, str]],
-) -> type[ModuleContract]:
-    class_name = f"{module_name_fragment}Module"
-    return type(
-        class_name,
-        (ModuleContract,),
-        {
-            "__module__": __name__,
-            "framework_module_id": module_id,
-            "module_key": module_key,
-            "StaticBoundaryParams": static_params_type,
-            "RuntimeBoundaryParams": runtime_params_type,
-            "BaseTypes": base_types,
-            "RuleTypes": rule_types,
-            "boundary_field_map": {
-                item["boundary_id"]: item["static_field_name"]
-                for item in field_bindings
-            },
-            "merge_policy": "runtime_override_else_static",
-        },
-    )
-
-
 @dataclass(frozen=True)
 class ModuleContractState:
     module_id: str
@@ -764,59 +622,34 @@ class ModuleContractState:
 def _build_module_contract_state(binding: ConfigModuleBinding) -> ModuleContractState:
     module_id = binding.framework_module.module_id
     module_key = module_key_from_id(module_id)
-    module_name_fragment = module_class_name_fragment(module_id)
     field_bindings = tuple(_module_field_bindings(binding))
-    static_params_type: type[StaticBoundaryParamsContract]
-    runtime_params_type: type[RuntimeBoundaryParamsContract]
-    base_types: tuple[type[BaseContract], ...]
-    rule_types: tuple[type[RuleContract], ...]
-    module_type: type[ModuleContract]
-    if module_id == BACKEND_L2_M0_MODULE_ID:
-        static_params_type = BackendL2M0StaticBoundaryParams
-        runtime_params_type = BackendL2M0DynamicBoundaryParams
-        base_types = (
-            BackendL2M0B1Base,
-            BackendL2M0B2Base,
-            BackendL2M0B3Base,
+    bundle = static_module_contracts.get_static_module_contract_bundle(module_id)
+    if bundle is None:
+        raise ValueError(f"missing static module contract bundle: {module_id}")
+    static_params_type = bundle.static_params_type
+    runtime_params_type = bundle.runtime_params_type
+    base_types = bundle.base_types
+    rule_types = bundle.rule_types
+    module_type = bundle.module_type
+    module_name_fragment = module_type.__name__.removesuffix("Module")
+
+    expected_boundary_field_map = {
+        item["boundary_id"]: item["static_field_name"]
+        for item in field_bindings
+    }
+    actual_boundary_field_map = dict(getattr(module_type, "boundary_field_map", {}))
+    if actual_boundary_field_map != expected_boundary_field_map:
+        raise ValueError(
+            "static module boundary map mismatch for "
+            f"{module_id}: expected={sorted(expected_boundary_field_map.items())} "
+            f"actual={sorted(actual_boundary_field_map.items())}"
         )
-        rule_types = (
-            BackendL2M0R1Rule,
-            BackendL2M0R2Rule,
-            BackendL2M0R3Rule,
-            BackendL2M0R4Rule,
+    actual_module_key = str(getattr(module_type, "module_key", "")).strip()
+    if actual_module_key != module_key:
+        raise ValueError(
+            f"static module key mismatch for {module_id}: expected={module_key} actual={actual_module_key}"
         )
-        module_type = BackendL2M0Module
-    else:
-        static_params_type = _build_static_params_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            field_bindings=list(field_bindings),
-        )
-        runtime_params_type = _build_runtime_params_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            field_bindings=list(field_bindings),
-        )
-        base_types = _build_base_contract_types(
-            binding,
-            module_name_fragment=module_name_fragment,
-        )
-        rule_types = _build_rule_contract_types(
-            binding,
-            module_name_fragment=module_name_fragment,
-        )
-        module_type = _build_module_contract_type(
-            module_id=module_id,
-            module_key=module_key,
-            module_name_fragment=module_name_fragment,
-            static_params_type=static_params_type,
-            runtime_params_type=runtime_params_type,
-            base_types=base_types,
-            rule_types=rule_types,
-            field_bindings=list(field_bindings),
-        )
+
     raw_static_payload = _module_static_payload(binding.config_module.exact_export, module_key=module_key)
     static_payload: dict[str, Any] = {}
     for item in field_bindings:
@@ -1250,6 +1083,7 @@ def build_code_modules(
     *,
     root_module_ids: dict[str, str],
 ) -> tuple[tuple[CodeModuleBinding, ...], dict[str, Any]]:
+    importlib.reload(static_module_contracts)
     bindings: list[CodeModuleBinding] = []
     runtime_exports: dict[str, Any] = {}
     contract_state_by_module = {
@@ -1426,7 +1260,15 @@ def build_code_modules(
             "anchor": module_id,
             "token": module_id,
         }
-        if module_id == BACKEND_L2_M0_MODULE_ID:
+        if module_type.__module__ == "project_runtime.static_modules.all_module_contracts":
+            source_ref = {
+                "file_path": "src/project_runtime/static_modules/all_module_contracts.py",
+                "line": _find_all_module_contract_line(f"class {module_type.__name__}(", fallback=1),
+                "section": "all_module_contracts",
+                "anchor": f"class {module_type.__name__}",
+                "token": module_id,
+            }
+        elif module_id == BACKEND_L2_M0_MODULE_ID:
             source_ref = {
                 "file_path": "src/project_runtime/static_modules/backend_l2_m0.py",
                 "line": _find_backend_l2_m0_line("class BackendL2M0Module(", fallback=1),

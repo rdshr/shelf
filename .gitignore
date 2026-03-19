@@ -10,6 +10,7 @@ __pycache__/
 # JavaScript local dependencies/test artifacts
 node_modules/
 .vscode-test/
+.vscode/settings.json
 
 projects/knowledge_base_basic/generated/canonical.json
 

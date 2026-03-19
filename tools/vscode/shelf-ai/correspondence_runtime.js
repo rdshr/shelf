@@ -453,7 +453,7 @@ function resolveSecondaryTargets(objectValue) {
 /**
  * @param {CorrespondenceValidationSummary | null | undefined} summary
  * @param {Record<string, CorrespondenceObject>} objectIndex
- * @returns {{ message: string, file: string, line: number, column: number, code: string, objectId: string, targetKind: string }[]}
+ * @returns {{ message: string, file: string, line: number, column: number, code: string, level: string, objectId: string, targetKind: string }[]}
  */
 function buildValidationIssues(summary, objectIndex) {
   if (!summary || !Array.isArray(summary.issues) || !summary.issues.length) {
@@ -475,6 +475,7 @@ function buildValidationIssues(summary, objectIndex) {
       line: primaryTarget ? primaryTarget.start_line : 1,
       column: 1,
       code: "SHELF_CORRESPONDENCE",
+      level: asText(issue.level).toLowerCase() === "warning" ? "warning" : "error",
       objectId: primaryObjectId,
       targetKind: primaryTarget ? primaryTarget.target_kind : "",
     };
@@ -482,9 +483,9 @@ function buildValidationIssues(summary, objectIndex) {
 }
 
 /**
- * @param {{ message: string, file: string, line: number, column: number, code: string }[]} primaryIssues
- * @param {{ message: string, file: string, line: number, column: number, code: string }[]} fallbackIssues
- * @returns {{ message: string, file: string, line: number, column: number, code: string }[]}
+ * @param {{ message: string, file: string, line: number, column: number, code: string, level?: string }[]} primaryIssues
+ * @param {{ message: string, file: string, line: number, column: number, code: string, level?: string }[]} fallbackIssues
+ * @returns {{ message: string, file: string, line: number, column: number, code: string, level?: string }[]}
  */
 function mergeIssueLists(primaryIssues, fallbackIssues) {
   const merged = [];

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Mapping, cast
 
 from knowledge_base_runtime.runtime_profile import (
     KnowledgeBaseRuntimeProfile,
@@ -275,18 +275,30 @@ class BackendL2M0R4Rule(RuleContract):
 class BackendL2M0Module(ModuleContract):
     framework_module_id: ClassVar[str] = BACKEND_L2_M0_MODULE_ID
     module_key: ClassVar[str] = BACKEND_L2_M0_MODULE_KEY
-    StaticBoundaryParams: ClassVar[type[StaticBoundaryParamsContract]] = BackendL2M0StaticBoundaryParams
-    RuntimeBoundaryParams: ClassVar[type[RuntimeBoundaryParamsContract]] = BackendL2M0DynamicBoundaryParams
-    BaseTypes: ClassVar[tuple[type[BaseContract], ...]] = (
-        BackendL2M0B1Base,
-        BackendL2M0B2Base,
-        BackendL2M0B3Base,
+    StaticBoundaryParams: ClassVar[type[StaticBoundaryParamsContract]] = cast(
+        type[StaticBoundaryParamsContract],
+        BackendL2M0StaticBoundaryParams,
     )
-    RuleTypes: ClassVar[tuple[type[RuleContract], ...]] = (
-        BackendL2M0R1Rule,
-        BackendL2M0R2Rule,
-        BackendL2M0R3Rule,
-        BackendL2M0R4Rule,
+    RuntimeBoundaryParams: ClassVar[type[RuntimeBoundaryParamsContract]] = cast(
+        type[RuntimeBoundaryParamsContract],
+        BackendL2M0DynamicBoundaryParams,
+    )
+    BaseTypes: ClassVar[tuple[type[BaseContract], ...]] = cast(
+        tuple[type[BaseContract], ...],
+        (
+            BackendL2M0B1Base,
+            BackendL2M0B2Base,
+            BackendL2M0B3Base,
+        ),
+    )
+    RuleTypes: ClassVar[tuple[type[RuleContract], ...]] = cast(
+        tuple[type[RuleContract], ...],
+        (
+            BackendL2M0R1Rule,
+            BackendL2M0R2Rule,
+            BackendL2M0R3Rule,
+            BackendL2M0R4Rule,
+        ),
     )
     boundary_field_map: ClassVar[dict[str, str]] = dict(BACKEND_L2_M0_BOUNDARY_FIELD_MAP)
     merge_policy: ClassVar[str] = "runtime_override_else_static"
