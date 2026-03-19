@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import tempfile
 import unittest
+from typing import Any, cast
 
 from project_runtime.compiler import compile_project_runtime
 from project_runtime.config_layer import build_config_modules, load_project_config
@@ -253,19 +254,21 @@ class FourLayerCanonicalTest(unittest.TestCase):
         canonical = compile_project_runtime().canonical
         correspondence = canonical.get("correspondence")
         self.assertIsInstance(correspondence, dict)
-        self.assertEqual(correspondence.get("correspondence_schema_version"), 1)
+        correspondence_dict = cast(dict[str, Any], correspondence)
+        self.assertEqual(correspondence_dict.get("correspondence_schema_version"), 1)
 
-        objects = correspondence.get("objects")
+        objects = correspondence_dict.get("objects")
         self.assertIsInstance(objects, list)
         self.assertTrue(objects)
-        object_index = correspondence.get("object_index")
+        object_list = cast(list[dict[str, Any]], objects)
+        object_index = correspondence_dict.get("object_index")
         self.assertIsInstance(object_index, dict)
-        tree = correspondence.get("tree")
+        object_index_dict = cast(dict[str, Any], object_index)
+        tree = correspondence_dict.get("tree")
         self.assertIsInstance(tree, list)
         self.assertTrue(tree)
 
-        for item in objects:
-            self.assertIsInstance(item, dict)
+        for item in object_list:
             self.assertIn(item["object_kind"], {"module", "base", "rule", "boundary", "static_param", "runtime_param"})
             self.assertTrue(str(item.get("object_id") or ""))
             self.assertTrue(str(item.get("owner_module_id") or ""))
@@ -286,11 +289,12 @@ class FourLayerCanonicalTest(unittest.TestCase):
             targets = item.get("navigation_targets")
             self.assertIsInstance(targets, list)
             self.assertTrue(targets)
-            target_kinds = {target["target_kind"] for target in targets if isinstance(target, dict)}
+            target_list = cast(list[dict[str, Any]], targets)
+            target_kinds = {target["target_kind"] for target in target_list}
             self.assertIn(item["primary_nav_target_kind"], target_kinds)
             self.assertIn(item["primary_edit_target_kind"], target_kinds)
 
-            primary_targets = [target for target in targets if isinstance(target, dict) and bool(target.get("is_primary"))]
+            primary_targets = [target for target in target_list if bool(target.get("is_primary"))]
             self.assertTrue(primary_targets)
             self.assertTrue(
                 any(
@@ -302,13 +306,11 @@ class FourLayerCanonicalTest(unittest.TestCase):
                 any(
                     str(target.get("target_kind") or "") == str(item["primary_edit_target_kind"])
                     and bool(target.get("is_editable"))
-                    for target in targets
-                    if isinstance(target, dict)
+                    for target in target_list
                 )
             )
 
-            for target in targets:
-                self.assertIsInstance(target, dict)
+            for target in target_list:
                 self.assertIn(
                     target["target_kind"],
                     {
@@ -331,24 +333,28 @@ class FourLayerCanonicalTest(unittest.TestCase):
 
             anchor = item.get("correspondence_anchor")
             self.assertIsInstance(anchor, dict)
-            self.assertEqual(anchor.get("target_kind"), "code_correspondence")
+            anchor_dict = cast(dict[str, Any], anchor)
+            self.assertEqual(anchor_dict.get("target_kind"), "code_correspondence")
             implementation_anchor = item.get("implementation_anchor")
             self.assertIsInstance(implementation_anchor, dict)
-            self.assertEqual(implementation_anchor.get("target_kind"), "code_implementation")
+            implementation_anchor_dict = cast(dict[str, Any], implementation_anchor)
+            self.assertEqual(implementation_anchor_dict.get("target_kind"), "code_implementation")
 
-        validation_summary = correspondence.get("validation_summary")
+        validation_summary = correspondence_dict.get("validation_summary")
         self.assertIsInstance(validation_summary, dict)
-        self.assertIn("issue_count_by_object", validation_summary)
-        self.assertIn("issues", validation_summary)
-        self.assertIn("error_count", validation_summary)
-        issues = validation_summary["issues"]
+        validation_summary_dict = cast(dict[str, Any], validation_summary)
+        self.assertIn("issue_count_by_object", validation_summary_dict)
+        self.assertIn("issues", validation_summary_dict)
+        self.assertIn("error_count", validation_summary_dict)
+        issues = validation_summary_dict["issues"]
         self.assertIsInstance(issues, list)
-        for issue in issues:
-            self.assertIsInstance(issue, dict)
+        issue_list = cast(list[dict[str, Any]], issues)
+        for issue in issue_list:
             object_ids = issue.get("object_ids", [])
             self.assertIsInstance(object_ids, list)
-            for object_id in object_ids:
-                self.assertIn(object_id, object_index)
+            object_id_list = cast(list[Any], object_ids)
+            for object_id in object_id_list:
+                self.assertIn(object_id, object_index_dict)
 
     def test_correspondence_guard_fails_when_rule_boundary_mapping_is_missing(self) -> None:
         project_config = load_project_config("projects/knowledge_base_basic/project.toml")
