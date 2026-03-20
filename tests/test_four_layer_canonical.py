@@ -437,6 +437,41 @@ class FourLayerCanonicalTest(unittest.TestCase):
         self.assertTrue(any("rule base id not in owner module" in reason for reason in reasons))
         self.assertTrue(any("rule boundary id not in owner module" in reason for reason in reasons))
 
+    def test_correspondence_guard_fails_when_base_declares_missing_or_invalid_boundary(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        target = next(
+            item
+            for item in code_bindings
+            if item.framework_module.module_id == "knowledge_base.L2.M0"
+        )
+        first_base = target.code_module.BaseTypes[0]
+
+        setattr(first_base, "boundary_ids", tuple())
+        summary_missing = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary_missing.passed)
+        self.assertTrue(
+            any("base boundary_ids missing" in reason for reason in summary_missing.rules[0].reasons)
+        )
+
+        setattr(first_base, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
+        summary_invalid = summarize_correspondence_guard(
+            framework_modules=framework_modules,
+            config_modules=config_bindings,
+            code_modules=code_bindings,
+        )
+        self.assertFalse(summary_invalid.passed)
+        self.assertTrue(
+            any("base boundary id not in owner module" in reason for reason in summary_invalid.rules[0].reasons)
+        )
+
     def test_correspondence_guard_fails_when_config_mapping_missing(self) -> None:
         project_config = load_project_config("projects/knowledge_base_basic/project.toml")
         framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)

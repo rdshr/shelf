@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.15 - 2026-03-20
+
+- Updated framework design standards to remove the mandatory base-to-capability direct mapping constraint and keep capability derivation at the rule-combination layer.
+- Added correspondence guard enforcement that every base must declare at least one boundary and that declared base boundaries must belong to the owner module.
+- Synced Shelf AI framework lint hint `FW022` wording with the new base-boundary constraint semantics.
+
 ## 0.1.14 - 2026-03-19
 
 - Removed extension-side normalization that silently stripped stale `--json` from validation commands; Shelf now executes the configured validation command as-is.

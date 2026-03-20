@@ -187,6 +187,7 @@ def summarize_correspondence_guard(
                 )
             base_id = str(getattr(base_type, "framework_base_id", "")).strip()
             owner_id = str(getattr(base_type, "owner_module_id", "")).strip()
+            boundary_ids = _tuple_of_text(getattr(base_type, "boundary_ids", tuple()))
             if not base_id:
                 reasons.append(f"CORRESPONDENCE_VIOLATION: base class missing framework_base_id in {module_id}")
                 continue
@@ -195,6 +196,14 @@ def summarize_correspondence_guard(
                     "CORRESPONDENCE_VIOLATION: base class owner mismatch "
                     f"{base_id} owner={owner_id} expected={module_id}"
                 )
+            if not boundary_ids:
+                reasons.append(f"CORRESPONDENCE_VIOLATION: base boundary_ids missing {base_id}")
+            for boundary_id in boundary_ids:
+                if boundary_id not in expected_boundary_ids:
+                    reasons.append(
+                        "CORRESPONDENCE_VIOLATION: base boundary id not in owner module "
+                        f"{base_id} -> {boundary_id}"
+                    )
             actual_base_ids.add(base_id)
             base_symbol = _symbol(base_type)
             if base_id in base_symbols and base_symbols[base_id] != base_symbol:
