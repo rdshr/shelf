@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.20 - 2026-03-20
+
+- Switched Shelf AI Problems diagnostics to Chinese by default instead of leaking English validation text from generated-artifact guards and correspondence summaries.
+- Added correspondence-side reason localization so common audit drift messages land in Chinese even when the underlying runtime emits English reason strings.
+- Repacked and reinstalled the local VSIX after the diagnostics localization fix so the shipped release matches the current validated workspace.
+
 ## 0.1.19 - 2026-03-20
 
 - Removed fixed default-project assumptions in runtime and scripts: project resolution now supports discovery from `projects/*/project.toml` or explicit input instead of `projects/project.toml` fallback.
