@@ -14,7 +14,6 @@ const treeWebviewBridge = require("./tree_webview_bridge");
 const localSettings = require("./local_settings");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
-const DEFAULT_VALIDATION_FALLBACK_FILE = path.join("projects", "project.toml");
 const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
 const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
 const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
@@ -68,7 +67,7 @@ const FRAMEWORK_RULE_HINTS = {
 };
 
 function resetStatusToIdle(status) {
-  status.text = "$(check) Shelf idle";
+  status.text = "$(check) Shelf 空闲";
   status.tooltip = "Shelf";
   status.backgroundColor = undefined;
   status.color = undefined;
@@ -95,6 +94,80 @@ function countIssueLevels(issues) {
   };
 }
 
+const DEFAULT_SHELF_ISSUE_MESSAGE = "Shelf 校验问题";
+
+function localizeIssueLine(rawLine) {
+  const sourceLine = String(rawLine ?? "");
+  const line = sourceLine.trim();
+  if (!line) {
+    return sourceLine;
+  }
+
+  const baseBoundaryMiss = line.match(
+    /^declared boundary not effectively read by base:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (baseBoundaryMiss) {
+    return `基类声明的参数边界未被有效读取：${baseBoundaryMiss[1]} -> ${baseBoundaryMiss[2]}`;
+  }
+
+  const ruleBoundaryMiss = line.match(
+    /^declared rule boundary not effectively read:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (ruleBoundaryMiss) {
+    return `规则声明的参数边界未被有效读取：${ruleBoundaryMiss[1]} -> ${ruleBoundaryMiss[2]}`;
+  }
+
+  const exactScopeViolation = line.match(
+    /^FRAMEWORK_VIOLATION:\s*(.+?)\s+is outside framework projected exact paths;\s*extend framework projection before editing this path\.?$/i
+  );
+  if (exactScopeViolation) {
+    return `FRAMEWORK_VIOLATION：${exactScopeViolation[1]} 超出 framework 投影的 exact 路径范围；请先扩展 framework 投影后再编辑该路径。`;
+  }
+
+  const communicationScopeViolation = line.match(
+    /^FRAMEWORK_VIOLATION:\s*(.+?)\s+is outside framework projected communication paths;\s*extend framework projection before editing this path\.?$/i
+  );
+  if (communicationScopeViolation) {
+    return `FRAMEWORK_VIOLATION：${communicationScopeViolation[1]} 超出 framework 投影的 communication 路径范围；请先扩展 framework 投影后再编辑该路径。`;
+  }
+
+  const oneToOneViolation = line.match(
+    /^FRAMEWORK_VIOLATION:\s*boundary projection must be one-to-one:\s*(.+)$/i
+  );
+  if (oneToOneViolation) {
+    return `FRAMEWORK_VIOLATION：boundary 投影必须一对一：${oneToOneViolation[1]}`;
+  }
+
+  const guardedImportViolation = line.match(
+    /^FRAMEWORK_VIOLATION:\s*guarded import escapes configured path scope:\s*(.+)$/i
+  );
+  if (guardedImportViolation) {
+    return `FRAMEWORK_VIOLATION：受保护导入越出已配置的路径范围：${guardedImportViolation[1]}`;
+  }
+
+  if (/^validate_canonical --check-changes failed\.?$/i.test(line)) {
+    return "validate_canonical --check-changes 校验失败。";
+  }
+  if (/^mypy failed\.?$/i.test(line)) {
+    return "mypy 校验失败。";
+  }
+  if (/^Shelf validation issue$/i.test(line)) {
+    return DEFAULT_SHELF_ISSUE_MESSAGE;
+  }
+  return sourceLine;
+}
+
+function localizeIssueMessage(rawMessage) {
+  const text = String(rawMessage ?? "");
+  if (!text.trim()) {
+    return DEFAULT_SHELF_ISSUE_MESSAGE;
+  }
+  return text
+    .split("\n")
+    .map((line) => localizeIssueLine(line))
+    .join("\n");
+}
+
 function createStatusController({
   status,
   getValidationTriggerMode,
@@ -106,20 +179,20 @@ function createStatusController({
 }) {
   const setOk = () => {
     status.text = "$(check) Shelf OK";
-    status.tooltip = "Shelf: no guard issues";
+    status.tooltip = "Shelf：未发现守卫问题";
     status.backgroundColor = undefined;
     status.color = undefined;
   };
 
   const setError = (errors) => {
-    status.text = "$(close) Shelf failed";
+    status.text = "$(close) Shelf 失败";
     status.tooltip = buildTooltip(errors);
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
     status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
   };
 
   const setWarning = (warnings) => {
-    status.text = "$(warning) Shelf warning";
+    status.text = "$(warning) Shelf 警告";
     status.tooltip = buildTooltip(warnings);
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
@@ -129,12 +202,12 @@ function createStatusController({
     const dirtyCount = getDirtyWatchedFileCount();
     const triggerMode = getValidationTriggerMode();
     const revalidateHint = triggerMode === "manual"
-      ? "Run validation when you are ready."
-      : "Save to revalidate.";
-    status.text = "$(close) Shelf pending";
+      ? "准备好后手动执行校验。"
+      : "保存后会重新校验。";
+    status.text = "$(close) Shelf 待校验";
     status.tooltip = dirtyCount > 0
-      ? `Shelf: ${dirtyCount} watched file(s) changed. ${revalidateHint}`
-      : `Shelf: watched files changed. ${revalidateHint}`;
+      ? `Shelf：${dirtyCount} 个受监控文件已变更。${revalidateHint}`
+      : `Shelf：受监控文件已变更。${revalidateHint}`;
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
   };
@@ -212,15 +285,15 @@ function resolveValidationFallbackFile(repoRoot) {
   if (Array.isArray(discoveredProjects) && discoveredProjects.length) {
     return discoveredProjects[0];
   }
-  const preferredDefault = path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE);
-  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
-    return preferredDefault;
-  }
   const standardsFallback = path.join(repoRoot, STANDARDS_TREE_FILE);
   if (fs.existsSync(standardsFallback) && fs.statSync(standardsFallback).isFile()) {
     return standardsFallback;
   }
-  return preferredDefault;
+  const readmeFallback = path.join(repoRoot, "README.md");
+  if (fs.existsSync(readmeFallback) && fs.statSync(readmeFallback).isFile()) {
+    return readmeFallback;
+  }
+  return null;
 }
 
 function createWorkspaceValidationWatchers({
@@ -361,7 +434,7 @@ function activate(context) {
       }
       if (notifyOnError) {
         void vscode.window.showWarningMessage(
-          `Shelf ignored ${localSettings.LOCAL_SETTINGS_REL_PATH}: ${nextError}`
+          `Shelf 已忽略 ${localSettings.LOCAL_SETTINGS_REL_PATH}：${nextError}`
         );
       }
     } else if (localShelfSettingsError) {
@@ -593,25 +666,25 @@ function activate(context) {
   const describeProjectFreshness = (projectFreshness) => {
     const projectLabel = projectFreshness.projectId || path.basename(path.dirname(projectFreshness.projectFilePath || ""));
     if (projectFreshness.status === "missing") {
-      return `${projectLabel}: missing ${projectFreshness.canonicalRelPath || "generated/canonical.json"}`;
+      return `${projectLabel}：缺少 ${projectFreshness.canonicalRelPath || "generated/canonical.json"}`;
     }
     if (projectFreshness.status === "invalid") {
-      return `${projectLabel}: invalid canonical.json`;
+      return `${projectLabel}：canonical.json 无效`;
     }
     const staleSources = [
       ...(projectFreshness.newerSourceRelPaths || []),
       ...(projectFreshness.missingSourceRelPaths || []),
     ];
     if (!staleSources.length) {
-      return `${projectLabel}: stale canonical`;
+      return `${projectLabel}：canonical 已过期`;
     }
-    return `${projectLabel}: stale via ${staleSources.slice(0, 2).join(", ")}`;
+    return `${projectLabel}：因 ${staleSources.slice(0, 2).join(", ")} 过期`;
   };
 
   const describeCanonicalFreshness = (freshnessState) => {
     const parts = [];
     if (freshnessState.dirtySourceRelPaths.length) {
-      parts.push(`dirty authoring sources: ${freshnessState.dirtySourceRelPaths.slice(0, 2).join(", ")}`);
+      parts.push(`作者源有未校验变更：${freshnessState.dirtySourceRelPaths.slice(0, 2).join(", ")}`);
     }
     if (freshnessState.blockingProjects.length) {
       parts.push(
@@ -719,7 +792,7 @@ function activate(context) {
     if (execResult.timedOut) {
       return parseStageFailure(
         `SHELF_${String(label).replace(/[^A-Za-z0-9]+/g, "_").toUpperCase()}_TIMEOUT`,
-        `Shelf ${label} command timed out after ${Math.round(execResult.timeoutMs / 1000)}s.`,
+        `Shelf ${label} 命令执行超时（${Math.round(execResult.timeoutMs / 1000)} 秒）。`,
         execResult.stdout,
         execResult.stderr,
         execResult.code
@@ -769,18 +842,18 @@ function activate(context) {
     const settings = readIntentGateSettings();
     const normalizedIntent = String(intentText || "").trim();
     if (!settings.enabled) {
-      return { passed: false, message: "Shelf intent gate is disabled in settings." };
+      return { passed: false, message: "设置中已关闭 Shelf 对话意图门禁。" };
     }
     if (!normalizedIntent) {
-      return { passed: false, message: "Intent text is empty." };
+      return { passed: false, message: "意图描述为空。" };
     }
 
     const preValidation = await runIntentGateGrantValidation(repoRoot, settings);
     if (!preValidation.passed) {
-      const firstMessage = preValidation.errors[0]?.message || "validate_canonical --check-changes failed.";
+      const firstMessage = preValidation.errors[0]?.message || "validate_canonical --check-changes 校验失败。";
       return {
         passed: false,
-        message: `intent gate blocked before mapping: ${firstMessage}`,
+        message: `门禁在映射前拦截：${firstMessage}`,
       };
     }
 
@@ -800,12 +873,12 @@ function activate(context) {
     }
 
     if (!analysis.passed) {
-      clearIntentGateSession("mapping not found");
+      clearIntentGateSession("未找到可用映射");
       const reason = String(analysis.reason || "").trim();
       return {
         passed: false,
         analysis,
-        message: reason || "No framework mapping reached threshold. Ask a human to update framework first.",
+        message: reason || "没有命中阈值的 framework 映射，请先由人更新 framework。",
       };
     }
 
@@ -840,7 +913,7 @@ function activate(context) {
         return {
           passed: false,
           analysis,
-          message: "Mapping confirmation was cancelled.",
+          message: "映射确认已取消。",
         };
       }
     }
@@ -857,7 +930,7 @@ function activate(context) {
       lastTouchedAt: new Date().toISOString(),
     };
     refreshSidebarHome();
-    return { passed: true, analysis, message: "Governed task session granted." };
+    return { passed: true, analysis, message: "受控任务会话已授权。" };
   };
 
   const restoreGuardedDocumentFromBaseline = async (doc, baselineText) => {
@@ -923,18 +996,18 @@ function activate(context) {
 
     const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, docPath));
     const blockedMessage = session && session.repoRoot !== repoRoot
-      ? "guarded save blocked: active intent session belongs to a different workspace."
-      : "guarded save blocked: start a governed task and confirm framework mapping first.";
+      ? "受保护保存已阻断：当前会话属于其他工作区。"
+      : "受保护保存已阻断：请先启动受控任务并确认 framework 映射。";
 
     if (settings.mode === "warn") {
-      vscode.window.showWarningMessage(`Shelf intent gate warning (${relPath}): ${blockedMessage}`);
+      vscode.window.showWarningMessage(`Shelf 对话意图门禁警告（${relPath}）：${blockedMessage}`);
       return { allow: true };
     }
 
     const baselineText = guardedBaselineByPath.get(docPath);
     if (typeof baselineText !== "string") {
       vscode.window.showErrorMessage(
-        `Shelf intent gate blocked save for ${relPath}, but no baseline snapshot was available to restore.`
+        `Shelf 对话意图门禁阻断了 ${relPath} 的保存，但没有可用于回滚的基线快照。`
       );
       return { allow: false };
     }
@@ -942,11 +1015,11 @@ function activate(context) {
     const restored = await restoreGuardedDocumentFromBaseline(doc, baselineText);
     if (restored) {
       vscode.window.showErrorMessage(
-        `Shelf intent gate blocked and reverted ${relPath}. Run "Shelf: Start Governed Task" first.`
+        `Shelf 对话意图门禁已阻断并回滚 ${relPath}。请先执行“Shelf: 启动受控任务会话”。`
       );
     } else {
       vscode.window.showErrorMessage(
-        `Shelf intent gate blocked ${relPath}, but automatic restore failed.`
+        `Shelf 对话意图门禁已阻断 ${relPath}，但自动回滚失败。`
       );
     }
     return { allow: false };
@@ -997,7 +1070,7 @@ function activate(context) {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       gitHooksReady = null;
-      gitHooksDetail = "No workspace";
+      gitHooksDetail = "无工作区";
       refreshSidebarHome();
       return;
     }
@@ -1022,11 +1095,11 @@ function activate(context) {
 
     gitHooksPrompted = true;
     const action = await vscode.window.showInformationMessage(
-      "Shelf recommends enabling the repository git hooks so pre-push checks cannot be skipped.",
-      "Install Hooks",
-      "Later"
+      "Shelf 建议启用仓库 Git Hooks，避免 pre-push 校验被跳过。",
+      "安装 Hooks",
+      "稍后"
     );
-    if (action === "Install Hooks") {
+    if (action === "安装 Hooks") {
       await vscode.commands.executeCommand("shelf.installGitHooks");
     }
   };
@@ -1034,7 +1107,7 @@ function activate(context) {
   const runCodegenPreflight = async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
       return;
     }
     const repoRoot = folder.uri.fsPath;
@@ -1046,7 +1119,7 @@ function activate(context) {
     );
 
     output.clear();
-    status.text = "$(sync~spin) Shelf preflight";
+    status.text = "$(sync~spin) Shelf 预检中";
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
     status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
 
@@ -1056,7 +1129,7 @@ function activate(context) {
       repoRoot,
       (stdout, stderr, code) => parseStageFailure(
         "SHELF_CODEGEN_PREFLIGHT_MATERIALIZE",
-        "Shelf codegen preflight failed during materialization.",
+        "Shelf 生成前预检在物化阶段失败。",
         stdout,
         stderr,
         code
@@ -1072,13 +1145,13 @@ function activate(context) {
       statusController.refresh();
       refreshSidebarHome();
       const action = await vscode.window.showErrorMessage(
-        "Shelf codegen preflight failed during materialization.",
-        "Open Problems",
-        "Open Log"
+        "Shelf 生成前预检在物化阶段失败。",
+        "打开问题列表",
+        "打开日志"
       );
-      if (action === "Open Problems") {
+      if (action === "打开问题列表") {
         await vscode.commands.executeCommand("workbench.actions.view.problems");
-      } else if (action === "Open Log") {
+      } else if (action === "打开日志") {
         output.show(true);
       }
       return;
@@ -1090,7 +1163,7 @@ function activate(context) {
     await runValidation({ mode: "full", triggerUris: [], notifyOnFail: true, source: "manual" });
     if (lastValidationPassed) {
       vscode.window.showInformationMessage(
-        "Shelf codegen preflight passed. Framework -> Config -> Code -> Evidence chain is consistent."
+        "Shelf 生成前预检通过。Framework -> Config -> Code -> Evidence 主链一致。"
       );
     }
   };
@@ -1236,7 +1309,7 @@ function activate(context) {
       repoRoot,
       (stdout, stderr, code) => parseStageFailure(
         "SHELF_MATERIALIZE",
-        "Shelf auto-materialization failed.",
+        "Shelf 自动物化失败。",
         stdout,
         stderr,
         code
@@ -1265,7 +1338,7 @@ function activate(context) {
       );
     } catch (error) {
       return [normalizeIssue({
-        message: `Shelf could not load correspondence summary: ${String(error)}`,
+        message: `Shelf 无法加载 correspondence 汇总：${String(error)}`,
         file: "projects/*/generated/canonical.json",
         line: 1,
         column: 1,
@@ -1309,7 +1382,7 @@ function activate(context) {
 
     const showProgressStatus = task.source === "manual";
     if (showProgressStatus) {
-      status.text = "$(sync~spin) Shelf validating";
+      status.text = "$(sync~spin) Shelf 校验中";
       status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
       status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
     }
@@ -1389,13 +1462,13 @@ function activate(context) {
       if (shouldNotify && shouldNotifyFailure(combined.errors, lastFailureSignature)) {
         lastFailureSignature = signature(combined.errors);
         const action = await vscode.window.showErrorMessage(
-          `Shelf guard failed (${combined.errors.length} issue(s)).`,
-          "Open Problems",
-          "Open Log"
+          `Shelf 守卫失败（${combined.errors.length} 个问题）。`,
+          "打开问题列表",
+          "打开日志"
         );
-        if (action === "Open Problems") {
+        if (action === "打开问题列表") {
           await vscode.commands.executeCommand("workbench.actions.view.problems");
-        } else if (action === "Open Log") {
+        } else if (action === "打开日志") {
           output.show(true);
         }
       }
@@ -1441,7 +1514,7 @@ function activate(context) {
     const normalizedRel = relFile.replace(/\\/g, "/").replace(/^\/+/, "");
     const absPath = path.resolve(repoRoot, normalizedRel);
     if (!fs.existsSync(absPath)) {
-      vscode.window.showWarningMessage(`Shelf: source file not found: ${normalizedRel}`);
+      vscode.window.showWarningMessage(`Shelf：未找到源文件：${normalizedRel}`);
       return;
     }
 
@@ -1495,7 +1568,7 @@ function activate(context) {
   const openTreeView = async (kind) => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
       return;
     }
 
@@ -1508,15 +1581,15 @@ function activate(context) {
       const panel = ensureTreePanel(kind);
       panel.webview.html = buildTreeFallbackHtml(
         freshnessDetail
-          ? `Evidence tree unavailable until canonical is fresh. ${freshnessDetail}`
-          : "Evidence tree unavailable until canonical is fresh.",
-        "Shelf: Run Codegen Preflight",
+          ? `canonical 未 fresh，证据树不可用。${freshnessDetail}`
+          : "canonical 未 fresh，证据树不可用。",
+        "Shelf：执行生成前预检",
         treeTitleForKind(kind)
       );
       vscode.window.showWarningMessage(
         freshnessDetail
-          ? `Shelf: evidence tree is unavailable until canonical is fresh. ${freshnessDetail}`
-          : "Shelf: evidence tree is unavailable until canonical is fresh."
+          ? `Shelf：canonical 未 fresh 前证据树不可用。${freshnessDetail}`
+          : "Shelf：canonical 未 fresh 前证据树不可用。"
       );
       return;
     }
@@ -1527,7 +1600,7 @@ function activate(context) {
       const stylePath = path.join(context.extensionPath, "media", "tree_view.css");
       if (!fs.existsSync(scriptPath)) {
         panel.webview.html = buildTreeFallbackHtml(
-          "Tree webview bundle is missing: media/tree_view_bundle.js",
+          "缺少 Tree Webview 打包文件：media/tree_view_bundle.js",
           "npm run build:webview",
           treeTitleForKind(kind)
         );
@@ -1535,8 +1608,8 @@ function activate(context) {
       }
       if (!fs.existsSync(stylePath)) {
         panel.webview.html = buildTreeFallbackHtml(
-          "Tree webview stylesheet is missing: media/tree_view.css",
-          "Shelf: Run Codegen Preflight",
+          "缺少 Tree Webview 样式文件：media/tree_view.css",
+          "Shelf：执行生成前预检",
           treeTitleForKind(kind)
         );
         return;
@@ -1556,8 +1629,8 @@ function activate(context) {
       });
     } catch (error) {
       panel.webview.html = buildTreeFallbackHtml(
-        `Failed to render ${kind === "evidence" ? "evidence" : "framework"} tree runtime projection: ${String(error)}`,
-        "Shelf: Run Codegen Preflight",
+        `渲染${kind === "evidence" ? "证据树" : "框架树"}运行时投影失败：${String(error)}`,
+        "Shelf：执行生成前预检",
         treeTitleForKind(kind)
       );
     }
@@ -1674,16 +1747,16 @@ function activate(context) {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
       return buildSidebarHomeHtml({
-        workspace: "No workspace",
+        workspace: "无工作区",
         heroTone: "unknown",
         heroStatus: "等待工作区",
         heroSummary: "打开仓库后，这里会优先显示框架树入口，同时保留证据树守卫和问题跳转。",
         treePath: "runtime projection (in-memory)",
         validationStatus: "Unavailable",
-        issueSummary: "No workspace",
-        treeStatus: "Unknown",
-        standardsStatus: "Unknown",
-        lastValidation: "Not available",
+        issueSummary: "无工作区",
+        treeStatus: "未知",
+        standardsStatus: "未知",
+        lastValidation: "暂无",
         actionItems: defaultActionItems,
         healthItems: [
           {
@@ -1775,7 +1848,7 @@ function activate(context) {
           : (
             activeIntentSession
               ? `${activeIntentSession.analysis.mappings.length} mappings · ${new Date(activeIntentSession.createdAt).toLocaleString()}`
-              : "先执行 “Shelf: Start Governed Task”，确认映射后再改实现层文件。"
+              : "先执行“Shelf: 启动受控任务会话”，确认映射后再改实现层文件。"
           )
       );
     const issueLevels = countIssueLevels(lastRunIssues);
@@ -1783,20 +1856,20 @@ function activate(context) {
     const errorIssueCount = issueLevels.errorCount;
     const warningIssueCount = issueLevels.warningCount;
     const hasWarningOnly = warningIssueCount > 0 && errorIssueCount === 0;
-    const issueSummary = validationEnabled
+      const issueSummary = validationEnabled
       ? (
         lastValidationPassed === null
-          ? "Not run yet"
+          ? "尚未运行"
           : (
             errorIssueCount > 0
-              ? `${errorIssueCount} error(s)${warningIssueCount > 0 ? ` + ${warningIssueCount} warning(s)` : ""}`
-              : (warningIssueCount > 0 ? `${warningIssueCount} warning(s)` : "No issues")
+              ? `${errorIssueCount} 个错误${warningIssueCount > 0 ? ` + ${warningIssueCount} 个警告` : ""}`
+              : (warningIssueCount > 0 ? `${warningIssueCount} 个警告` : "无问题")
           )
       )
-      : "Validation disabled";
+      : "校验已停用";
     const lastValidation = lastValidationAt
-      ? `${lastValidationMode === "full" ? "Full" : "Change"} · ${new Date(lastValidationAt).toLocaleString()}`
-      : "Not run in this session";
+      ? `${lastValidationMode === "full" ? "完整" : "增量"} · ${new Date(lastValidationAt).toLocaleString()}`
+      : "本会话尚未运行";
     const issueItems = lastRunIssues.slice(0, 3).map((issue, index) => {
       const recognizedCode = normalizeFrameworkRuleCode(issue.code);
       return {
@@ -1804,7 +1877,7 @@ function activate(context) {
         code: recognizedCode || String(issue.code || "ARCHSYNC"),
         tone: normalizeIssueLevel(issue.level),
         hint: recognizedCode ? frameworkRuleHint(recognizedCode) : "",
-        message: issue.message || "Shelf validation issue",
+        message: issue.message || DEFAULT_SHELF_ISSUE_MESSAGE,
         location: issue.file
           ? `${issue.file}:${Number(issue.line || 1)}`
           : `line ${Number(issue.line || 1)}`
@@ -1829,7 +1902,7 @@ function activate(context) {
     );
     const changeSummary = lastChangeSummary
       ? `${lastChangeSummary.touchedCount || 0} touched / ${lastChangeSummary.affectedCount || 0} affected`
-      : "No recent node closure";
+      : "暂无最近节点闭包";
 
     let heroTone = "unknown";
     let heroStatus = "等待首次校验";
@@ -1944,7 +2017,7 @@ function activate(context) {
       },
       {
         label: "Canonical Freshness",
-        value: freshnessState.hasBlocking ? "Stale" : "Fresh",
+        value: freshnessState.hasBlocking ? "过期" : "新鲜",
         tone: freshnessState.hasBlocking ? "error" : "ok",
         note: freshnessState.hasBlocking
           ? (freshnessDetail || "先 materialize / validate，再继续信任正式跨层结果。")
@@ -1952,7 +2025,7 @@ function activate(context) {
       },
       {
         label: "守卫模式",
-        value: guardMode === "strict" ? "Strict" : "Normal",
+        value: guardMode === "strict" ? "严格" : "普通",
         tone: guardMode === "strict" ? "ok" : "unknown",
         note: guardMode === "strict"
           ? "发现 generated 直改时会自动回滚并重物化。"
@@ -2043,8 +2116,8 @@ function activate(context) {
       treePath: "runtime projection (in-memory)",
       validationStatus: validationEnabled ? "Enabled" : "Disabled",
       issueSummary,
-      treeStatus: frameworkTreeReady ? "Ready (runtime)" : "Missing framework source",
-      standardsStatus: standardsExists ? "Ready" : "Missing",
+      treeStatus: frameworkTreeReady ? "就绪（运行时）" : "缺少 framework 源",
+      standardsStatus: standardsExists ? "就绪" : "缺失",
       lastValidation,
       actionItems,
       healthItems,
@@ -2355,19 +2428,19 @@ function activate(context) {
     async () => {
       const folder = vscode.workspace.workspaceFolders?.[0];
       if (!folder) {
-        vscode.window.showWarningMessage("Shelf: no workspace is open.");
+        vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
         return;
       }
 
       const settings = readIntentGateSettings();
       if (!settings.enabled) {
-        vscode.window.showWarningMessage("Shelf: intent gate is disabled. Enable `shelf.intentGateEnabled` first.");
+        vscode.window.showWarningMessage("Shelf：对话意图门禁已关闭，请先启用 `shelf.intentGateEnabled`。");
         return;
       }
 
       const intentText = await vscode.window.showInputBox({
-        title: "Shelf Governed Task",
-        prompt: "Describe the requested change. Shelf will map it to framework paths before code edits.",
+        title: "Shelf 受控任务",
+        prompt: "请描述本次需求。Shelf 会先映射到 framework 路径，再允许改代码。",
         placeHolder: "例如：给知识库聊天页增加 @ 文档引用，并新增动态图展示页",
         ignoreFocusOut: true,
       });
@@ -2380,7 +2453,7 @@ function activate(context) {
         intentText,
       });
       if (!result.passed) {
-        vscode.window.showErrorMessage(`Shelf intent gate denied: ${result.message}`);
+        vscode.window.showErrorMessage(`Shelf 对话意图门禁拒绝授权：${result.message}`);
         return;
       }
 
@@ -2388,7 +2461,7 @@ function activate(context) {
         .map((item) => `${item.moduleId}/${item.boundaryId}`)
         .join(" | ");
       vscode.window.showInformationMessage(
-        `Shelf governed task granted (${result.analysis.mappings.length} mappings): ${preview}`
+        `Shelf 受控任务已授权（${result.analysis.mappings.length} 条映射）：${preview}`
       );
     }
   );
@@ -2399,7 +2472,7 @@ function activate(context) {
       const settings = readIntentGateSettings();
       const session = ensureIntentGateSession(settings);
       if (!session) {
-        vscode.window.showInformationMessage("Shelf: no active governed task session.");
+        vscode.window.showInformationMessage("Shelf：当前没有已授权的受控任务会话。");
         return;
       }
       output.appendLine("[intent-gate] active session");
@@ -2419,7 +2492,7 @@ function activate(context) {
     async () => {
       clearIntentGateSession("manual clear");
       refreshSidebarHome();
-      vscode.window.showInformationMessage("Shelf: governed task session cleared.");
+      vscode.window.showInformationMessage("Shelf：受控任务会话已清空。");
     }
   );
 
@@ -2437,7 +2510,7 @@ function activate(context) {
       const activeDraft = activeFrameworkDraftFile();
       if (!activeDraft) {
         vscode.window.showWarningMessage(
-          "Shelf: open a markdown file under framework_drafts/<framework>/ before publishing."
+          "Shelf：发布前请先打开 `framework_drafts/<framework>/` 下的 Markdown 文件。"
         );
         return;
       }
@@ -2448,7 +2521,7 @@ function activate(context) {
         activeDraft.repoRoot,
         (stdout, stderr, code) => parseStageFailure(
           "SHELF_PUBLISH_FRAMEWORK_DRAFT",
-          "Shelf failed to publish the current framework draft.",
+          "Shelf 发布当前 framework 草稿失败。",
           stdout,
           stderr,
           code
@@ -2456,10 +2529,10 @@ function activate(context) {
       );
       if (!result.passed) {
         const action = await vscode.window.showErrorMessage(
-          "Shelf: failed to publish the current framework draft.",
-          "Open Log"
+          "Shelf：发布当前 framework 草稿失败。",
+          "打开日志"
         );
-        if (action === "Open Log") {
+        if (action === "打开日志") {
           output.show(true);
         }
         return;
@@ -2474,7 +2547,7 @@ function activate(context) {
         source: "manual"
       });
       vscode.window.showInformationMessage(
-        `Shelf: published ${workspaceGuard.normalizeRelPath(activeDraft.publishedRelPath)}`
+        `Shelf：已发布 ${workspaceGuard.normalizeRelPath(activeDraft.publishedRelPath)}`
       );
     }
   );
@@ -2482,7 +2555,7 @@ function activate(context) {
   const installGitHooksDisposable = vscode.commands.registerCommand("shelf.installGitHooks", async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
       return;
     }
 
@@ -2493,7 +2566,7 @@ function activate(context) {
       repoRoot,
       (stdout, stderr, code) => parseStageFailure(
         "SHELF_GIT_HOOKS",
-        "Shelf failed to install the repository git hooks.",
+        "Shelf 安装仓库 Git Hooks 失败。",
         stdout,
         stderr,
         code
@@ -2501,13 +2574,13 @@ function activate(context) {
     );
 
     if (result.passed) {
-      vscode.window.showInformationMessage("Shelf: repository git hooks installed.");
+      vscode.window.showInformationMessage("Shelf：仓库 Git Hooks 已安装。");
     } else {
       const action = await vscode.window.showErrorMessage(
-        "Shelf: failed to install repository git hooks.",
-        "Open Log"
+        "Shelf：安装仓库 Git Hooks 失败。",
+        "打开日志"
       );
-      if (action === "Open Log") {
+      if (action === "打开日志") {
         output.show(true);
       }
     }
@@ -2519,12 +2592,12 @@ function activate(context) {
     async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showWarningMessage("Shelf: no active editor for framework template insertion.");
+        vscode.window.showWarningMessage("Shelf：当前没有可用于插入模板的活动编辑器。");
         return;
       }
 
       if (editor.document.languageId !== "markdown") {
-        vscode.window.showWarningMessage("Shelf: framework module template can only be inserted into Markdown files.");
+        vscode.window.showWarningMessage("Shelf：framework 模块模板只能插入到 Markdown 文件。");
         return;
       }
 
@@ -2534,7 +2607,7 @@ function activate(context) {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         output.appendLine(`[template] ${message}`);
-        vscode.window.showErrorMessage("Shelf: failed to load the @framework module template.");
+        vscode.window.showErrorMessage("Shelf：加载 @framework 模块模板失败。");
         return;
       }
 
@@ -2543,7 +2616,7 @@ function activate(context) {
         editor.selections
       );
       if (!inserted) {
-        vscode.window.showWarningMessage("Shelf: framework module template insertion was cancelled.");
+        vscode.window.showWarningMessage("Shelf：framework 模块模板插入已取消。");
       }
     }
   );
@@ -2551,7 +2624,7 @@ function activate(context) {
   const showIssuesDisposable = vscode.commands.registerCommand("shelf.showIssues", async () => {
     if (!validationActive && lastRepoRoot) {
       vscode.window.showInformationMessage(
-        `Shelf validation guard is disabled: missing ${STANDARDS_TREE_FILE} in this workspace.`
+        `Shelf 校验守卫已停用：当前工作区缺少 ${STANDARDS_TREE_FILE}。`
       );
       return;
     }
@@ -2580,8 +2653,8 @@ function activate(context) {
     });
 
     const selected = await vscode.window.showQuickPick(picks, {
-      title: `Shelf Mapping Issues (${lastRunIssues.length})`,
-      placeHolder: "Select an issue to jump to its location"
+      title: `Shelf 映射问题（${lastRunIssues.length}）`,
+      placeHolder: "选择问题并跳转到对应位置"
     });
 
     if (selected && lastRepoRoot) {
@@ -2596,11 +2669,11 @@ function activate(context) {
   const refreshFrameworkTreeDisposable = vscode.commands.registerCommand("shelf.refreshFrameworkTree", async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
       return;
     }
     await openFrameworkTree();
-    vscode.window.showInformationMessage("Shelf: framework tree runtime projection refreshed.");
+    vscode.window.showInformationMessage("Shelf：框架树运行时投影已刷新。");
   });
 
   const openEvidenceTreeDisposable = vscode.commands.registerCommand("shelf.openEvidenceTree", async () => {
@@ -2610,7 +2683,7 @@ function activate(context) {
   const refreshEvidenceTreeDisposable = vscode.commands.registerCommand("shelf.refreshEvidenceTree", async () => {
     const folder = vscode.workspace.workspaceFolders?.[0];
     if (!folder) {
-      vscode.window.showWarningMessage("Shelf: no workspace is open.");
+      vscode.window.showWarningMessage("Shelf：当前未打开工作区。");
       return;
     }
 
@@ -2622,21 +2695,21 @@ function activate(context) {
       const panel = ensureTreePanel("evidence");
       panel.webview.html = buildTreeFallbackHtml(
         freshnessDetail
-          ? `Evidence tree unavailable until canonical is fresh. ${freshnessDetail}`
-          : "Evidence tree unavailable until canonical is fresh.",
-        "Shelf: Run Codegen Preflight",
+          ? `canonical 未 fresh，证据树不可用。${freshnessDetail}`
+          : "canonical 未 fresh，证据树不可用。",
+        "Shelf：执行生成前预检",
         treeTitleForKind("evidence")
       );
       vscode.window.showWarningMessage(
         freshnessDetail
-          ? `Shelf: refresh evidence tree is blocked until canonical is fresh. ${freshnessDetail}`
-          : "Shelf: refresh evidence tree is blocked until canonical is fresh."
+          ? `Shelf：canonical 未 fresh，证据树刷新已阻断。${freshnessDetail}`
+          : "Shelf：canonical 未 fresh，证据树刷新已阻断。"
       );
       return;
     }
 
     await openEvidenceTree();
-    vscode.window.showInformationMessage("Shelf: evidence tree runtime projection refreshed.");
+    vscode.window.showInformationMessage("Shelf：证据树运行时投影已刷新。");
   });
 
   const configurationDisposable = vscode.workspace.onDidChangeConfiguration(async (event) => {
@@ -2696,7 +2769,7 @@ function activate(context) {
         try {
           guardedBaselineByPath.set(fsPath, fs.readFileSync(fsPath, "utf8"));
         } catch (error) {
-          output.appendLine(`[intent-gate] baseline snapshot failed for ${relPath}: ${String(error)}`);
+          output.appendLine(`[intent-gate] ${relPath} 基线快照失败：${String(error)}`);
         }
       }
       if (!event.document.isDirty) {
@@ -2971,7 +3044,7 @@ function parseMypyResult(stdout, stderr, code) {
       .join("\n")
       .trim();
     errors.push(normalizeIssue({
-      message: fallback || "mypy failed.",
+      message: fallback || "mypy 校验失败。",
       file: null,
       line: 1,
       column: 1,
@@ -3000,6 +3073,9 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
       : (triggerUri
         ? triggerUri.fsPath
         : resolveValidationFallbackFile(repoRoot));
+    if (!target) {
+      continue;
+    }
 
     if (!grouped.has(target)) {
       grouped.set(target, []);
@@ -3039,7 +3115,7 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
         const relLine = Math.max(0, Number(rel.line || 1) - 1);
         const relCol = Math.max(0, Number(rel.column || 1) - 1);
         const relRange = new vscode.Range(relLine, relCol, relLine, relCol + 1);
-        const relMessage = rel.message || "Related location";
+        const relMessage = localizeIssueMessage(rel.message || "关联位置");
         relatedInfo.push(
           new vscode.DiagnosticRelatedInformation(
             new vscode.Location(vscode.Uri.file(relFile), relRange),
@@ -3080,7 +3156,7 @@ function buildTreeFallbackHtml(message, refreshCommandLabel, title) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
-  const commandLabel = escapeHtml(refreshCommandLabel || "Shelf: Refresh Framework Tree");
+  const commandLabel = escapeHtml(refreshCommandLabel || "Shelf：刷新框架树视图");
   const pageTitle = escapeHtml(title || "Shelf · Framework Tree");
 
   return `<!doctype html>
@@ -3187,14 +3263,14 @@ function escapeHtml(value) {
 function buildSidebarHomeHtml(model) {
   const workspace = escapeHtml(model.workspace);
   const heroTone = escapeHtml(model.heroTone || "unknown");
-  const heroStatus = escapeHtml(model.heroStatus || "Waiting");
+  const heroStatus = escapeHtml(model.heroStatus || "等待中");
   const heroSummary = escapeHtml(model.heroSummary || "");
   const treePath = escapeHtml(model.treePath);
   const validationStatus = escapeHtml(model.validationStatus);
   const issueSummary = escapeHtml(model.issueSummary);
-  const treeStatus = escapeHtml(model.treeStatus || "Unknown");
-  const standardsStatus = escapeHtml(model.standardsStatus || "Unknown");
-  const lastValidation = escapeHtml(model.lastValidation || "Not available");
+  const treeStatus = escapeHtml(model.treeStatus || "未知");
+  const standardsStatus = escapeHtml(model.standardsStatus || "未知");
+  const lastValidation = escapeHtml(model.lastValidation || "暂无");
   const issueOverflow = Number(model.issueOverflow || 0);
   const lastValidationTone = escapeHtml(model.lastValidationTone || "unknown");
   const issueItems = Array.isArray(model.issueItems) ? model.issueItems : [];
@@ -3202,7 +3278,7 @@ function buildSidebarHomeHtml(model) {
   const changeItems = Array.isArray(model.changeItems) ? model.changeItems : [];
   const changeEmptyText = escapeHtml(model.changeEmptyText || "当前没有可展示的节点闭包。");
   const changeOverflow = Number(model.changeOverflow || 0);
-  const changeSummary = escapeHtml(model.changeSummary || "No recent node closure");
+  const changeSummary = escapeHtml(model.changeSummary || "暂无最近节点闭包");
   const actionItems = Array.isArray(model.actionItems) ? model.actionItems : [];
   const healthItems = Array.isArray(model.healthItems) ? model.healthItems : [];
   const calloutTone = escapeHtml(model.calloutTone || "unknown");
@@ -3226,9 +3302,9 @@ function buildSidebarHomeHtml(model) {
           <span class="overview-value">${escapeHtml(item.value)}</span>
         </div>`).join("");
   const metaRows = [
-    { label: "Workspace", value: workspace },
-    { label: "Tree Path", value: treePath },
-    { label: "Last Validation", value: lastValidation }
+    { label: "工作区", value: workspace },
+    { label: "树路径", value: treePath },
+    { label: "最近校验", value: lastValidation }
   ];
   const metaRowsHtml = metaRows.map((item) => `
         <div class="meta-row">
@@ -3836,7 +3912,7 @@ async function revealIssue(issue, repoRoot) {
     ? candidate
     : fallbackTarget;
   if (!target || !fs.existsSync(target)) {
-    vscode.window.showWarningMessage("Shelf 无可用定位文件：当前工作区未发现可打开的 project.toml。");
+    vscode.window.showWarningMessage("Shelf 无可用定位文件：当前工作区未发现可打开的项目配置或规范文档。");
     return;
   }
   const uri = vscode.Uri.file(target);
@@ -3855,7 +3931,7 @@ async function revealIssue(issue, repoRoot) {
 function normalizeIssue(item) {
   if (typeof item === "string") {
     return {
-      message: item,
+      message: localizeIssueMessage(item),
       file: null,
       line: 1,
       column: 1,
@@ -3867,7 +3943,7 @@ function normalizeIssue(item) {
 
   if (!item || typeof item !== "object") {
     return {
-      message: String(item),
+      message: localizeIssueMessage(String(item)),
       file: null,
       line: 1,
       column: 1,
@@ -3878,7 +3954,7 @@ function normalizeIssue(item) {
   }
 
   return {
-    message: String(item.message || "Shelf validation issue"),
+    message: localizeIssueMessage(String(item.message || DEFAULT_SHELF_ISSUE_MESSAGE)),
     file: item.file || null,
     line: Number(item.line || 1),
     column: Number(item.column || 1),
@@ -3922,13 +3998,13 @@ function buildTooltip(errors) {
     return "Shelf";
   }
   const counts = countIssueLevels(errors);
-  const summary = `${counts.errorCount} error(s), ${counts.warningCount} warning(s)`;
+  const summary = `${counts.errorCount} 个错误，${counts.warningCount} 个警告`;
   const preview = errors.slice(0, 3).map((e) => {
     const marker = normalizeIssueLevel(e.level) === "warning" ? "⚠" : "✖";
     return `• ${marker} ${e.message}`;
   }).join("\n");
-  const more = errors.length > 3 ? `\n... +${errors.length - 3} more` : "";
-  return `Shelf\n${summary}\n${preview}${more}\n(click to open Problems)`;
+  const more = errors.length > 3 ? `\n... 另有 ${errors.length - 3} 条` : "";
+  return `Shelf\n${summary}\n${preview}${more}\n（点击打开 Problems）`;
 }
 
 function hasStandardsTree(repoRoot) {
@@ -3937,10 +4013,10 @@ function hasStandardsTree(repoRoot) {
 
 function setStatusDisabled(status, repoRoot) {
   status.text = "$(circle-slash) Shelf";
-  status.tooltip = `Shelf validation guard disabled: ${toWorkspaceRelative(
+  status.tooltip = `Shelf 校验守卫已停用：${toWorkspaceRelative(
     path.join(repoRoot, STANDARDS_TREE_FILE),
     repoRoot
-  )} not found`;
+  )} 不存在`;
   status.backgroundColor = undefined;
   status.color = undefined;
 }
