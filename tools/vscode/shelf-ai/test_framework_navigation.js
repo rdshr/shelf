@@ -19,6 +19,10 @@ function loadFrameworkFile(relativePath) {
   };
 }
 
+function normalizePathSlashes(value) {
+  return value.replace(/\\/g, "/");
+}
+
 function locate(text, needle) {
   const index = text.indexOf(needle);
   assert.notStrictEqual(index, -1, `missing needle: ${needle}`);
@@ -43,7 +47,7 @@ function writeFile(filePath, text) {
 
 function main() {
   const knowledgeBaseL0 = loadFrameworkFile("framework/knowledge_base/L0-M2-对话与引用原子模块.md");
-  const moduleRef = locate(knowledgeBaseL0.text, "frontend.L1.M2[R1,R2]");
+  const moduleRef = locate(knowledgeBaseL0.text, "frontend.L1.M9[R1,R2]");
   const moduleResult = resolveDefinitionTarget({
     repoRoot,
     filePath: knowledgeBaseL0.filePath,
@@ -52,17 +56,17 @@ function main() {
     character: moduleRef.character + 1,
   });
   assert(moduleResult, "module ref should resolve");
-  assert(moduleResult.filePath.endsWith("framework/frontend/L1-M2-展示与容器原子模块.md"));
+  assert(normalizePathSlashes(moduleResult.filePath).endsWith("framework/frontend/L1-M9-承载-展示与容器-原子模块.md"));
 
   const moduleHover = resolveHoverTarget({
     repoRoot,
     filePath: knowledgeBaseL0.filePath,
     text: knowledgeBaseL0.text,
     line: moduleRef.line,
-    character: moduleRef.character + "frontend.L1.M2".length - 1,
+    character: moduleRef.character + "frontend.L1.M9".length - 1,
   });
   assert(moduleHover, "module hover should resolve");
-  assert(moduleHover.markdown.includes("**frontend.L1.M2**"));
+  assert(moduleHover.markdown.includes("**frontend.L1.M9**"));
   assert(moduleHover.markdown.includes("能力声明"));
 
   const workbenchL2 = loadFrameworkFile("framework/knowledge_base/L2-M0-知识库工作台场景模块.md");
@@ -75,7 +79,7 @@ function main() {
     character: boundaryConfigRef.character,
   });
   assert(boundaryConfigResult, "boundary config ref should resolve");
-  assert(boundaryConfigResult.filePath.endsWith("projects/knowledge_base_basic/project.toml"));
+  assert(normalizePathSlashes(boundaryConfigResult.filePath).endsWith("projects/knowledge_base_basic/project.toml"));
   assert.strictEqual(targetLineText(boundaryConfigResult).trim(), "[exact.knowledge_base.chat]");
 
   const boundaryHover = resolveHoverTarget({
@@ -98,7 +102,7 @@ function main() {
     character: boundaryConfigRef.character,
   });
   assert(
-    boundaryRefs.some((item) => item.filePath.endsWith("projects/knowledge_base_basic/project.toml")),
+    boundaryRefs.some((item) => normalizePathSlashes(item.filePath).endsWith("projects/knowledge_base_basic/project.toml")),
     "boundary references should include the unified project config target"
   );
 
@@ -158,7 +162,7 @@ framework_file = "framework/knowledge_base/L2-M0-知识库工作台场景模块.
       character: boundaryConfigRef.character,
     });
     assert(
-      !noCanonicalRefs.some((item) => item.filePath.endsWith("project.toml")),
+      !noCanonicalRefs.some((item) => normalizePathSlashes(item.filePath).endsWith("project.toml")),
       "project config references should require canonical instead of inferred fallback"
     );
   } finally {

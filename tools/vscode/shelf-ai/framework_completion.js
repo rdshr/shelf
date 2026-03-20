@@ -108,7 +108,7 @@ function createCompletionDefinitions() {
       label: "B 条目",
       detail: "插入最小可行基条目",
       documentation: "用于 `B*` 结构基定义。",
-      insertText: "- `B${1:1}` ${2:结构基名}：${3:L0.M0[R1] 或 frontend.L1.M0[R1,R2]}。来源：`${4:C1 + P1}`。",
+      insertText: "- `B${1:1}` ${2:结构基名}：${3:L0.M0[R1] 或 frontend.L1.M4[R1,R2]}。来源：`${4:C1 + P1}`。",
       contexts: ["list", "base-symbol", "framework-file-empty"],
     },
     {

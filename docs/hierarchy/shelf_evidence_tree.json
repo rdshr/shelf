@@ -217,75 +217,6 @@
       {
         "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
-        "to": "framework:frontend.L1.M1"
-      },
-      {
-        "from": "framework:frontend.L1.M1",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "config:frontend.L1.M1"
-      },
-      {
-        "from": "config:frontend.L1.M1",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "code:frontend.L1.M1"
-      },
-      {
-        "from": "code:frontend.L1.M1",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "evidence:frontend.L1.M1"
-      },
-      {
-        "from": "project:knowledge_base_basic:canonical",
-        "relation": "tree_child",
-        "to": "framework:frontend.L1.M2"
-      },
-      {
-        "from": "framework:frontend.L1.M2",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "config:frontend.L1.M2"
-      },
-      {
-        "from": "config:frontend.L1.M2",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "code:frontend.L1.M2"
-      },
-      {
-        "from": "code:frontend.L1.M2",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "evidence:frontend.L1.M2"
-      },
-      {
-        "from": "project:knowledge_base_basic:canonical",
-        "relation": "tree_child",
-        "to": "framework:frontend.L1.M3"
-      },
-      {
-        "from": "framework:frontend.L1.M3",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "config:frontend.L1.M3"
-      },
-      {
-        "from": "config:frontend.L1.M3",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "code:frontend.L1.M3"
-      },
-      {
-        "from": "code:frontend.L1.M3",
-        "link_role": "mainline",
-        "relation": "tree_child",
-        "to": "evidence:frontend.L1.M3"
-      },
-      {
-        "from": "project:knowledge_base_basic:canonical",
-        "relation": "tree_child",
         "to": "framework:frontend.L1.M4"
       },
       {
@@ -305,6 +236,75 @@
         "link_role": "mainline",
         "relation": "tree_child",
         "to": "evidence:frontend.L1.M4"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "framework:frontend.L1.M9"
+      },
+      {
+        "from": "framework:frontend.L1.M9",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "config:frontend.L1.M9"
+      },
+      {
+        "from": "config:frontend.L1.M9",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "code:frontend.L1.M9"
+      },
+      {
+        "from": "code:frontend.L1.M9",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "evidence:frontend.L1.M9"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "framework:frontend.L1.M12"
+      },
+      {
+        "from": "framework:frontend.L1.M12",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "config:frontend.L1.M12"
+      },
+      {
+        "from": "config:frontend.L1.M12",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "code:frontend.L1.M12"
+      },
+      {
+        "from": "code:frontend.L1.M12",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "evidence:frontend.L1.M12"
+      },
+      {
+        "from": "project:knowledge_base_basic:canonical",
+        "relation": "tree_child",
+        "to": "framework:frontend.L1.M15"
+      },
+      {
+        "from": "framework:frontend.L1.M15",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "config:frontend.L1.M15"
+      },
+      {
+        "from": "config:frontend.L1.M15",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "code:frontend.L1.M15"
+      },
+      {
+        "from": "code:frontend.L1.M15",
+        "link_role": "mainline",
+        "relation": "tree_child",
+        "to": "evidence:frontend.L1.M15"
       },
       {
         "from": "project:knowledge_base_basic:canonical",
@@ -378,25 +378,25 @@
       {
         "from": "project:knowledge_base_basic:canonical",
         "relation": "tree_child",
-        "to": "framework:frontend.L2.M0"
+        "to": "framework:frontend.L2.M2"
       },
       {
-        "from": "framework:frontend.L2.M0",
+        "from": "framework:frontend.L2.M2",
         "link_role": "mainline",
         "relation": "tree_child",
-        "to": "config:frontend.L2.M0"
+        "to": "config:frontend.L2.M2"
       },
       {
-        "from": "config:frontend.L2.M0",
+        "from": "config:frontend.L2.M2",
         "link_role": "mainline",
         "relation": "tree_child",
-        "to": "code:frontend.L2.M0"
+        "to": "code:frontend.L2.M2"
       },
       {
-        "from": "code:frontend.L2.M0",
+        "from": "code:frontend.L2.M2",
         "link_role": "mainline",
         "relation": "tree_child",
-        "to": "evidence:frontend.L2.M0"
+        "to": "evidence:frontend.L2.M2"
       },
       {
         "from": "project:knowledge_base_basic:canonical",
@@ -1466,11 +1466,11 @@
       {
         "base_items": [
           {
-            "text": "framework/frontend/L1-M0-触发原子模块.md",
+            "text": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
             "token": "Framework"
           },
           {
-            "text": "TRIGGER, ACTION, STATUS, A11Y",
+            "text": "FIELD, AREA, VALUE, SUBMIT, STATUS, A11Y",
             "token": "Boundaries"
           }
         ],
@@ -1488,7 +1488,7 @@
             "token": "Evidence"
           }
         ],
-        "description": "layer=framework | module=frontend.L1.M0 | framework=frontend | level=L1 | file=framework/frontend/L1-M0-触发原子模块.md",
+        "description": "layer=framework | module=frontend.L1.M0 | framework=frontend | level=L1 | file=framework/frontend/L1-M0-输入-文本输入-原子模块.md",
         "doc_line": 1,
         "hover_kicker": "Evidence Trace Node",
         "id": "framework:frontend.L1.M0",
@@ -1496,16 +1496,16 @@
         "level": 2,
         "module_name": "frontend",
         "module_ref": "L1.M0",
-        "module_title": "前端触发原子模块",
+        "module_title": "前端文本输入原子模块",
         "node_kind": "framework_module",
         "order": 0,
-        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
+        "source_file": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
         "source_line": 1
       },
       {
         "base_items": [
           {
-            "text": "TRIGGER, ACTION, STATUS, A11Y",
+            "text": "FIELD, AREA, VALUE, SUBMIT, STATUS, A11Y",
             "token": "Bindings"
           }
         ],
@@ -1523,7 +1523,7 @@
         "level": 3,
         "module_name": "frontend",
         "module_ref": "L1.M0",
-        "module_title": "前端触发原子模块",
+        "module_title": "前端文本输入原子模块",
         "node_kind": "config_module",
         "order": 0,
         "source_file": "projects/knowledge_base_basic/project.toml",
@@ -1532,7 +1532,7 @@
       {
         "base_items": [
           {
-            "text": "4",
+            "text": "6",
             "token": "Slots"
           }
         ],
@@ -1550,7 +1550,7 @@
         "level": 4,
         "module_name": "frontend",
         "module_ref": "L1.M0",
-        "module_title": "前端触发原子模块",
+        "module_title": "前端文本输入原子模块",
         "node_kind": "code_module",
         "order": 0,
         "source_file": "src/project_runtime/code_layer.py",
@@ -1577,7 +1577,7 @@
         "level": 5,
         "module_name": "frontend",
         "module_ref": "L1.M0",
-        "module_title": "前端触发原子模块",
+        "module_title": "前端文本输入原子模块",
         "node_kind": "evidence_module",
         "order": 0,
         "source_file": "src/project_runtime/evidence_layer.py",
@@ -1586,371 +1586,11 @@
       {
         "base_items": [
           {
-            "text": "framework/frontend/L1-M1-文本输入原子模块.md",
+            "text": "framework/frontend/L1-M4-动作-触发-原子模块.md",
             "token": "Framework"
           },
           {
-            "text": "FIELD, AREA, VALUE, SUBMIT, STATUS, A11Y",
-            "token": "Boundaries"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M1ConfigModule",
-            "token": "Config"
-          },
-          {
-            "text": "FrontendL1M1CodeModule",
-            "token": "Code"
-          },
-          {
-            "text": "FrontendL1M1EvidenceModule",
-            "token": "Evidence"
-          }
-        ],
-        "description": "layer=framework | module=frontend.L1.M1 | framework=frontend | level=L1 | file=framework/frontend/L1-M1-文本输入原子模块.md",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Trace Node",
-        "id": "framework:frontend.L1.M1",
-        "label": "framework:frontend.L1.M1",
-        "level": 2,
-        "module_name": "frontend",
-        "module_ref": "L1.M1",
-        "module_title": "前端文本输入原子模块",
-        "node_kind": "framework_module",
-        "order": 1,
-        "source_file": "framework/frontend/L1-M1-文本输入原子模块.md",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "FIELD, AREA, VALUE, SUBMIT, STATUS, A11Y",
-            "token": "Bindings"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M1ConfigModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=config | module=frontend.L1.M1 | class=FrontendL1M1ConfigModule | file=projects/knowledge_base_basic/project.toml",
-        "doc_line": 1,
-        "hover_kicker": "Config Module",
-        "id": "config:frontend.L1.M1",
-        "label": "config:frontend.L1.M1",
-        "level": 3,
-        "module_name": "frontend",
-        "module_ref": "L1.M1",
-        "module_title": "前端文本输入原子模块",
-        "node_kind": "config_module",
-        "order": 1,
-        "source_file": "projects/knowledge_base_basic/project.toml",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "6",
-            "token": "Slots"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M1CodeModule",
-            "token": "Owner"
-          }
-        ],
-        "description": "layer=code | module=frontend.L1.M1 | class=FrontendL1M1CodeModule | file=src/project_runtime/code_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Code Module",
-        "id": "code:frontend.L1.M1",
-        "label": "code:frontend.L1.M1",
-        "level": 4,
-        "module_name": "frontend",
-        "module_ref": "L1.M1",
-        "module_title": "前端文本输入原子模块",
-        "node_kind": "code_module",
-        "order": 1,
-        "source_file": "src/project_runtime/code_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "FrontendL1M1CodeModule",
-            "token": "Source"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M1EvidenceModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=evidence | module=frontend.L1.M1 | class=FrontendL1M1EvidenceModule | file=src/project_runtime/evidence_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Module",
-        "id": "evidence:frontend.L1.M1",
-        "label": "evidence:frontend.L1.M1",
-        "level": 5,
-        "module_name": "frontend",
-        "module_ref": "L1.M1",
-        "module_title": "前端文本输入原子模块",
-        "node_kind": "evidence_module",
-        "order": 1,
-        "source_file": "src/project_runtime/evidence_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "framework/frontend/L1-M2-展示与容器原子模块.md",
-            "token": "Framework"
-          },
-          {
-            "text": "TEXT, PANEL, VIEWPORT, META, EMPTY, A11Y",
-            "token": "Boundaries"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M2ConfigModule",
-            "token": "Config"
-          },
-          {
-            "text": "FrontendL1M2CodeModule",
-            "token": "Code"
-          },
-          {
-            "text": "FrontendL1M2EvidenceModule",
-            "token": "Evidence"
-          }
-        ],
-        "description": "layer=framework | module=frontend.L1.M2 | framework=frontend | level=L1 | file=framework/frontend/L1-M2-展示与容器原子模块.md",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Trace Node",
-        "id": "framework:frontend.L1.M2",
-        "label": "framework:frontend.L1.M2",
-        "level": 2,
-        "module_name": "frontend",
-        "module_ref": "L1.M2",
-        "module_title": "前端展示与容器原子模块",
-        "node_kind": "framework_module",
-        "order": 2,
-        "source_file": "framework/frontend/L1-M2-展示与容器原子模块.md",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "TEXT, PANEL, VIEWPORT, META, EMPTY, A11Y",
-            "token": "Bindings"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M2ConfigModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=config | module=frontend.L1.M2 | class=FrontendL1M2ConfigModule | file=projects/knowledge_base_basic/project.toml",
-        "doc_line": 1,
-        "hover_kicker": "Config Module",
-        "id": "config:frontend.L1.M2",
-        "label": "config:frontend.L1.M2",
-        "level": 3,
-        "module_name": "frontend",
-        "module_ref": "L1.M2",
-        "module_title": "前端展示与容器原子模块",
-        "node_kind": "config_module",
-        "order": 2,
-        "source_file": "projects/knowledge_base_basic/project.toml",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "6",
-            "token": "Slots"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M2CodeModule",
-            "token": "Owner"
-          }
-        ],
-        "description": "layer=code | module=frontend.L1.M2 | class=FrontendL1M2CodeModule | file=src/project_runtime/code_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Code Module",
-        "id": "code:frontend.L1.M2",
-        "label": "code:frontend.L1.M2",
-        "level": 4,
-        "module_name": "frontend",
-        "module_ref": "L1.M2",
-        "module_title": "前端展示与容器原子模块",
-        "node_kind": "code_module",
-        "order": 2,
-        "source_file": "src/project_runtime/code_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "FrontendL1M2CodeModule",
-            "token": "Source"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M2EvidenceModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=evidence | module=frontend.L1.M2 | class=FrontendL1M2EvidenceModule | file=src/project_runtime/evidence_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Module",
-        "id": "evidence:frontend.L1.M2",
-        "label": "evidence:frontend.L1.M2",
-        "level": 5,
-        "module_name": "frontend",
-        "module_ref": "L1.M2",
-        "module_title": "前端展示与容器原子模块",
-        "node_kind": "evidence_module",
-        "order": 2,
-        "source_file": "src/project_runtime/evidence_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "framework/frontend/L1-M3-集合浏览原子模块.md",
-            "token": "Framework"
-          },
-          {
-            "text": "COLLECTION, HIERARCHY, ITEM, CURRENT, FOCUS, A11Y",
-            "token": "Boundaries"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M3ConfigModule",
-            "token": "Config"
-          },
-          {
-            "text": "FrontendL1M3CodeModule",
-            "token": "Code"
-          },
-          {
-            "text": "FrontendL1M3EvidenceModule",
-            "token": "Evidence"
-          }
-        ],
-        "description": "layer=framework | module=frontend.L1.M3 | framework=frontend | level=L1 | file=framework/frontend/L1-M3-集合浏览原子模块.md",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Trace Node",
-        "id": "framework:frontend.L1.M3",
-        "label": "framework:frontend.L1.M3",
-        "level": 2,
-        "module_name": "frontend",
-        "module_ref": "L1.M3",
-        "module_title": "前端集合浏览原子模块",
-        "node_kind": "framework_module",
-        "order": 3,
-        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "COLLECTION, HIERARCHY, ITEM, CURRENT, FOCUS, A11Y",
-            "token": "Bindings"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M3ConfigModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=config | module=frontend.L1.M3 | class=FrontendL1M3ConfigModule | file=projects/knowledge_base_basic/project.toml",
-        "doc_line": 1,
-        "hover_kicker": "Config Module",
-        "id": "config:frontend.L1.M3",
-        "label": "config:frontend.L1.M3",
-        "level": 3,
-        "module_name": "frontend",
-        "module_ref": "L1.M3",
-        "module_title": "前端集合浏览原子模块",
-        "node_kind": "config_module",
-        "order": 3,
-        "source_file": "projects/knowledge_base_basic/project.toml",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "6",
-            "token": "Slots"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M3CodeModule",
-            "token": "Owner"
-          }
-        ],
-        "description": "layer=code | module=frontend.L1.M3 | class=FrontendL1M3CodeModule | file=src/project_runtime/code_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Code Module",
-        "id": "code:frontend.L1.M3",
-        "label": "code:frontend.L1.M3",
-        "level": 4,
-        "module_name": "frontend",
-        "module_ref": "L1.M3",
-        "module_title": "前端集合浏览原子模块",
-        "node_kind": "code_module",
-        "order": 3,
-        "source_file": "src/project_runtime/code_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "FrontendL1M3CodeModule",
-            "token": "Source"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "FrontendL1M3EvidenceModule",
-            "token": "Class"
-          }
-        ],
-        "description": "layer=evidence | module=frontend.L1.M3 | class=FrontendL1M3EvidenceModule | file=src/project_runtime/evidence_layer.py",
-        "doc_line": 1,
-        "hover_kicker": "Evidence Module",
-        "id": "evidence:frontend.L1.M3",
-        "label": "evidence:frontend.L1.M3",
-        "level": 5,
-        "module_name": "frontend",
-        "module_ref": "L1.M3",
-        "module_title": "前端集合浏览原子模块",
-        "node_kind": "evidence_module",
-        "order": 3,
-        "source_file": "src/project_runtime/evidence_layer.py",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
-            "text": "framework/frontend/L1-M4-标记与反馈原子模块.md",
-            "token": "Framework"
-          },
-          {
-            "text": "TAG, BUBBLE, EMPTY, STATUS, EVENT, A11Y",
+            "text": "TRIGGER, ACTION, STATUS, A11Y",
             "token": "Boundaries"
           }
         ],
@@ -1968,7 +1608,7 @@
             "token": "Evidence"
           }
         ],
-        "description": "layer=framework | module=frontend.L1.M4 | framework=frontend | level=L1 | file=framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "description": "layer=framework | module=frontend.L1.M4 | framework=frontend | level=L1 | file=framework/frontend/L1-M4-动作-触发-原子模块.md",
         "doc_line": 1,
         "hover_kicker": "Evidence Trace Node",
         "id": "framework:frontend.L1.M4",
@@ -1976,16 +1616,16 @@
         "level": 2,
         "module_name": "frontend",
         "module_ref": "L1.M4",
-        "module_title": "前端标记与反馈原子模块",
+        "module_title": "前端触发原子模块",
         "node_kind": "framework_module",
         "order": 4,
-        "source_file": "framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "source_file": "framework/frontend/L1-M4-动作-触发-原子模块.md",
         "source_line": 1
       },
       {
         "base_items": [
           {
-            "text": "TAG, BUBBLE, EMPTY, STATUS, EVENT, A11Y",
+            "text": "TRIGGER, ACTION, STATUS, A11Y",
             "token": "Bindings"
           }
         ],
@@ -2003,7 +1643,7 @@
         "level": 3,
         "module_name": "frontend",
         "module_ref": "L1.M4",
-        "module_title": "前端标记与反馈原子模块",
+        "module_title": "前端触发原子模块",
         "node_kind": "config_module",
         "order": 4,
         "source_file": "projects/knowledge_base_basic/project.toml",
@@ -2012,7 +1652,7 @@
       {
         "base_items": [
           {
-            "text": "6",
+            "text": "4",
             "token": "Slots"
           }
         ],
@@ -2030,7 +1670,7 @@
         "level": 4,
         "module_name": "frontend",
         "module_ref": "L1.M4",
-        "module_title": "前端标记与反馈原子模块",
+        "module_title": "前端触发原子模块",
         "node_kind": "code_module",
         "order": 4,
         "source_file": "src/project_runtime/code_layer.py",
@@ -2057,9 +1697,369 @@
         "level": 5,
         "module_name": "frontend",
         "module_ref": "L1.M4",
-        "module_title": "前端标记与反馈原子模块",
+        "module_title": "前端触发原子模块",
         "node_kind": "evidence_module",
         "order": 4,
+        "source_file": "src/project_runtime/evidence_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+            "token": "Framework"
+          },
+          {
+            "text": "TEXT, PANEL, VIEWPORT, META, EMPTY, A11Y",
+            "token": "Boundaries"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M9ConfigModule",
+            "token": "Config"
+          },
+          {
+            "text": "FrontendL1M9CodeModule",
+            "token": "Code"
+          },
+          {
+            "text": "FrontendL1M9EvidenceModule",
+            "token": "Evidence"
+          }
+        ],
+        "description": "layer=framework | module=frontend.L1.M9 | framework=frontend | level=L1 | file=framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Trace Node",
+        "id": "framework:frontend.L1.M9",
+        "label": "framework:frontend.L1.M9",
+        "level": 2,
+        "module_name": "frontend",
+        "module_ref": "L1.M9",
+        "module_title": "前端展示与容器原子模块",
+        "node_kind": "framework_module",
+        "order": 9,
+        "source_file": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "TEXT, PANEL, VIEWPORT, META, EMPTY, A11Y",
+            "token": "Bindings"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M9ConfigModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=config | module=frontend.L1.M9 | class=FrontendL1M9ConfigModule | file=projects/knowledge_base_basic/project.toml",
+        "doc_line": 1,
+        "hover_kicker": "Config Module",
+        "id": "config:frontend.L1.M9",
+        "label": "config:frontend.L1.M9",
+        "level": 3,
+        "module_name": "frontend",
+        "module_ref": "L1.M9",
+        "module_title": "前端展示与容器原子模块",
+        "node_kind": "config_module",
+        "order": 9,
+        "source_file": "projects/knowledge_base_basic/project.toml",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "6",
+            "token": "Slots"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M9CodeModule",
+            "token": "Owner"
+          }
+        ],
+        "description": "layer=code | module=frontend.L1.M9 | class=FrontendL1M9CodeModule | file=src/project_runtime/code_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Code Module",
+        "id": "code:frontend.L1.M9",
+        "label": "code:frontend.L1.M9",
+        "level": 4,
+        "module_name": "frontend",
+        "module_ref": "L1.M9",
+        "module_title": "前端展示与容器原子模块",
+        "node_kind": "code_module",
+        "order": 9,
+        "source_file": "src/project_runtime/code_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "FrontendL1M9CodeModule",
+            "token": "Source"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M9EvidenceModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=evidence | module=frontend.L1.M9 | class=FrontendL1M9EvidenceModule | file=src/project_runtime/evidence_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Module",
+        "id": "evidence:frontend.L1.M9",
+        "label": "evidence:frontend.L1.M9",
+        "level": 5,
+        "module_name": "frontend",
+        "module_ref": "L1.M9",
+        "module_title": "前端展示与容器原子模块",
+        "node_kind": "evidence_module",
+        "order": 9,
+        "source_file": "src/project_runtime/evidence_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+            "token": "Framework"
+          },
+          {
+            "text": "COLLECTION, HIERARCHY, ITEM, CURRENT, FOCUS, A11Y",
+            "token": "Boundaries"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M12ConfigModule",
+            "token": "Config"
+          },
+          {
+            "text": "FrontendL1M12CodeModule",
+            "token": "Code"
+          },
+          {
+            "text": "FrontendL1M12EvidenceModule",
+            "token": "Evidence"
+          }
+        ],
+        "description": "layer=framework | module=frontend.L1.M12 | framework=frontend | level=L1 | file=framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Trace Node",
+        "id": "framework:frontend.L1.M12",
+        "label": "framework:frontend.L1.M12",
+        "level": 2,
+        "module_name": "frontend",
+        "module_ref": "L1.M12",
+        "module_title": "前端集合浏览原子模块",
+        "node_kind": "framework_module",
+        "order": 12,
+        "source_file": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "COLLECTION, HIERARCHY, ITEM, CURRENT, FOCUS, A11Y",
+            "token": "Bindings"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M12ConfigModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=config | module=frontend.L1.M12 | class=FrontendL1M12ConfigModule | file=projects/knowledge_base_basic/project.toml",
+        "doc_line": 1,
+        "hover_kicker": "Config Module",
+        "id": "config:frontend.L1.M12",
+        "label": "config:frontend.L1.M12",
+        "level": 3,
+        "module_name": "frontend",
+        "module_ref": "L1.M12",
+        "module_title": "前端集合浏览原子模块",
+        "node_kind": "config_module",
+        "order": 12,
+        "source_file": "projects/knowledge_base_basic/project.toml",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "6",
+            "token": "Slots"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M12CodeModule",
+            "token": "Owner"
+          }
+        ],
+        "description": "layer=code | module=frontend.L1.M12 | class=FrontendL1M12CodeModule | file=src/project_runtime/code_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Code Module",
+        "id": "code:frontend.L1.M12",
+        "label": "code:frontend.L1.M12",
+        "level": 4,
+        "module_name": "frontend",
+        "module_ref": "L1.M12",
+        "module_title": "前端集合浏览原子模块",
+        "node_kind": "code_module",
+        "order": 12,
+        "source_file": "src/project_runtime/code_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "FrontendL1M12CodeModule",
+            "token": "Source"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M12EvidenceModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=evidence | module=frontend.L1.M12 | class=FrontendL1M12EvidenceModule | file=src/project_runtime/evidence_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Module",
+        "id": "evidence:frontend.L1.M12",
+        "label": "evidence:frontend.L1.M12",
+        "level": 5,
+        "module_name": "frontend",
+        "module_ref": "L1.M12",
+        "module_title": "前端集合浏览原子模块",
+        "node_kind": "evidence_module",
+        "order": 12,
+        "source_file": "src/project_runtime/evidence_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+            "token": "Framework"
+          },
+          {
+            "text": "TAG, BUBBLE, EMPTY, STATUS, EVENT, A11Y",
+            "token": "Boundaries"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M15ConfigModule",
+            "token": "Config"
+          },
+          {
+            "text": "FrontendL1M15CodeModule",
+            "token": "Code"
+          },
+          {
+            "text": "FrontendL1M15EvidenceModule",
+            "token": "Evidence"
+          }
+        ],
+        "description": "layer=framework | module=frontend.L1.M15 | framework=frontend | level=L1 | file=framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Trace Node",
+        "id": "framework:frontend.L1.M15",
+        "label": "framework:frontend.L1.M15",
+        "level": 2,
+        "module_name": "frontend",
+        "module_ref": "L1.M15",
+        "module_title": "前端标记与反馈原子模块",
+        "node_kind": "framework_module",
+        "order": 15,
+        "source_file": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "TAG, BUBBLE, EMPTY, STATUS, EVENT, A11Y",
+            "token": "Bindings"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M15ConfigModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=config | module=frontend.L1.M15 | class=FrontendL1M15ConfigModule | file=projects/knowledge_base_basic/project.toml",
+        "doc_line": 1,
+        "hover_kicker": "Config Module",
+        "id": "config:frontend.L1.M15",
+        "label": "config:frontend.L1.M15",
+        "level": 3,
+        "module_name": "frontend",
+        "module_ref": "L1.M15",
+        "module_title": "前端标记与反馈原子模块",
+        "node_kind": "config_module",
+        "order": 15,
+        "source_file": "projects/knowledge_base_basic/project.toml",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "6",
+            "token": "Slots"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M15CodeModule",
+            "token": "Owner"
+          }
+        ],
+        "description": "layer=code | module=frontend.L1.M15 | class=FrontendL1M15CodeModule | file=src/project_runtime/code_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Code Module",
+        "id": "code:frontend.L1.M15",
+        "label": "code:frontend.L1.M15",
+        "level": 4,
+        "module_name": "frontend",
+        "module_ref": "L1.M15",
+        "module_title": "前端标记与反馈原子模块",
+        "node_kind": "code_module",
+        "order": 15,
+        "source_file": "src/project_runtime/code_layer.py",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "FrontendL1M15CodeModule",
+            "token": "Source"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "FrontendL1M15EvidenceModule",
+            "token": "Class"
+          }
+        ],
+        "description": "layer=evidence | module=frontend.L1.M15 | class=FrontendL1M15EvidenceModule | file=src/project_runtime/evidence_layer.py",
+        "doc_line": 1,
+        "hover_kicker": "Evidence Module",
+        "id": "evidence:frontend.L1.M15",
+        "label": "evidence:frontend.L1.M15",
+        "level": 5,
+        "module_name": "frontend",
+        "module_ref": "L1.M15",
+        "module_title": "前端标记与反馈原子模块",
+        "node_kind": "evidence_module",
+        "order": 15,
         "source_file": "src/project_runtime/evidence_layer.py",
         "source_line": 1
       },
@@ -2426,7 +2426,7 @@
       {
         "base_items": [
           {
-            "text": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+            "text": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
             "token": "Framework"
           },
           {
@@ -2436,30 +2436,30 @@
         ],
         "capability_items": [
           {
-            "text": "FrontendL2M0ConfigModule",
+            "text": "FrontendL2M2ConfigModule",
             "token": "Config"
           },
           {
-            "text": "FrontendL2M0CodeModule",
+            "text": "FrontendL2M2CodeModule",
             "token": "Code"
           },
           {
-            "text": "FrontendL2M0EvidenceModule",
+            "text": "FrontendL2M2EvidenceModule",
             "token": "Evidence"
           }
         ],
-        "description": "layer=framework | module=frontend.L2.M0 | framework=frontend | level=L2 | file=framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "description": "layer=framework | module=frontend.L2.M2 | framework=frontend | level=L2 | file=framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "doc_line": 1,
         "hover_kicker": "Evidence Trace Node",
-        "id": "framework:frontend.L2.M0",
-        "label": "framework:frontend.L2.M0",
+        "id": "framework:frontend.L2.M2",
+        "label": "framework:frontend.L2.M2",
         "level": 2,
         "module_name": "frontend",
-        "module_ref": "L2.M0",
+        "module_ref": "L2.M2",
         "module_title": "前端规则化二维集合浏览标准模块",
         "node_kind": "framework_module",
-        "order": 0,
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "order": 2,
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "source_line": 1
       },
       {
@@ -2471,21 +2471,21 @@
         ],
         "capability_items": [
           {
-            "text": "FrontendL2M0ConfigModule",
+            "text": "FrontendL2M2ConfigModule",
             "token": "Class"
           }
         ],
-        "description": "layer=config | module=frontend.L2.M0 | class=FrontendL2M0ConfigModule | file=projects/knowledge_base_basic/project.toml",
+        "description": "layer=config | module=frontend.L2.M2 | class=FrontendL2M2ConfigModule | file=projects/knowledge_base_basic/project.toml",
         "doc_line": 1,
         "hover_kicker": "Config Module",
-        "id": "config:frontend.L2.M0",
-        "label": "config:frontend.L2.M0",
+        "id": "config:frontend.L2.M2",
+        "label": "config:frontend.L2.M2",
         "level": 3,
         "module_name": "frontend",
-        "module_ref": "L2.M0",
+        "module_ref": "L2.M2",
         "module_title": "前端规则化二维集合浏览标准模块",
         "node_kind": "config_module",
-        "order": 0,
+        "order": 2,
         "source_file": "projects/knowledge_base_basic/project.toml",
         "source_line": 1
       },
@@ -2498,48 +2498,48 @@
         ],
         "capability_items": [
           {
-            "text": "FrontendL2M0CodeModule",
+            "text": "FrontendL2M2CodeModule",
             "token": "Owner"
           }
         ],
-        "description": "layer=code | module=frontend.L2.M0 | class=FrontendL2M0CodeModule | file=src/project_runtime/code_layer.py",
+        "description": "layer=code | module=frontend.L2.M2 | class=FrontendL2M2CodeModule | file=src/project_runtime/code_layer.py",
         "doc_line": 1,
         "hover_kicker": "Code Module",
-        "id": "code:frontend.L2.M0",
-        "label": "code:frontend.L2.M0",
+        "id": "code:frontend.L2.M2",
+        "label": "code:frontend.L2.M2",
         "level": 4,
         "module_name": "frontend",
-        "module_ref": "L2.M0",
+        "module_ref": "L2.M2",
         "module_title": "前端规则化二维集合浏览标准模块",
         "node_kind": "code_module",
-        "order": 0,
+        "order": 2,
         "source_file": "src/project_runtime/code_layer.py",
         "source_line": 1
       },
       {
         "base_items": [
           {
-            "text": "FrontendL2M0CodeModule",
+            "text": "FrontendL2M2CodeModule",
             "token": "Source"
           }
         ],
         "capability_items": [
           {
-            "text": "FrontendL2M0EvidenceModule",
+            "text": "FrontendL2M2EvidenceModule",
             "token": "Class"
           }
         ],
-        "description": "layer=evidence | module=frontend.L2.M0 | class=FrontendL2M0EvidenceModule | file=src/project_runtime/evidence_layer.py",
+        "description": "layer=evidence | module=frontend.L2.M2 | class=FrontendL2M2EvidenceModule | file=src/project_runtime/evidence_layer.py",
         "doc_line": 1,
         "hover_kicker": "Evidence Module",
-        "id": "evidence:frontend.L2.M0",
-        "label": "evidence:frontend.L2.M0",
+        "id": "evidence:frontend.L2.M2",
+        "label": "evidence:frontend.L2.M2",
         "level": 5,
         "module_name": "frontend",
-        "module_ref": "L2.M0",
+        "module_ref": "L2.M2",
         "module_title": "前端规则化二维集合浏览标准模块",
         "node_kind": "evidence_module",
-        "order": 0,
+        "order": 2,
         "source_file": "src/project_runtime/evidence_layer.py",
         "source_line": 1
       },

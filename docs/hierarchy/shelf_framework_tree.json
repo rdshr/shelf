@@ -33,7 +33,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
+        "source_file": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M0",
         "target_ref": "frontend.L1.M0",
@@ -46,7 +46,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
+        "source_file": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M1",
         "target_ref": "frontend.L1.M0",
@@ -59,7 +59,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
+        "source_file": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M2",
         "target_ref": "frontend.L1.M0",
@@ -72,124 +72,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M1-文本输入原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M0",
-        "target_ref": "frontend.L1.M1",
-        "terms": "frontend.L0.M0",
-        "to": "frontend.L1.M1",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M1",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M1-文本输入原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M1",
-        "target_ref": "frontend.L1.M1",
-        "terms": "frontend.L0.M1",
-        "to": "frontend.L1.M1",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M1-文本输入原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M2",
-        "target_ref": "frontend.L1.M1",
-        "terms": "frontend.L0.M2",
-        "to": "frontend.L1.M1",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M0",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M2-展示与容器原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M0",
-        "target_ref": "frontend.L1.M2",
-        "terms": "frontend.L0.M0",
-        "to": "frontend.L1.M2",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M1",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M2-展示与容器原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M1",
-        "target_ref": "frontend.L1.M2",
-        "terms": "frontend.L0.M1",
-        "to": "frontend.L1.M2",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M2-展示与容器原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M2",
-        "target_ref": "frontend.L1.M2",
-        "terms": "frontend.L0.M2",
-        "to": "frontend.L1.M2",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M0",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M0",
-        "target_ref": "frontend.L1.M3",
-        "terms": "frontend.L0.M0",
-        "to": "frontend.L1.M3",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M1",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M1",
-        "target_ref": "frontend.L1.M3",
-        "terms": "frontend.L0.M1",
-        "to": "frontend.L1.M3",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M2",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L0.M2",
-        "target_ref": "frontend.L1.M3",
-        "terms": "frontend.L0.M2",
-        "to": "frontend.L1.M3",
-        "to_level": "L1"
-      },
-      {
-        "from": "frontend.L0.M0",
-        "from_level": "L0",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "source_file": "framework/frontend/L1-M4-动作-触发-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M0",
         "target_ref": "frontend.L1.M4",
@@ -202,7 +85,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "source_file": "framework/frontend/L1-M4-动作-触发-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M1",
         "target_ref": "frontend.L1.M4",
@@ -215,7 +98,7 @@
         "from_level": "L0",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "source_file": "framework/frontend/L1-M4-动作-触发-原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L0.M2",
         "target_ref": "frontend.L1.M4",
@@ -224,42 +107,146 @@
         "to_level": "L1"
       },
       {
-        "from": "frontend.L1.M0",
+        "from": "frontend.L0.M0",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M0",
+        "target_ref": "frontend.L1.M9",
+        "terms": "frontend.L0.M0",
+        "to": "frontend.L1.M9",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M1",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "frontend.L1.M9",
+        "terms": "frontend.L0.M1",
+        "to": "frontend.L1.M9",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M2",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M2",
+        "target_ref": "frontend.L1.M9",
+        "terms": "frontend.L0.M2",
+        "to": "frontend.L1.M9",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M0",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M0",
+        "target_ref": "frontend.L1.M12",
+        "terms": "frontend.L0.M0",
+        "to": "frontend.L1.M12",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M1",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "frontend.L1.M12",
+        "terms": "frontend.L0.M1",
+        "to": "frontend.L1.M12",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M2",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M2",
+        "target_ref": "frontend.L1.M12",
+        "terms": "frontend.L0.M2",
+        "to": "frontend.L1.M12",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M0",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M0",
+        "target_ref": "frontend.L1.M15",
+        "terms": "frontend.L0.M0",
+        "to": "frontend.L1.M15",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M1",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M1",
+        "target_ref": "frontend.L1.M15",
+        "terms": "frontend.L0.M1",
+        "to": "frontend.L1.M15",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L0.M2",
+        "from_level": "L0",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L0.M2",
+        "target_ref": "frontend.L1.M15",
+        "terms": "frontend.L0.M2",
+        "to": "frontend.L1.M15",
+        "to_level": "L1"
+      },
+      {
+        "from": "frontend.L1.M12",
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L1.M0",
-        "target_ref": "frontend.L2.M0",
-        "terms": "frontend.L1.M0",
-        "to": "frontend.L2.M0",
+        "source_ref": "frontend.L1.M12",
+        "target_ref": "frontend.L2.M2",
+        "terms": "frontend.L1.M12",
+        "to": "frontend.L2.M2",
         "to_level": "L2"
       },
       {
-        "from": "frontend.L1.M2",
+        "from": "frontend.L1.M15",
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L1.M2",
-        "target_ref": "frontend.L2.M0",
-        "terms": "frontend.L1.M2",
-        "to": "frontend.L2.M0",
-        "to_level": "L2"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "from_level": "L1",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M3",
-        "target_ref": "frontend.L2.M0",
-        "terms": "frontend.L1.M3",
-        "to": "frontend.L2.M0",
+        "source_ref": "frontend.L1.M15",
+        "target_ref": "frontend.L2.M2",
+        "terms": "frontend.L1.M15",
+        "to": "frontend.L2.M2",
         "to_level": "L2"
       },
       {
@@ -267,12 +254,25 @@
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M4",
-        "target_ref": "frontend.L2.M0",
+        "target_ref": "frontend.L2.M2",
         "terms": "frontend.L1.M4",
-        "to": "frontend.L2.M0",
+        "to": "frontend.L2.M2",
+        "to_level": "L2"
+      },
+      {
+        "from": "frontend.L1.M9",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M9",
+        "target_ref": "frontend.L2.M2",
+        "terms": "frontend.L1.M9",
+        "to": "frontend.L2.M2",
         "to_level": "L2"
       },
       {
@@ -289,41 +289,28 @@
         "to_level": "L3"
       },
       {
-        "from": "frontend.L1.M1",
+        "from": "frontend.L1.M12",
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
         "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L1.M1",
+        "source_ref": "frontend.L1.M12",
         "target_ref": "frontend.L3.M0",
-        "terms": "frontend.L1.M1",
+        "terms": "frontend.L1.M12",
         "to": "frontend.L3.M0",
         "to_level": "L3"
       },
       {
-        "from": "frontend.L1.M2",
+        "from": "frontend.L1.M15",
         "from_level": "L1",
         "module": "frontend",
         "relation": "framework_module_growth",
         "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L1.M2",
+        "source_ref": "frontend.L1.M15",
         "target_ref": "frontend.L3.M0",
-        "terms": "frontend.L1.M2",
-        "to": "frontend.L3.M0",
-        "to_level": "L3"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "from_level": "L1",
-        "module": "frontend",
-        "relation": "framework_module_growth",
-        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M3",
-        "target_ref": "frontend.L3.M0",
-        "terms": "frontend.L1.M3",
+        "terms": "frontend.L1.M15",
         "to": "frontend.L3.M0",
         "to_level": "L3"
       },
@@ -341,114 +328,127 @@
         "to_level": "L3"
       },
       {
-        "from": "frontend.L2.M0",
+        "from": "frontend.L1.M9",
+        "from_level": "L1",
+        "module": "frontend",
+        "relation": "framework_module_growth",
+        "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M9",
+        "target_ref": "frontend.L3.M0",
+        "terms": "frontend.L1.M9",
+        "to": "frontend.L3.M0",
+        "to_level": "L3"
+      },
+      {
+        "from": "frontend.L2.M2",
         "from_level": "L2",
         "module": "frontend",
         "relation": "framework_module_growth",
         "source_file": "framework/frontend/L3-M0-前端框架标准模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L2.M0",
+        "source_ref": "frontend.L2.M2",
         "target_ref": "frontend.L3.M0",
-        "terms": "frontend.L2.M0",
+        "terms": "frontend.L2.M2",
         "to": "frontend.L3.M0",
         "to_level": "L3"
       },
       {
+        "from": "frontend.L1.M12",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M12",
+        "target_ref": "knowledge_base.L0.M0",
+        "terms": "frontend.L1.M12",
+        "to": "knowledge_base.L0.M0",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M15",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M15",
+        "target_ref": "knowledge_base.L0.M0",
+        "terms": "frontend.L1.M15",
+        "to": "knowledge_base.L0.M0",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M4",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M4",
+        "target_ref": "knowledge_base.L0.M0",
+        "terms": "frontend.L1.M4",
+        "to": "knowledge_base.L0.M0",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M9",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M9",
+        "target_ref": "knowledge_base.L0.M0",
+        "terms": "frontend.L1.M9",
+        "to": "knowledge_base.L0.M0",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M12",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M12",
+        "target_ref": "knowledge_base.L0.M1",
+        "terms": "frontend.L1.M12",
+        "to": "knowledge_base.L0.M1",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M15",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M15",
+        "target_ref": "knowledge_base.L0.M1",
+        "terms": "frontend.L1.M15",
+        "to": "knowledge_base.L0.M1",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M9",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M9",
+        "target_ref": "knowledge_base.L0.M1",
+        "terms": "frontend.L1.M9",
+        "to": "knowledge_base.L0.M1",
+        "to_level": "L0"
+      },
+      {
         "from": "frontend.L1.M0",
         "from_level": "L1",
         "module": "knowledge_base",
         "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M0",
-        "target_ref": "knowledge_base.L0.M0",
-        "terms": "frontend.L1.M0",
-        "to": "knowledge_base.L0.M0",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M2",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M2",
-        "target_ref": "knowledge_base.L0.M0",
-        "terms": "frontend.L1.M2",
-        "to": "knowledge_base.L0.M0",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M3",
-        "target_ref": "knowledge_base.L0.M0",
-        "terms": "frontend.L1.M3",
-        "to": "knowledge_base.L0.M0",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M0-文件库与摄取原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M4",
-        "target_ref": "knowledge_base.L0.M0",
-        "terms": "frontend.L1.M4",
-        "to": "knowledge_base.L0.M0",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M2",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M2",
-        "target_ref": "knowledge_base.L0.M1",
-        "terms": "frontend.L1.M2",
-        "to": "knowledge_base.L0.M1",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M3",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M3",
-        "target_ref": "knowledge_base.L0.M1",
-        "terms": "frontend.L1.M3",
-        "to": "knowledge_base.L0.M1",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M4",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M1-文档与目录原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M4",
-        "target_ref": "knowledge_base.L0.M1",
-        "terms": "frontend.L1.M4",
-        "to": "knowledge_base.L0.M1",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M0",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
         "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
         "source_line": 1,
         "source_ref": "frontend.L1.M0",
@@ -458,28 +458,15 @@
         "to_level": "L0"
       },
       {
-        "from": "frontend.L1.M1",
+        "from": "frontend.L1.M15",
         "from_level": "L1",
         "module": "knowledge_base",
         "relation": "framework_module_growth",
         "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
         "source_line": 1,
-        "source_ref": "frontend.L1.M1",
+        "source_ref": "frontend.L1.M15",
         "target_ref": "knowledge_base.L0.M2",
-        "terms": "frontend.L1.M1",
-        "to": "knowledge_base.L0.M2",
-        "to_level": "L0"
-      },
-      {
-        "from": "frontend.L1.M2",
-        "from_level": "L1",
-        "module": "knowledge_base",
-        "relation": "framework_module_growth",
-        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
-        "source_line": 1,
-        "source_ref": "frontend.L1.M2",
-        "target_ref": "knowledge_base.L0.M2",
-        "terms": "frontend.L1.M2",
+        "terms": "frontend.L1.M15",
         "to": "knowledge_base.L0.M2",
         "to_level": "L0"
       },
@@ -493,6 +480,19 @@
         "source_ref": "frontend.L1.M4",
         "target_ref": "knowledge_base.L0.M2",
         "terms": "frontend.L1.M4",
+        "to": "knowledge_base.L0.M2",
+        "to_level": "L0"
+      },
+      {
+        "from": "frontend.L1.M9",
+        "from_level": "L1",
+        "module": "knowledge_base",
+        "relation": "framework_module_growth",
+        "source_file": "framework/knowledge_base/L0-M2-对话与引用原子模块.md",
+        "source_line": 1,
+        "source_ref": "frontend.L1.M9",
+        "target_ref": "knowledge_base.L0.M2",
+        "terms": "frontend.L1.M9",
         "to": "knowledge_base.L0.M2",
         "to_level": "L0"
       },
@@ -788,7 +788,7 @@
       {
         "base_items": [
           {
-            "text": "视图壳与槽位结构基：由主承载区、辅助承载区、顺序槽位与空态占位构成的视图壳结构",
+            "text": "视图壳与槽位结构基：由主承载区、辅助承载区、顺序槽位与空态占位构成的稳定闭环的最小视图壳结构",
             "token": "B1"
           },
           {
@@ -831,7 +831,7 @@
             "token": "B1"
           },
           {
-            "text": "状态相位反馈结构基：由状态集合、相位切换、反馈出口、禁用位与对外暴露位构成的状态结构",
+            "text": "状态相位反馈结构基：由交互前态、状态集合、相位切换、反馈出口、禁用位与对外暴露位构成的状态结构",
             "token": "B2"
           }
         ],
@@ -845,7 +845,7 @@
             "token": "C2"
           },
           {
-            "text": "状态相位表达能力：把加载、成功、失败、禁用与反馈相位收敛为稳定状态结构",
+            "text": "状态相位表达能力：把悬停、聚焦、按下、加载、成功、失败、禁用与反馈相位收敛为稳定状态结构",
             "token": "C3"
           }
         ],
@@ -905,51 +905,16 @@
       {
         "base_items": [
           {
-            "text": "触发入口结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1,R2]",
-            "token": "B1"
-          },
-          {
-            "text": "动作反馈结构基：L0.M0[R2] + L0.M1[R2] + L0.M2[R1,R2]",
-            "token": "B2"
-          }
-        ],
-        "capability_items": [
-          {
-            "text": "触发入口承载能力：把点击、确认、切换与即时动作入口收敛为稳定触发结构",
-            "token": "C1"
-          },
-          {
-            "text": "动作出口承接能力：把提交、回退、开关切换与确认出口收敛为稳定动作结果结构",
-            "token": "C2"
-          },
-          {
-            "text": "触发反馈与可达能力：把状态出口、禁用关系与可访问提示收敛为稳定触发接口",
-            "token": "C3"
-          }
-        ],
-        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-触发原子模块.md | title=前端触发原子模块",
-        "doc_line": 1,
-        "hover_kicker": "Framework Module",
-        "id": "frontend.L1.M0",
-        "label": "L1.frontend.M0",
-        "level": 1,
-        "module_name": "frontend",
-        "module_ref": "L1.M0",
-        "module_title": "前端触发原子模块",
-        "node_kind": "framework_module",
-        "order": 0,
-        "source_file": "framework/frontend/L1-M0-触发原子模块.md",
-        "source_line": 1
-      },
-      {
-        "base_items": [
-          {
             "text": "单行编辑结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1,R2]",
             "token": "B1"
           },
           {
             "text": "多行编辑结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1,R2]",
             "token": "B2"
+          },
+          {
+            "text": "绑定提交结构基：L0.M0[R2] + L0.M1[R2] + L0.M2[R1,R2]",
+            "token": "B3"
           }
         ],
         "capability_items": [
@@ -966,18 +931,57 @@
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M1 | file=framework/frontend/L1-M1-文本输入原子模块.md | title=前端文本输入原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M0 | file=framework/frontend/L1-M0-输入-文本输入-原子模块.md | title=前端文本输入原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
-        "id": "frontend.L1.M1",
-        "label": "L1.frontend.M1",
+        "id": "frontend.L1.M0",
+        "label": "L1.frontend.M0",
         "level": 1,
         "module_name": "frontend",
-        "module_ref": "L1.M1",
+        "module_ref": "L1.M0",
         "module_title": "前端文本输入原子模块",
         "node_kind": "framework_module",
-        "order": 1,
-        "source_file": "framework/frontend/L1-M1-文本输入原子模块.md",
+        "order": 0,
+        "source_file": "framework/frontend/L1-M0-输入-文本输入-原子模块.md",
+        "source_line": 1
+      },
+      {
+        "base_items": [
+          {
+            "text": "触发入口结构基：L0.M0[R2] + L0.M1[R1,R2] + L0.M2[R1,R2]",
+            "token": "B1"
+          },
+          {
+            "text": "动作反馈结构基：L0.M0[R2] + L0.M1[R2] + L0.M2[R1,R2]",
+            "token": "B2"
+          }
+        ],
+        "capability_items": [
+          {
+            "text": "触发入口承载能力：把点击、确认与即时动作入口收敛为稳定触发结构",
+            "token": "C1"
+          },
+          {
+            "text": "动作出口承接能力：把提交、回退与确认出口收敛为稳定动作结果结构",
+            "token": "C2"
+          },
+          {
+            "text": "触发反馈与可达能力：把状态出口、禁用关系与可访问提示收敛为稳定触发接口",
+            "token": "C3"
+          }
+        ],
+        "description": "module=frontend | level=L1 | node=L1.M4 | file=framework/frontend/L1-M4-动作-触发-原子模块.md | title=前端触发原子模块",
+        "doc_line": 1,
+        "hover_kicker": "Framework Module",
+        "id": "frontend.L1.M4",
+        "label": "L1.frontend.M4",
+        "level": 1,
+        "module_name": "frontend",
+        "module_ref": "L1.M4",
+        "module_title": "前端触发原子模块",
+        "node_kind": "framework_module",
+        "order": 4,
+        "source_file": "framework/frontend/L1-M4-动作-触发-原子模块.md",
         "source_line": 1
       },
       {
@@ -1005,18 +1009,18 @@
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M2 | file=framework/frontend/L1-M2-展示与容器原子模块.md | title=前端展示与容器原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M9 | file=framework/frontend/L1-M9-承载-展示与容器-原子模块.md | title=前端展示与容器原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
-        "id": "frontend.L1.M2",
-        "label": "L1.frontend.M2",
+        "id": "frontend.L1.M9",
+        "label": "L1.frontend.M9",
         "level": 1,
         "module_name": "frontend",
-        "module_ref": "L1.M2",
+        "module_ref": "L1.M9",
         "module_title": "前端展示与容器原子模块",
         "node_kind": "framework_module",
-        "order": 2,
-        "source_file": "framework/frontend/L1-M2-展示与容器原子模块.md",
+        "order": 9,
+        "source_file": "framework/frontend/L1-M9-承载-展示与容器-原子模块.md",
         "source_line": 1
       },
       {
@@ -1044,18 +1048,18 @@
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M3 | file=framework/frontend/L1-M3-集合浏览原子模块.md | title=前端集合浏览原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M12 | file=framework/frontend/L1-M12-浏览-集合浏览-原子模块.md | title=前端集合浏览原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
-        "id": "frontend.L1.M3",
-        "label": "L1.frontend.M3",
+        "id": "frontend.L1.M12",
+        "label": "L1.frontend.M12",
         "level": 1,
         "module_name": "frontend",
-        "module_ref": "L1.M3",
+        "module_ref": "L1.M12",
         "module_title": "前端集合浏览原子模块",
         "node_kind": "framework_module",
-        "order": 3,
-        "source_file": "framework/frontend/L1-M3-集合浏览原子模块.md",
+        "order": 12,
+        "source_file": "framework/frontend/L1-M12-浏览-集合浏览-原子模块.md",
         "source_line": 1
       },
       {
@@ -1065,7 +1069,7 @@
             "token": "B1"
           },
           {
-            "text": "反馈提示结构基：L0.M0[R1,R2] + L0.M1[R2] + L0.M2[R1,R2]",
+            "text": "附着反馈结构基：L0.M0[R1,R2] + L0.M1[R2] + L0.M2[R1,R2]",
             "token": "B2"
           }
         ],
@@ -1075,7 +1079,7 @@
             "token": "C1"
           },
           {
-            "text": "反馈提示能力：把消息气泡、失败提示与空态说明收敛为稳定反馈结构",
+            "text": "附着反馈能力：把消息气泡、失败提示与空态说明收敛为稳定附着反馈结构",
             "token": "C2"
           },
           {
@@ -1083,32 +1087,32 @@
             "token": "C3"
           }
         ],
-        "description": "module=frontend | level=L1 | node=L1.M4 | file=framework/frontend/L1-M4-标记与反馈原子模块.md | title=前端标记与反馈原子模块",
+        "description": "module=frontend | level=L1 | node=L1.M15 | file=framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md | title=前端标记与反馈原子模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
-        "id": "frontend.L1.M4",
-        "label": "L1.frontend.M4",
+        "id": "frontend.L1.M15",
+        "label": "L1.frontend.M15",
         "level": 1,
         "module_name": "frontend",
-        "module_ref": "L1.M4",
+        "module_ref": "L1.M15",
         "module_title": "前端标记与反馈原子模块",
         "node_kind": "framework_module",
-        "order": 4,
-        "source_file": "framework/frontend/L1-M4-标记与反馈原子模块.md",
+        "order": 15,
+        "source_file": "framework/frontend/L1-M15-反馈-标记与反馈-原子模块.md",
         "source_line": 1
       },
       {
         "base_items": [
           {
-            "text": "二维承载结构基：L1.M2[R2] + L1.M3[R1,R2]",
+            "text": "二维承载结构基：L1.M9[R2] + L1.M12[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "列语义操作结构基：L1.M0[R2] + L1.M3[R2]",
+            "text": "列语义操作结构基：L1.M4[R2] + L1.M12[R2]",
             "token": "B2"
           },
           {
-            "text": "状态反馈闭合结构基：L1.M2[R2] + L1.M4[R1,R2]",
+            "text": "视口附着反馈结构基：L1.M9[R2] + L1.M15[R1,R2]",
             "token": "B3"
           }
         ],
@@ -1130,32 +1134,32 @@
             "token": "C4"
           }
         ],
-        "description": "module=frontend | level=L2 | node=L2.M0 | file=framework/frontend/L2-M0-规则化二维集合浏览标准模块.md | title=前端规则化二维集合浏览标准模块",
+        "description": "module=frontend | level=L2 | node=L2.M2 | file=framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md | title=前端规则化二维集合浏览标准模块",
         "doc_line": 1,
         "hover_kicker": "Framework Module",
-        "id": "frontend.L2.M0",
-        "label": "L2.frontend.M0",
+        "id": "frontend.L2.M2",
+        "label": "L2.frontend.M2",
         "level": 2,
         "module_name": "frontend",
-        "module_ref": "L2.M0",
+        "module_ref": "L2.M2",
         "module_title": "前端规则化二维集合浏览标准模块",
         "node_kind": "framework_module",
-        "order": 0,
-        "source_file": "framework/frontend/L2-M0-规则化二维集合浏览标准模块.md",
+        "order": 2,
+        "source_file": "framework/frontend/L2-M2-浏览场景-规则化二维集合浏览-标准模块.md",
         "source_line": 1
       },
       {
         "base_items": [
           {
-            "text": "承载交互契约基：L1.M0[R2] + L1.M1[R2] + L1.M2[R1,R2]",
+            "text": "承载交互契约基：L1.M4[R2] + L1.M0[R2] + L1.M9[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "导航反馈扩展契约基：L1.M3[R1,R2] + L1.M4[R1,R2]",
+            "text": "导航反馈扩展契约基：L1.M12[R1,R2] + L1.M15[R1,R2]",
             "token": "B2"
           },
           {
-            "text": "复合结构承接基：L2.M0[R2,R3,R4]",
+            "text": "复合结构承接基：L2.M2[R2,R3,R4]",
             "token": "B3"
           }
         ],
@@ -1190,15 +1194,15 @@
       {
         "base_items": [
           {
-            "text": "文件目录结构基：frontend.L1.M2[R2] + frontend.L1.M3[R1,R2]",
+            "text": "文件目录结构基：frontend.L1.M9[R2] + frontend.L1.M12[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "文件摄取结构基：frontend.L1.M0[R2] + frontend.L1.M4[R1,R2]",
+            "text": "文件摄取结构基：frontend.L1.M4[R2] + frontend.L1.M15[R1,R2]",
             "token": "B2"
           },
           {
-            "text": "目录约束结构基：frontend.L1.M2[R1,R2] + frontend.L1.M3[R2] + frontend.L1.M4[R1,R2]",
+            "text": "目录约束结构基：frontend.L1.M9[R1,R2] + frontend.L1.M12[R2] + frontend.L1.M15[R1,R2]",
             "token": "B3"
           }
         ],
@@ -1233,15 +1237,15 @@
       {
         "base_items": [
           {
-            "text": "文档视口结构基：frontend.L1.M2[R1,R2]",
+            "text": "文档视口结构基：frontend.L1.M9[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "TOC 树结构基：frontend.L1.M2[R1] + frontend.L1.M3[R2]",
+            "text": "TOC 树结构基：frontend.L1.M9[R1] + frontend.L1.M12[R2]",
             "token": "B2"
           },
           {
-            "text": "阅读锚点结构基：frontend.L1.M2[R2] + frontend.L1.M4[R1,R2]",
+            "text": "阅读锚点结构基：frontend.L1.M9[R2] + frontend.L1.M15[R1,R2]",
             "token": "B3"
           }
         ],
@@ -1276,15 +1280,15 @@
       {
         "base_items": [
           {
-            "text": "对话舞台结构基：frontend.L1.M2[R1,R2] + frontend.L1.M4[R1,R2]",
+            "text": "对话舞台结构基：frontend.L1.M9[R1,R2] + frontend.L1.M15[R1,R2]",
             "token": "B1"
           },
           {
-            "text": "提问提交结构基：frontend.L1.M0[R1,R2] + frontend.L1.M1[R1,R2]",
+            "text": "提问提交结构基：frontend.L1.M4[R1,R2] + frontend.L1.M0[R1,R2]",
             "token": "B2"
           },
           {
-            "text": "行内引用结构基：frontend.L1.M2[R1,R2] + frontend.L1.M4[R1,R2]",
+            "text": "行内引用结构基：frontend.L1.M9[R1,R2] + frontend.L1.M15[R1,R2]",
             "token": "B3"
           }
         ],

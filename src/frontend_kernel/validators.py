@@ -170,4 +170,4 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
 
 
 def summarize_frontend_rules(results: tuple[RuleValidationOutcome, ...]) -> RuleValidationSummary:
-    return RuleValidationSummary(module_id="frontend.L2.M0", rules=results)
+    return RuleValidationSummary(module_id="frontend.L3.M0", rules=results)
