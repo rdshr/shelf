@@ -32,10 +32,12 @@
 8. 始终保持架构单一，不要创建 side channel
 
 ## 对话触发守卫（强制）
-- 门禁作用范围必须由用户配置决定，而非写死目录。范围来源与优先级为：VSCode `shelf.intentGateGuardedPathPrefixes` > `.shelf/settings.jsonc` 中 `shelf.intentGateGuardedPathPrefixes` > 插件默认值；排除项来自对应 `intentGateIgnoredPathPrefixes`。
-- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），且目标修改路径命中“门禁作用范围”，AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
+- AGENTS 只认最终生效的 `shelf.*` 值作为门禁配置语义入口，不再维护独立目录常量；不再在 AGENTS 里区分配置来自哪个文件承载。
+- 门禁范围只看：`shelf.intentGateGuardedPathPrefixes` 与 `shelf.intentGateIgnoredPathPrefixes`。若未显式覆盖，插件默认受检目录为：`framework/`、`framework_drafts/`、`projects/`、`src/project_runtime/`、`scripts/`、`tools/vscode/shelf-ai/`。
+- 检查开关只看：`shelf.intentGateEnabled`、`shelf.intentGateRunChangeValidationBeforeGrant`、`shelf.intentGateTemporaryBypasses`。当 `intentGateEnabled = false`，或 `intentGateRunChangeValidationBeforeGrant = false`，或 `intentGateTemporaryBypasses` 包含 `grant_pre_validation` / `*` 时，可临时关闭“改前 check-changes 检查”。
+- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），且目标修改路径命中“门禁作用范围”且未命中上述关闭条件，AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
 - 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改命中门禁范围的文件，并明确提示“先由人修改 framework，再继续实现层变更”。
-- AI 完成命中门禁范围的修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，确保未引入新的 framework 语义越权。
+- AI 完成命中门禁范围的修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，除非命中上述临时关闭条件；未关闭时必须确保未引入新的 framework 语义越权。
 - 该守卫属于“对话级自动触发”，不得要求用户手工复制临时 `project.toml` 才触发。
 - 当用户把 `intentGateGuardedPathPrefixes` 配置为仅 `framework/` 时，门禁只对 `framework/**` 生效。
 
