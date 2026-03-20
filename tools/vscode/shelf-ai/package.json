@@ -312,8 +312,7 @@
             "framework_drafts/",
             "projects/",
             "src/project_runtime/",
-            "scripts/",
-            "tools/vscode/shelf-ai/"
+            "scripts/"
           ],
           "items": {
             "type": "string"

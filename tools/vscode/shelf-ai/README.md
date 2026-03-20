@@ -25,7 +25,7 @@ Authoring-term note:
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
 - Adds a governed-task intent gate: map request text to canonical framework paths (`module_id / boundary_id / exact.*`) before guarded implementation saves.
 - Enforces one-to-one parameter mapping for governed-task sessions: if any canonical parameter still projects to multiple related paths, session grant is rejected until framework is clarified.
-- Blocks or warns on guarded saves within framework-document-related paths by default (`framework/`, `framework_drafts/`, `projects/`, `src/project_runtime/`, `scripts/`, `tools/vscode/shelf-ai/`) when no active governed-task session is granted.
+- Blocks or warns on guarded saves within framework-document-related paths by default (`framework/`, `framework_drafts/`, `projects/`, `src/project_runtime/`, `scripts/`) when no active governed-task session is granted.
 
 ## Contract
 
@@ -77,7 +77,7 @@ Local workspace overlay file:
 - `shelf.intentGateMinimumScore = 4`
 - `shelf.intentGateMaxMatches = 8`
 - `shelf.intentGateSessionTtlMinutes = 120`
-- `shelf.intentGateGuardedPathPrefixes = [\"framework/\", \"framework_drafts/\", \"projects/\", \"src/project_runtime/\", \"scripts/\", \"tools/vscode/shelf-ai/\"]`
+- `shelf.intentGateGuardedPathPrefixes = [\"framework/\", \"framework_drafts/\", \"projects/\", \"src/project_runtime/\", \"scripts/\"]`
 - `shelf.intentGateIgnoredPathPrefixes = [\".git/\", \".github/\", \".venv/\", \"node_modules/\", \"dist/\", \"build/\", \"out/\", \".pytest_cache/\", \".mypy_cache/\", \"__pycache__/\"]`
 - `shelf.intentGateTemporaryBypasses = []`
 - `shelf.frameworkTreeNodeHorizontalGap = 8`
@@ -119,7 +119,7 @@ Available bypass items:
 4. Once granted, guarded implementation saves are allowed until the session expires or is cleared.
 5. Without a granted session, guarded saves are warned or blocked/reverted (depending on `shelf.intentGateEnforcementMode`).
 
-Default governed-path strategy scopes to framework-document-related paths. Set `shelf.intentGateGuardedPathPrefixes = ["*"]` only if you explicitly want to intercept all workspace code paths.
+Default governed-path strategy scopes to framework-document-related paths and excludes Shelf extension source paths. Set `shelf.intentGateGuardedPathPrefixes = ["*"]` only if you explicitly want to intercept all workspace code paths.
 
 ## Validation
 

@@ -31,7 +31,6 @@ const DEFAULT_INTENT_GATE_GUARDED_PREFIXES = [
   "projects/",
   "src/project_runtime/",
   "scripts/",
-  "tools/vscode/shelf-ai/",
 ];
 const DEFAULT_INTENT_GATE_IGNORED_PREFIXES = [
   ".git/",

@@ -16,7 +16,7 @@
   "configuration.shelf.intentGateMinimumScore.description": "Minimum mapping score threshold for intent-to-framework gate matching.",
   "configuration.shelf.intentGateMaxMatches.description": "Maximum number of canonical mapping candidates retained in a governed-task session.",
   "configuration.shelf.intentGateSessionTtlMinutes.description": "Time-to-live for a governed-task session. Expired sessions are cleared and guarded saves are blocked again.",
-  "configuration.shelf.intentGateGuardedPathPrefixes.description": "Workspace-relative path prefixes guarded by the intent gate on save. Default scope targets framework-document-related paths and coupled implementation code; use `*` only when you explicitly want full-workspace interception.",
+  "configuration.shelf.intentGateGuardedPathPrefixes.description": "Workspace-relative path prefixes guarded by the intent gate on save. Default scope targets framework-document-related paths and coupled implementation code, but excludes Shelf extension source paths; use `*` only when you explicitly want full-workspace interception.",
   "configuration.shelf.intentGateIgnoredPathPrefixes.description": "Workspace-relative path prefixes excluded from intent-gate save interception.",
   "configuration.shelf.intentGateTemporaryBypasses.description": "Temporary local bypass switches for intent gate checks. Use an empty array to keep strict behavior, a selected subset to bypass specific checks, or `[*]` to bypass all listed checks.",
   "configuration.shelf.changeValidationCommand.description": "Command used for save-triggered validation.",

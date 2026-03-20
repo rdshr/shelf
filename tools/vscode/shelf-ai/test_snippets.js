@@ -92,6 +92,15 @@ function main() {
     "uv run python scripts/validate_canonical.py",
     "package.json must default shelf.fullValidationCommand to the supported canonical validation command"
   );
+  const defaultGuardedPrefixes = configuration["shelf.intentGateGuardedPathPrefixes"]?.default || [];
+  assert(
+    Array.isArray(defaultGuardedPrefixes) && defaultGuardedPrefixes.includes("framework/"),
+    "package.json must keep framework/ in default guarded path prefixes"
+  );
+  assert(
+    !defaultGuardedPrefixes.includes("tools/vscode/shelf-ai/"),
+    "package.json must not guard Shelf extension source paths by default"
+  );
 
   const frameworkSnippet = snippetJson["@framework Module Template"];
   assert(frameworkSnippet, "markdown snippets must keep the @framework module template");

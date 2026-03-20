@@ -16,7 +16,7 @@
   "configuration.shelf.intentGateMinimumScore.description": "意图到 framework 门禁匹配的最小评分阈值。",
   "configuration.shelf.intentGateMaxMatches.description": "受控任务会话保留的 canonical 映射候选最大数量。",
   "configuration.shelf.intentGateSessionTtlMinutes.description": "受控任务会话的有效期（分钟）。会话过期后会被清空，受保护保存再次阻断。",
-  "configuration.shelf.intentGateGuardedPathPrefixes.description": "按工作区相对路径前缀定义保存门禁范围。默认覆盖框架文档相关路径及其耦合实现路径；仅在明确需要全工作区拦截时使用 `*`。",
+  "configuration.shelf.intentGateGuardedPathPrefixes.description": "按工作区相对路径前缀定义保存门禁范围。默认覆盖框架文档相关路径及其耦合实现路径，但默认排除 Shelf 插件源码路径；仅在明确需要全工作区拦截时使用 `*`。",
   "configuration.shelf.intentGateIgnoredPathPrefixes.description": "按工作区相对路径前缀定义门禁排除范围。",
   "configuration.shelf.intentGateTemporaryBypasses.description": "会话门禁的本地临时绕过项。使用空数组保持严格行为，使用子集绕过指定检查，或使用 `[*]` 一次绕过全部列出的检查。",
   "configuration.shelf.changeValidationCommand.description": "保存触发校验时使用的命令。",
