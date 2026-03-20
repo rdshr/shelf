@@ -27,4 +27,6 @@
 
 当前样板：
 
-- 暂无（待重建）
+- `message_queue_basic`
+  - 项目配置：`projects/message_queue_basic/project.toml`
+  - 产物目录：`projects/message_queue_basic/generated/`

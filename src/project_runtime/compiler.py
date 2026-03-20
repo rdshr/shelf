@@ -18,14 +18,26 @@ from rule_validation_models import ValidationReports
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _discover_default_project_file() -> Path:
+def _discover_default_project_file() -> Path | None:
     candidates = sorted((REPO_ROOT / "projects").glob("*/project.toml"))
     if candidates:
         return candidates[0]
-    return REPO_ROOT / "projects" / "project.toml"
+    return None
 
 
 DEFAULT_PROJECT_FILE = _discover_default_project_file()
+
+
+def _resolve_project_file(project_file: str | Path | None) -> Path:
+    if project_file is not None:
+        return normalize_project_path(project_file)
+    discovered = _discover_default_project_file()
+    if discovered is None:
+        raise FileNotFoundError(
+            "no projects/*/project.toml found; "
+            "specify --project-file or create a project config first"
+        )
+    return discovered
 
 
 def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifactPaths:
@@ -267,8 +279,8 @@ def _build_canonical(
     return canonical
 
 
-def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
-    resolved_project_file = normalize_project_path(project_file)
+def compile_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
+    resolved_project_file = _resolve_project_file(project_file)
     project_config = load_project_config(resolved_project_file)
     framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
     config_modules = build_config_modules(project_config, framework_modules)
@@ -325,12 +337,12 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
 
 
 @lru_cache(maxsize=4)
-def load_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
+def load_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
     return compile_project_runtime(project_file)
 
 
-def materialize_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
-    resolved_project_file = normalize_project_path(project_file)
+def materialize_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
+    resolved_project_file = _resolve_project_file(project_file)
     assembly = compile_project_runtime(resolved_project_file)
     generated = resolved_project_file.parent / "generated"
     generated.mkdir(parents=True, exist_ok=True)

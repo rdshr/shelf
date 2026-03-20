@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import import_module
+from pathlib import Path
 from typing import Any, Callable
 
 from fastapi import FastAPI, HTTPException
@@ -106,7 +107,7 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
     return app
 
 
-def build_project_app_from_project_file(project_file: str) -> FastAPI:
+def build_project_app_from_project_file(project_file: str | Path | None = None) -> FastAPI:
     return build_project_runtime_app(load_project_runtime(project_file))
 
 

@@ -12,13 +12,22 @@ if str(SRC_DIR) not in sys.path:
 from project_runtime import DEFAULT_PROJECT_FILE, materialize_project_runtime
 
 
+def _default_project_file_arg() -> str | None:
+    if DEFAULT_PROJECT_FILE is None:
+        return None
+    try:
+        return str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(DEFAULT_PROJECT_FILE)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Materialize the project under the new Framework -> Config -> Code -> Evidence architecture."
     )
     parser.add_argument(
         "--project-file",
-        default=str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT)),
+        default=_default_project_file_arg(),
         help="path to the project.toml file",
     )
     return parser

@@ -21,7 +21,7 @@
 9. `generated/canonical.json` 是唯一机器真相源。其他 tree、report、evidence view 都只能是它的派生视图。
 10. 不要恢复旧的核心架构。不要保留并行真相源，不要把旧系统换个名字继续跑。
 11. 写任何代码前，先评估是否存在更简洁的等效实现；若存在必须优先采用。只有在正确性、性能、兼容性或可测试性明确需要时，才允许增加实现复杂度。
-12. 禁止硬编码门禁/依赖/默认项目路径。涉及模块选择、跨层依赖、root 关系、默认项目定位时，必须基于 framework upstream、project 配置或运行时发现，不得写死 `frontend/knowledge_base/backend` 固定分支或 `projects/project.toml` 固定回退。
+12. 禁止硬编码门禁/依赖/项目路径。涉及模块选择、跨层依赖、root 关系、项目定位时，必须基于 framework upstream、project 配置或运行时发现，不得写死 `frontend/knowledge_base/backend` 固定分支或 `projects/project.toml` 固定回退。
 13. 防回退要求：提交前必须通过 `tests/test_no_hardcode_guard.py`，若出现命中项必须先改为配置化/结构化来源再继续。
 
 ## 默认工作顺序
@@ -80,7 +80,7 @@
 ### 4. 规范优先级
 - 规范总纲：`specs/规范总纲与树形结构.md`
 - 框架设计标准：`specs/框架设计核心标准.md`
-- 领域标准：`framework/shelf/L2-M0-置物架框架标准模块.md`
+- 领域标准：按项目选中的 framework 根模块（示例：`framework/message_queue/L1-M0-消息队列标准模块.md`）
 - 代码规范目录：`specs/code/`
 - Python 实现质量（静态类型）：`specs/code/Python实现质量标准.md`
 

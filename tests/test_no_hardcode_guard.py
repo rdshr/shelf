@@ -21,7 +21,7 @@ TARGET_FILES = (
     REPO_ROOT / "scripts",
 )
 
-SUFFIXES = {".py", ".js"}
+SUFFIXES = {".py", ".pyi", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"}
 
 FORBIDDEN_PATTERNS = (
     ForbiddenPattern(
@@ -30,7 +30,12 @@ FORBIDDEN_PATTERNS = (
     ),
     ForbiddenPattern(
         name="fixed_project_file_fallback",
-        regex=re.compile(r"projects/project\.toml"),
+        regex=re.compile(
+            r"(projects/project\.toml|"
+            r"path\.join\(\s*(?:[^,\n]+,\s*)?[\"']projects[\"']\s*,\s*[\"']project\.toml[\"']\s*\)|"
+            r"Path\(\s*[\"']projects[\"']\s*\)\s*/\s*[\"']project\.toml[\"']|"
+            r"(?:REPO_ROOT|repo_root)\s*/\s*[\"']projects[\"']\s*/\s*[\"']project\.toml[\"'])"
+        ),
     ),
     ForbiddenPattern(
         name="fixed_three_root_requirement_message",

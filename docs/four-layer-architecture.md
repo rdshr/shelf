@@ -46,7 +46,7 @@
 
 ## 3. 唯一机器真相
 
-- 全仓库唯一机器真相源为 `generated/canonical.json`
+- 全仓库唯一机器真相源为 `projects/*/generated/canonical.json`
 - 该 JSON 必须天然分层表达：
   - `framework`
   - `config`
@@ -83,4 +83,4 @@
 - `project.toml` 只保留 Config 层语义
 - Code 层承担第一次真实实现落点
 - Evidence 层承担验证、快照和追溯职责
-- 全部主流程收敛到 `generated/canonical.json`
+- 全部主流程收敛到 `projects/*/generated/canonical.json`
