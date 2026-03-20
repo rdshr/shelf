@@ -76,10 +76,12 @@ function shortText(value: string, maxLength: number): string {
 }
 
 function escapeHtml(value: string): string {
-  return value
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function kindClass(kind: string): string {

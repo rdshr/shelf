@@ -75,6 +75,27 @@ function resetStatusToIdle(status) {
   status.color = undefined;
 }
 
+function normalizeIssueLevel(level) {
+  return String(level || "").trim().toLowerCase() === "warning" ? "warning" : "error";
+}
+
+function countIssueLevels(issues) {
+  let errorCount = 0;
+  let warningCount = 0;
+  for (const issue of issues || []) {
+    if (normalizeIssueLevel(issue?.level) === "warning") {
+      warningCount += 1;
+    } else {
+      errorCount += 1;
+    }
+  }
+  return {
+    errorCount,
+    warningCount,
+    totalCount: errorCount + warningCount,
+  };
+}
+
 function createStatusController({
   status,
   getValidationTriggerMode,
@@ -96,6 +117,13 @@ function createStatusController({
     status.tooltip = buildTooltip(errors);
     status.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
     status.color = new vscode.ThemeColor("statusBarItem.errorForeground");
+  };
+
+  const setWarning = (warnings) => {
+    status.text = "$(warning) Shelf warning";
+    status.tooltip = buildTooltip(warnings);
+    status.backgroundColor = new vscode.ThemeColor("statusBarItem.warningBackground");
+    status.color = new vscode.ThemeColor("statusBarItem.warningForeground");
   };
 
   const setPendingSave = () => {
@@ -122,7 +150,12 @@ function createStatusController({
     }
     const lastRunIssues = getLastRunIssues();
     if (lastRunIssues.length) {
-      setError(lastRunIssues);
+      const counts = countIssueLevels(lastRunIssues);
+      if (counts.errorCount > 0) {
+        setError(lastRunIssues);
+      } else {
+        setWarning(lastRunIssues);
+      }
       return;
     }
     if (getDirtyWatchedFileCount()) {
@@ -139,6 +172,7 @@ function createStatusController({
   return {
     setOk,
     setError,
+    setWarning,
     setPendingSave,
     refresh,
   };
@@ -705,9 +739,9 @@ function activate(context) {
       return { passed: true, errors: [] };
     }
     const config = getShelfConfig();
-    const changeValidationCommand = validationRuntime.normalizeValidationCommand(
-      String(config.get("changeValidationCommand") || DEFAULT_CHANGE_VALIDATION_COMMAND)
-    );
+    const changeValidationCommand = String(
+      config.get("changeValidationCommand") || DEFAULT_CHANGE_VALIDATION_COMMAND
+    ).trim();
     return runParsedCommand(
       "intent-gate-validate",
       changeValidationCommand,
@@ -1256,12 +1290,7 @@ function activate(context) {
     if (!command || typeof command !== "string") {
       return;
     }
-    const normalizedValidationCommand = validationRuntime.normalizeValidationCommand(command);
-    if (normalizedValidationCommand !== String(command).trim()) {
-      output.appendLine(
-        `[validate] removed unsupported --json flag from canonical validation command: ${normalizedValidationCommand}`
-      );
-    }
+    const validationCommand = String(command).trim();
 
     const showProgressStatus = task.source === "manual";
     if (showProgressStatus) {
@@ -1308,13 +1337,16 @@ function activate(context) {
       combinedIssues.push(...mypyResult.errors);
     }
 
-    const parsed = await runParsedCommand("validate", normalizedValidationCommand, repoRoot, parseResult);
+    const parsed = await runParsedCommand("validate", validationCommand, repoRoot, parseResult);
     combinedIssues.push(...parsed.errors);
     const correspondenceIssues = readCorrespondenceIssues(repoRoot);
 
+    const mergedIssues = correspondenceRuntime.mergeIssueLists(correspondenceIssues, combinedIssues);
+    const issueLevels = countIssueLevels(mergedIssues);
     const combined = {
-      passed: parsed.passed && combinedIssues.length === 0 && correspondenceIssues.length === 0,
-      errors: correspondenceRuntime.mergeIssueLists(correspondenceIssues, combinedIssues)
+      passed: parsed.passed && issueLevels.errorCount === 0,
+      errors: mergedIssues,
+      issueLevels,
     };
 
     lastRunIssues = combined.errors;
@@ -1325,7 +1357,9 @@ function activate(context) {
     lastChangeContext = changePlan.changeContext || null;
     lastChangeSummary = changeSummary;
     applyDiagnostics(combined, diagnostics, repoRoot, task.triggerUris[0] || null);
-    output.appendLine(`[result] passed=${combined.passed} errors=${combined.errors.length}`);
+    output.appendLine(
+      `[result] passed=${combined.passed} errors=${combined.issueLevels.errorCount} warnings=${combined.issueLevels.warningCount} issues=${combined.errors.length}`
+    );
     if (lastChangeContext && lastChangeContext.touchedNodes?.length) {
       output.appendLine(`[evidence] touched=${lastChangeContext.touchedNodes.join(", ")}`);
       output.appendLine(`[evidence] affected=${(lastChangeContext.affectedNodes || []).join(", ")}`);
@@ -1729,9 +1763,21 @@ function activate(context) {
               : "先执行 “Shelf: Start Governed Task”，确认映射后再改实现层文件。"
           )
       );
-    const issueCount = lastRunIssues.length;
+    const issueLevels = countIssueLevels(lastRunIssues);
+    const issueCount = issueLevels.totalCount;
+    const errorIssueCount = issueLevels.errorCount;
+    const warningIssueCount = issueLevels.warningCount;
+    const hasWarningOnly = warningIssueCount > 0 && errorIssueCount === 0;
     const issueSummary = validationEnabled
-      ? (lastValidationPassed === null ? "Not run yet" : (issueCount ? `${issueCount} issue(s)` : "No issues"))
+      ? (
+        lastValidationPassed === null
+          ? "Not run yet"
+          : (
+            errorIssueCount > 0
+              ? `${errorIssueCount} error(s)${warningIssueCount > 0 ? ` + ${warningIssueCount} warning(s)` : ""}`
+              : (warningIssueCount > 0 ? `${warningIssueCount} warning(s)` : "No issues")
+          )
+      )
       : "Validation disabled";
     const lastValidation = lastValidationAt
       ? `${lastValidationMode === "full" ? "Full" : "Change"} · ${new Date(lastValidationAt).toLocaleString()}`
@@ -1741,6 +1787,7 @@ function activate(context) {
       return {
         index,
         code: recognizedCode || String(issue.code || "ARCHSYNC"),
+        tone: normalizeIssueLevel(issue.level),
         hint: recognizedCode ? frameworkRuleHint(recognizedCode) : "",
         message: issue.message || "Shelf validation issue",
         location: issue.file
@@ -1804,9 +1851,9 @@ function activate(context) {
         action: "codegenPreflight",
         label: "先物化并校验"
       };
-    } else if (lastValidationPassed === false) {
+    } else if (lastValidationPassed === false || errorIssueCount > 0) {
       heroTone = "error";
-      heroStatus = `${issueCount} 个问题待处理`;
+      heroStatus = `${errorIssueCount} 个错误待处理`;
       heroSummary = "侧边栏现在会直接预览问题，并支持点进具体文件和行号。";
       calloutTone = "error";
       calloutTitle = "先处理校验问题";
@@ -1814,6 +1861,17 @@ function activate(context) {
       calloutAction = {
         action: "showIssues",
         label: "打开完整问题列表"
+      };
+    } else if (hasWarningOnly) {
+      heroTone = "warning";
+      heroStatus = `${warningIssueCount} 个警告待确认`;
+      heroSummary = "当前是可继续工作状态，但建议先确认这些警告是否符合预期。";
+      calloutTone = "warning";
+      calloutTitle = "建议先处理警告";
+      calloutBody = "警告不会阻断流程，但会影响风险可见性。建议逐条确认或修复。";
+      calloutAction = {
+        action: "showIssues",
+        label: "查看警告列表"
       };
     } else if (lastValidationPassed === true) {
       heroTone = "ok";
@@ -1919,10 +1977,18 @@ function activate(context) {
         label: "最近结果",
         value: lastValidationPassed === null
           ? "未运行"
-          : (lastValidationPassed ? "通过" : `${issueCount} 个问题`),
+          : (
+            errorIssueCount > 0
+              ? `${errorIssueCount} 个错误`
+              : (warningIssueCount > 0 ? `${warningIssueCount} 个警告` : "通过")
+          ),
         tone: lastValidationPassed === null
           ? "unknown"
-          : (lastValidationPassed ? "ok" : "error"),
+          : (
+            errorIssueCount > 0
+              ? "error"
+              : (warningIssueCount > 0 ? "warning" : "ok")
+          ),
         note: lastValidation
       }
     ];
@@ -1980,7 +2046,11 @@ function activate(context) {
       calloutAction,
       lastValidationTone: lastValidationPassed === null
         ? "unknown"
-        : (lastValidationPassed ? "ok" : "error")
+        : (
+          errorIssueCount > 0
+            ? "error"
+            : (warningIssueCount > 0 ? "warning" : "ok")
+        )
     });
   };
 
@@ -2902,7 +2972,7 @@ function parseMypyResult(stdout, stderr, code) {
 
 function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
   collection.clear();
-  if (parsed.passed) {
+  if (!parsed || !Array.isArray(parsed.errors) || !parsed.errors.length) {
     return;
   }
 
@@ -2925,13 +2995,17 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
     const range = new vscode.Range(startLine, startCol, startLine, startCol + 1);
     const ruleCode = normalizeFrameworkRuleCode(issue.code);
     const ruleHint = frameworkRuleHint(ruleCode);
+    const issueLevel = normalizeIssueLevel(issue.level);
+    const marker = issueLevel === "warning" ? "⚠" : "✖";
     const message = ruleCode
-      ? `✖ [shelf ${ruleCode}] ${ruleHint} | ${issue.message}`
-      : `✖ [shelf] ${issue.message}`;
+      ? `${marker} [shelf ${ruleCode}] ${ruleHint} | ${issue.message}`
+      : `${marker} [shelf] ${issue.message}`;
     const diag = new vscode.Diagnostic(
       range,
       message,
-      vscode.DiagnosticSeverity.Error
+      issueLevel === "warning"
+        ? vscode.DiagnosticSeverity.Warning
+        : vscode.DiagnosticSeverity.Error
     );
 
     if (ruleCode) {
@@ -3178,13 +3252,14 @@ function buildSidebarHomeHtml(model) {
   const issuesHtml = issueItems.length
     ? issueItems.map((item) => {
       const code = escapeHtml(item.code);
+      const tone = escapeHtml(item.tone || "error");
       const hint = escapeHtml(item.hint || "");
       const message = escapeHtml(item.message);
       const location = escapeHtml(item.location);
       return `
         <button type="button" class="issue-item" data-action="openIssue" data-index="${item.index}">
           <div class="issue-head">
-            <span class="issue-code">${code}</span>
+            <span class="issue-code ${tone}">${code}</span>
             ${hint ? `<span class="issue-hint">${hint}</span>` : ""}
           </div>
           <span class="issue-message">${message}</span>
@@ -3241,9 +3316,11 @@ function buildSidebarHomeHtml(model) {
       --badge-fg: var(--vscode-badge-foreground, var(--text));
       --selection: var(--vscode-list-activeSelectionBackground, rgba(55, 148, 255, 0.16));
       --ok: var(--vscode-testing-iconPassed, #89d185);
+      --warning: var(--vscode-testing-iconQueued, var(--vscode-editorWarning-foreground, #cca700));
       --error: var(--vscode-testing-iconFailed, var(--vscode-errorForeground, #f48771));
       --unknown: var(--vscode-descriptionForeground, #9da1a6);
       --ok-bg: rgba(137, 209, 133, 0.12);
+      --warning-bg: rgba(222, 177, 40, 0.16);
       --error-bg: rgba(244, 135, 113, 0.12);
       --unknown-bg: rgba(157, 161, 166, 0.12);
       --shadow: rgba(0, 0, 0, 0.24);
@@ -3259,6 +3336,7 @@ function buildSidebarHomeHtml(model) {
       --secondary-hover: rgba(0, 0, 0, 0.08);
       --selection: rgba(0, 122, 204, 0.10);
       --ok-bg: rgba(30, 122, 58, 0.08);
+      --warning-bg: rgba(180, 120, 0, 0.14);
       --error-bg: rgba(196, 43, 28, 0.08);
       --unknown-bg: rgba(90, 93, 94, 0.10);
       --shadow: rgba(15, 23, 42, 0.10);
@@ -3463,6 +3541,12 @@ function buildSidebarHomeHtml(model) {
       background: var(--error-bg);
     }
 
+    .badge.warning,
+    .status-badge.warning {
+      color: var(--warning);
+      background: var(--warning-bg);
+    }
+
     .badge.unknown,
     .status-badge.unknown {
       color: var(--unknown);
@@ -3582,6 +3666,14 @@ function buildSidebarHomeHtml(model) {
       color: var(--accent);
     }
 
+    .issue-code.warning {
+      color: var(--warning);
+    }
+
+    .issue-code.error {
+      color: var(--error);
+    }
+
     .issue-hint {
       font-size: 10px;
       line-height: 1.45;
@@ -3603,6 +3695,10 @@ function buildSidebarHomeHtml(model) {
 
     .note-panel.error {
       border-left-color: var(--error);
+    }
+
+    .note-panel.warning {
+      border-left-color: var(--warning);
     }
 
     .note-panel.unknown {
@@ -3744,6 +3840,7 @@ function normalizeIssue(item) {
       line: 1,
       column: 1,
       code: "ARCHSYNC_MAPPING",
+      level: "error",
       related: []
     };
   }
@@ -3755,6 +3852,7 @@ function normalizeIssue(item) {
       line: 1,
       column: 1,
       code: "ARCHSYNC_MAPPING",
+      level: "error",
       related: []
     };
   }
@@ -3765,6 +3863,7 @@ function normalizeIssue(item) {
     line: Number(item.line || 1),
     column: Number(item.column || 1),
     code: item.code || "ARCHSYNC_MAPPING",
+    level: normalizeIssueLevel(item.level),
     related: Array.isArray(item.related) ? item.related : []
   };
 }
@@ -3802,9 +3901,14 @@ function buildTooltip(errors) {
   if (!errors.length) {
     return "Shelf";
   }
-  const preview = errors.slice(0, 3).map((e) => `• ${e.message}`).join("\n");
+  const counts = countIssueLevels(errors);
+  const summary = `${counts.errorCount} error(s), ${counts.warningCount} warning(s)`;
+  const preview = errors.slice(0, 3).map((e) => {
+    const marker = normalizeIssueLevel(e.level) === "warning" ? "⚠" : "✖";
+    return `• ${marker} ${e.message}`;
+  }).join("\n");
   const more = errors.length > 3 ? `\n... +${errors.length - 3} more` : "";
-  return `Shelf\n${preview}${more}\n(click to open Problems)`;
+  return `Shelf\n${summary}\n${preview}${more}\n(click to open Problems)`;
 }
 
 function hasStandardsTree(repoRoot) {

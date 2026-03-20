@@ -15,9 +15,6 @@ from project_runtime.utils import REPO_ROOT, relative_path
 from rule_validation_models import RuleValidationOutcome, RuleValidationSummary
 
 _MAX_REASONS = 80
-_PILOT_MODULE_ID = "backend.L2.M0"
-
-
 def _symbol(class_type: type[Any]) -> str:
     return f"{class_type.__module__}:{class_type.__name__}"
 
@@ -476,16 +473,15 @@ def _module_diff(module_id: str, declared: dict[str, Any], effective: dict[str, 
     audit_drift: list[dict[str, Any]] = []
 
     if effective.get("status") != "supported":
-        if module_id == _PILOT_MODULE_ID:
-            conformance_errors.append(
-                _issue(
-                    issue_kind="conformance_error",
-                    level="error",
-                    module_id=module_id,
-                    object_id=module_id,
-                    reason=f"effective extraction unsupported for pilot module: {effective.get('reason', '')}",
-                )
+        conformance_errors.append(
+            _issue(
+                issue_kind="conformance_error",
+                level="error",
+                module_id=module_id,
+                object_id=module_id,
+                reason=f"effective extraction unsupported: {effective.get('reason', '')}",
             )
+        )
         return {
             "conformance_error": conformance_errors,
             "undeclared_usage": undeclared_usage,
@@ -727,13 +723,7 @@ def build_codegen_consistency_report(
             continue
 
         declared = _declared_model(framework_module, config_binding, code_binding)
-        if module_id != _PILOT_MODULE_ID:
-            effective = {
-                "status": "unsupported",
-                "reason": "effective extraction not enabled for this module yet",
-            }
-        else:
-            effective = _effective_model(code_binding, declared)
+        effective = _effective_model(code_binding, declared)
         diff = _module_diff(module_id, declared, effective)
         module_reports.append(
             {
@@ -750,13 +740,13 @@ def build_codegen_consistency_report(
 
     return {
         "scope": "codegen_consistency_guard",
-        "pilot_module_id": _PILOT_MODULE_ID,
         "modules": module_reports,
         "summary": {
             "conformance_error_count": len(all_conformance),
             "undeclared_usage_count": len(all_undeclared),
             "audit_drift_count": len(all_drift),
             "error_count": len(all_conformance) + len(all_undeclared),
+            "warning_count": len(all_drift),
             "supported_module_count": sum(1 for item in module_reports if item.get("status") == "supported"),
             "unsupported_module_count": sum(1 for item in module_reports if item.get("status") != "supported"),
         },
@@ -774,7 +764,8 @@ def summarize_codegen_consistency_guard(
         config_modules=config_modules,
         code_modules=code_modules,
     )
-    reasons: list[str] = []
+    blocking_reasons: list[str] = []
+    warning_reasons: list[str] = []
     object_issues: list[dict[str, Any]] = []
     for module_report in report["modules"]:
         diff = module_report.get("diff", {})
@@ -786,26 +777,31 @@ def summarize_codegen_consistency_guard(
                 object_issues.append(dict(item))
                 reason = str(item.get("reason") or "")
                 if reason:
-                    reasons.append(f"CONFORMANCE_ERROR: {reason}")
+                    blocking_reasons.append(f"CONFORMANCE_ERROR: {reason}")
         for item in undeclared_items:
             if isinstance(item, Mapping):
                 object_issues.append(dict(item))
                 reason = str(item.get("reason") or "")
                 if reason:
-                    reasons.append(f"UNDECLARED_USAGE: {reason}")
+                    blocking_reasons.append(f"UNDECLARED_USAGE: {reason}")
         for item in drift_items:
             if isinstance(item, Mapping):
                 object_issues.append(dict(item))
-    passed = not reasons
+                reason = str(item.get("reason") or "")
+                if reason:
+                    warning_reasons.append(f"AUDIT_DRIFT: {reason}")
+    passed = not blocking_reasons
     outcome = RuleValidationOutcome(
         rule_id="codegen_consistency.declared_vs_effective",
         name="declared vs effective codegen consistency",
         passed=passed,
-        reasons=tuple(reasons[:_MAX_REASONS]),
+        reasons=tuple(blocking_reasons[:_MAX_REASONS]),
         evidence={
             "object_issues": object_issues,
             "summary": report["summary"],
             "modules": report["modules"],
+            "warning_reasons": warning_reasons[:_MAX_REASONS],
+            "warning_reason_count": len(warning_reasons),
         },
     )
     return (
@@ -815,4 +811,3 @@ def summarize_codegen_consistency_guard(
         ),
         report,
     )
-

@@ -29,6 +29,12 @@ jobs:
       - name: Install extension dependencies
         run: npm ci
 
+      - name: Check webview TypeScript
+        run: npm run check:webview-types
+
+      - name: Run extension tests
+        run: npm test
+
       - name: Resolve package version
         id: meta
         run: |

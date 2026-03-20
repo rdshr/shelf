@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {

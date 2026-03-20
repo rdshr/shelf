@@ -99,14 +99,14 @@ function main() {
   assert.strictEqual(resolvePrimaryNavigationTarget(ruleObject)?.target_kind, ruleObject.primary_nav_target_kind);
 
   const moduleObject = rootPayload.object_index["knowledge_base.L2.M0"];
-  assert.strictEqual(moduleObject.materialization_kind, "runtime_dynamic_type");
+  assert.strictEqual(moduleObject.materialization_kind, "static_python_class");
   assert(
     moduleObject.navigation_targets.some((target) =>
       target.target_kind === "framework_definition"
       || target.target_kind === "config_source"
       || target.target_kind === "code_correspondence"
     ),
-    "runtime_dynamic_type objects should retain a non-dynamic fallback target"
+    "module objects should retain at least one stable cross-layer navigation target"
   );
 
   const correspondenceIssues = buildValidationIssues(
