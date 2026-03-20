@@ -36,6 +36,36 @@ def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifac
     )
 
 
+def _read_root_role_dependencies(exact_config: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    evidence_config = exact_config.get("evidence")
+    if not isinstance(evidence_config, dict):
+        return {}
+    raw_dependencies = evidence_config.get("root_role_dependencies")
+    if raw_dependencies is None:
+        return {}
+    if not isinstance(raw_dependencies, dict):
+        raise ValueError("exact.evidence.root_role_dependencies must be a table")
+    dependencies: dict[str, tuple[str, ...]] = {}
+    for raw_role, raw_values in raw_dependencies.items():
+        role = str(raw_role).strip()
+        if not role:
+            continue
+        if not isinstance(raw_values, list):
+            raise ValueError(
+                "exact.evidence.root_role_dependencies."
+                f"{role} must be an array"
+            )
+        values: list[str] = []
+        for item in raw_values:
+            dep_role = str(item).strip()
+            if not dep_role or dep_role == role or dep_role in values:
+                continue
+            values.append(dep_role)
+        if values:
+            dependencies[role] = tuple(values)
+    return dependencies
+
+
 def _build_links(
     framework_modules: tuple[type[Any], ...],
     config_modules: tuple[Any, ...],
@@ -242,7 +272,12 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
     project_config = load_project_config(resolved_project_file)
     framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
     config_modules = build_config_modules(project_config, framework_modules)
-    code_modules, code_exports = build_code_modules(config_modules, root_module_ids=root_module_ids)
+    root_role_dependencies = _read_root_role_dependencies(project_config.exact)
+    code_modules, code_exports = build_code_modules(
+        config_modules,
+        root_module_ids=root_module_ids,
+        root_role_dependencies=root_role_dependencies,
+    )
     draft_assembly = ProjectRuntimeAssembly(
         project_file=relative_path(resolved_project_file),
         metadata=project_config.metadata,
@@ -257,7 +292,9 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
     )
     evidence_modules, evidence_exports, validation_reports = build_evidence_modules(draft_assembly, code_modules)
     runtime_exports = dict(code_exports)
-    runtime_exports["runtime_blueprint"] = evidence_exports["runtime_blueprint"]
+    runtime_blueprint = evidence_exports.get("runtime_blueprint")
+    if runtime_blueprint is not None:
+        runtime_exports["runtime_blueprint"] = runtime_blueprint
     assembly = ProjectRuntimeAssembly(
         project_file=draft_assembly.project_file,
         metadata=draft_assembly.metadata,

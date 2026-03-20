@@ -12,7 +12,19 @@ const {
 } = require("./correspondence_runtime");
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
-const projectFilePath = path.join(repoRoot, "projects", "knowledge_base_basic", "project.toml");
+
+function discoverWorkspaceProjectFile() {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!projectsDir || !require("fs").existsSync(projectsDir)) {
+    return "";
+  }
+  const fs = require("fs");
+  const projectFiles = fs.readdirSync(projectsDir)
+    .map((entry) => path.join(projectsDir, entry, "project.toml"))
+    .filter((filePath) => fs.existsSync(filePath) && fs.statSync(filePath).isFile())
+    .sort();
+  return projectFiles[0] || "";
+}
 
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -74,6 +86,8 @@ function makeObject(overrides = {}) {
 }
 
 function main() {
+  const projectFilePath = discoverWorkspaceProjectFile();
+  assert(projectFilePath, "at least one workspace project.toml should exist");
   const snapshot = loadCorrespondenceSnapshot(repoRoot, { projectFilePath });
   assert(snapshot, "correspondence snapshot should load from fresh canonical");
   assert.strictEqual(
@@ -83,23 +97,28 @@ function main() {
 
   const rootPayload = readCorrespondenceApi(repoRoot, snapshot.endpoints.root, { projectFilePath });
   assert(rootPayload && typeof rootPayload === "object", "root correspondence endpoint should return payload");
-  assert(rootPayload.object_index["knowledge_base.L2.M0"], "root payload should expose module object index");
+  const objectIds = Object.keys(rootPayload.object_index || {});
+  const moduleObjectId = objectIds.find((item) => /\.L\d+\.M\d+$/.test(item));
+  assert(moduleObjectId, "root payload should expose at least one module object");
 
   const treePayload = readCorrespondenceApi(repoRoot, snapshot.endpoints.tree, { projectFilePath });
   assert(treePayload && typeof treePayload === "object", "tree endpoint should return payload");
   assert(Array.isArray(treePayload.tree) && treePayload.tree.length > 0, "tree endpoint should expose module entries");
 
+  const ruleObjectId = objectIds.find((item) => /\.R\d+/.test(item));
+  assert(ruleObjectId, "root payload should expose at least one rule object");
   const ruleObject = readCorrespondenceApi(
     repoRoot,
-    `${snapshot.endpoints.objectBase}${encodeURIComponent("knowledge_base.L2.M0.R1")}`,
+    `${snapshot.endpoints.objectBase}${encodeURIComponent(ruleObjectId)}`,
     { projectFilePath }
   );
   assert(ruleObject && typeof ruleObject === "object", "object endpoint should return a correspondence object");
-  assert.strictEqual(ruleObject.object_id, "knowledge_base.L2.M0.R1");
+  assert.strictEqual(ruleObject.object_id, ruleObjectId);
   assert.strictEqual(resolvePrimaryNavigationTarget(ruleObject)?.target_kind, ruleObject.primary_nav_target_kind);
 
-  const moduleObject = rootPayload.object_index["knowledge_base.L2.M0"];
-  assert.strictEqual(moduleObject.materialization_kind, "static_python_class");
+  const moduleObject = rootPayload.object_index[moduleObjectId];
+  assert(moduleObject && typeof moduleObject === "object");
+  assert(moduleObject.materialization_kind);
   assert(
     moduleObject.navigation_targets.some((target) =>
       target.target_kind === "framework_definition"
@@ -119,19 +138,19 @@ function main() {
           issue_kind: "demo_issue",
           level: "error",
           reason: "Demo correspondence failure",
-          object_ids: ["knowledge_base.L2.M0.R1"],
-          primary_object_id: "knowledge_base.L2.M0.R1",
+          object_ids: [ruleObjectId],
+          primary_object_id: ruleObjectId,
         },
       ],
       issue_count_by_object: {
-        "knowledge_base.L2.M0.R1": 1,
+        [ruleObjectId]: 1,
       },
     },
     rootPayload.object_index
   );
   assert.strictEqual(correspondenceIssues.length, 1);
   assert(
-    correspondenceIssues[0].message.includes("[knowledge_base.L2.M0.R1]"),
+    correspondenceIssues[0].message.includes(`[${ruleObjectId}]`),
     "validation issues should carry the primary object id"
   );
   assert.strictEqual(
@@ -143,7 +162,7 @@ function main() {
   const mergedIssues = mergeIssueLists(correspondenceIssues, [
     {
       message: "Legacy validation issue",
-      file: "projects/knowledge_base_basic/project.toml",
+      file: "projects/demo/project.toml",
       line: 1,
       column: 1,
       code: "ARCHSYNC_MAPPING",

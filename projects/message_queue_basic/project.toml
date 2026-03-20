@@ -1,0 +1,159 @@
+# 项目配置（Config 层唯一入口）
+#
+# 目标：
+# 1) 仅装配 message_queue 框架链路，不依赖当前为空的其他 framework 目录。
+# 2) 保持 Framework -> Config -> Code -> Evidence 主链结构，避免并行真相源。
+# 3) 用中文注释明确 section 职责边界，便于人与 AI 在该文件讨论。
+#
+# 注意：
+# - framework/*.md 仍是作者源；本文件只做实例化配置，不反向定义 framework。
+# - generated/canonical.json 由物化流程生成，禁止手工改写 generated 目录。
+
+[project]
+# 项目唯一标识（用于运行时与产物路径标记）
+project_id = "message_queue_basic"
+# 运行场景标识（用于运行时装配语义，不等同于 framework 名）
+runtime_scene = "message_queue"
+# 人类可读名称
+display_name = "消息队列基础样例"
+# 项目简介（面向协作与审阅）
+description = "仅包含 message_queue 模块链路的配置样例，用于队列参数讨论与后续扩展。"
+# 配置版本（可与发布版本解耦）
+version = "0.1.0"
+
+[framework]
+# 该项目仅显式选择队列标准模块；其上游 L0 模块由 framework 依赖自动收敛。
+
+[[framework.modules]]
+role = "message_queue"
+framework_file = "framework/message_queue/L1-M0-消息队列标准模块.md"
+
+# communication 负责人与 AI 的结构化沟通约束。
+# 这里描述“为什么这么配、边界讨论点是什么”，不放代码实现细节。
+[communication]
+
+[communication.message_queue.messageform]
+summary = "消息最小可识别单元与载荷形态约束"
+
+[communication.message_queue.capacity]
+summary = "队列容量与积压上限约束"
+
+[communication.message_queue.lifetime]
+summary = "消息保留与过期窗口约束"
+
+[communication.message_queue.orderrange]
+summary = "顺序成立范围与粒度约束"
+
+[communication.message_queue.handoff]
+summary = "入队/出队/再投递交接语义约束"
+
+[communication.message_queue.accessrelation]
+summary = "生产侧与消费侧访问关系约束"
+
+[communication.message_queue.ingress]
+summary = "生产入口、幂等与入队条件约束"
+
+[communication.message_queue.subscribe]
+summary = "订阅组、并发与重平衡约束"
+
+[communication.message_queue.ack]
+summary = "确认、拒收与重投递触发约束"
+
+[communication.message_queue.backlog]
+summary = "积压阈值、滞留时长与清理节奏约束"
+
+[communication.message_queue.failure]
+summary = "失败分类、死信与回放约束"
+
+[communication.message_queue.order]
+summary = "生产/消费两侧顺序保持约束"
+
+[communication.message_queue.trace]
+summary = "入队到确认全链路追踪约束"
+
+[communication.message_queue.sla]
+summary = "吞吐、延迟、恢复窗口服务约束"
+
+# exact 负责 Code 层精确消费字段。
+# 这里的字段应可被机器稳定读取；自然语言仅用于补充说明。
+[exact]
+
+[exact.message_queue.messageform]
+id_format = "uuid_v7"
+payload_format = "json"
+max_message_bytes = 262144
+
+[exact.message_queue.capacity]
+max_queue_messages = 100000
+max_inflight_messages = 5000
+overflow_policy = "reject_new"
+
+[exact.message_queue.lifetime]
+retention_seconds = 604800
+expire_policy = "drop_expired"
+
+[exact.message_queue.orderrange]
+scope = "partition"
+order_key = "topic_partition"
+
+[exact.message_queue.handoff]
+enqueue_commit = "durable"
+dequeue_commit = "ack_required"
+redelivery_mode = "at_least_once"
+
+[exact.message_queue.accessrelation]
+producer_visibility = "write_only"
+consumer_visibility = "read_only"
+direct_coupling = false
+
+[exact.message_queue.ingress]
+idempotency_key = "message_id"
+batch_size = 100
+require_routing_key = true
+
+[exact.message_queue.subscribe]
+consumer_group = "default"
+max_concurrency = 8
+rebalance_strategy = "cooperative_sticky"
+
+[exact.message_queue.ack]
+ack_timeout_seconds = 30
+nack_requeue = true
+max_redelivery = 16
+
+[exact.message_queue.backlog]
+alert_threshold = 20000
+max_lag_seconds = 900
+recovery_rate_per_minute = 5000
+
+[exact.message_queue.failure]
+dead_letter_topic = "mq.dlq"
+retry_topic = "mq.retry"
+replay_enabled = true
+
+[exact.message_queue.order]
+producer_ordering = "partition_key"
+consumer_ordering = "single_partition_serial"
+
+[exact.message_queue.trace]
+trace_enabled = true
+trace_fields = ["message_id", "topic", "partition", "offset", "consumer_group"]
+
+[exact.message_queue.sla]
+target_qps = 10000
+p99_latency_ms = 200
+recovery_window_seconds = 600
+
+# Evidence 层产物命名（机器产物路径配置）
+[exact.evidence]
+
+# 可选：root 角色依赖声明（用于 Code 层一致性检查，避免在代码里写死角色关系）
+# 规则来源 = framework upstream 依赖 + 本配置显式补充（并集）。
+# 当前 message_queue 项目不需要跨角色依赖，因此保持为空。
+# 示例（按需启用）：
+# [exact.evidence.root_role_dependencies]
+# frontend = ["knowledge_base", "backend"]
+# backend = ["frontend"]
+
+[exact.evidence.artifacts]
+canonical_json = "canonical.json"

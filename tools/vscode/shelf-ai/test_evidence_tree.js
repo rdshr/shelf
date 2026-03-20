@@ -5,36 +5,52 @@ const { classifyWorkspaceChanges, readEvidenceTree, summarizeChangeContext } = r
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
 
+function firstProjectIdFromPayload(payload) {
+  const nodes = Array.isArray(payload?.root?.nodes) ? payload.root.nodes : [];
+  for (const node of nodes) {
+    const nodeId = String(node?.id || "");
+    const match = /^project:([^:]+)$/.exec(nodeId);
+    if (match) {
+      return match[1];
+    }
+  }
+  return "";
+}
+
 function main() {
   const payload = readEvidenceTree(repoRoot, "");
+  const projectId = firstProjectIdFromPayload(payload);
+  assert(projectId, "evidence tree should include at least one project node");
+  const projectTomlRelPath = `projects/${projectId}/project.toml`;
+  const projectCanonicalRelPath = `projects/${projectId}/generated/canonical.json`;
 
   const projectPlan = classifyWorkspaceChanges(
     repoRoot,
-    ["projects/knowledge_base_basic/project.toml"],
+    [projectTomlRelPath],
     payload
   );
   assert(projectPlan.shouldMaterialize, "project config changes should trigger materialization");
   assert(
-    projectPlan.materializeProjects.some((item) => item.endsWith("projects/knowledge_base_basic/project.toml")),
+    projectPlan.materializeProjects.some((item) => item.endsWith(projectTomlRelPath)),
     "project config should map back to the owning project"
   );
   assert(
-    projectPlan.changeContext.touchedNodes.some((item) => item === "project:knowledge_base_basic"),
+    projectPlan.changeContext.touchedNodes.some((item) => item === `project:${projectId}`),
     "project config change should touch the project node"
   );
   assert(
-    projectPlan.changeContext.affectedNodes.some((item) => item === "project:knowledge_base_basic:canonical"),
+    projectPlan.changeContext.affectedNodes.some((item) => item === `project:${projectId}:canonical`),
     "project config change should affect the canonical node"
   );
 
   const generatedPlan = classifyWorkspaceChanges(
     repoRoot,
-    ["projects/knowledge_base_basic/generated/canonical.json"],
+    [projectCanonicalRelPath],
     payload
   );
   assert.strictEqual(generatedPlan.shouldMaterialize, false, "generated canonical edits should not auto-materialize");
   assert(
-    generatedPlan.changeContext.touchedNodes.some((item) => item === "project:knowledge_base_basic:canonical"),
+    generatedPlan.changeContext.touchedNodes.some((item) => item === `project:${projectId}:canonical`),
     "generated canonical edits should touch the canonical node"
   );
 

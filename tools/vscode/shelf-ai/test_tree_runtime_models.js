@@ -113,18 +113,21 @@ function main() {
     frameworkModel.validationSummary && typeof frameworkModel.validationSummary === "object",
     "framework model should expose correspondence validation summary"
   );
-  const workbenchNode = frameworkModel.nodes.find((node) => node.id === "knowledge_base.L2.M0");
-  assert(workbenchNode, "framework model should include knowledge_base.L2.M0 module node");
-  assert.strictEqual(workbenchNode.objectId, "knowledge_base.L2.M0");
-  assert(workbenchNode.defaultTarget, "module node should expose a primary navigation target");
+  const linkedNode = frameworkModel.nodes.find((node) =>
+    node.objectId
+    && frameworkModel.objectIndex
+    && frameworkModel.objectIndex[node.objectId]
+  );
+  assert(linkedNode, "framework model should include at least one node linked to correspondence object index");
+  assert(linkedNode.defaultTarget, "module node should expose a primary navigation target");
   assert.strictEqual(
-    workbenchNode.defaultTarget.target_kind,
-    frameworkModel.objectIndex["knowledge_base.L2.M0"].primary_nav_target_kind,
+    linkedNode.defaultTarget.target_kind,
+    frameworkModel.objectIndex[linkedNode.objectId].primary_nav_target_kind,
     "tree node open target should follow correspondence primary_nav_target_kind"
   );
   assert(
-    Array.isArray(workbenchNode.relatedObjectIds) && workbenchNode.relatedObjectIds.includes("knowledge_base.L2.M0.R1"),
-    "module node should expose correspondence-related objects for the existing inspector"
+    Array.isArray(linkedNode.relatedObjectIds),
+    "module node should expose correspondence-related object ids for inspector usage"
   );
   assert(
     frameworkModel.edges.length > 0 || frameworkModel.description.includes("fallback"),

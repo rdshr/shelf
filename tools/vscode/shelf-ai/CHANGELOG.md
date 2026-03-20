@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.17 - 2026-03-20
+
+- Removed hard-coded root-role coupling checks in `project_runtime.code_layer` and switched consistency validation to framework-upstream-derived dependencies plus explicit config overrides.
+- Added configurable root-role dependency overrides at `exact.evidence.root_role_dependencies`, so projects can declare extra root coupling without patching runtime code.
+- Enabled queue-only project materialization/validation flow (`message_queue` roots without mandatory frontend/knowledge_base/backend triple), while keeping per-module export injection strict to selected roots only.
+
 ## 0.1.16 - 2026-03-20
 
 - Removed hard dependency on `projects/knowledge_base_basic/project.toml` as the extension fallback project file and switched to generic `projects/*/project.toml` discovery.

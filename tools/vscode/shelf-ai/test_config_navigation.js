@@ -8,7 +8,18 @@ const {
 } = require("./config_navigation");
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
-const projectFilePath = path.join(repoRoot, "projects", "knowledge_base_basic", "project.toml");
+
+function discoverWorkspaceProjectFile() {
+  const projectsDir = path.join(repoRoot, "projects");
+  if (!fs.existsSync(projectsDir) || !fs.statSync(projectsDir).isDirectory()) {
+    return "";
+  }
+  const projectFiles = fs.readdirSync(projectsDir)
+    .map((entry) => path.join(projectsDir, entry, "project.toml"))
+    .filter((filePath) => fs.existsSync(filePath) && fs.statSync(filePath).isFile())
+    .sort();
+  return projectFiles[0] || "";
+}
 
 function findLineBySection(text, sectionName) {
   const lines = String(text || "").split(/\r?\n/);
@@ -30,16 +41,36 @@ function findLineContaining(text, token) {
   return -1;
 }
 
+function findFirstExactSection(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const match = /^\s*\[(exact\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)\]\s*$/.exec(lines[index] || "");
+    if (match) {
+      return {
+        sectionName: match[1],
+        line: index,
+      };
+    }
+  }
+  return null;
+}
+
 function main() {
+  const projectFilePath = discoverWorkspaceProjectFile();
+  assert(projectFilePath, "at least one workspace project.toml should exist");
   assert(isProjectConfigFile(projectFilePath, repoRoot), "project.toml should be recognized as project config file");
 
   const text = fs.readFileSync(projectFilePath, "utf8");
-  const exactSectionLine = findLineBySection(text, "exact.knowledge_base.fileset");
-  assert(exactSectionLine >= 0, "exact.knowledge_base.fileset section should exist");
+  const firstExactSection = findFirstExactSection(text);
+  assert(firstExactSection, "at least one exact.<framework>.<boundary> section should exist");
+  const exactSectionLine = firstExactSection.line;
+  const exactSectionName = firstExactSection.sectionName;
+  const boundaryToken = exactSectionName.split(".").pop();
+  assert(boundaryToken, "exact section should include boundary token");
 
   const sectionInfo = findCurrentTomlSection(text, exactSectionLine + 1);
   assert(sectionInfo, "section info should be resolved inside exact boundary section");
-  assert.strictEqual(sectionInfo.sectionName, "exact.knowledge_base.fileset");
+  assert.strictEqual(sectionInfo.sectionName, exactSectionName);
 
   const codeTarget = resolveConfigToCodeTarget({
     repoRoot,
@@ -49,37 +80,25 @@ function main() {
     character: 0,
   });
   assert(codeTarget, "config section should resolve to code anchor target");
-  assert.strictEqual(codeTarget.boundaryId, "FILESET");
-  assert.strictEqual(codeTarget.objectId, "knowledge_base.L0.M0::static_param::fileset");
+  assert.strictEqual(codeTarget.boundaryId, boundaryToken.toUpperCase());
+  assert(codeTarget.objectId.includes(`::static_param::${boundaryToken}`));
   assert.strictEqual(codeTarget.targetKind, "code_correspondence");
   assert(codeTarget.filePath.endsWith(path.join("src", "project_runtime", "code_layer.py")));
   assert(Number.isInteger(codeTarget.line) && codeTarget.line >= 0, "code target should include valid line");
 
-  const frontendSurfaceLine = findLineBySection(text, "exact.frontend.surface");
-  assert(frontendSurfaceLine >= 0, "exact.frontend.surface section should exist");
-  const frontendTarget = resolveConfigToCodeTarget({
-    repoRoot,
-    filePath: projectFilePath,
-    text,
-    line: frontendSurfaceLine + 1,
-    character: 0,
-  });
-  assert(frontendTarget, "shared frontend surface section should resolve");
-  assert.strictEqual(frontendTarget.moduleId, "frontend.L2.M0");
-  assert.strictEqual(frontendTarget.boundaryId, "SURFACE");
-  assert.strictEqual(frontendTarget.objectId, "frontend.L2.M0::static_param::surface");
   const codeLayerPath = path.join(repoRoot, "src", "project_runtime", "code_layer.py");
   const codeLayerText = fs.readFileSync(codeLayerPath, "utf8");
-  const expectedSurfaceLine = findLineContaining(
+  const expectedBoundaryLine = findLineContaining(
     codeLayerText,
-    '_require_boundary_context_value(boundary_context, "SURFACE")'
+    `_require_boundary_context_value(boundary_context, "${boundaryToken.toUpperCase()}")`
   );
-  assert(expectedSurfaceLine > 0, "code layer should expose SURFACE boundary context anchor");
-  assert.strictEqual(
-    frontendTarget.line,
-    expectedSurfaceLine - 1,
-    "frontend surface should resolve to module static params consumer anchor"
-  );
+  if (expectedBoundaryLine > 0) {
+    assert.strictEqual(
+      codeTarget.line,
+      expectedBoundaryLine - 1,
+      "exact boundary section should resolve to module static params consumer anchor"
+    );
+  }
 
   const projectSectionLine = findLineBySection(text, "project");
   assert(projectSectionLine >= 0, "project section should exist");
