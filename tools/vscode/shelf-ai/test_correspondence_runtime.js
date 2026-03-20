@@ -287,10 +287,51 @@ function main() {
       correspondenceIssues[0].message.includes(`[${ruleObjectId}]`),
       "validation issues should carry the primary object id"
     );
+    assert(
+      correspondenceIssues[0].message.includes("Demo correspondence failure"),
+      "custom correspondence reasons should be preserved when no localization rule matches"
+    );
     assert.strictEqual(
       correspondenceIssues[0].file,
       resolvePrimaryNavigationTarget(ruleObject)?.file_path,
       "validation summary issues should anchor to the primary navigation target"
+    );
+
+    const localizedIssues = buildValidationIssues(
+      {
+        passed: false,
+        rule_count: 1,
+        error_count: 0,
+        issues: [
+          {
+            issue_kind: "audit_drift",
+            level: "warning",
+            reason: `declared boundary not effectively read by base: ${moduleObjectId}.B1 -> CAPACITY`,
+            object_ids: [moduleObjectId],
+            primary_object_id: moduleObjectId,
+          },
+          {
+            issue_kind: "audit_drift",
+            level: "warning",
+            reason: `declared rule boundary not effectively read: ${ruleObjectId} -> MESSAGE`,
+            object_ids: [ruleObjectId],
+            primary_object_id: ruleObjectId,
+          },
+        ],
+        issue_count_by_object: {
+          [moduleObjectId]: 1,
+          [ruleObjectId]: 1,
+        },
+      },
+      rootPayload.object_index
+    );
+    assert(
+      localizedIssues[0].message.includes("基类声明的参数边界未被有效读取"),
+      "base-boundary drift should be localized to Chinese by default"
+    );
+    assert(
+      localizedIssues[1].message.includes("规则声明的参数边界未被有效读取"),
+      "rule-boundary drift should be localized to Chinese by default"
     );
 
     const mergedIssues = mergeIssueLists(correspondenceIssues, [
@@ -313,7 +354,7 @@ function main() {
     invalidSchemaPayload.correspondence_schema_version = SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION + 1;
     assert.throws(
       () => normalizeCorrespondencePayload(invalidSchemaPayload),
-      /unsupported correspondence schema version/
+      /不支持的 correspondence schema 版本/
     );
 
     assert.throws(
@@ -340,7 +381,7 @@ function main() {
         tree: [],
         validation_summary: {},
       }),
-      /runtime_dynamic_type requires a fallback target/
+      /runtime_dynamic_type 缺少可回退目标/
     );
   } finally {
     fixture.cleanup();

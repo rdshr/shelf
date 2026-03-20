@@ -1263,7 +1263,7 @@ function activate(context) {
       );
       for (const relPath of unresolvedProtectedPaths) {
         issues.push(normalizeIssue({
-          message: "Generated artifacts were edited directly and Shelf could not determine how to restore them.",
+          message: "检测到直接编辑 generated 产物，且 Shelf 无法判断应恢复到哪个项目来源。",
           file: relPath,
           line: 1,
           column: 1,
@@ -1275,7 +1275,7 @@ function activate(context) {
 
     for (const relPath of changePlan.protectedGeneratedPaths) {
       issues.push(normalizeIssue({
-        message: "Direct edits under projects/*/generated/* are forbidden. Change framework markdown or project.toml and re-materialize instead.",
+        message: "禁止直接编辑 projects/*/generated/* 下的产物。请改 framework markdown 或 project.toml，然后重新 materialize。",
         file: relPath,
         line: 1,
         column: 1,
@@ -1429,7 +1429,9 @@ function activate(context) {
     combinedIssues.push(...parsed.errors);
     const correspondenceIssues = readCorrespondenceIssues(repoRoot);
 
-    const mergedIssues = correspondenceRuntime.mergeIssueLists(correspondenceIssues, combinedIssues);
+    const mergedIssues = correspondenceRuntime
+      .mergeIssueLists(correspondenceIssues, combinedIssues)
+      .map((issue) => normalizeIssue(issue));
     const issueLevels = countIssueLevels(mergedIssues);
     const combined = {
       passed: parsed.passed && issueLevels.errorCount === 0,
@@ -3088,9 +3090,10 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
     const ruleHint = frameworkRuleHint(ruleCode);
     const issueLevel = normalizeIssueLevel(issue.level);
     const marker = issueLevel === "warning" ? "⚠" : "✖";
+    const localizedMessage = localizeIssueMessage(issue.message || DEFAULT_SHELF_ISSUE_MESSAGE);
     const message = ruleCode
-      ? `${marker} [shelf ${ruleCode}] ${ruleHint} | ${issue.message}`
-      : `${marker} [shelf] ${issue.message}`;
+      ? `${marker} [shelf ${ruleCode}] ${ruleHint} | ${localizedMessage}`
+      : `${marker} [shelf] ${localizedMessage}`;
     const diag = new vscode.Diagnostic(
       range,
       message,
