@@ -424,18 +424,24 @@ class FourLayerCanonicalTest(unittest.TestCase):
             if item.framework_module.module_id == "knowledge_base.L2.M0"
         )
         first_rule = target.code_module.RuleTypes[0]
-        setattr(first_rule, "base_ids", ("knowledge_base.L2.M0.B999",))
-        setattr(first_rule, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
+        original_base_ids = tuple(first_rule.base_ids)
+        original_boundary_ids = tuple(first_rule.boundary_ids)
+        try:
+            setattr(first_rule, "base_ids", ("knowledge_base.L2.M0.B999",))
+            setattr(first_rule, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
 
-        summary = summarize_correspondence_guard(
-            framework_modules=framework_modules,
-            config_modules=config_bindings,
-            code_modules=code_bindings,
-        )
-        self.assertFalse(summary.passed)
-        reasons = summary.rules[0].reasons
-        self.assertTrue(any("rule base id not in owner module" in reason for reason in reasons))
-        self.assertTrue(any("rule boundary id not in owner module" in reason for reason in reasons))
+            summary = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary.passed)
+            reasons = summary.rules[0].reasons
+            self.assertTrue(any("rule base id not in owner module" in reason for reason in reasons))
+            self.assertTrue(any("rule boundary id not in owner module" in reason for reason in reasons))
+        finally:
+            setattr(first_rule, "base_ids", original_base_ids)
+            setattr(first_rule, "boundary_ids", original_boundary_ids)
 
     def test_correspondence_guard_fails_when_base_declares_missing_or_invalid_boundary(self) -> None:
         project_config = load_project_config("projects/knowledge_base_basic/project.toml")
@@ -449,28 +455,137 @@ class FourLayerCanonicalTest(unittest.TestCase):
             if item.framework_module.module_id == "knowledge_base.L2.M0"
         )
         first_base = target.code_module.BaseTypes[0]
+        original_boundary_ids = tuple(first_base.boundary_ids)
+        try:
+            setattr(first_base, "boundary_ids", tuple())
+            summary_missing = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary_missing.passed)
+            self.assertTrue(
+                any("base boundary_ids missing" in reason for reason in summary_missing.rules[0].reasons)
+            )
 
-        setattr(first_base, "boundary_ids", tuple())
-        summary_missing = summarize_correspondence_guard(
-            framework_modules=framework_modules,
-            config_modules=config_bindings,
-            code_modules=code_bindings,
-        )
-        self.assertFalse(summary_missing.passed)
-        self.assertTrue(
-            any("base boundary_ids missing" in reason for reason in summary_missing.rules[0].reasons)
-        )
+            setattr(first_base, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
+            summary_invalid = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary_invalid.passed)
+            self.assertTrue(
+                any("base boundary id not in owner module" in reason for reason in summary_invalid.rules[0].reasons)
+            )
+        finally:
+            setattr(first_base, "boundary_ids", original_boundary_ids)
 
-        setattr(first_base, "boundary_ids", ("BOUNDARY_NOT_EXIST",))
-        summary_invalid = summarize_correspondence_guard(
-            framework_modules=framework_modules,
-            config_modules=config_bindings,
-            code_modules=code_bindings,
+    def test_correspondence_guard_fails_when_base_is_not_used_by_any_rule(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        framework_target = next(
+            item
+            for item in framework_modules
+            if item.module_id == "knowledge_base.L2.M0"
         )
-        self.assertFalse(summary_invalid.passed)
-        self.assertTrue(
-            any("base boundary id not in owner module" in reason for reason in summary_invalid.rules[0].reasons)
+        first_base = framework_target.base_classes[0]
+        original_related_rule_ids = tuple(first_base.related_rule_ids)
+        try:
+            setattr(first_base, "related_rule_ids", tuple())
+            summary = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary.passed)
+            self.assertTrue(
+                any("base is not used by any rule" in reason for reason in summary.rules[0].reasons)
+            )
+        finally:
+            setattr(first_base, "related_rule_ids", original_related_rule_ids)
+
+    def test_correspondence_guard_fails_when_rule_has_no_output_or_invalid(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        framework_target = next(
+            item
+            for item in framework_modules
+            if item.module_id == "knowledge_base.L2.M0"
         )
+        first_rule = framework_target.rule_classes[0]
+        original_outputs = tuple(first_rule.output_capabilities)
+        original_invalids = tuple(first_rule.invalid_conclusions)
+        try:
+            setattr(first_rule, "output_capabilities", tuple())
+            setattr(first_rule, "invalid_conclusions", tuple())
+            summary = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary.passed)
+            self.assertTrue(
+                any(
+                    "rule must declare output_capabilities or invalid_conclusions" in reason
+                    for reason in summary.rules[0].reasons
+                )
+            )
+        finally:
+            setattr(first_rule, "output_capabilities", original_outputs)
+            setattr(first_rule, "invalid_conclusions", original_invalids)
+
+    def test_correspondence_guard_fails_when_bases_are_redundant_split(self) -> None:
+        project_config = load_project_config("projects/knowledge_base_basic/project.toml")
+        framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
+        config_bindings = build_config_modules(project_config, framework_modules)
+        code_bindings, _ = build_code_modules(config_bindings, root_module_ids=root_module_ids)
+
+        framework_target = next(
+            item
+            for item in framework_modules
+            if item.module_id == "knowledge_base.L2.M0"
+        )
+        first_base = framework_target.base_classes[0]
+        second_base = framework_target.base_classes[1]
+        first_rule = framework_target.rule_classes[0]
+
+        original_first_boundary = tuple(first_base.boundary_bindings)
+        original_second_boundary = tuple(second_base.boundary_bindings)
+        original_first_related = tuple(first_base.related_rule_ids)
+        original_second_related = tuple(second_base.related_rule_ids)
+        original_rule_outputs = tuple(first_rule.output_capabilities)
+        original_rule_invalids = tuple(first_rule.invalid_conclusions)
+        try:
+            setattr(first_base, "boundary_bindings", ("CHAT",))
+            setattr(second_base, "boundary_bindings", ("CHAT",))
+            setattr(first_base, "related_rule_ids", ("R1",))
+            setattr(second_base, "related_rule_ids", ("R1",))
+            setattr(first_rule, "output_capabilities", ("C1",))
+            setattr(first_rule, "invalid_conclusions", tuple())
+
+            summary = summarize_correspondence_guard(
+                framework_modules=framework_modules,
+                config_modules=config_bindings,
+                code_modules=code_bindings,
+            )
+            self.assertFalse(summary.passed)
+            self.assertTrue(
+                any("redundant base split detected" in reason for reason in summary.rules[0].reasons)
+            )
+        finally:
+            setattr(first_base, "boundary_bindings", original_first_boundary)
+            setattr(second_base, "boundary_bindings", original_second_boundary)
+            setattr(first_base, "related_rule_ids", original_first_related)
+            setattr(second_base, "related_rule_ids", original_second_related)
+            setattr(first_rule, "output_capabilities", original_rule_outputs)
+            setattr(first_rule, "invalid_conclusions", original_rule_invalids)
 
     def test_correspondence_guard_fails_when_config_mapping_missing(self) -> None:
         project_config = load_project_config("projects/knowledge_base_basic/project.toml")

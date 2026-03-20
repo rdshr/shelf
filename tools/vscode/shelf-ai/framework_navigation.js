@@ -13,7 +13,7 @@ const UPPER_SYMBOL_PATTERN = /[A-Z][A-Z0-9_]+/g;
 const BACKTICK_SEGMENT_PATTERN = /`([^`]+)`/g;
 const SYMBOL_TOKEN_PATTERN = /[A-Za-z][A-Za-z0-9_]*/g;
 const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
-const DEFAULT_PROJECT_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
+const DEFAULT_PROJECT_FILE = path.join("projects", "project.toml");
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],

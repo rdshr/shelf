@@ -758,7 +758,7 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
             config_target = _target(
                 target_kind="config_source",
                 layer="config",
-                file_path=project_file or "projects/knowledge_base_basic/project.toml",
+                file_path=project_file or "projects/project.toml",
                 start_line=config_line,
                 end_line=config_line,
                 symbol=config_exact_path,

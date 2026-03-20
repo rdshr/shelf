@@ -16,7 +16,16 @@ from rule_validation_models import ValidationReports
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PROJECT_FILE = REPO_ROOT / "projects" / "knowledge_base_basic" / "project.toml"
+
+
+def _discover_default_project_file() -> Path:
+    candidates = sorted((REPO_ROOT / "projects").glob("*/project.toml"))
+    if candidates:
+        return candidates[0]
+    return REPO_ROOT / "projects" / "project.toml"
+
+
+DEFAULT_PROJECT_FILE = _discover_default_project_file()
 
 
 def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifactPaths:

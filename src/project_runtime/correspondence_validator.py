@@ -155,6 +155,55 @@ def summarize_correspondence_guard(
             f"{module_id}.{rule.rule_id}"
             for rule in framework_module.rule_classes
         }
+        framework_rule_by_short_id = {
+            str(rule.rule_id): rule
+            for rule in framework_module.rule_classes
+        }
+        for rule in framework_module.rule_classes:
+            rule_short_id = str(getattr(rule, "rule_id", "")).strip()
+            outputs = _tuple_of_text(getattr(rule, "output_capabilities", tuple()))
+            invalids = _tuple_of_text(getattr(rule, "invalid_conclusions", tuple()))
+            if not outputs and not invalids:
+                reasons.append(
+                    "CORRESPONDENCE_VIOLATION: rule must declare output_capabilities or invalid_conclusions "
+                    f"{module_id}.{rule_short_id}"
+                )
+
+        base_signature_to_id: dict[
+            tuple[frozenset[str], frozenset[str], frozenset[str]],
+            str,
+        ] = {}
+        for base in framework_module.base_classes:
+            base_full_id = f"{module_id}.{str(base.base_id)}"
+            related_rule_ids = frozenset(_tuple_of_text(getattr(base, "related_rule_ids", tuple())))
+            if not related_rule_ids:
+                reasons.append(
+                    f"CORRESPONDENCE_VIOLATION: base is not used by any rule {base_full_id}"
+                )
+            boundary_ids = frozenset(_tuple_of_text(getattr(base, "boundary_bindings", tuple())))
+            downstream_effects: set[str] = set()
+            for rule_short_id in related_rule_ids:
+                framework_rule = framework_rule_by_short_id.get(rule_short_id)
+                if framework_rule is None:
+                    continue
+                outputs = _tuple_of_text(getattr(framework_rule, "output_capabilities", tuple()))
+                invalids = _tuple_of_text(getattr(framework_rule, "invalid_conclusions", tuple()))
+                downstream_effects.update(f"capability:{item}" for item in outputs)
+                downstream_effects.update(f"invalid:{item}" for item in invalids)
+            signature = (
+                boundary_ids,
+                related_rule_ids,
+                frozenset(downstream_effects),
+            )
+            duplicated_with = base_signature_to_id.get(signature)
+            if duplicated_with and duplicated_with != base_full_id:
+                reasons.append(
+                    "CORRESPONDENCE_VIOLATION: redundant base split detected "
+                    f"{duplicated_with} <-> {base_full_id} "
+                    "(same boundary set, rule participation set, downstream impact set)"
+                )
+            else:
+                base_signature_to_id[signature] = base_full_id
 
         actual_base_ids: set[str] = set()
         actual_rule_ids: set[str] = set()

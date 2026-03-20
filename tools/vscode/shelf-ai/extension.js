@@ -14,7 +14,7 @@ const treeWebviewBridge = require("./tree_webview_bridge");
 const localSettings = require("./local_settings");
 
 const STANDARDS_TREE_FILE = path.join("specs", "规范总纲与树形结构.md");
-const DEFAULT_VALIDATION_FALLBACK_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
+const DEFAULT_VALIDATION_FALLBACK_FILE = path.join("projects", "project.toml");
 const SIDEBAR_VIEW_ID = "shelf.sidebarHome";
 const DEFAULT_MATERIALIZE_COMMAND = "uv run python scripts/materialize_project.py";
 const DEFAULT_PUBLISH_FRAMEWORK_DRAFT_COMMAND = "uv run python scripts/publish_framework_draft.py";
@@ -206,6 +206,22 @@ function scheduleWatchedChangeValidation({
   }
   scheduleValidation({ mode: "change", triggerUris, notifyOnFail: false, source });
   return true;
+}
+
+function resolveValidationFallbackFile(repoRoot) {
+  const discoveredProjects = workspaceGuard.discoverProjectFiles(repoRoot);
+  if (Array.isArray(discoveredProjects) && discoveredProjects.length) {
+    return discoveredProjects[0];
+  }
+  const preferredDefault = path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE);
+  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
+    return preferredDefault;
+  }
+  const standardsFallback = path.join(repoRoot, STANDARDS_TREE_FILE);
+  if (fs.existsSync(standardsFallback) && fs.statSync(standardsFallback).isFile()) {
+    return standardsFallback;
+  }
+  return preferredDefault;
 }
 
 function createWorkspaceValidationWatchers({
@@ -2984,7 +3000,7 @@ function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
       ? candidateTarget
       : (triggerUri
         ? triggerUri.fsPath
-        : path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE));
+        : resolveValidationFallbackFile(repoRoot));
 
     if (!grouped.has(target)) {
       grouped.set(target, []);
@@ -3816,9 +3832,14 @@ function buildSidebarHomeHtml(model) {
 
 async function revealIssue(issue, repoRoot) {
   const candidate = resolveIssueFile(issue.file, repoRoot);
+  const fallbackTarget = resolveValidationFallbackFile(repoRoot);
   const target = (candidate && fs.existsSync(candidate))
     ? candidate
-    : path.join(repoRoot, DEFAULT_VALIDATION_FALLBACK_FILE);
+    : fallbackTarget;
+  if (!target || !fs.existsSync(target)) {
+    vscode.window.showWarningMessage("Shelf 无可用定位文件：当前工作区未发现可打开的 project.toml。");
+    return;
+  }
   const uri = vscode.Uri.file(target);
   const doc = await vscode.workspace.openTextDocument(uri);
   const line = Math.max(0, Number(issue.line || 1) - 1);

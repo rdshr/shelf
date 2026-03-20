@@ -43,7 +43,7 @@ def _build_parser() -> argparse.ArgumentParser:
     serve_parser.add_argument(
         "--project-file",
         default=str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT)),
-        help="path to the project.toml file. Defaults to projects/knowledge_base_basic/project.toml.",
+        help="path to the project.toml file. Defaults to the auto-discovered project under projects/*/project.toml.",
     )
     serve_parser.add_argument("--host", default=DEFAULT_HOST, help=f"bind host (default: {DEFAULT_HOST})")
     serve_parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"bind port (default: {DEFAULT_PORT})")

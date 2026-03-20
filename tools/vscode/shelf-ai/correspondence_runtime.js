@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const workspaceGuard = require("./guarding");
 
-const DEFAULT_PROJECT_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
+const DEFAULT_PROJECT_FILE = path.join("projects", "project.toml");
 const SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION = 1;
 const DEFAULT_API_PREFIX = "/api/knowledge";
 

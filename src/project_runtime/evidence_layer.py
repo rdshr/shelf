@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from rule_validation_models import ValidationReports
+from rule_validation_models import RuleValidationOutcome, RuleValidationSummary, ValidationReports
 
 from project_runtime.config_layer import ConfigModuleBinding
 from project_runtime.codegen_consistency_guard import summarize_codegen_consistency_guard
@@ -111,10 +111,24 @@ def build_evidence_modules(
     code_modules: tuple[CodeModuleBinding, ...],
 ) -> tuple[tuple[type[EvidenceModuleClass], ...], dict[str, Any], ValidationReports]:
     from frontend_kernel.validators import summarize_frontend_rules, validate_frontend_rules
-    from knowledge_base_framework.validators import summarize_workbench_rules, validate_workbench_rules
 
     frontend_summary = summarize_frontend_rules(validate_frontend_rules(assembly))
-    knowledge_summary = summarize_workbench_rules(validate_workbench_rules(assembly))
+    try:
+        from knowledge_base_framework.validators import summarize_workbench_rules, validate_workbench_rules
+    except ModuleNotFoundError:
+        knowledge_summary = RuleValidationSummary(
+            module_id="knowledge_base.removed",
+            rules=(
+                RuleValidationOutcome(
+                    rule_id="KB_REMOVED",
+                    name="knowledge_base framework validators removed",
+                    passed=True,
+                    reasons=("knowledge_base_framework package is not present in this workspace snapshot.",),
+                ),
+            ),
+        )
+    else:
+        knowledge_summary = summarize_workbench_rules(validate_workbench_rules(assembly))
     framework_summary = summarize_framework_violation_guard(
         framework_modules=tuple(binding.framework_module for binding in code_modules),
         communication_config=assembly.config.communication,

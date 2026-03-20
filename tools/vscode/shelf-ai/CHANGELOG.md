@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.16 - 2026-03-20
+
+- Removed hard dependency on `projects/knowledge_base_basic/project.toml` as the extension fallback project file and switched to generic `projects/*/project.toml` discovery.
+- Updated issue reveal fallback behavior so Shelf can still open a valid workspace file (project file first, then standards doc) when no canonical issue file is available.
+- Synced framework/correspondence navigation default project preference to the generic workspace fallback path.
+
 ## 0.1.15 - 2026-03-20
 
 - Updated framework design standards to remove the mandatory base-to-capability direct mapping constraint and keep capability derivation at the rule-combination layer.

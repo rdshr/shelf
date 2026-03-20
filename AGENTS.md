@@ -32,15 +32,17 @@
 8. 始终保持架构单一，不要创建 side channel
 
 ## 对话触发守卫（强制）
-- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
-- 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改 `projects/**`、`src/**`、`tools/**` 等实现层文件，并明确提示“先由人修改 framework，再继续实现层变更”。
-- AI 完成实现层修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，确保未引入新的 framework 语义越权。
+- 门禁作用范围必须由用户配置决定，而非写死目录。范围来源与优先级为：VSCode `shelf.intentGateGuardedPathPrefixes` > `.shelf/settings.jsonc` 中 `shelf.intentGateGuardedPathPrefixes` > 插件默认值；排除项来自对应 `intentGateIgnoredPathPrefixes`。
+- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），且目标修改路径命中“门禁作用范围”，AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
+- 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改命中门禁范围的文件，并明确提示“先由人修改 framework，再继续实现层变更”。
+- AI 完成命中门禁范围的修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，确保未引入新的 framework 语义越权。
 - 该守卫属于“对话级自动触发”，不得要求用户手工复制临时 `project.toml` 才触发。
+- 当用户把 `intentGateGuardedPathPrefixes` 配置为仅 `framework/` 时，门禁只对 `framework/**` 生效。
 
 ### 对话意图到框架映射门禁（强制）
 - 用户提出“新增/调整功能”时，AI 必须先完成“需求 -> framework 显式映射”再动实现层文件。
 - 映射结果至少应包含：`module_id`、对应 `boundary_id`（或明确的 Rule/Base 约束）、以及落点 `exact.*` 路径。
-- 若 AI 不能给出上述映射，或映射结果无法在当前 framework 中找到对应约束，AI 必须拒绝修改 `project.toml` 与 `src/**` 代码，并提示“该需求尚未进入 framework，请先由人修改 framework”。
+- 若 AI 不能给出上述映射，或映射结果无法在当前 framework 中找到对应约束，AI 必须拒绝修改命中门禁范围的实现文件，并提示“该需求尚未进入 framework，请先由人修改 framework”。
 - 在“映射失败”场景中，AI 不得通过“直接改 config 或 code”规避框架前置；不得创建平行真相路径。
 - `framework/**` 是人类作者源；AI 对 framework 默认只读。需要新增框架能力时，AI 只能给出修改建议，不得直接落盘 framework 文件。
 

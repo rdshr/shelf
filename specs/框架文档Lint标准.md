@@ -57,6 +57,9 @@
 - framework Markdown 结构完整性
 - Framework / Base / Rule class 物化完整性
 - 每个 `B*` 至少绑定一个参数边界（由规则参数绑定闭包计算）
+- 每个 `B*` 至少参与一条 `R*` 组合规则
+- 每条 `R*` 至少声明一种结果：输出能力或失效结论
+- 禁止伪拆分：同模块内两个 `B*` 若边界集合、规则参与集合、下游影响集合完全一致则判定违规
 - `project.toml` 可解析性
 - contract 切片与四层 compile 结果一致性
 - canonical 可重新物化
