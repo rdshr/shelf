@@ -4,6 +4,7 @@ const vscode = require("vscode");
 const frameworkNavigation = require("./framework_navigation");
 const configNavigation = require("./config_navigation");
 const frameworkCompletion = require("./framework_completion");
+const frameworkLint = require("./framework_lint");
 const evidenceTree = require("./evidence_tree");
 const correspondenceRuntime = require("./correspondence_runtime");
 const workspaceGuard = require("./guarding");
@@ -23,26 +24,6 @@ const DEFAULT_CHANGE_VALIDATION_COMMAND = "uv run python scripts/validate_canoni
 const DEFAULT_INTENT_GATE_TTL_MINUTES = 120;
 const DEFAULT_INTENT_GATE_MINIMUM_SCORE = 4;
 const DEFAULT_INTENT_GATE_MAX_MATCHES = 8;
-const INTENT_GATE_GUARD_ALL_TOKEN = "*";
-const DEFAULT_INTENT_GATE_GUARDED_PREFIXES = [
-  "framework/",
-  "framework_drafts/",
-  "projects/",
-  "src/project_runtime/",
-  "scripts/",
-];
-const DEFAULT_INTENT_GATE_IGNORED_PREFIXES = [
-  ".git/",
-  ".github/",
-  ".venv/",
-  "node_modules/",
-  "dist/",
-  "build/",
-  "out/",
-  ".pytest_cache/",
-  ".mypy_cache/",
-  "__pycache__/",
-];
 const FRAMEWORK_RULE_HINTS = {
   FW002: "@framework 必须无参数",
   FW003: "标题必须为 中文名:EnglishName",
@@ -63,7 +44,17 @@ const FRAMEWORK_RULE_HINTS = {
   FW040: "R*/R*.* 编号必须合法并可追溯",
   FW041: "每个 R* 必须包含参与基/组合方式/输出能力/参数绑定",
   FW050: "R*.输出能力必须引用已定义 C*",
-  FW060: "新符号必须通过输出结构声明后才可在规则中使用"
+  FW060: "新符号必须通过输出结构声明后才可在规则中使用",
+  FWL001: "标题必须为 中文名:EnglishName",
+  FWL002: "@framework 必须为无参数单行",
+  FWL003: "必须包含 1~5 标准章节",
+  FWL004: "列表项必须使用 -",
+  FWL005: "能力声明条目格式必须合法",
+  FWL006: "参数定义条目格式必须合法",
+  FWL007: "最小可行基条目格式必须合法",
+  FWL008: "规则条目格式必须合法",
+  FWL009: "验证条目格式必须合法",
+  FWL010: "章节内必须至少存在一个可解析条目"
 };
 
 function resetStatusToIdle(status) {
@@ -337,12 +328,13 @@ function createWorkspaceValidationWatchers({
 function activate(context) {
   const output = vscode.window.createOutputChannel("Shelf");
   const diagnostics = vscode.languages.createDiagnosticCollection("shelf-validation");
+  const frameworkLintDiagnostics = vscode.languages.createDiagnosticCollection("shelf-framework-lint");
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   resetStatusToIdle(status);
   status.command = "shelf.showIssues";
   status.show();
 
-  context.subscriptions.push(output, diagnostics, status);
+  context.subscriptions.push(output, diagnostics, frameworkLintDiagnostics, status);
 
   let running = false;
   let pending = null;
@@ -368,8 +360,7 @@ function activate(context) {
   let localShelfSettingsError = "";
   const suppressedGeneratedDirectories = new Map();
   const dirtyWatchedFiles = new Set();
-  const guardedBaselineByPath = new Map();
-  const restoringGuardedFiles = new Set();
+  const frameworkLintTimers = new Map();
   const activeValidationCommand = validationRuntime.createActiveCommandTracker();
   const VALIDATION_SOURCE_PRIORITY = {
     auto: 1,
@@ -387,16 +378,18 @@ function activate(context) {
   ];
   const INTENT_GATE_SETTING_KEYS = [
     "shelf.intentGateEnabled",
-    "shelf.intentGateEnforcementMode",
     "shelf.intentGateRequireMappingEcho",
     "shelf.intentGateRunChangeValidationBeforeGrant",
     "shelf.intentGateAutoOpenOutput",
     "shelf.intentGateMinimumScore",
     "shelf.intentGateMaxMatches",
     "shelf.intentGateSessionTtlMinutes",
-    "shelf.intentGateGuardedPathPrefixes",
-    "shelf.intentGateIgnoredPathPrefixes",
     "shelf.intentGateTemporaryBypasses",
+  ];
+  const FRAMEWORK_LINT_SETTING_KEYS = [
+    "shelf.frameworkLintEnabled",
+    "shelf.frameworkLintOnType",
+    "shelf.frameworkLintDebounceMs",
   ];
 
   const clampInt = (value, minimum, maximum, fallback) => {
@@ -480,6 +473,15 @@ function activate(context) {
     };
   };
 
+  const readFrameworkLintSettings = () => {
+    const config = getShelfConfig();
+    return {
+      enabled: Boolean(config.get("frameworkLintEnabled", true)),
+      onType: Boolean(config.get("frameworkLintOnType", true)),
+      debounceMs: clampInt(config.get("frameworkLintDebounceMs", 300), 0, 5_000, 300),
+    };
+  };
+
   const getValidationTriggerMode = () => {
     const config = getShelfConfig();
     const value = String(config.get("validationTriggerMode") || "all");
@@ -497,35 +499,10 @@ function activate(context) {
     return triggerKind === "save";
   };
 
-  const normalizePrefixList = (value, fallback) => {
-    const source = Array.isArray(value) ? value : fallback;
-    const normalized = [];
-    const seen = new Set();
-    for (const item of source) {
-      const rawText = String(item || "").trim();
-      if (!rawText) {
-        continue;
-      }
-      if (rawText === INTENT_GATE_GUARD_ALL_TOKEN) {
-        return [INTENT_GATE_GUARD_ALL_TOKEN];
-      }
-      const text = workspaceGuard.normalizeRelPath(rawText);
-      if (!text || seen.has(text)) {
-        continue;
-      }
-      seen.add(text);
-      normalized.push(text.endsWith("/") ? text : `${text}/`);
-    }
-    return normalized.length ? normalized : fallback;
-  };
-
   const readIntentGateSettings = () => {
     const config = getShelfConfig();
-    const rawMode = String(config.get("intentGateEnforcementMode") || "block").trim().toLowerCase();
-    const mode = rawMode === "warn" ? "warn" : "block";
     return {
       enabled: Boolean(config.get("intentGateEnabled")),
-      mode,
       requireMappingEcho: Boolean(config.get("intentGateRequireMappingEcho")),
       runValidationBeforeGrant: Boolean(config.get("intentGateRunChangeValidationBeforeGrant")),
       autoOpenOutput: Boolean(config.get("intentGateAutoOpenOutput")),
@@ -547,14 +524,6 @@ function activate(context) {
         1_440,
         DEFAULT_INTENT_GATE_TTL_MINUTES
       ),
-      guardedPrefixes: normalizePrefixList(
-        config.get("intentGateGuardedPathPrefixes"),
-        DEFAULT_INTENT_GATE_GUARDED_PREFIXES
-      ),
-      ignoredPrefixes: normalizePrefixList(
-        config.get("intentGateIgnoredPathPrefixes"),
-        DEFAULT_INTENT_GATE_IGNORED_PREFIXES
-      ),
       temporaryBypasses: intentGate.normalizeTemporaryBypassScopes(
         config.get("intentGateTemporaryBypasses")
       ),
@@ -570,24 +539,6 @@ function activate(context) {
       output.appendLine(`[intent-gate] session cleared: ${reason}`);
     }
     intentGateSession = null;
-  };
-
-  const pathMatchesPrefix = (relPath, prefix) => (
-    prefix === INTENT_GATE_GUARD_ALL_TOKEN || relPath === prefix || relPath.startsWith(prefix)
-  );
-
-  const isIntentGateGuardedPath = (repoRoot, fsPath, settings) => {
-    if (!repoRoot || !fsPath || !settings.enabled) {
-      return false;
-    }
-    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, fsPath));
-    if (!relPath || relPath.startsWith("..")) {
-      return false;
-    }
-    if (settings.ignoredPrefixes.some((prefix) => pathMatchesPrefix(relPath, prefix))) {
-      return false;
-    }
-    return settings.guardedPrefixes.some((prefix) => pathMatchesPrefix(relPath, prefix));
   };
 
   const isIntentGateSessionExpired = (session, settings) => {
@@ -807,8 +758,6 @@ function activate(context) {
     output.appendLine(`- query tokens: ${analysis.queryTokens.join(", ")}`);
     output.appendLine(`- mappings: ${analysis.mappings.length}`);
     output.appendLine(`- minimum score: ${settings.minimumScore}`);
-    output.appendLine(`- guarded prefixes: ${settings.guardedPrefixes.join(", ")}`);
-    output.appendLine(`- ignored prefixes: ${settings.ignoredPrefixes.join(", ")}`);
     output.appendLine(
       `- temporary bypasses: ${settings.temporaryBypasses.length ? settings.temporaryBypasses.join(", ") : "none"}`
     );
@@ -898,7 +847,7 @@ function activate(context) {
           {
             label: "Confirm Mapping (Recommended)",
             description: "Grant this governed task session.",
-            detail: "Use the top canonical-backed mappings and unlock guarded saves.",
+            detail: "Use the top canonical-backed mappings and continue implementation with clear scope.",
             keepOpen: true,
           },
           ...picks,
@@ -906,7 +855,7 @@ function activate(context) {
         {
           title: "Shelf Governed Task Mapping",
           canPickMany: false,
-          placeHolder: "Confirm mapping, or cancel to keep implementation edits blocked.",
+          placeHolder: "Confirm mapping, or cancel to continue without a governed session.",
         }
       );
       if (!selected || !selected.keepOpen) {
@@ -931,98 +880,6 @@ function activate(context) {
     };
     refreshSidebarHome();
     return { passed: true, analysis, message: "受控任务会话已授权。" };
-  };
-
-  const restoreGuardedDocumentFromBaseline = async (doc, baselineText) => {
-    if (!doc || typeof baselineText !== "string") {
-      return false;
-    }
-    const targetPath = doc.uri?.fsPath || "";
-    if (!targetPath) {
-      return false;
-    }
-    restoringGuardedFiles.add(targetPath);
-    try {
-      const fullRange = new vscode.Range(
-        doc.positionAt(0),
-        doc.positionAt(doc.getText().length)
-      );
-      const edit = new vscode.WorkspaceEdit();
-      edit.replace(doc.uri, fullRange, baselineText);
-      const applied = await vscode.workspace.applyEdit(edit);
-      if (!applied) {
-        return false;
-      }
-      await doc.save();
-      return true;
-    } finally {
-      restoringGuardedFiles.delete(targetPath);
-    }
-  };
-
-  const enforceIntentGateOnSave = async (doc) => {
-    const settings = readIntentGateSettings();
-    if (!settings.enabled) {
-      return { allow: true };
-    }
-    const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder || !doc?.uri?.fsPath) {
-      return { allow: true };
-    }
-    const repoRoot = folder.uri.fsPath;
-    const docPath = doc.uri.fsPath;
-
-    if (isIntentGateTemporaryBypassEnabled(settings, "save_guard")) {
-      guardedBaselineByPath.delete(docPath);
-      return { allow: true };
-    }
-
-    if (restoringGuardedFiles.has(docPath)) {
-      guardedBaselineByPath.delete(docPath);
-      return { allow: true };
-    }
-
-    if (!isIntentGateGuardedPath(repoRoot, docPath, settings)) {
-      guardedBaselineByPath.delete(docPath);
-      return { allow: true };
-    }
-
-    const session = ensureIntentGateSession(settings);
-    if (session && session.repoRoot === repoRoot) {
-      guardedBaselineByPath.delete(docPath);
-      session.lastTouchedAt = new Date().toISOString();
-      return { allow: true };
-    }
-
-    const relPath = workspaceGuard.normalizeRelPath(path.relative(repoRoot, docPath));
-    const blockedMessage = session && session.repoRoot !== repoRoot
-      ? "受保护保存已阻断：当前会话属于其他工作区。"
-      : "受保护保存已阻断：请先启动受控任务并确认 framework 映射。";
-
-    if (settings.mode === "warn") {
-      vscode.window.showWarningMessage(`Shelf 对话意图门禁警告（${relPath}）：${blockedMessage}`);
-      return { allow: true };
-    }
-
-    const baselineText = guardedBaselineByPath.get(docPath);
-    if (typeof baselineText !== "string") {
-      vscode.window.showErrorMessage(
-        `Shelf 对话意图门禁阻断了 ${relPath} 的保存，但没有可用于回滚的基线快照。`
-      );
-      return { allow: false };
-    }
-
-    const restored = await restoreGuardedDocumentFromBaseline(doc, baselineText);
-    if (restored) {
-      vscode.window.showErrorMessage(
-        `Shelf 对话意图门禁已阻断并回滚 ${relPath}。请先执行“Shelf: 启动受控任务会话”。`
-      );
-    } else {
-      vscode.window.showErrorMessage(
-        `Shelf 对话意图门禁已阻断 ${relPath}，但自动回滚失败。`
-      );
-    }
-    return { allow: false };
   };
 
   const requestManualValidation = () => {
@@ -1670,6 +1527,114 @@ function activate(context) {
     refreshSidebarHome();
   };
 
+  const isFrameworkLintDocument = (document) => {
+    if (!document || document.languageId !== "markdown" || document.uri.scheme !== "file") {
+      return false;
+    }
+    const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+    if (!folder) {
+      return false;
+    }
+    return frameworkNavigation.isFrameworkMarkdownFile(document.uri.fsPath, folder.uri.fsPath);
+  };
+
+  const clearFrameworkLintTimer = (key) => {
+    const timerId = frameworkLintTimers.get(key);
+    if (timerId) {
+      clearTimeout(timerId);
+      frameworkLintTimers.delete(key);
+    }
+  };
+
+  const runFrameworkLintForDocument = (document) => {
+    if (!document || !document.uri || document.uri.scheme !== "file") {
+      return;
+    }
+    const key = document.uri.toString();
+    clearFrameworkLintTimer(key);
+
+    const lintSettings = readFrameworkLintSettings();
+    if (!lintSettings.enabled || !isFrameworkLintDocument(document)) {
+      frameworkLintDiagnostics.delete(document.uri);
+      return;
+    }
+
+    const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+    if (!folder) {
+      frameworkLintDiagnostics.delete(document.uri);
+      return;
+    }
+
+    const lintIssues = frameworkLint
+      .lintFrameworkMarkdown({
+        repoRoot: folder.uri.fsPath,
+        filePath: document.uri.fsPath,
+        text: document.getText(),
+      })
+      .map((item) => normalizeIssue(item));
+
+    if (!lintIssues.length) {
+      frameworkLintDiagnostics.delete(document.uri);
+      return;
+    }
+
+    const payload = {
+      passed: false,
+      errors: lintIssues,
+    };
+    applyDiagnostics(payload, frameworkLintDiagnostics, folder.uri.fsPath, document.uri, {
+      clearExisting: false,
+    });
+  };
+
+  const scheduleFrameworkLintForDocument = (document, { immediate = false } = {}) => {
+    if (!document || !document.uri || document.uri.scheme !== "file") {
+      return;
+    }
+    const key = document.uri.toString();
+    clearFrameworkLintTimer(key);
+
+    const lintSettings = readFrameworkLintSettings();
+    if (!lintSettings.enabled) {
+      frameworkLintDiagnostics.delete(document.uri);
+      return;
+    }
+    if (!isFrameworkLintDocument(document)) {
+      frameworkLintDiagnostics.delete(document.uri);
+      return;
+    }
+    if (!immediate && !lintSettings.onType) {
+      return;
+    }
+
+    const delayMs = immediate ? 0 : lintSettings.debounceMs;
+    frameworkLintTimers.set(
+      key,
+      setTimeout(() => {
+        frameworkLintTimers.delete(key);
+        runFrameworkLintForDocument(document);
+      }, delayMs)
+    );
+  };
+
+  const refreshFrameworkLintForOpenDocuments = ({ immediate = true } = {}) => {
+    const lintSettings = readFrameworkLintSettings();
+    if (!lintSettings.enabled) {
+      for (const key of [...frameworkLintTimers.keys()]) {
+        clearFrameworkLintTimer(key);
+      }
+      frameworkLintDiagnostics.clear();
+      return;
+    }
+    for (const document of vscode.workspace.textDocuments) {
+      if (isFrameworkLintDocument(document)) {
+        scheduleFrameworkLintForDocument(document, { immediate });
+      } else if (document.uri?.scheme === "file") {
+        frameworkLintDiagnostics.delete(document.uri);
+      }
+    }
+  };
+
   const renderSidebarHome = () => {
     const defaultActionItems = [
       {
@@ -1687,7 +1652,7 @@ function activate(context) {
       {
         action: "clearGovernedTaskSession",
         label: "清空门禁会话",
-        description: "清空当前授权会话，恢复到默认阻断状态。",
+        description: "清空当前授权会话；保存阶段不阻断，可随时重新授权。",
         tone: "ghost"
       },
       {
@@ -1835,7 +1800,6 @@ function activate(context) {
     const evidenceTreeReady = !freshnessState.hasBlocking;
     const guardMode = config.get("guardMode") === "strict" ? "strict" : "normal";
     const hasIntentGateTemporaryBypass = intentGateSettings.temporaryBypasses.length > 0;
-    const isSaveGuardBypassed = isIntentGateTemporaryBypassEnabled(intentGateSettings, "save_guard");
     const intentGateStatus = !intentGateSettings.enabled
       ? "Disabled"
       : (hasIntentGateTemporaryBypass ? "Bypass" : (activeIntentSession ? "Granted" : "Required"));
@@ -1984,10 +1948,10 @@ function activate(context) {
         action: "installHooks",
         label: "安装 Git Hooks"
       };
-    } else if (intentGateSettings.enabled && !isSaveGuardBypassed && !activeIntentSession) {
-      calloutTone = "error";
-      calloutTitle = "先开启受控任务会话";
-      calloutBody = "实现层修改前，先执行需求到 framework 映射门禁。未授权会话下，受保护路径保存会被阻断或回滚。";
+    } else if (intentGateSettings.enabled && !activeIntentSession) {
+      calloutTone = "warning";
+      calloutTitle = "建议先开启受控任务会话";
+      calloutBody = "保存不会被门禁阻断，但建议先完成“需求 -> framework 映射”，再进入实现阶段。";
       calloutAction = {
         action: "startGovernedTask",
         label: "启动受控任务会话"
@@ -2717,20 +2681,23 @@ function activate(context) {
   const configurationDisposable = vscode.workspace.onDidChangeConfiguration(async (event) => {
     const affectsIntentGate = INTENT_GATE_SETTING_KEYS.some((key) => event.affectsConfiguration(key));
     const affectsTreeView = TREE_WEBVIEW_SETTING_KEYS.some((key) => event.affectsConfiguration(key));
-    if (!affectsIntentGate && !affectsTreeView) {
+    const affectsFrameworkLint = FRAMEWORK_LINT_SETTING_KEYS.some((key) => event.affectsConfiguration(key));
+    if (!affectsIntentGate && !affectsTreeView && !affectsFrameworkLint) {
       return;
     }
-    await handleRuntimeSettingSourcesChanged({
-      reason: "VSCode shelf settings update",
-      refreshTree: affectsTreeView
-    });
+    if (affectsIntentGate || affectsTreeView) {
+      await handleRuntimeSettingSourcesChanged({
+        reason: "VSCode shelf settings update",
+        refreshTree: affectsTreeView
+      });
+    }
+    if (affectsFrameworkLint) {
+      refreshFrameworkLintForOpenDocuments({ immediate: true });
+    }
   });
 
   const saveDisposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-    const gateDecision = await enforceIntentGateOnSave(doc);
-    if (!gateDecision.allow) {
-      return;
-    }
+    scheduleFrameworkLintForDocument(doc, { immediate: true });
     const config = getShelfConfig();
     if (!config.get("enableOnSave") || !shouldRunValidationTrigger("save")) {
       return;
@@ -2755,28 +2722,10 @@ function activate(context) {
     if (!folder || !event.document?.uri?.fsPath) {
       return;
     }
+    scheduleFrameworkLintForDocument(event.document, { immediate: false });
     const relPath = workspaceGuard.normalizeRelPath(path.relative(folder.uri.fsPath, event.document.uri.fsPath));
     if (!workspaceGuard.isWatchedPath(relPath) || isSuppressedGeneratedPath(relPath)) {
       return;
-    }
-
-    const intentSettings = readIntentGateSettings();
-    if (
-      intentSettings.enabled
-      && !isIntentGateTemporaryBypassEnabled(intentSettings, "save_guard")
-      && isIntentGateGuardedPath(folder.uri.fsPath, event.document.uri.fsPath, intentSettings)
-    ) {
-      const fsPath = event.document.uri.fsPath;
-      if (event.document.isDirty && !guardedBaselineByPath.has(fsPath) && !restoringGuardedFiles.has(fsPath)) {
-        try {
-          guardedBaselineByPath.set(fsPath, fs.readFileSync(fsPath, "utf8"));
-        } catch (error) {
-          output.appendLine(`[intent-gate] ${relPath} 基线快照失败：${String(error)}`);
-        }
-      }
-      if (!event.document.isDirty) {
-        guardedBaselineByPath.delete(fsPath);
-      }
     }
 
     if (event.document.isDirty) {
@@ -2788,6 +2737,19 @@ function activate(context) {
     dirtyWatchedFiles.delete(event.document.uri.fsPath);
     refreshStatusFromCurrentState();
     refreshSidebarHome();
+  });
+
+  const openDocumentDisposable = vscode.workspace.onDidOpenTextDocument((document) => {
+    scheduleFrameworkLintForDocument(document, { immediate: true });
+  });
+
+  const closeDocumentDisposable = vscode.workspace.onDidCloseTextDocument((document) => {
+    if (!document?.uri) {
+      return;
+    }
+    const key = document.uri.toString();
+    clearFrameworkLintTimer(key);
+    frameworkLintDiagnostics.delete(document.uri);
   });
 
   const createDisposable = vscode.workspace.onDidCreateFiles(async (event) => {
@@ -2870,6 +2832,7 @@ function activate(context) {
         reason: `${localSettings.LOCAL_SETTINGS_REL_PATH} update`,
         refreshTree: true
       });
+      refreshFrameworkLintForOpenDocuments({ immediate: true });
     };
     localSettingsWatcher.onDidChange(refreshFromLocalSettingsFile);
     localSettingsWatcher.onDidCreate(refreshFromLocalSettingsFile);
@@ -2898,6 +2861,8 @@ function activate(context) {
     openEvidenceTreeDisposable,
     refreshEvidenceTreeDisposable,
     configurationDisposable,
+    openDocumentDisposable,
+    closeDocumentDisposable,
     changeDisposable,
     saveDisposable,
     createDisposable,
@@ -2910,6 +2875,7 @@ function activate(context) {
   if (shouldRunValidationTrigger("workspace")) {
     scheduleValidation({ mode: "change", triggerUris: [], notifyOnFail: false, source: "auto" });
   }
+  refreshFrameworkLintForOpenDocuments({ immediate: true });
   void refreshGitHookStatus({ promptIfMissing: true });
 }
 
@@ -3060,8 +3026,10 @@ function parseMypyResult(stdout, stderr, code) {
   };
 }
 
-function applyDiagnostics(parsed, collection, repoRoot, triggerUri) {
-  collection.clear();
+function applyDiagnostics(parsed, collection, repoRoot, triggerUri, { clearExisting = true } = {}) {
+  if (clearExisting) {
+    collection.clear();
+  }
   if (!parsed || !Array.isArray(parsed.errors) || !parsed.errors.length) {
     return;
   }

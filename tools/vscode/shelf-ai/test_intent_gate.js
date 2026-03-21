@@ -40,12 +40,12 @@ framework_file = "framework/demo/L0-M0-示例模块.md"
 
 function main() {
   assert.deepStrictEqual(
-    normalizeTemporaryBypassScopes(["save_guard", " SAVE_GUARD ", "unknown", "mapping_echo"]),
-    ["mapping_echo", "save_guard"],
+    normalizeTemporaryBypassScopes(["grant_pre_validation", " GRANT_PRE_VALIDATION ", "unknown", "mapping_echo"]),
+    ["grant_pre_validation", "mapping_echo"],
     "temporary bypass scopes should be normalized, deduplicated, and filtered"
   );
   assert.deepStrictEqual(
-    normalizeTemporaryBypassScopes(["all", "save_guard"]),
+    normalizeTemporaryBypassScopes(["all", "grant_pre_validation"]),
     [TEMP_BYPASS_ALL_TOKEN],
     "all token should normalize to *"
   );

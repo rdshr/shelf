@@ -92,14 +92,29 @@ function main() {
     "uv run python scripts/validate_canonical.py",
     "package.json must default shelf.fullValidationCommand to the supported canonical validation command"
   );
-  const defaultGuardedPrefixes = configuration["shelf.intentGateGuardedPathPrefixes"]?.default || [];
   assert(
-    Array.isArray(defaultGuardedPrefixes) && defaultGuardedPrefixes.includes("framework/"),
-    "package.json must keep framework/ in default guarded path prefixes"
+    configuration["shelf.frameworkLintEnabled"]?.default === true,
+    "package.json must enable framework realtime lint by default"
   );
   assert(
-    !defaultGuardedPrefixes.includes("tools/vscode/shelf-ai/"),
-    "package.json must not guard Shelf extension source paths by default"
+    configuration["shelf.frameworkLintOnType"]?.default === true,
+    "package.json must run framework realtime lint while typing by default"
+  );
+  assert(
+    configuration["shelf.frameworkLintDebounceMs"]?.default === 300,
+    "package.json must expose framework lint debounce configuration"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateEnforcementMode"),
+    "package.json should not expose save-time intent gate enforcement mode"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateGuardedPathPrefixes"),
+    "package.json should not expose save-time guarded path prefixes"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateIgnoredPathPrefixes"),
+    "package.json should not expose save-time ignored path prefixes"
   );
 
   const frameworkSnippet = snippetJson["@framework Module Template"];

@@ -6,7 +6,6 @@ const MAX_MATCH_COUNT = 8;
 const NON_ONE_TO_ONE_MAPPING_PREFIX = "non one-to-one boundary mapping";
 const TEMP_BYPASS_ALL_TOKEN = "*";
 const TEMP_BYPASS_SCOPES = Object.freeze([
-  "save_guard",
   "grant_pre_validation",
   "mapping_echo",
   "one_to_one_check",

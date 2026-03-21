@@ -22,10 +22,11 @@ Authoring-term note:
 - Guards `projects/*/generated/*` from direct edits.
 - Treats stale / missing / invalid canonical as non-authoritative: formal config jumps and the evidence tree wait for fresh canonical.
 - Runs canonical validation and optionally `mypy` from the extension.
+- Adds project-independent framework markdown syntax diagnostics (Problems 波浪线) while typing/saving.
 - Supports publishing the active `framework_drafts/...` file into the formal `framework/...` tree.
-- Adds a governed-task intent gate: map request text to canonical framework paths (`module_id / boundary_id / exact.*`) before guarded implementation saves.
+- Adds a governed-task intent gate: map request text to canonical framework paths (`module_id / boundary_id / exact.*`) before implementation.
 - Enforces one-to-one parameter mapping for governed-task sessions: if any canonical parameter still projects to multiple related paths, session grant is rejected until framework is clarified.
-- Blocks or warns on guarded saves within framework-document-related paths by default (`framework/`, `framework_drafts/`, `projects/`, `src/project_runtime/`, `scripts/`) when no active governed-task session is granted.
+- Save-time blocking is disabled; repository-side validation/hook checks remain the enforcement boundary.
 
 ## Contract
 
@@ -70,15 +71,12 @@ Local workspace overlay file:
 
 - `shelf.guardMode = strict`
 - `shelf.intentGateEnabled = true`
-- `shelf.intentGateEnforcementMode = block`
 - `shelf.intentGateRequireMappingEcho = true`
 - `shelf.intentGateRunChangeValidationBeforeGrant = true`
 - `shelf.intentGateAutoOpenOutput = true`
 - `shelf.intentGateMinimumScore = 4`
 - `shelf.intentGateMaxMatches = 8`
 - `shelf.intentGateSessionTtlMinutes = 120`
-- `shelf.intentGateGuardedPathPrefixes = [\"framework/\", \"framework_drafts/\", \"projects/\", \"src/project_runtime/\", \"scripts/\"]`
-- `shelf.intentGateIgnoredPathPrefixes = [\".git/\", \".github/\", \".venv/\", \"node_modules/\", \"dist/\", \"build/\", \"out/\", \".pytest_cache/\", \".mypy_cache/\", \"__pycache__/\"]`
 - `shelf.intentGateTemporaryBypasses = []`
 - `shelf.frameworkTreeNodeHorizontalGap = 8`
 - `shelf.frameworkTreeLevelVerticalGap = 80`
@@ -91,18 +89,20 @@ Local workspace overlay file:
 - `shelf.generatedEventSuppressionMs = 2500`
 - `shelf.manualValidationRestartThresholdMs = 15000`
 - `shelf.validationDebounceMs = 250`
+- `shelf.frameworkLintEnabled = true`
+- `shelf.frameworkLintOnType = true`
+- `shelf.frameworkLintDebounceMs = 300`
 
-Changing tree webview settings will re-render the currently open tree panel automatically. If no tree panel is open, the next open/refresh will use the new values. Validation timing settings take effect on the next scheduled or manual validation run without requiring reload.
+Changing tree webview settings will re-render the currently open tree panel automatically. If no tree panel is open, the next open/refresh will use the new values. Validation timing settings take effect on the next scheduled or manual validation run without requiring reload. Framework lint settings take effect immediately for currently opened framework markdown files.
 
 Intent-gate temporary bypass supports multi-option configuration:
 
 - Keep strict mode: `[]`
-- Bypass specific checks: for example `["save_guard", "mapping_echo"]`
+- Bypass specific checks: for example `["grant_pre_validation", "mapping_echo"]`
 - Bypass all listed checks: `["*"]`
 
 Available bypass items:
 
-- `save_guard`: allow guarded-path saves without a governed-task session.
 - `grant_pre_validation`: skip `validate_canonical.py --check-changes` before session grant.
 - `mapping_echo`: skip QuickPick mapping confirmation before session grant.
 - `one_to_one_check`: allow governed-task session mapping even when canonical boundary projection is not one-to-one.
@@ -116,10 +116,8 @@ Available bypass items:
 3. Shelf runs `validate_canonical.py --check-changes` (configurable), computes canonical-backed mapping candidates, and asks for confirmation.
    If canonical boundary projection is not one-to-one, Shelf blocks the session and asks a human to update framework first (unless `one_to_one_check` temporary bypass is enabled).
    You can temporarily bypass specific gate steps with `shelf.intentGateTemporaryBypasses`, but default remains strict.
-4. Once granted, guarded implementation saves are allowed until the session expires or is cleared.
-5. Without a granted session, guarded saves are warned or blocked/reverted (depending on `shelf.intentGateEnforcementMode`).
-
-Default governed-path strategy scopes to framework-document-related paths and excludes Shelf extension source paths. Set `shelf.intentGateGuardedPathPrefixes = ["*"]` only if you explicitly want to intercept all workspace code paths.
+4. Once granted, the session remains available until it expires or is cleared.
+5. Save-time blocking is disabled; guard enforcement relies on repository validation and git hooks at commit/push boundaries.
 
 ## Validation
 
@@ -133,6 +131,8 @@ Default commands:
 `validate_canonical.py` now enforces one-to-one boundary projection at repository guard level. If any boundary still maps to multiple related paths, validation fails with `FRAMEWORK_VIOLATION` and asks for framework updates first.
 
 `Shelf: Run Codegen Preflight` materializes all discovered `projects/*/project.toml` files, then runs full validation.
+
+Framework markdown lint is independent from project selection: syntax diagnostics are computed directly from the current `framework/**` or `framework_drafts/**` document and rendered as standard VSCode Problems diagnostics.
 
 The `@framework` template entry is a repository-side hard authoring contract and must not be removed without an equally direct replacement.
 
