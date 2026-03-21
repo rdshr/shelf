@@ -60,6 +60,24 @@ jobs:
             echo "Missing release notes: ${NOTES_PATH}" >&2
             exit 1
           fi
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          mapfile -t SHELF_TAGS < <(git tag -l 'shelf-ai-v*' --sort=v:refname)
+          CURRENT_INDEX=-1
+          for i in "${!SHELF_TAGS[@]}"; do
+            if [[ "${SHELF_TAGS[$i]}" == "${CURRENT_TAG}" ]]; then
+              CURRENT_INDEX="${i}"
+              break
+            fi
+          done
+          if [[ "${CURRENT_INDEX}" -lt 0 ]]; then
+            echo "Cannot locate current tag ${CURRENT_TAG} in tag list." >&2
+            exit 1
+          fi
+          EXPECTED_RANGE=""
+          if [[ "${CURRENT_INDEX}" -gt 0 ]]; then
+            PREV_TAG="${SHELF_TAGS[$((CURRENT_INDEX - 1))]}"
+            EXPECTED_RANGE="${PREV_TAG}..${CURRENT_TAG}"
+          fi
           grep -q '^## 中文说明' "${NOTES_PATH}" || { echo "Missing Chinese release-note section" >&2; exit 1; }
           grep -q '^## English Notes' "${NOTES_PATH}" || { echo "Missing English release-note section" >&2; exit 1; }
           awk '
@@ -79,6 +97,14 @@ jobs:
               }
             }
           ' "${NOTES_PATH}"
+          if [[ -n "${EXPECTED_RANGE}" ]]; then
+            grep -q "${EXPECTED_RANGE}" "${NOTES_PATH}" || {
+              echo "Release notes must include full commit range: ${EXPECTED_RANGE}" >&2
+              exit 1
+            }
+          else
+            echo "No previous shelf-ai tag found; skipping range-string validation."
+          fi
 
       - name: Package VSIX
         run: |
