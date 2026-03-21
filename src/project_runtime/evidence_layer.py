@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from rule_validation_models import ValidationReports
+from rule_validation_models import RuleValidationOutcome, RuleValidationSummary, ValidationReports
 
 from project_runtime.config_layer import ConfigModuleBinding
 from project_runtime.codegen_consistency_guard import summarize_codegen_consistency_guard
@@ -89,6 +89,26 @@ def _document_digests(runtime_documents: list[dict[str, Any]]) -> dict[str, str]
     }
 
 
+def _build_skipped_summary(
+    *,
+    module_id: str,
+    rule_id: str,
+    name: str,
+    reason: str,
+) -> RuleValidationSummary:
+    return RuleValidationSummary(
+        module_id=module_id,
+        rules=(
+            RuleValidationOutcome(
+                rule_id=rule_id,
+                name=name,
+                passed=True,
+                reasons=(reason,),
+            ),
+        ),
+    )
+
+
 def _read_path_scope_overrides(
     communication_config: dict[str, Any],
 ) -> tuple[list[str] | None, list[str] | None]:
@@ -106,15 +126,86 @@ def _read_path_scope_overrides(
     return read_list("guarded_path_prefixes"), read_list("ignored_path_prefixes")
 
 
+def _module_id_by_export_key(code_modules: tuple[CodeModuleBinding, ...], export_key: str) -> str:
+    matches: list[str] = []
+    for binding in code_modules:
+        exports = binding.code_module.code_exports
+        if not isinstance(exports, dict) or export_key not in exports:
+            continue
+        module_id = str(binding.framework_module.module_id).strip()
+        if module_id and module_id not in matches:
+            matches.append(module_id)
+    if len(matches) != 1:
+        return ""
+    return matches[0]
+
+
+def _append_module_evidence_exports(
+    exports_by_module_id: dict[str, dict[str, Any]],
+    *,
+    module_id: str,
+    payload: dict[str, Any],
+) -> None:
+    normalized_module_id = str(module_id).strip()
+    if not normalized_module_id or not payload:
+        return
+    existing = exports_by_module_id.setdefault(normalized_module_id, {})
+    for key, value in payload.items():
+        if key in existing and existing[key] != value:
+            raise ValueError(
+                "conflicting evidence export assignment for module: "
+                f"module_id={normalized_module_id} key={key}"
+            )
+        existing[key] = value
+
+
 def build_evidence_modules(
     assembly: ProjectRuntimeAssembly,
     code_modules: tuple[CodeModuleBinding, ...],
 ) -> tuple[tuple[type[EvidenceModuleClass], ...], dict[str, Any], ValidationReports]:
-    from frontend_kernel.validators import summarize_frontend_rules, validate_frontend_rules
-    from knowledge_base_framework.validators import summarize_workbench_rules, validate_workbench_rules
+    frontend_root_module_id = _module_id_by_export_key(code_modules, "frontend_app_spec")
+    knowledge_root_module_id = _module_id_by_export_key(code_modules, "knowledge_base_domain_spec")
 
-    frontend_summary = summarize_frontend_rules(validate_frontend_rules(assembly))
-    knowledge_summary = summarize_workbench_rules(validate_workbench_rules(assembly))
+    if frontend_root_module_id:
+        from frontend_kernel.validators import summarize_frontend_rules, validate_frontend_rules
+
+        frontend_summary = summarize_frontend_rules(
+            validate_frontend_rules(assembly),
+            module_id=frontend_root_module_id,
+        )
+    else:
+        frontend_summary = _build_skipped_summary(
+            module_id="frontend.unselected",
+            rule_id="FRONTEND_NOT_SELECTED",
+            name="frontend validators skipped",
+            reason="frontend root module is not selected in this project.",
+        )
+
+    if knowledge_root_module_id:
+        try:
+            from knowledge_base_framework.validators import summarize_workbench_rules, validate_workbench_rules
+        except ModuleNotFoundError:
+            knowledge_summary = RuleValidationSummary(
+                module_id="knowledge_base.removed",
+                rules=(
+                    RuleValidationOutcome(
+                        rule_id="KB_REMOVED",
+                        name="knowledge_base framework validators removed",
+                        passed=True,
+                        reasons=("knowledge_base_framework package is not present in this workspace snapshot.",),
+                    ),
+                ),
+            )
+        else:
+            knowledge_summary = summarize_workbench_rules(validate_workbench_rules(assembly))
+    else:
+        knowledge_summary = _build_skipped_summary(
+            module_id="knowledge_base.unselected",
+            rule_id="KNOWLEDGE_BASE_NOT_SELECTED",
+            name="knowledge_base validators skipped",
+            reason="knowledge_base root module is not selected in this project.",
+        )
+
     framework_summary = summarize_framework_violation_guard(
         framework_modules=tuple(binding.framework_module for binding in code_modules),
         communication_config=assembly.config.communication,
@@ -158,15 +249,44 @@ def build_evidence_modules(
             "path_scope_guard": path_scope_summary,
         }
     )
-    runtime_documents = assembly.require_runtime_export("runtime_documents")
-    if not isinstance(runtime_documents, list):
-        raise ValueError("runtime_documents export must be a list")
+
+    runtime_blueprint: dict[str, Any] | None = None
+    if frontend_root_module_id:
+        runtime_blueprint = _runtime_blueprint(assembly)
+
+    document_digests: dict[str, str] | None = None
+    if knowledge_root_module_id:
+        runtime_documents = assembly.require_runtime_export("runtime_documents")
+        if not isinstance(runtime_documents, list):
+            raise ValueError("runtime_documents export must be a list")
+        document_digests = _document_digests(runtime_documents)
+
     evidence_exports = {
-        "runtime_blueprint": _runtime_blueprint(assembly),
-        "document_digests": _document_digests(runtime_documents),
         "codegen_consistency": codegen_consistency_report,
         "validation_reports": validation_reports.to_dict(),
     }
+    if runtime_blueprint is not None:
+        evidence_exports["runtime_blueprint"] = runtime_blueprint
+    if document_digests is not None:
+        evidence_exports["document_digests"] = document_digests
+    module_evidence_exports_by_id: dict[str, dict[str, Any]] = {}
+    _append_module_evidence_exports(
+        module_evidence_exports_by_id,
+        module_id=frontend_root_module_id,
+        payload={
+            "frontend_rules": frontend_summary.to_dict(),
+            **({"runtime_blueprint": runtime_blueprint} if runtime_blueprint is not None else {}),
+        },
+    )
+    _append_module_evidence_exports(
+        module_evidence_exports_by_id,
+        module_id=knowledge_root_module_id,
+        payload={
+            "knowledge_base_rules": knowledge_summary.to_dict(),
+            **({"document_digests": document_digests} if document_digests is not None else {}),
+        },
+    )
+
     evidence_modules: list[type[EvidenceModuleClass]] = []
     for binding in code_modules:
         class_name = binding.code_module.__name__.replace("CodeModule", "EvidenceModule")
@@ -174,12 +294,7 @@ def build_evidence_modules(
             "module_id": binding.framework_module.module_id,
             "code_exports": binding.code_module.code_exports,
         }
-        if binding.framework_module.module_id == assembly.root_module_ids.get("frontend"):
-            module_exports["frontend_rules"] = frontend_summary.to_dict()
-            module_exports["runtime_blueprint"] = evidence_exports["runtime_blueprint"]
-        if binding.framework_module.module_id == assembly.root_module_ids.get("knowledge_base"):
-            module_exports["knowledge_base_rules"] = knowledge_summary.to_dict()
-            module_exports["document_digests"] = evidence_exports["document_digests"]
+        module_exports.update(module_evidence_exports_by_id.get(binding.framework_module.module_id, {}))
         evidence_module = type(
             class_name,
             (EvidenceModuleClass,),

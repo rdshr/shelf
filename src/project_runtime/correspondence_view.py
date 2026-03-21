@@ -190,6 +190,15 @@ def _path_section_line(project_file: str, dotted_path: str) -> int:
     return _find_line(project_file, section_name, fallback=1)
 
 
+def _fallback_project_file(canonical: dict[str, Any]) -> str:
+    project = canonical.get("project")
+    if isinstance(project, dict):
+        project_id = str(project.get("project_id") or "").strip()
+        if project_id:
+            return f"projects/{project_id}/project.toml"
+    return "projects/<project_id>/project.toml"
+
+
 def _code_correspondence_target(
     *,
     kind: str,
@@ -543,6 +552,10 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
     objects: list[CorrespondenceNode] = []
     tree: list[dict[str, Any]] = []
 
+    configured_project_file = str(canonical.get("config", {}).get("project_file") or "")
+    default_project_file = _fallback_project_file(canonical)
+    resolved_project_file = configured_project_file or default_project_file
+
     for module_id in _module_ids(canonical):
         framework_module = _find_module(canonical, "framework", module_id)
         config_module = _find_module(canonical, "config", module_id)
@@ -553,7 +566,6 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
         module_source_ref = framework_module.get("source_ref", {}) if isinstance(framework_module, dict) else {}
         if not isinstance(module_source_ref, dict):
             module_source_ref = {}
-        project_file = str(canonical.get("config", {}).get("project_file") or "")
         module_config_bindings = []
         compiled = config_module.get("compiled_config_export", {}) if isinstance(config_module, dict) else {}
         if isinstance(compiled, dict):
@@ -754,11 +766,11 @@ def build_correspondence_view(canonical: dict[str, Any]) -> dict[str, Any]:
                 is_editable=True,
             )
             config_exact_path = str(boundary_link.get("config_source_exact_path") or "")
-            config_line = _path_section_line(project_file, config_exact_path) if project_file and config_exact_path else 1
+            config_line = _path_section_line(resolved_project_file, config_exact_path) if config_exact_path else 1
             config_target = _target(
                 target_kind="config_source",
                 layer="config",
-                file_path=project_file or "projects/knowledge_base_basic/project.toml",
+                file_path=resolved_project_file,
                 start_line=config_line,
                 end_line=config_line,
                 symbol=config_exact_path,

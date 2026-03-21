@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import import_module
+from pathlib import Path
 from typing import Any, Callable
 
 from fastapi import FastAPI, HTTPException
@@ -29,6 +30,10 @@ class RuntimeBlueprint:
     repository_factory_path: str | None
     api_router_factory_path: str | None
     page_routes: tuple[RuntimeRouteSpec, ...]
+
+
+def project_runtime_public_summary(project: ProjectRuntimeAssembly) -> dict[str, object]:
+    return project.public_summary
 
 
 def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> FastAPI:
@@ -102,20 +107,32 @@ def build_project_runtime_app(project: ProjectRuntimeAssembly | None = None) -> 
     return app
 
 
-def build_project_app_from_project_file(project_file: str) -> FastAPI:
+def build_project_app_from_project_file(project_file: str | Path | None = None) -> FastAPI:
     return build_project_runtime_app(load_project_runtime(project_file))
 
 
 def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint:
-    value = project.require_runtime_export("runtime_blueprint")
+    value = project.runtime_exports.get("runtime_blueprint")
+    if value is None:
+        return RuntimeBlueprint(
+            mode="standalone",
+            project_config_endpoint="/project/config",
+            landing_path="/",
+            summary_factory_path="project_runtime.runtime_app:project_runtime_public_summary",
+            repository_factory_path=None,
+            api_router_factory_path=None,
+            page_routes=tuple(),
+        )
     if not isinstance(value, dict):
         raise ValueError("runtime_blueprint export is required for runtime app construction")
     transport = value.get("transport")
     if not isinstance(transport, dict):
         raise ValueError("runtime_blueprint.transport is required for runtime app construction")
     raw_page_routes = value.get("page_routes")
-    if not isinstance(raw_page_routes, list) or not raw_page_routes:
-        raise ValueError("runtime_blueprint.page_routes must be a non-empty list")
+    if raw_page_routes is None:
+        raw_page_routes = []
+    if not isinstance(raw_page_routes, list):
+        raise ValueError("runtime_blueprint.page_routes must be a list")
     page_routes = tuple(
         RuntimeRouteSpec(
             route_id=str(item["route_id"]),
@@ -146,7 +163,9 @@ def _load_runtime_blueprint(project: ProjectRuntimeAssembly) -> RuntimeBlueprint
 
 
 def _load_root_path(project: ProjectRuntimeAssembly) -> str:
-    frontend_spec = project.require_runtime_export("frontend_app_spec")
+    frontend_spec = project.runtime_exports.get("frontend_app_spec")
+    if frontend_spec is None:
+        return "/"
     if not isinstance(frontend_spec, dict):
         raise ValueError("frontend_app_spec export is required for runtime root route")
     contract = frontend_spec.get("contract")
@@ -173,16 +192,19 @@ def _resolve_correspondence_endpoint(
     project: ProjectRuntimeAssembly,
     blueprint: RuntimeBlueprint,
 ) -> tuple[str, str]:
-    backend_spec = project.require_runtime_export("backend_service_spec")
-    if not isinstance(backend_spec, dict):
-        raise ValueError("backend_service_spec export is required for correspondence endpoint")
-    transport = backend_spec.get("transport")
-    if not isinstance(transport, dict):
-        raise ValueError("backend_service_spec.transport must be a dict")
-    api_prefix = transport.get("api_prefix")
-    if not isinstance(api_prefix, str) or not api_prefix.startswith("/"):
-        raise ValueError("backend_service_spec.transport.api_prefix must be an absolute path")
-    endpoint = f"{api_prefix}/correspondence"
+    backend_spec = project.runtime_exports.get("backend_service_spec")
+    api_prefix = ""
+    if backend_spec is not None:
+        if not isinstance(backend_spec, dict):
+            raise ValueError("backend_service_spec export must be a dict")
+        transport = backend_spec.get("transport")
+        if not isinstance(transport, dict):
+            raise ValueError("backend_service_spec.transport must be a dict")
+        raw_api_prefix = transport.get("api_prefix")
+        if not isinstance(raw_api_prefix, str) or not raw_api_prefix.startswith("/"):
+            raise ValueError("backend_service_spec.transport.api_prefix must be an absolute path")
+        api_prefix = raw_api_prefix
+    endpoint = f"{api_prefix}/correspondence" if api_prefix else "/correspondence"
     if endpoint == blueprint.project_config_endpoint:
         raise ValueError("correspondence endpoint conflicts with project_config endpoint")
     return api_prefix, endpoint

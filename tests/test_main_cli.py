@@ -8,6 +8,12 @@ import main as shelf_main
 
 
 class MainCliTest(unittest.TestCase):
+    def _default_project_file(self) -> str:
+        default_project_file = shelf_main.DEFAULT_PROJECT_FILE
+        if default_project_file is None:
+            self.skipTest("no projects/*/project.toml found")
+        return str(default_project_file.relative_to(shelf_main.REPO_ROOT))
+
     def test_normalize_argv_defaults_to_serve(self) -> None:
         self.assertEqual(shelf_main._normalize_argv([]), ["serve"])
         self.assertEqual(shelf_main._normalize_argv(["--reload"]), ["serve", "--reload"])
@@ -19,7 +25,7 @@ class MainCliTest(unittest.TestCase):
             [
                 "serve",
                 "--project-file",
-                "projects/knowledge_base_basic/project.toml",
+                self._default_project_file(),
                 "--reload",
             ]
         )
@@ -38,7 +44,7 @@ class MainCliTest(unittest.TestCase):
                 [
                     "serve",
                     "--project-file",
-                    "projects/knowledge_base_basic/project.toml",
+                    self._default_project_file(),
                     "--host",
                     "0.0.0.0",
                     "--port",

@@ -12112,8 +12112,8 @@
           <ul class="hover-list">${hoverList(node.capabilityItems || [], "无能力声明", 2)}</ul>
         </section>
         <section class="hover-section">
-          <h4 class="hover-section-title">最小可行基</h4>
-          <ul class="hover-list">${hoverList(node.baseItems || [], "无最小可行基", 2)}</ul>
+          <h4 class="hover-section-title">最小结构基</h4>
+          <ul class="hover-list">${hoverList(node.baseItems || [], "无最小结构基", 2)}</ul>
         </section>
       </div>
       <div class="hover-footer">${footer}</div>

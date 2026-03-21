@@ -155,6 +155,55 @@ def summarize_correspondence_guard(
             f"{module_id}.{rule.rule_id}"
             for rule in framework_module.rule_classes
         }
+        framework_rule_by_short_id = {
+            str(rule.rule_id): rule
+            for rule in framework_module.rule_classes
+        }
+        for rule in framework_module.rule_classes:
+            rule_short_id = str(getattr(rule, "rule_id", "")).strip()
+            outputs = _tuple_of_text(getattr(rule, "output_capabilities", tuple()))
+            invalids = _tuple_of_text(getattr(rule, "invalid_conclusions", tuple()))
+            if not outputs and not invalids:
+                reasons.append(
+                    "CORRESPONDENCE_VIOLATION: rule must declare output_capabilities or invalid_conclusions "
+                    f"{module_id}.{rule_short_id}"
+                )
+
+        base_signature_to_id: dict[
+            tuple[frozenset[str], frozenset[str], frozenset[str]],
+            str,
+        ] = {}
+        for base in framework_module.base_classes:
+            base_full_id = f"{module_id}.{str(base.base_id)}"
+            related_rule_ids = frozenset(_tuple_of_text(getattr(base, "related_rule_ids", tuple())))
+            if not related_rule_ids:
+                reasons.append(
+                    f"CORRESPONDENCE_VIOLATION: base is not used by any rule {base_full_id}"
+                )
+            boundary_ids = frozenset(_tuple_of_text(getattr(base, "boundary_bindings", tuple())))
+            downstream_effects: set[str] = set()
+            for rule_short_id in related_rule_ids:
+                framework_rule = framework_rule_by_short_id.get(rule_short_id)
+                if framework_rule is None:
+                    continue
+                outputs = _tuple_of_text(getattr(framework_rule, "output_capabilities", tuple()))
+                invalids = _tuple_of_text(getattr(framework_rule, "invalid_conclusions", tuple()))
+                downstream_effects.update(f"capability:{item}" for item in outputs)
+                downstream_effects.update(f"invalid:{item}" for item in invalids)
+            signature = (
+                boundary_ids,
+                related_rule_ids,
+                frozenset(downstream_effects),
+            )
+            duplicated_with = base_signature_to_id.get(signature)
+            if duplicated_with and duplicated_with != base_full_id:
+                reasons.append(
+                    "CORRESPONDENCE_VIOLATION: redundant base split detected "
+                    f"{duplicated_with} <-> {base_full_id} "
+                    "(same boundary set, rule participation set, downstream impact set)"
+                )
+            else:
+                base_signature_to_id[signature] = base_full_id
 
         actual_base_ids: set[str] = set()
         actual_rule_ids: set[str] = set()
@@ -187,6 +236,7 @@ def summarize_correspondence_guard(
                 )
             base_id = str(getattr(base_type, "framework_base_id", "")).strip()
             owner_id = str(getattr(base_type, "owner_module_id", "")).strip()
+            base_boundary_ids = _tuple_of_text(getattr(base_type, "boundary_ids", tuple()))
             if not base_id:
                 reasons.append(f"CORRESPONDENCE_VIOLATION: base class missing framework_base_id in {module_id}")
                 continue
@@ -195,6 +245,14 @@ def summarize_correspondence_guard(
                     "CORRESPONDENCE_VIOLATION: base class owner mismatch "
                     f"{base_id} owner={owner_id} expected={module_id}"
                 )
+            if not base_boundary_ids:
+                reasons.append(f"CORRESPONDENCE_VIOLATION: base boundary_ids missing {base_id}")
+            for boundary_id in base_boundary_ids:
+                if boundary_id not in expected_boundary_ids:
+                    reasons.append(
+                        "CORRESPONDENCE_VIOLATION: base boundary id not in owner module "
+                        f"{base_id} -> {boundary_id}"
+                    )
             actual_base_ids.add(base_id)
             base_symbol = _symbol(base_type)
             if base_id in base_symbols and base_symbols[base_id] != base_symbol:
@@ -223,7 +281,7 @@ def summarize_correspondence_guard(
             rule_id = str(getattr(rule_type, "framework_rule_id", "")).strip()
             owner_id = str(getattr(rule_type, "owner_module_id", "")).strip()
             base_ids = _tuple_of_text(getattr(rule_type, "base_ids", tuple()))
-            boundary_ids = _tuple_of_text(getattr(rule_type, "boundary_ids", tuple()))
+            rule_boundary_ids = _tuple_of_text(getattr(rule_type, "boundary_ids", tuple()))
             if not rule_id:
                 reasons.append(f"CORRESPONDENCE_VIOLATION: rule class missing framework_rule_id in {module_id}")
                 continue
@@ -234,7 +292,7 @@ def summarize_correspondence_guard(
                 )
             if not base_ids:
                 reasons.append(f"CORRESPONDENCE_VIOLATION: rule base_ids missing {rule_id}")
-            if not boundary_ids:
+            if not rule_boundary_ids:
                 reasons.append(f"CORRESPONDENCE_VIOLATION: rule boundary_ids missing {rule_id}")
             for base_id in base_ids:
                 if base_id not in expected_base_ids:
@@ -242,7 +300,7 @@ def summarize_correspondence_guard(
                         "CORRESPONDENCE_VIOLATION: rule base id not in owner module "
                         f"{rule_id} -> {base_id}"
                     )
-            for boundary_id in boundary_ids:
+            for boundary_id in rule_boundary_ids:
                 if boundary_id not in expected_boundary_ids:
                     reasons.append(
                         "CORRESPONDENCE_VIOLATION: rule boundary id not in owner module "

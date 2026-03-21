@@ -21,6 +21,8 @@
 9. `generated/canonical.json` 是唯一机器真相源。其他 tree、report、evidence view 都只能是它的派生视图。
 10. 不要恢复旧的核心架构。不要保留并行真相源，不要把旧系统换个名字继续跑。
 11. 写任何代码前，先评估是否存在更简洁的等效实现；若存在必须优先采用。只有在正确性、性能、兼容性或可测试性明确需要时，才允许增加实现复杂度。
+12. 禁止硬编码门禁/依赖/项目路径。涉及模块选择、跨层依赖、root 关系、项目定位时，必须基于 framework upstream、project 配置或运行时发现，不得写死 `frontend/knowledge_base/backend` 固定分支或 `projects/project.toml` 固定回退。
+13. 防回退要求：提交前必须通过 `tests/test_no_hardcode_guard.py`，若出现命中项必须先改为配置化/结构化来源再继续。
 
 ## 默认工作顺序
 1. 读相关 `framework/*.md`
@@ -32,15 +34,20 @@
 8. 始终保持架构单一，不要创建 side channel
 
 ## 对话触发守卫（强制）
-- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
-- 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改 `projects/**`、`src/**`、`tools/**` 等实现层文件，并明确提示“先由人修改 framework，再继续实现层变更”。
-- AI 完成实现层修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，确保未引入新的 framework 语义越权。
+- AGENTS 只认最终生效的 `shelf.*` 值作为门禁配置语义入口，不再维护独立目录常量；不再在 AGENTS 里区分配置来自哪个文件承载。
+- 门禁范围只看：`shelf.intentGateGuardedPathPrefixes` 与 `shelf.intentGateIgnoredPathPrefixes`。若未显式覆盖，插件默认受检目录为：`framework/`、`framework_drafts/`、`projects/`、`src/project_runtime/`、`scripts/`。
+- 检查开关只看：`shelf.intentGateEnabled`、`shelf.intentGateRunChangeValidationBeforeGrant`、`shelf.intentGateTemporaryBypasses`。当 `intentGateEnabled = false`，或 `intentGateRunChangeValidationBeforeGrant = false`，或 `intentGateTemporaryBypasses` 包含 `grant_pre_validation` / `*` 时，可临时关闭“改前 check-changes 检查”。
+- 只要用户在 AI 对话中提出“改代码/改配置/改脚本/改模块”诉求（无论中文或英文），且目标修改路径命中“门禁作用范围”且未命中上述关闭条件，AI 在开始任何文件修改前，必须先执行：`uv run python scripts/validate_canonical.py --check-changes`。
+- bootstrap 例外：若 `--check-changes` 失败原因为“当前仓库不存在任何 `projects/*/project.toml`”，可进入 bootstrap 模式继续生成首个 `project.toml` 与对应代码/产物；生成后必须立刻恢复常规门禁并重新执行 `--check-changes`。
+- 若上述命令失败，或输出包含 `FRAMEWORK_VIOLATION`，AI 必须拒绝继续修改命中门禁范围的文件，并明确提示“先由人修改 framework，再继续实现层变更”。
+- AI 完成命中门禁范围的修改后，提交前必须再次执行：`uv run python scripts/validate_canonical.py --check-changes`，除非命中上述临时关闭条件；未关闭时必须确保未引入新的 framework 语义越权。
 - 该守卫属于“对话级自动触发”，不得要求用户手工复制临时 `project.toml` 才触发。
+- 当用户把 `intentGateGuardedPathPrefixes` 配置为仅 `framework/` 时，门禁只对 `framework/**` 生效。
 
 ### 对话意图到框架映射门禁（强制）
 - 用户提出“新增/调整功能”时，AI 必须先完成“需求 -> framework 显式映射”再动实现层文件。
 - 映射结果至少应包含：`module_id`、对应 `boundary_id`（或明确的 Rule/Base 约束）、以及落点 `exact.*` 路径。
-- 若 AI 不能给出上述映射，或映射结果无法在当前 framework 中找到对应约束，AI 必须拒绝修改 `project.toml` 与 `src/**` 代码，并提示“该需求尚未进入 framework，请先由人修改 framework”。
+- 若 AI 不能给出上述映射，或映射结果无法在当前 framework 中找到对应约束，AI 必须拒绝修改命中门禁范围的实现文件，并提示“该需求尚未进入 framework，请先由人修改 framework”。
 - 在“映射失败”场景中，AI 不得通过“直接改 config 或 code”规避框架前置；不得创建平行真相路径。
 - `framework/**` 是人类作者源；AI 对 framework 默认只读。需要新增框架能力时，AI 只能给出修改建议，不得直接落盘 framework 文件。
 
@@ -54,6 +61,7 @@
 ### 2. 运行与验证命令
 - 运行主程序：`uv run python src/main.py`
 - 静态类型检查：`uv run mypy`
+- 硬编码守卫：`uv run pytest -q tests/test_no_hardcode_guard.py`
 - 项目生成产物物化：`uv run python scripts/materialize_project.py`
 - canonical 验证：`uv run python scripts/validate_canonical.py`
 - 变更传导验证：`uv run python scripts/validate_canonical.py --check-changes`
@@ -62,6 +70,7 @@
 ### 3. 变更执行要求
 - 修改标准或代码后，必须执行对应验证命令。
 - Python 代码变更后，必须通过静态类型检查（`uv run mypy`）。
+- 触及 `src/project_runtime/**`、`src/frontend_kernel/**`、`tools/vscode/shelf-ai/**` 或 `scripts/**` 时，必须执行硬编码守卫测试（`uv run pytest -q tests/test_no_hardcode_guard.py`）。
 - 项目行为变更必须先改 `framework/*.md` 或 `projects/<project_id>/project.toml`，再执行 `uv run python scripts/materialize_project.py` 生成产物；禁止直接手改 `projects/<project_id>/generated/*`。
 - 禁止在仓库规范文档中引入 `pip install` 作为标准流程。
 - 必须启用仓库 `pre-push` hook：`bash scripts/install_git_hooks.sh`。
@@ -71,7 +80,7 @@
 ### 4. 规范优先级
 - 规范总纲：`specs/规范总纲与树形结构.md`
 - 框架设计标准：`specs/框架设计核心标准.md`
-- 领域标准：`framework/shelf/L2-M0-置物架框架标准模块.md`
+- 领域标准：按项目选中的 framework 根模块（示例：`framework/message_queue/L1-M0-消息队列标准模块.md`）
 - 代码规范目录：`specs/code/`
 - Python 实现质量（静态类型）：`specs/code/Python实现质量标准.md`
 

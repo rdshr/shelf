@@ -220,7 +220,7 @@ def _compile_frontend_app_spec(
     *,
     boundary_context: dict[str, dict[str, Any]],
     exact_export: dict[str, Any],
-    root_module_ids: dict[str, str],
+    extend_slot_module_ids: dict[str, str],
 ) -> dict[str, Any]:
     profile = load_knowledge_base_runtime_profile()
     surface = _require_boundary_context_value(boundary_context, "SURFACE")
@@ -398,8 +398,8 @@ def _compile_frontend_app_spec(
                 "api_prefix": str(route["api_prefix"]),
             },
             "extend_slots": [
-                {"slot_id": "domain_workbench", "module_id": root_module_ids["knowledge_base"]},
-                {"slot_id": "backend_contract", "module_id": root_module_ids["backend"]},
+                {"slot_id": "domain_workbench", "module_id": extend_slot_module_ids["domain_workbench"]},
+                {"slot_id": "backend_contract", "module_id": extend_slot_module_ids["backend_contract"]},
             ],
             "component_variants": {
                 "conversation_list": str(extend["conversation_list_variant"]),
@@ -679,20 +679,32 @@ def _build_module_contract_state(binding: ConfigModuleBinding) -> ModuleContract
     )
 
 
-def _module_compile_symbol(module_id: str, root_module_ids: dict[str, str]) -> str:
-    if module_id == root_module_ids.get("frontend"):
+def _module_compile_symbol(
+    module_id: str,
+    *,
+    frontend_module_id: str,
+    knowledge_base_module_id: str,
+    backend_module_id: str,
+) -> str:
+    if module_id == frontend_module_id:
         return "project_runtime.code_layer:_compile_frontend_app_spec"
-    if module_id == root_module_ids.get("knowledge_base"):
+    if module_id == knowledge_base_module_id:
         return "project_runtime.code_layer:_compile_knowledge_base_domain_spec"
     if module_id == BACKEND_L2_M0_MODULE_ID:
         return "project_runtime.static_modules.backend_l2_m0:BackendL2M0Module.export_service_spec"
-    if module_id == root_module_ids.get("backend"):
+    if module_id == backend_module_id:
         return "project_runtime.code_layer:_compile_backend_service_spec"
     return "project_runtime.code_layer:build_code_modules"
 
 
-def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) -> dict[str, tuple[str, ...]]:
-    if module_id == root_module_ids.get("frontend"):
+def _module_runtime_slot_map(
+    module_id: str,
+    *,
+    frontend_module_id: str,
+    knowledge_base_module_id: str,
+    backend_module_id: str,
+) -> dict[str, tuple[str, ...]]:
+    if module_id == frontend_module_id:
         return {
             "SURFACE": (
                 "frontend_app_spec.ui.shell",
@@ -719,7 +731,7 @@ def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) ->
             ),
             "A11Y": ("frontend_app_spec.contract.a11y",),
         }
-    if module_id == root_module_ids.get("knowledge_base"):
+    if module_id == knowledge_base_module_id:
         return {
             "SURFACE": (
                 "knowledge_base_domain_spec.workbench.layout_variant",
@@ -739,7 +751,7 @@ def _module_runtime_slot_map(module_id: str, root_module_ids: dict[str, str]) ->
                 "knowledge_base_domain_spec.workbench.citation_return",
             ),
         }
-    if module_id == root_module_ids.get("backend"):
+    if module_id == backend_module_id:
         return {
             "LIBRARY": ("backend_service_spec.knowledge_base",),
             "PREVIEW": ("backend_service_spec.retrieval",),
@@ -762,7 +774,9 @@ def _boundary_slot_source_ref(
     module_id: str,
     boundary_id: str,
     *,
-    root_module_ids: dict[str, str],
+    frontend_module_id: str,
+    knowledge_base_module_id: str,
+    backend_module_id: str,
 ) -> dict[str, Any]:
     if module_id == BACKEND_L2_M0_MODULE_ID:
         needle_by_boundary = {
@@ -785,13 +799,13 @@ def _boundary_slot_source_ref(
     fallback_line = _find_code_line("def _build_implementation_slots(", fallback=1)
     needle = ""
     section = "implementation_slots"
-    if module_id == root_module_ids.get("frontend"):
+    if module_id == frontend_module_id:
         needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_frontend_app_spec"
-    elif module_id == root_module_ids.get("knowledge_base"):
+    elif module_id == knowledge_base_module_id:
         needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_knowledge_base_domain_spec"
-    elif module_id == root_module_ids.get("backend"):
+    elif module_id == backend_module_id:
         needle = f'_require_boundary_context_value(boundary_context, "{boundary_id}")'
         section = "compile_backend_service_spec"
     line = _find_code_line(needle, fallback=fallback_line)
@@ -842,7 +856,9 @@ def _runtime_slot_source_ref(
 def _build_implementation_slots(
     binding: ConfigModuleBinding,
     *,
-    root_module_ids: dict[str, str],
+    frontend_module_id: str,
+    knowledge_base_module_id: str,
+    backend_module_id: str,
 ) -> list[dict[str, Any]]:
     exact_export = binding.config_module.exact_export
     module_key = str(
@@ -853,8 +869,18 @@ def _build_implementation_slots(
     if not isinstance(boundary_projections, dict):
         boundary_projections = {}
     slots: list[dict[str, Any]] = []
-    runtime_slot_map = _module_runtime_slot_map(binding.framework_module.module_id, root_module_ids)
-    compile_symbol = _module_compile_symbol(binding.framework_module.module_id, root_module_ids)
+    runtime_slot_map = _module_runtime_slot_map(
+        binding.framework_module.module_id,
+        frontend_module_id=frontend_module_id,
+        knowledge_base_module_id=knowledge_base_module_id,
+        backend_module_id=backend_module_id,
+    )
+    compile_symbol = _module_compile_symbol(
+        binding.framework_module.module_id,
+        frontend_module_id=frontend_module_id,
+        knowledge_base_module_id=knowledge_base_module_id,
+        backend_module_id=backend_module_id,
+    )
     for boundary in binding.framework_module.boundaries:
         projection = boundary_projections.get(boundary.boundary_id, {})
         if not isinstance(projection, dict):
@@ -899,7 +925,9 @@ def _build_implementation_slots(
                 "source_ref": _boundary_slot_source_ref(
                     binding.framework_module.module_id,
                     boundary.boundary_id,
-                    root_module_ids=root_module_ids,
+                    frontend_module_id=frontend_module_id,
+                    knowledge_base_module_id=knowledge_base_module_id,
+                    backend_module_id=backend_module_id,
                 ),
             }
         )
@@ -1004,11 +1032,18 @@ def _base_binding_records(
     *,
     class_name: str,
     implementation_slots: list[dict[str, Any]],
-    root_module_ids: dict[str, str],
+    frontend_module_id: str,
+    knowledge_base_module_id: str,
+    backend_module_id: str,
 ) -> list[dict[str, Any]]:
     slot_lookup = {slot["slot_id"]: slot for slot in implementation_slots}
     owner_id = f"code_owner::{binding.framework_module.module_id}"
-    owner_source_symbol = _module_compile_symbol(binding.framework_module.module_id, root_module_ids)
+    owner_source_symbol = _module_compile_symbol(
+        binding.framework_module.module_id,
+        frontend_module_id=frontend_module_id,
+        knowledge_base_module_id=knowledge_base_module_id,
+        backend_module_id=backend_module_id,
+    )
     records: list[dict[str, Any]] = []
     for base_class in binding.framework_module.base_classes:
         boundary_ids = list(base_class.boundary_bindings)
@@ -1078,10 +1113,187 @@ def _rule_binding_records(
     return records
 
 
+def _module_framework_name(module_id: str) -> str:
+    return str(module_id).split(".", 1)[0].strip()
+
+
+_MISSING_OVERLAY = object()
+
+
+def _resolve_root_module_id_by_overlay(
+    *,
+    binding_by_module_id: dict[str, ConfigModuleBinding],
+    root_module_ids: dict[str, str],
+    overlay_key: str,
+) -> str:
+    matches: list[str] = []
+    for module_id in root_module_ids.values():
+        normalized = str(module_id).strip()
+        if not normalized:
+            continue
+        binding = binding_by_module_id.get(normalized)
+        if binding is None:
+            continue
+        overlay_value = _overlay(binding.config_module.exact_export, overlay_key, default=_MISSING_OVERLAY)
+        if overlay_value is _MISSING_OVERLAY:
+            continue
+        if normalized not in matches:
+            matches.append(normalized)
+    if not matches:
+        return ""
+    if len(matches) > 1:
+        raise ValueError(
+            "multiple root modules expose the same exact overlay key: "
+            f"overlay={overlay_key} modules={matches}"
+        )
+    return matches[0]
+
+
+def _resolve_frontend_extend_slot_module_ids(
+    *,
+    frontend_module_id: str,
+    root_module_ids: dict[str, str],
+    merged_dependencies: dict[str, tuple[str, ...]],
+) -> dict[str, str]:
+    role_by_module_id = {
+        str(module_id).strip(): str(role).strip()
+        for role, module_id in root_module_ids.items()
+        if str(role).strip() and str(module_id).strip()
+    }
+    frontend_role = role_by_module_id.get(frontend_module_id, "")
+    if not frontend_role:
+        raise ValueError(f"frontend module is not selected as a root role: module_id={frontend_module_id}")
+    dependency_module_ids: list[str] = []
+    for dep_role in merged_dependencies.get(frontend_role, tuple()):
+        dep_module_id = str(root_module_ids.get(dep_role) or "").strip()
+        if dep_module_id and dep_module_id not in dependency_module_ids:
+            dependency_module_ids.append(dep_module_id)
+    if len(dependency_module_ids) != 2:
+        raise ValueError(
+            "frontend EXTEND slots require exactly two resolved upstream root dependencies; "
+            "declare them in framework upstream refs (or exact.evidence.root_role_dependencies) "
+            f"for role={frontend_role}, resolved={dependency_module_ids}"
+        )
+    return {
+        "domain_workbench": dependency_module_ids[0],
+        "backend_contract": dependency_module_ids[1],
+    }
+
+
+def _normalize_root_role_dependencies(root_role_dependencies: dict[str, Any] | None) -> dict[str, tuple[str, ...]]:
+    if not root_role_dependencies:
+        return {}
+    normalized: dict[str, tuple[str, ...]] = {}
+    for raw_role, raw_deps in root_role_dependencies.items():
+        role = str(raw_role).strip()
+        if not role:
+            continue
+        if isinstance(raw_deps, str):
+            dep_values = [raw_deps]
+        elif isinstance(raw_deps, (list, tuple, set)):
+            dep_values = list(raw_deps)
+        else:
+            raise ValueError(f"root role dependency list must be sequence/string: {role}")
+        dependencies: list[str] = []
+        for item in dep_values:
+            dep_role = str(item).strip()
+            if not dep_role or dep_role == role or dep_role in dependencies:
+                continue
+            dependencies.append(dep_role)
+        if dependencies:
+            normalized[role] = tuple(dependencies)
+    return normalized
+
+
+def _framework_root_role_dependencies(
+    *,
+    binding_by_module_id: dict[str, ConfigModuleBinding],
+    root_module_ids: dict[str, str],
+) -> dict[str, tuple[str, ...]]:
+    role_by_module_id = {
+        str(module_id).strip(): str(role).strip()
+        for role, module_id in root_module_ids.items()
+        if str(role).strip() and str(module_id).strip()
+    }
+    roles_by_framework: dict[str, list[str]] = {}
+    for role, module_id in root_module_ids.items():
+        role_name = str(role).strip()
+        module_name = str(module_id).strip()
+        if not role_name or not module_name:
+            continue
+        framework_name = _module_framework_name(module_name)
+        roles_by_framework.setdefault(framework_name, []).append(role_name)
+
+    dependencies: dict[str, tuple[str, ...]] = {}
+    for role, module_id in root_module_ids.items():
+        role_name = str(role).strip()
+        module_name = str(module_id).strip()
+        if not role_name or not module_name:
+            continue
+        binding = binding_by_module_id.get(module_name)
+        if binding is None:
+            continue
+        required_roles: list[str] = []
+        for upstream_module_id in binding.framework_module.upstream_module_ids:
+            upstream_id = str(upstream_module_id).strip()
+            if not upstream_id:
+                continue
+            dep_role = role_by_module_id.get(upstream_id)
+            if not dep_role:
+                framework_candidates = roles_by_framework.get(_module_framework_name(upstream_id), [])
+                if len(framework_candidates) == 1:
+                    dep_role = framework_candidates[0]
+            if not dep_role or dep_role == role_name or dep_role in required_roles:
+                continue
+            required_roles.append(dep_role)
+        if required_roles:
+            dependencies[role_name] = tuple(required_roles)
+    return dependencies
+
+
+def _merge_root_role_dependencies(
+    framework_dependencies: dict[str, tuple[str, ...]],
+    configured_dependencies: dict[str, tuple[str, ...]],
+) -> dict[str, tuple[str, ...]]:
+    merged: dict[str, list[str]] = {}
+    for source in (framework_dependencies, configured_dependencies):
+        for role, deps in source.items():
+            if role not in merged:
+                merged[role] = []
+            for dep_role in deps:
+                if dep_role not in merged[role]:
+                    merged[role].append(dep_role)
+    return {
+        role: tuple(deps)
+        for role, deps in merged.items()
+        if deps
+    }
+
+
+def _append_module_code_exports(
+    exports_by_module_id: dict[str, dict[str, Any]],
+    *,
+    module_id: str,
+    payload: dict[str, Any],
+) -> None:
+    normalized_module_id = str(module_id).strip()
+    if not normalized_module_id or not payload:
+        return
+    existing = exports_by_module_id.setdefault(normalized_module_id, {})
+    for key, value in payload.items():
+        if key in existing and existing[key] != value:
+            raise ValueError(
+                "conflicting code export assignment for module: "
+                f"module_id={normalized_module_id} key={key}"
+            )
+        existing[key] = value
+
+
 def build_code_modules(
     config_modules: tuple[ConfigModuleBinding, ...],
     *,
     root_module_ids: dict[str, str],
+    root_role_dependencies: dict[str, Any] | None = None,
 ) -> tuple[tuple[CodeModuleBinding, ...], dict[str, Any]]:
     importlib.reload(static_module_contracts)
     bindings: list[CodeModuleBinding] = []
@@ -1094,65 +1306,151 @@ def build_code_modules(
         binding.framework_module.module_id: binding
         for binding in config_modules
     }
-    frontend_root = binding_by_module_id.get(root_module_ids.get("frontend", ""))
-    knowledge_root = binding_by_module_id.get(root_module_ids.get("knowledge_base", ""))
-    backend_root = binding_by_module_id.get(root_module_ids.get("backend", ""))
-    if frontend_root is None or knowledge_root is None or backend_root is None:
-        raise ValueError("frontend, knowledge_base, and backend root modules are required")
-    frontend_state = contract_state_by_module[frontend_root.framework_module.module_id]
-    knowledge_state = contract_state_by_module[knowledge_root.framework_module.module_id]
-    backend_state = contract_state_by_module[backend_root.framework_module.module_id]
-    frontend_app_spec = _compile_frontend_app_spec(
-        boundary_context=frontend_state.boundary_context,
-        exact_export=frontend_root.config_module.exact_export,
+    framework_dependencies = _framework_root_role_dependencies(
+        binding_by_module_id=binding_by_module_id,
         root_module_ids=root_module_ids,
     )
-    route_contract = frontend_app_spec["contract"]["route_contract"]
-    runtime_documents = _compile_runtime_documents(knowledge_root.config_module.exact_export)
-    knowledge_base_domain_spec = _compile_knowledge_base_domain_spec(
-        boundary_context=knowledge_state.boundary_context,
-        exact_export=knowledge_root.config_module.exact_export,
-        runtime_documents=runtime_documents,
+    configured_dependencies = _normalize_root_role_dependencies(root_role_dependencies)
+    merged_dependencies = _merge_root_role_dependencies(framework_dependencies, configured_dependencies)
+
+    for role, required_roles in merged_dependencies.items():
+        selected_module_id = str(root_module_ids.get(role) or "").strip()
+        if not selected_module_id:
+            continue
+        for dep_role in required_roles:
+            dep_module_id = str(root_module_ids.get(dep_role) or "").strip()
+            if not dep_module_id:
+                raise ValueError(
+                    "missing required root role dependency: "
+                    f"{role} requires {dep_role} "
+                    "(configure exact.evidence.root_role_dependencies "
+                    "or provide framework upstream dependency)"
+                )
+            if dep_module_id not in binding_by_module_id:
+                raise ValueError(
+                    "root role dependency points to unresolved module: "
+                    f"role={dep_role} module_id={dep_module_id}"
+                )
+
+    frontend_root_id = _resolve_root_module_id_by_overlay(
+        binding_by_module_id=binding_by_module_id,
+        root_module_ids=root_module_ids,
+        overlay_key="frontend",
     )
-    if backend_root.framework_module.module_id == BACKEND_L2_M0_MODULE_ID:
-        if not isinstance(backend_state.static_params, BackendL2M0StaticBoundaryParams):
-            raise ValueError("backend.L2.M0 static params must be BackendL2M0StaticBoundaryParams")
-        if not isinstance(backend_state.runtime_params, BackendL2M0DynamicBoundaryParams):
-            raise ValueError("backend.L2.M0 runtime params must be BackendL2M0DynamicBoundaryParams")
-        backend_module = BackendL2M0Module(
-            static_params=backend_state.static_params,
-            dynamic_params=backend_state.runtime_params,
+    knowledge_root_id = _resolve_root_module_id_by_overlay(
+        binding_by_module_id=binding_by_module_id,
+        root_module_ids=root_module_ids,
+        overlay_key="documents",
+    )
+    backend_root_id = _resolve_root_module_id_by_overlay(
+        binding_by_module_id=binding_by_module_id,
+        root_module_ids=root_module_ids,
+        overlay_key="backend",
+    )
+    frontend_root = binding_by_module_id.get(frontend_root_id)
+    knowledge_root = binding_by_module_id.get(knowledge_root_id)
+    backend_root = binding_by_module_id.get(backend_root_id)
+
+    frontend_app_spec: dict[str, Any] | None = None
+    route_contract: dict[str, Any] | None = None
+    if frontend_root is not None:
+        frontend_state = contract_state_by_module[frontend_root.framework_module.module_id]
+        frontend_extend_slot_module_ids = _resolve_frontend_extend_slot_module_ids(
+            frontend_module_id=frontend_root.framework_module.module_id,
+            root_module_ids=root_module_ids,
+            merged_dependencies=merged_dependencies,
         )
-        backend_service_spec = backend_module.export_service_spec(
-            exact_export=backend_root.config_module.exact_export,
-            route_contract=route_contract,
+        frontend_app_spec = _compile_frontend_app_spec(
+            boundary_context=frontend_state.boundary_context,
+            exact_export=frontend_root.config_module.exact_export,
+            extend_slot_module_ids=frontend_extend_slot_module_ids,
         )
-    else:
-        backend_service_spec = _compile_backend_service_spec(
-            boundary_context=backend_state.boundary_context,
-            exact_export=backend_root.config_module.exact_export,
-            route_contract=route_contract,
+        route_contract = frontend_app_spec["contract"]["route_contract"]
+
+    runtime_documents: list[dict[str, Any]] | None = None
+    knowledge_base_domain_spec: dict[str, Any] | None = None
+    if knowledge_root is not None:
+        knowledge_state = contract_state_by_module[knowledge_root.framework_module.module_id]
+        runtime_documents = _compile_runtime_documents(knowledge_root.config_module.exact_export)
+        knowledge_base_domain_spec = _compile_knowledge_base_domain_spec(
+            boundary_context=knowledge_state.boundary_context,
+            exact_export=knowledge_root.config_module.exact_export,
+            runtime_documents=runtime_documents,
         )
-    runtime_exports["frontend_app_spec"] = frontend_app_spec
-    runtime_exports["knowledge_base_domain_spec"] = knowledge_base_domain_spec
-    runtime_exports["runtime_documents"] = runtime_documents
-    runtime_exports["backend_service_spec"] = backend_service_spec
+
+    backend_service_spec: dict[str, Any] | None = None
+    if backend_root is not None:
+        if route_contract is None:
+            raise ValueError(
+                "backend service compiler requires route_contract, "
+                f"but no module produced it: module_id={backend_root.framework_module.module_id}"
+            )
+        backend_state = contract_state_by_module[backend_root.framework_module.module_id]
+        if backend_root.framework_module.module_id == BACKEND_L2_M0_MODULE_ID:
+            if not isinstance(backend_state.static_params, BackendL2M0StaticBoundaryParams):
+                raise ValueError("backend.L2.M0 static params must be BackendL2M0StaticBoundaryParams")
+            if not isinstance(backend_state.runtime_params, BackendL2M0DynamicBoundaryParams):
+                raise ValueError("backend.L2.M0 runtime params must be BackendL2M0DynamicBoundaryParams")
+            backend_module = BackendL2M0Module(
+                static_params=backend_state.static_params,
+                dynamic_params=backend_state.runtime_params,
+            )
+            backend_service_spec = backend_module.export_service_spec(
+                exact_export=backend_root.config_module.exact_export,
+                route_contract=route_contract,
+            )
+        else:
+            backend_service_spec = _compile_backend_service_spec(
+                boundary_context=backend_state.boundary_context,
+                exact_export=backend_root.config_module.exact_export,
+                route_contract=route_contract,
+            )
+
+    if frontend_app_spec is not None:
+        runtime_exports["frontend_app_spec"] = frontend_app_spec
+    if knowledge_base_domain_spec is not None:
+        runtime_exports["knowledge_base_domain_spec"] = knowledge_base_domain_spec
+    if runtime_documents is not None:
+        runtime_exports["runtime_documents"] = runtime_documents
+    if backend_service_spec is not None:
+        runtime_exports["backend_service_spec"] = backend_service_spec
+    module_code_exports_by_id: dict[str, dict[str, Any]] = {}
+    _append_module_code_exports(
+        module_code_exports_by_id,
+        module_id=frontend_root_id,
+        payload={"frontend_app_spec": frontend_app_spec} if frontend_app_spec is not None else {},
+    )
+    _append_module_code_exports(
+        module_code_exports_by_id,
+        module_id=knowledge_root_id,
+        payload={
+            **(
+                {"knowledge_base_domain_spec": knowledge_base_domain_spec}
+                if knowledge_base_domain_spec is not None
+                else {}
+            ),
+            **({"runtime_documents": runtime_documents} if runtime_documents is not None else {}),
+        },
+    )
+    _append_module_code_exports(
+        module_code_exports_by_id,
+        module_id=backend_root_id,
+        payload={"backend_service_spec": backend_service_spec} if backend_service_spec is not None else {},
+    )
     for binding in config_modules:
         module_id = binding.framework_module.module_id
         state = contract_state_by_module[module_id]
         module_key = state.module_key
         exact_export = binding.config_module.exact_export
-        code_exports: dict[str, Any] = {}
-        if module_id == root_module_ids.get("frontend"):
-            code_exports["frontend_app_spec"] = frontend_app_spec
-        if module_id == root_module_ids.get("knowledge_base"):
-            code_exports["knowledge_base_domain_spec"] = knowledge_base_domain_spec
-            code_exports["runtime_documents"] = runtime_documents
-        if module_id == root_module_ids.get("backend"):
-            code_exports["backend_service_spec"] = backend_service_spec
+        code_exports = dict(module_code_exports_by_id.get(module_id, {}))
         module_name_fragment = state.module_name_fragment
         class_name = f"{module_name_fragment}CodeModule"
-        implementation_slots = _build_implementation_slots(binding, root_module_ids=root_module_ids)
+        implementation_slots = _build_implementation_slots(
+            binding,
+            frontend_module_id=frontend_root_id,
+            knowledge_base_module_id=knowledge_root_id,
+            backend_module_id=backend_root_id,
+        )
         field_bindings = list(state.field_bindings)
         static_params_type = state.static_params_type
         runtime_params_type = state.runtime_params_type
@@ -1170,7 +1468,9 @@ def build_code_modules(
             binding,
             class_name=class_name,
             implementation_slots=implementation_slots,
-            root_module_ids=root_module_ids,
+            frontend_module_id=frontend_root_id,
+            knowledge_base_module_id=knowledge_root_id,
+            backend_module_id=backend_root_id,
         )
         rule_bindings = _rule_binding_records(
             binding,

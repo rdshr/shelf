@@ -14,17 +14,11 @@ Framework -> Config -> Code -> Evidence
 - `Evidence` 层负责验证、快照、追溯和 GUI 材料
 - `projects/*/generated/canonical.json` 是唯一机器真相源
 
-## 默认项目
+## 样例项目
 
-- [projects/knowledge_base_basic/project.toml](./projects/knowledge_base_basic/project.toml)
+- [projects/message_queue_basic/project.toml](./projects/message_queue_basic/project.toml)
 
-该项目会物化出一个知识库工作台示例：
-
-- 聊天主界面
-- 引用抽屉
-- 知识库列表与详情页
-- 文档详情页
-- canonical 派生框架树与证据树
+该项目用于验证 message_queue 场景的四层主链物化与校验流程。
 
 ## 快速开始
 
@@ -39,8 +33,9 @@ uv run python src/main.py
 
 默认入口：
 
-- App: `http://127.0.0.1:8000/knowledge-base`
-- Project Config API: `http://127.0.0.1:8000/api/knowledge/project-config`
+- App: `http://127.0.0.1:8000/`
+- Project Config API: `http://127.0.0.1:8000/project/config`
+- Correspondence API: `http://127.0.0.1:8000/correspondence`
 
 ## 关键文件
 

@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const workspaceGuard = require("./guarding");
 
-const DEFAULT_PROJECT_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
 const SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION = 1;
 const DEFAULT_API_PREFIX = "/api/knowledge";
 
@@ -91,6 +90,106 @@ function normalizeApiPath(value) {
   return text.startsWith("/") ? text : `/${text}`;
 }
 
+function localizeCorrespondenceReason(rawReason) {
+  const reason = asText(rawReason);
+  if (!reason) {
+    return "correspondence 校验问题";
+  }
+
+  const unsupportedExtraction = reason.match(/^effective extraction unsupported:\s*(.+)$/i);
+  if (unsupportedExtraction) {
+    return `effective 提取暂不支持：${unsupportedExtraction[1]}`;
+  }
+
+  const missingDeclaredBase = reason.match(/^declared base not assembled in module __init__:\s*(.+)$/i);
+  if (missingDeclaredBase) {
+    return `模块 __init__ 未装配已声明的基类：${missingDeclaredBase[1]}`;
+  }
+
+  const undeclaredAssembledBase = reason.match(/^module __init__ assembled undeclared base:\s*(.+)$/i);
+  if (undeclaredAssembledBase) {
+    return `模块 __init__ 装配了未声明的基类：${undeclaredAssembledBase[1]}`;
+  }
+
+  const missingDeclaredRule = reason.match(/^declared rule not assembled in module __init__:\s*(.+)$/i);
+  if (missingDeclaredRule) {
+    return `模块 __init__ 未装配已声明的规则：${missingDeclaredRule[1]}`;
+  }
+
+  const undeclaredAssembledRule = reason.match(/^module __init__ assembled undeclared rule:\s*(.+)$/i);
+  if (undeclaredAssembledRule) {
+    return `模块 __init__ 装配了未声明的规则：${undeclaredAssembledRule[1]}`;
+  }
+
+  const boundaryMapMismatch = reason.match(
+    /^boundary_field_map mismatch\s+expected=(.+?)\s+actual=(.+)$/i
+  );
+  if (boundaryMapMismatch) {
+    return `boundary_field_map 不一致：期望=${boundaryMapMismatch[1]}，实际=${boundaryMapMismatch[2]}`;
+  }
+
+  const missingEffectiveBase = reason.match(/^effective base extraction missing:\s*(.+)$/i);
+  if (missingEffectiveBase) {
+    return `缺少基类 effective 提取结果：${missingEffectiveBase[1]}`;
+  }
+
+  const baseReadsUndeclaredBoundary = reason.match(
+    /^base reads undeclared boundary:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (baseReadsUndeclaredBoundary) {
+    return `基类读取了未声明的参数边界：${baseReadsUndeclaredBoundary[1]} -> ${baseReadsUndeclaredBoundary[2]}`;
+  }
+
+  const baseBoundaryMiss = reason.match(
+    /^declared boundary not effectively read by base:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (baseBoundaryMiss) {
+    return `基类声明的参数边界未被有效读取：${baseBoundaryMiss[1]} -> ${baseBoundaryMiss[2]}`;
+  }
+
+  const missingEffectiveRule = reason.match(/^effective rule extraction missing:\s*(.+)$/i);
+  if (missingEffectiveRule) {
+    return `缺少规则 effective 提取结果：${missingEffectiveRule[1]}`;
+  }
+
+  const ruleInjectsUndeclaredBase = reason.match(
+    /^rule constructor injects undeclared base:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (ruleInjectsUndeclaredBase) {
+    return `规则构造器注入了未声明的基类：${ruleInjectsUndeclaredBase[1]} -> ${ruleInjectsUndeclaredBase[2]}`;
+  }
+
+  const missingInjectedRuleBase = reason.match(
+    /^declared rule base not injected by constructor:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (missingInjectedRuleBase) {
+    return `规则声明的基类未被构造器注入：${missingInjectedRuleBase[1]} -> ${missingInjectedRuleBase[2]}`;
+  }
+
+  const ruleReadsUndeclaredBoundary = reason.match(
+    /^rule reads undeclared boundary:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (ruleReadsUndeclaredBoundary) {
+    return `规则读取了未声明的参数边界：${ruleReadsUndeclaredBoundary[1]} -> ${ruleReadsUndeclaredBoundary[2]}`;
+  }
+
+  const ruleBoundaryMiss = reason.match(
+    /^declared rule boundary not effectively read:\s*(.+?)\s*->\s*(.+)$/i
+  );
+  if (ruleBoundaryMiss) {
+    return `规则声明的参数边界未被有效读取：${ruleBoundaryMiss[1]} -> ${ruleBoundaryMiss[2]}`;
+  }
+
+  const ruleBaseMismatch = reason.match(
+    /^rule constructor bases and module assembly injected bases mismatch\s+(.+?):\s*constructor=(.+?)\s+module_init=(.+)$/i
+  );
+  if (ruleBaseMismatch) {
+    return `规则构造器基类与模块装配注入基类不一致：${ruleBaseMismatch[1]}：constructor=${ruleBaseMismatch[2]}，module_init=${ruleBaseMismatch[3]}`;
+  }
+
+  return reason;
+}
+
 /**
  * @param {string} projectFilePath
  * @returns {Record<string, unknown> | null}
@@ -115,11 +214,11 @@ function readProjectCanonical(projectFilePath) {
  */
 function resolvePreferredProjectFile(repoRoot, frameworkName = "") {
   const candidates = workspaceGuard.discoverProjectFiles(repoRoot);
-  const preferredDefault = path.join(repoRoot, DEFAULT_PROJECT_FILE);
+  const preferredDefault = candidates.length > 0 ? candidates[0] : null;
   let bestFile = null;
   let bestScore = -1;
   for (const filePath of candidates) {
-    let score = filePath === preferredDefault ? 1 : 0;
+    let score = preferredDefault && filePath === preferredDefault ? 1 : 0;
     if (frameworkName) {
       try {
         const frameworks = workspaceGuard.inferConfiguredFrameworks(fs.readFileSync(filePath, "utf8"));
@@ -137,9 +236,6 @@ function resolvePreferredProjectFile(repoRoot, frameworkName = "") {
   }
   if (bestFile) {
     return bestFile;
-  }
-  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
-    return preferredDefault;
   }
   return null;
 }
@@ -176,7 +272,7 @@ function resolveCorrespondenceApiPaths(canonical) {
  */
 function normalizeNavigationTarget(candidate) {
   if (!candidate || typeof candidate !== "object") {
-    throw new Error("invalid correspondence target: expected object");
+    throw new Error("非法 correspondence target：期望 object");
   }
   return {
     target_kind: asText(candidate.target_kind),
@@ -198,11 +294,11 @@ function normalizeNavigationTarget(candidate) {
  */
 function normalizeCorrespondenceObject(candidate) {
   if (!candidate || typeof candidate !== "object") {
-    throw new Error("invalid correspondence object: expected object");
+    throw new Error("非法 correspondence object：期望 object");
   }
   const objectId = asText(candidate.object_id);
   if (!objectId) {
-    throw new Error("invalid correspondence object: missing object_id");
+    throw new Error("非法 correspondence object：缺少 object_id");
   }
   const navigationTargets = Array.isArray(candidate.navigation_targets)
     ? candidate.navigation_targets.map(normalizeNavigationTarget)
@@ -225,10 +321,10 @@ function normalizeCorrespondenceObject(candidate) {
       .map((target) => target.target_kind)
   );
   if (!navigationTargets.some((target) => target.target_kind === objectValue.primary_nav_target_kind)) {
-    throw new Error(`invalid correspondence object ${objectId}: missing primary_nav_target_kind target`);
+    throw new Error(`非法 correspondence object ${objectId}：缺少 primary_nav_target_kind 对应目标`);
   }
   if (!navigationTargets.some((target) => target.target_kind === objectValue.primary_edit_target_kind)) {
-    throw new Error(`invalid correspondence object ${objectId}: missing primary_edit_target_kind target`);
+    throw new Error(`非法 correspondence object ${objectId}：缺少 primary_edit_target_kind 对应目标`);
   }
   if (objectValue.materialization_kind === "runtime_dynamic_type") {
     const hasFallback = navigationTargets.some((target) =>
@@ -237,14 +333,14 @@ function normalizeCorrespondenceObject(candidate) {
       || target.target_kind === "code_correspondence"
     );
     if (!hasFallback) {
-      throw new Error(`invalid correspondence object ${objectId}: runtime_dynamic_type requires a fallback target`);
+      throw new Error(`非法 correspondence object ${objectId}：runtime_dynamic_type 缺少可回退目标`);
     }
   }
   if (navigationTargets.some((target) => target.target_kind === "deprecated_alias" && target.is_primary)) {
-    throw new Error(`invalid correspondence object ${objectId}: deprecated_alias cannot be primary`);
+    throw new Error(`非法 correspondence object ${objectId}：deprecated_alias 不能作为主目标`);
   }
   if (!primaryTargetKinds.has(objectValue.primary_nav_target_kind)) {
-    throw new Error(`invalid correspondence object ${objectId}: primary nav target is not marked primary`);
+    throw new Error(`非法 correspondence object ${objectId}：主导航目标未标记为 primary`);
   }
   return objectValue;
 }
@@ -296,12 +392,12 @@ function normalizeValidationSummary(candidate) {
  */
 function normalizeCorrespondencePayload(candidate) {
   if (!candidate || typeof candidate !== "object") {
-    throw new Error("invalid correspondence payload: expected object");
+    throw new Error("非法 correspondence payload：期望 object");
   }
   const schemaVersion = Number(candidate.correspondence_schema_version || 0);
   if (schemaVersion !== SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION) {
     throw new Error(
-      `unsupported correspondence schema version: ${schemaVersion} (expected ${SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION})`
+      `不支持的 correspondence schema 版本：${schemaVersion}（期望 ${SUPPORTED_CORRESPONDENCE_SCHEMA_VERSION}）`
     );
   }
   const objects = Array.isArray(candidate.objects)
@@ -316,7 +412,7 @@ function normalizeCorrespondencePayload(candidate) {
     for (const [objectId, objectValue] of Object.entries(rawObjectIndex)) {
       const normalized = normalizeCorrespondenceObject(objectValue);
       if (normalized.object_id !== objectId) {
-        throw new Error(`invalid correspondence object index entry: ${objectId}`);
+        throw new Error(`非法 correspondence object index 条目：${objectId}`);
       }
       objectIndex[objectId] = normalized;
     }
@@ -467,10 +563,11 @@ function buildValidationIssues(summary, objectIndex) {
       || objectValue?.correspondence_anchor
       || objectValue?.implementation_anchor
       || null;
+    const localizedReason = localizeCorrespondenceReason(issue.reason);
     return {
       message: primaryObjectId
-        ? `[${primaryObjectId}] ${asText(issue.reason) || "Correspondence validation issue"}`
-        : (asText(issue.reason) || "Correspondence validation issue"),
+        ? `[${primaryObjectId}] ${localizedReason}`
+        : localizedReason,
       file: primaryTarget ? primaryTarget.file_path : "projects/*/generated/canonical.json",
       line: primaryTarget ? primaryTarget.start_line : 1,
       column: 1,

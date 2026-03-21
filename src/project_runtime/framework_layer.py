@@ -280,13 +280,13 @@ def _boundary_projection_map(module: ParsedFrameworkModule) -> dict[str, dict[st
 
 
 def _module_exact_overlay_paths(module: ParsedFrameworkModule) -> tuple[str, ...]:
-    if module.framework == "frontend":
-        return ("exact.code.frontend",)
-    if module.framework == "knowledge_base":
-        return ("exact.knowledge_base.documents",)
-    if module.framework == "backend":
-        return ("exact.code.backend",)
-    return tuple()
+    framework_name = str(module.framework).strip()
+    if not framework_name:
+        return tuple()
+    return (
+        f"exact.code.{framework_name}",
+        f"exact.{framework_name}.documents",
+    )
 
 
 def _serialize_boundary(boundary: Any, boundary_projection_map: dict[str, dict[str, Any]]) -> dict[str, Any]:

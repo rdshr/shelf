@@ -24,6 +24,15 @@ RELOAD_DIRS = [
 RELOAD_INCLUDES = ["*.py", "*.md", "*.toml", "*.json"]
 
 
+def _default_project_file_arg() -> str | None:
+    if DEFAULT_PROJECT_FILE is None:
+        return None
+    try:
+        return str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(DEFAULT_PROJECT_FILE)
+
+
 def _normalize_argv(argv: list[str]) -> list[str]:
     if not argv:
         return ["serve"]
@@ -42,8 +51,8 @@ def _build_parser() -> argparse.ArgumentParser:
     serve_parser = subparsers.add_parser("serve", help="load the selected project runtime and start the demo server")
     serve_parser.add_argument(
         "--project-file",
-        default=str(DEFAULT_PROJECT_FILE.relative_to(REPO_ROOT)),
-        help="path to the project.toml file. Defaults to projects/knowledge_base_basic/project.toml.",
+        default=_default_project_file_arg(),
+        help="path to the project.toml file. Defaults to the auto-discovered project under projects/*/project.toml.",
     )
     serve_parser.add_argument("--host", default=DEFAULT_HOST, help=f"bind host (default: {DEFAULT_HOST})")
     serve_parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"bind port (default: {DEFAULT_PORT})")
@@ -51,11 +60,15 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _serve_project(project_file: str | Path, *, host: str, port: int, reload: bool) -> None:
-    resolved_project_file = Path(project_file)
-    if not resolved_project_file.is_absolute():
-        resolved_project_file = (REPO_ROOT / resolved_project_file).resolve()
-    os.environ[PROJECT_FILE_ENV] = str(resolved_project_file)
+def _serve_project(project_file: str | Path | None, *, host: str, port: int, reload: bool) -> None:
+    resolved_project_file: Path | None = None
+    if project_file is not None:
+        resolved_project_file = Path(project_file)
+        if not resolved_project_file.is_absolute():
+            resolved_project_file = (REPO_ROOT / resolved_project_file).resolve()
+        os.environ[PROJECT_FILE_ENV] = str(resolved_project_file)
+    else:
+        os.environ.pop(PROJECT_FILE_ENV, None)
 
     if reload:
         materialize_project_runtime(resolved_project_file)

@@ -34,8 +34,7 @@ INLINE_REF_PATTERN = re.compile(
     r"^(?:(?P<framework>[A-Za-z][A-Za-z0-9_-]*)\.)?L(?P<level>\d+)\.M(?P<module>\d+)(?:\[(?P<rules>[^\]]*)\])?$"
 )
 PARAMETER_SECTION_TITLES = (
-    "## 2. 参数定义（Parameter）",
-    "## 2. 边界定义（Boundary / 参数）",
+    "## 2. 边界定义（Boundary / Parameter 参数）",
 )
 RULE_PARAMETER_BINDING_PREFIXES = ("参数绑定：", "边界绑定：")
 
@@ -396,7 +395,7 @@ def parse_framework_module(path: str | Path) -> FrameworkModule:
             relative_file=relative_file,
         ),
         bases=_parse_bases(
-            sections.get("## 3. 最小可行基（Minimum Viable Bases）", []),
+            sections.get("## 3. 最小结构基（Minimal Structural Bases）", []),
             framework,
             relative_file=relative_file,
         ),

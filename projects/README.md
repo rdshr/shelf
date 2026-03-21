@@ -27,15 +27,6 @@
 
 当前样板：
 
-- [projects/knowledge_base_basic/project.toml](./knowledge_base_basic/project.toml)
-
-说明：
-
-- `knowledge_base_basic` 是用于验证四层编译链和运行时效果的样例项目
-- 它保留在仓库里参与物化与测试，但不是公开发布对象
-
-重新物化：
-
-```bash
-uv run python scripts/materialize_project.py --project-file projects/knowledge_base_basic/project.toml
-```
+- `message_queue_basic`
+  - 项目配置：`projects/message_queue_basic/project.toml`
+  - 产物目录：`projects/message_queue_basic/generated/`

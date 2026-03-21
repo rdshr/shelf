@@ -27,6 +27,14 @@ def _outcome(
     )
 
 
+def _selected_root_module_ids(root_module_ids: dict[str, str]) -> set[str]:
+    return {
+        str(module_id).strip()
+        for module_id in root_module_ids.values()
+        if str(module_id).strip()
+    }
+
+
 def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleValidationOutcome, ...]:
     contract_spec = load_knowledge_base_runtime_profile()
     frontend_spec = resolve_frontend_app_spec(project)
@@ -91,10 +99,32 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
             r2_reasons.append(f"missing frontend_app_spec.ui page: {page_id}")
 
     r3_reasons: list[str] = []
-    if contract["extend_slots"][0]["module_id"] != project.root_module_ids["knowledge_base"]:
-        r3_reasons.append("domain workbench slot must point to the selected domain framework module")
-    if contract["extend_slots"][1]["module_id"] != project.root_module_ids["backend"]:
-        r3_reasons.append("backend contract slot must point to the selected backend framework module")
+    extend_slot_by_id: dict[str, str] = {}
+    for item in contract.get("extend_slots", []):
+        if not isinstance(item, dict):
+            continue
+        slot_id = str(item.get("slot_id") or "").strip()
+        module_id = str(item.get("module_id") or "").strip()
+        if slot_id and module_id:
+            extend_slot_by_id[slot_id] = module_id
+    domain_slot_module_id = extend_slot_by_id.get("domain_workbench")
+    backend_slot_module_id = extend_slot_by_id.get("backend_contract")
+    if not domain_slot_module_id:
+        r3_reasons.append("domain_workbench extend slot is required")
+    if not backend_slot_module_id:
+        r3_reasons.append("backend_contract extend slot is required")
+
+    selected_root_module_ids = _selected_root_module_ids(project.root_module_ids)
+    if domain_slot_module_id and domain_slot_module_id not in selected_root_module_ids:
+        r3_reasons.append("domain_workbench slot must point to a selected root module")
+    if backend_slot_module_id and backend_slot_module_id not in selected_root_module_ids:
+        r3_reasons.append("backend_contract slot must point to a selected root module")
+    if (
+        domain_slot_module_id
+        and backend_slot_module_id
+        and domain_slot_module_id == backend_slot_module_id
+    ):
+        r3_reasons.append("domain_workbench and backend_contract must point to different root modules")
 
     r4_reasons: list[str] = []
     if not bool(preview.get("enabled")):
@@ -169,5 +199,9 @@ def validate_frontend_rules(project: "ProjectRuntimeAssembly") -> tuple[RuleVali
     )
 
 
-def summarize_frontend_rules(results: tuple[RuleValidationOutcome, ...]) -> RuleValidationSummary:
-    return RuleValidationSummary(module_id="frontend.L2.M0", rules=results)
+def summarize_frontend_rules(
+    results: tuple[RuleValidationOutcome, ...],
+    *,
+    module_id: str,
+) -> RuleValidationSummary:
+    return RuleValidationSummary(module_id=str(module_id), rules=results)

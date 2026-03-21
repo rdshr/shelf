@@ -326,7 +326,10 @@ def build_config_modules(
         overlays: dict[str, Any] = {}
         for overlay_path in module_class.exact_overlay_paths:
             overlay_key = overlay_path.rsplit(".", 1)[-1]
-            overlays[overlay_key] = lookup_dotted_path(project_payload, overlay_path)
+            try:
+                overlays[overlay_key] = lookup_dotted_path(project_payload, overlay_path)
+            except KeyError:
+                continue
         communication_export = {
             "module_id": module_class.module_id,
             "module_key": module_key,

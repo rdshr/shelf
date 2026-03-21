@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.1.21 - 2026-03-21
+
+- Release summary is based on the full commit range `shelf-ai-v0.1.20..shelf-ai-v0.1.21`.
+- Added real-time framework markdown lint diagnostics and quick fixes, with grant-stage intent-gate behavior alignment.
+- Unified authoring section naming to `## 2. 边界定义（Boundary / Parameter 参数）` and `## 3. 最小结构基（Minimal Structural Bases）` across parser/lint/completion/navigation/snippets/tests/framework docs.
+- Added Boundary-section dash auto-expansion (`-` -> parameter item template) with inferred `P` numbering.
+- Rebuilt and revalidated Shelf AI assets before packaging and installation.
+
+## 0.1.20 - 2026-03-20
+
+- Switched Shelf AI Problems diagnostics to Chinese by default instead of leaking English validation text from generated-artifact guards and correspondence summaries.
+- Added correspondence-side reason localization so common audit drift messages land in Chinese even when the underlying runtime emits English reason strings.
+- Repacked and reinstalled the local VSIX after the diagnostics localization fix so the shipped release matches the current validated workspace.
+
+## 0.1.19 - 2026-03-20
+
+- Removed fixed default-project assumptions in runtime and scripts: project resolution now supports discovery from `projects/*/project.toml` or explicit input instead of `projects/project.toml` fallback.
+- Hardened no-project handling in CLI/validation/materialization paths with explicit messages and bootstrap-aware checks.
+- Synced repository docs and guards to the current `message_queue_basic` baseline and canonical path conventions.
+
+## 0.1.18 - 2026-03-20
+
+- Replaced hard-coded per-module `if module_id == ...` export assignment branches in runtime/evidence layers with mapping-driven export injection.
+- Removed fixed `frontend/knowledge_base/backend` overlay branching in framework projection and switched to framework-name-driven overlay path generation.
+- Added repository-level hardcode regression guard (`tests/test_no_hardcode_guard.py`) and enforced anti-hardcode execution requirements in `AGENTS.md`.
+
+## 0.1.17 - 2026-03-20
+
+- Removed hard-coded root-role coupling checks in `project_runtime.code_layer` and switched consistency validation to framework-upstream-derived dependencies plus explicit config overrides.
+- Added configurable root-role dependency overrides at `exact.evidence.root_role_dependencies`, so projects can declare extra root coupling without patching runtime code.
+- Enabled queue-only project materialization/validation flow (`message_queue` roots without mandatory frontend/knowledge_base/backend triple), while keeping per-module export injection strict to selected roots only.
+
+## 0.1.16 - 2026-03-20
+
+- Removed hard dependency on `projects/knowledge_base_basic/project.toml` as the extension fallback project file and switched to generic `projects/*/project.toml` discovery.
+- Updated issue reveal fallback behavior so Shelf can still open a valid workspace file (project file first, then standards doc) when no canonical issue file is available.
+- Synced framework/correspondence navigation default project preference to the generic workspace fallback path.
+
+## 0.1.15 - 2026-03-20
+
+- Updated framework design standards to remove the mandatory base-to-capability direct mapping constraint and keep capability derivation at the rule-combination layer.
+- Added correspondence guard enforcement that every base must declare at least one boundary and that declared base boundaries must belong to the owner module.
+- Synced Shelf AI framework lint hint `FW022` wording with the new base-boundary constraint semantics.
+
 ## 0.1.14 - 2026-03-19
 
 - Removed extension-side normalization that silently stripped stale `--json` from validation commands; Shelf now executes the configured validation command as-is.

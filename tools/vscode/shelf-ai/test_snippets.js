@@ -92,6 +92,42 @@ function main() {
     "uv run python scripts/validate_canonical.py",
     "package.json must default shelf.fullValidationCommand to the supported canonical validation command"
   );
+  assert(
+    configuration["shelf.frameworkLintEnabled"]?.default === true,
+    "package.json must enable framework realtime lint by default"
+  );
+  assert(
+    configuration["shelf.frameworkLintOnType"]?.default === true,
+    "package.json must run framework realtime lint while typing by default"
+  );
+  assert(
+    configuration["shelf.frameworkLintDebounceMs"]?.default === 300,
+    "package.json must expose framework lint debounce configuration"
+  );
+  assert(
+    configuration["shelf.frameworkAutoCompleteEnabled"]?.default === true,
+    "package.json must enable framework auto completion by default"
+  );
+  assert(
+    configuration["shelf.frameworkAutoTriggerSuggest"]?.default === true,
+    "package.json must auto trigger framework completion by default"
+  );
+  assert(
+    configuration["shelf.frameworkQuickFixEnabled"]?.default === true,
+    "package.json must enable framework lint quick fixes by default"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateEnforcementMode"),
+    "package.json should not expose save-time intent gate enforcement mode"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateGuardedPathPrefixes"),
+    "package.json should not expose save-time guarded path prefixes"
+  );
+  assert(
+    !Object.prototype.hasOwnProperty.call(configuration, "shelf.intentGateIgnoredPathPrefixes"),
+    "package.json should not expose save-time ignored path prefixes"
+  );
 
   const frameworkSnippet = snippetJson["@framework Module Template"];
   assert(frameworkSnippet, "markdown snippets must keep the @framework module template");
@@ -103,11 +139,11 @@ function main() {
     "@framework snippet must include capability statement section"
   );
   assert(
-    frameworkSnippet.body.includes("## 2. 参数定义（Parameter）"),
-    "@framework snippet must include parameter section"
+    frameworkSnippet.body.includes("## 2. 边界定义（Boundary / Parameter 参数）"),
+    "@framework snippet must include boundary/parameter section"
   );
   assert(
-    frameworkSnippet.body.includes("## 3. 最小可行基（Minimum Viable Bases）"),
+    frameworkSnippet.body.includes("## 3. 最小结构基（Minimal Structural Bases）"),
     "@framework snippet must include base section"
   );
   assert(
@@ -140,11 +176,19 @@ function main() {
     "extension.js must register a markdown completion provider"
   );
   assert(
+    /registerCodeActionsProvider\s*\(/.test(extensionSource),
+    "extension.js must register framework markdown quick-fix provider"
+  );
+  assert(
+    extensionSource.includes("editor.action.triggerSuggest"),
+    "extension.js must trigger framework suggestion popup while typing"
+  );
+  assert(
     /onDidChangeTextDocument\s*\(/.test(extensionSource),
     "extension.js must clear stale shelf diagnostics when watched documents are edited"
   );
   assert(
-    extensionSource.includes('$(close) Shelf failed'),
+    extensionSource.includes('$(close) Shelf 失败'),
     "extension.js must expose a visible cross icon for failing Shelf status"
   );
   assert(
@@ -220,17 +264,63 @@ function main() {
 
   const sectionEntries = frameworkCompletion.getFrameworkCompletionEntries("## ", "", true);
   assert(
-    sectionEntries.some((entry) => entry.label.includes("最小可行基")),
-    "section completion must include the Minimum Viable Bases heading"
+    sectionEntries.some((entry) => entry.label.includes("最小结构基")),
+    "section completion must include the Minimal Structural Bases heading"
   );
 
-  const baseEntries = frameworkCompletion.getFrameworkCompletionEntries("- `B", "B", true);
+  const authoringSample = [
+    "# 模块:Module",
+    "",
+    "@framework",
+    "",
+    "## 1. 能力声明（Capability Statement）",
+    "",
+    "- `C1` 现有能力：描述。",
+    "- `N1` 非职责声明：描述。",
+    "",
+    "## 4. 基组合原则（Base Combination Principles）",
+    "",
+    "- `R7` 现有规则",
+    "  - `R7.1` 参与基：`B1 + B2`。",
+  ].join("\n");
+
+  const capabilityEntries = frameworkCompletion.getFrameworkCompletionEntries(
+    "- ",
+    "",
+    true,
+    {
+      documentText: authoringSample,
+      lineNumber: 6,
+    }
+  );
+  assert(
+    capabilityEntries.some((entry) => entry.label === "C 条目"),
+    "capability section completion must include C entry"
+  );
+  assert(
+    !capabilityEntries.some((entry) => entry.label === "参数条目"),
+    "capability section completion should not prioritize parameter entry"
+  );
+  const cEntry = capabilityEntries.find((entry) => entry.label === "C 条目");
+  assert(cEntry?.insertText.includes("C${1:2}"), "C completion should infer next index from current document");
+  assert(
+    capabilityEntries.some((entry) => entry.label === "N 条目"),
+    "capability section completion must include non-responsibility entry"
+  );
+
+  const baseEntries = frameworkCompletion.getFrameworkCompletionEntries("- `B", "B", true, {
+    documentText: authoringSample,
+    lineNumber: 6,
+  });
   assert(
     baseEntries.some((entry) => entry.label === "B 条目"),
     "base completion must include the B entry template"
   );
 
-  const ruleChildEntries = frameworkCompletion.getFrameworkCompletionEntries("  - `R1.", "R1.", true);
+  const ruleChildEntries = frameworkCompletion.getFrameworkCompletionEntries("  - `R7.", "R7.", true, {
+    documentText: authoringSample,
+    lineNumber: 12,
+  });
   assert(
     ruleChildEntries.some((entry) => entry.label === "R*.1 参与基"),
     "rule child completion must include R*.1"
@@ -238,6 +328,55 @@ function main() {
   assert(
     ruleChildEntries.some((entry) => entry.label === "R*.4 参数绑定"),
     "rule child completion must include R*.4"
+  );
+  const ruleChildEntry = ruleChildEntries.find((entry) => entry.label === "R*.1 参与基");
+  assert(
+    ruleChildEntry?.insertText.includes("R${1:7}.1"),
+    "rule child completion should infer nearest rule number"
+  );
+
+  const parameterAuthoringSample = [
+    "# 模块:Module",
+    "",
+    "@framework",
+    "",
+    "## 1. 能力声明（Capability Statement）",
+    "",
+    "- `C1` 现有能力：描述。",
+    "",
+    "## 2. 边界定义（Boundary / Parameter 参数）",
+    "",
+    "- `P1` 现有参数：描述。来源：`C1`。",
+    "",
+  ].join("\n");
+  const parameterDashAutoExpansion = frameworkCompletion.getFrameworkDashAutoExpansion(
+    "-",
+    true,
+    {
+      documentText: parameterAuthoringSample,
+      lineNumber: 11,
+    }
+  );
+  assert(
+    typeof parameterDashAutoExpansion?.insertText === "string",
+    "parameter section dash should auto-expand to parameter entry"
+  );
+  assert(
+    parameterDashAutoExpansion.insertText.includes("${1:P2}"),
+    "parameter dash auto-expansion should infer the next P index"
+  );
+  const nonParameterDashAutoExpansion = frameworkCompletion.getFrameworkDashAutoExpansion(
+    "-",
+    true,
+    {
+      documentText: authoringSample,
+      lineNumber: 6,
+    }
+  );
+  assert.strictEqual(
+    nonParameterDashAutoExpansion,
+    null,
+    "dash auto-expansion should only apply inside the parameter section"
   );
 }
 

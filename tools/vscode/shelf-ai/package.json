@@ -2,7 +2,7 @@
   "name": "shelf-ai",
   "displayName": "Shelf AI",
   "description": "Shelf AI: canonical-first navigation for the Framework -> Config -> Code -> Evidence chain.",
-  "version": "0.1.14",
+  "version": "0.1.21",
   "publisher": "rdshr",
   "license": "SEE LICENSE IN LICENSE.txt",
   "repository": {
@@ -27,6 +27,7 @@
     "guarding.js",
     "evidence_tree.js",
     "framework_completion.js",
+    "framework_lint.js",
     "framework_navigation.js",
     "config_navigation.js",
     "correspondence_runtime.js",
@@ -45,7 +46,7 @@
   "scripts": {
     "build:webview": "node scripts/build_tree_webview.mjs",
     "check:webview-types": "tsc --pretty false --noEmit -p webview/tree/tsconfig.json",
-    "test": "node test_guarding.js && node test_framework_navigation.js && node test_config_navigation.js && node test_correspondence_runtime.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_local_settings.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
+    "test": "node test_guarding.js && node test_framework_navigation.js && node test_framework_lint.js && node test_config_navigation.js && node test_correspondence_runtime.js && node test_evidence_tree.js && node test_validation_runtime.js && node test_intent_gate.js && node test_local_settings.js && node test_snippets.js && node test_tree_runtime_models.js && node test_tree_webview_bridge.js",
     "vscode:prepublish": "npm run build:webview"
   },
   "devDependencies": {
@@ -260,15 +261,6 @@
           "default": true,
           "description": "%configuration.shelf.intentGateEnabled.description%"
         },
-        "shelf.intentGateEnforcementMode": {
-          "type": "string",
-          "enum": [
-            "warn",
-            "block"
-          ],
-          "default": "block",
-          "description": "%configuration.shelf.intentGateEnforcementMode.description%"
-        },
         "shelf.intentGateRequireMappingEcho": {
           "type": "boolean",
           "default": true,
@@ -305,40 +297,6 @@
           "maximum": 1440,
           "description": "%configuration.shelf.intentGateSessionTtlMinutes.description%"
         },
-        "shelf.intentGateGuardedPathPrefixes": {
-          "type": "array",
-          "default": [
-            "framework/",
-            "framework_drafts/",
-            "projects/",
-            "src/project_runtime/",
-            "scripts/",
-            "tools/vscode/shelf-ai/"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "description": "%configuration.shelf.intentGateGuardedPathPrefixes.description%"
-        },
-        "shelf.intentGateIgnoredPathPrefixes": {
-          "type": "array",
-          "default": [
-            ".git/",
-            ".github/",
-            ".venv/",
-            "node_modules/",
-            "dist/",
-            "build/",
-            "out/",
-            ".pytest_cache/",
-            ".mypy_cache/",
-            "__pycache__/"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "description": "%configuration.shelf.intentGateIgnoredPathPrefixes.description%"
-        },
         "shelf.intentGateTemporaryBypasses": {
           "type": "array",
           "default": [],
@@ -346,7 +304,6 @@
             "type": "string",
             "enum": [
               "*",
-              "save_guard",
               "grant_pre_validation",
               "mapping_echo",
               "one_to_one_check"
@@ -450,6 +407,38 @@
           "minimum": 0,
           "maximum": 5000,
           "description": "%configuration.shelf.validationDebounceMs.description%"
+        },
+        "shelf.frameworkLintEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.shelf.frameworkLintEnabled.description%"
+        },
+        "shelf.frameworkLintOnType": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.shelf.frameworkLintOnType.description%"
+        },
+        "shelf.frameworkLintDebounceMs": {
+          "type": "integer",
+          "default": 300,
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "%configuration.shelf.frameworkLintDebounceMs.description%"
+        },
+        "shelf.frameworkAutoCompleteEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.shelf.frameworkAutoCompleteEnabled.description%"
+        },
+        "shelf.frameworkAutoTriggerSuggest": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.shelf.frameworkAutoTriggerSuggest.description%"
+        },
+        "shelf.frameworkQuickFixEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.shelf.frameworkQuickFixEnabled.description%"
         }
       }
     }

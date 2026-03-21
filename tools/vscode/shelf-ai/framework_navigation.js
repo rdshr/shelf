@@ -13,13 +13,11 @@ const UPPER_SYMBOL_PATTERN = /[A-Z][A-Z0-9_]+/g;
 const BACKTICK_SEGMENT_PATTERN = /`([^`]+)`/g;
 const SYMBOL_TOKEN_PATTERN = /[A-Za-z][A-Za-z0-9_]*/g;
 const TOML_SECTION_PATTERN = /^\s*\[([A-Za-z0-9_.-]+)\]\s*$/;
-const DEFAULT_PROJECT_FILE = path.join("projects", "knowledge_base_basic", "project.toml");
 
 const SECTION_PREFIXES = [
   ["## 1. 能力声明", "capability"],
-  ["## 2. 参数定义", "boundary"],
   ["## 2. 边界定义", "boundary"],
-  ["## 3. 最小可行基", "base"],
+  ["## 3. 最小结构基", "base"],
   ["## 4. 基组合原则", "rule"],
   ["## 5. 验证", "verification"],
 ];
@@ -621,11 +619,11 @@ function inferConfiguredFrameworks(projectText) {
 
 function resolvePreferredProjectFile(repoRoot, frameworkName) {
   const candidates = discoverProjectFiles(repoRoot);
-  const preferredDefault = path.join(repoRoot, DEFAULT_PROJECT_FILE);
+  const preferredDefault = candidates.length > 0 ? candidates[0] : null;
   let bestFile = null;
   let bestScore = -1;
   for (const filePath of candidates) {
-    let score = filePath === preferredDefault ? 1 : 0;
+    let score = preferredDefault && filePath === preferredDefault ? 1 : 0;
     try {
       const frameworks = inferConfiguredFrameworks(fs.readFileSync(filePath, "utf8"));
       if (frameworks.has(frameworkName)) {
@@ -641,9 +639,6 @@ function resolvePreferredProjectFile(repoRoot, frameworkName) {
   }
   if (bestFile) {
     return bestFile;
-  }
-  if (fs.existsSync(preferredDefault) && fs.statSync(preferredDefault).isFile()) {
-    return preferredDefault;
   }
   return null;
 }
@@ -751,7 +746,7 @@ function buildModuleHoverMarkdown(moduleInfo, index) {
   }
 
   pushItemSection(parts, "能力声明", index.capabilities);
-  pushItemSection(parts, "最小可行基", index.bases);
+  pushItemSection(parts, "最小结构基", index.bases);
 
   if (index.rules.length > 0) {
     parts.push("", "基组合原则");

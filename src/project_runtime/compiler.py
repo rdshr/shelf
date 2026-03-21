@@ -16,7 +16,28 @@ from rule_validation_models import ValidationReports
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PROJECT_FILE = REPO_ROOT / "projects" / "knowledge_base_basic" / "project.toml"
+
+
+def _discover_default_project_file() -> Path | None:
+    candidates = sorted((REPO_ROOT / "projects").glob("*/project.toml"))
+    if candidates:
+        return candidates[0]
+    return None
+
+
+DEFAULT_PROJECT_FILE = _discover_default_project_file()
+
+
+def _resolve_project_file(project_file: str | Path | None) -> Path:
+    if project_file is not None:
+        return normalize_project_path(project_file)
+    discovered = _discover_default_project_file()
+    if discovered is None:
+        raise FileNotFoundError(
+            "no projects/*/project.toml found; "
+            "specify --project-file or create a project config first"
+        )
+    return discovered
 
 
 def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifactPaths:
@@ -25,6 +46,36 @@ def _artifact_paths(project_file: Path, canonical_name: str) -> GeneratedArtifac
         directory=relative_path(output_dir),
         canonical_json=relative_path(output_dir / canonical_name),
     )
+
+
+def _read_root_role_dependencies(exact_config: dict[str, Any]) -> dict[str, tuple[str, ...]]:
+    evidence_config = exact_config.get("evidence")
+    if not isinstance(evidence_config, dict):
+        return {}
+    raw_dependencies = evidence_config.get("root_role_dependencies")
+    if raw_dependencies is None:
+        return {}
+    if not isinstance(raw_dependencies, dict):
+        raise ValueError("exact.evidence.root_role_dependencies must be a table")
+    dependencies: dict[str, tuple[str, ...]] = {}
+    for raw_role, raw_values in raw_dependencies.items():
+        role = str(raw_role).strip()
+        if not role:
+            continue
+        if not isinstance(raw_values, list):
+            raise ValueError(
+                "exact.evidence.root_role_dependencies."
+                f"{role} must be an array"
+            )
+        values: list[str] = []
+        for item in raw_values:
+            dep_role = str(item).strip()
+            if not dep_role or dep_role == role or dep_role in values:
+                continue
+            values.append(dep_role)
+        if values:
+            dependencies[role] = tuple(values)
+    return dependencies
 
 
 def _build_links(
@@ -228,12 +279,17 @@ def _build_canonical(
     return canonical
 
 
-def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
-    resolved_project_file = normalize_project_path(project_file)
+def compile_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
+    resolved_project_file = _resolve_project_file(project_file)
     project_config = load_project_config(resolved_project_file)
     framework_modules, root_module_ids = resolve_selected_framework_modules(project_config.framework_modules)
     config_modules = build_config_modules(project_config, framework_modules)
-    code_modules, code_exports = build_code_modules(config_modules, root_module_ids=root_module_ids)
+    root_role_dependencies = _read_root_role_dependencies(project_config.exact)
+    code_modules, code_exports = build_code_modules(
+        config_modules,
+        root_module_ids=root_module_ids,
+        root_role_dependencies=root_role_dependencies,
+    )
     draft_assembly = ProjectRuntimeAssembly(
         project_file=relative_path(resolved_project_file),
         metadata=project_config.metadata,
@@ -248,7 +304,9 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
     )
     evidence_modules, evidence_exports, validation_reports = build_evidence_modules(draft_assembly, code_modules)
     runtime_exports = dict(code_exports)
-    runtime_exports["runtime_blueprint"] = evidence_exports["runtime_blueprint"]
+    runtime_blueprint = evidence_exports.get("runtime_blueprint")
+    if runtime_blueprint is not None:
+        runtime_exports["runtime_blueprint"] = runtime_blueprint
     assembly = ProjectRuntimeAssembly(
         project_file=draft_assembly.project_file,
         metadata=draft_assembly.metadata,
@@ -279,12 +337,12 @@ def compile_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> 
 
 
 @lru_cache(maxsize=4)
-def load_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
+def load_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
     return compile_project_runtime(project_file)
 
 
-def materialize_project_runtime(project_file: str | Path = DEFAULT_PROJECT_FILE) -> ProjectRuntimeAssembly:
-    resolved_project_file = normalize_project_path(project_file)
+def materialize_project_runtime(project_file: str | Path | None = None) -> ProjectRuntimeAssembly:
+    resolved_project_file = _resolve_project_file(project_file)
     assembly = compile_project_runtime(resolved_project_file)
     generated = resolved_project_file.parent / "generated"
     generated.mkdir(parents=True, exist_ok=True)
